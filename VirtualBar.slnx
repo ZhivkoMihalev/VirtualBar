@@ -1,0 +1,7 @@
+<Solution>
+  <Project Path="VirtualBar.Api/VirtualBar.Api.csproj" />
+  <Project Path="VirtualBar.Application/VirtualBar.Application.csproj" />
+  <Project Path="VirtualBar.Domain/VirtualBar.Domain.csproj" />
+  <Project Path="VirtualBar.Infrastructure/VirtualBar.Infrastructure.csproj" />
+  <Project Path="VirtualBar.Tests/VirtualBar.Tests.csproj" />
+</Solution>

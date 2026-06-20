@@ -1,5 +1,5 @@
 import { client } from './client'
-import type { Bottle, SpiritCategory, BottleCondition } from '../types'
+import type { Bottle, BottleComment, SpiritCategory, BottleCondition } from '../types'
 
 export interface AddBottlePayload {
   name: string
@@ -53,4 +53,22 @@ export interface BarcodeProduct {
 export async function lookupBarcode(barcode: string): Promise<BarcodeProduct> {
   const res = await client.get<BarcodeProduct>(`/products/barcode/${encodeURIComponent(barcode)}`)
   return res.data
+}
+
+export async function toggleBottleLike(bottleId: string): Promise<void> {
+  await client.post(`/bottles/${bottleId}/likes`)
+}
+
+export async function getBottleComments(bottleId: string): Promise<BottleComment[]> {
+  const res = await client.get<BottleComment[]>(`/bottles/${bottleId}/comments`)
+  return res.data
+}
+
+export async function addBottleComment(bottleId: string, content: string): Promise<BottleComment> {
+  const res = await client.post<BottleComment>(`/bottles/${bottleId}/comments`, { content })
+  return res.data
+}
+
+export async function deleteBottleComment(bottleId: string, commentId: string): Promise<void> {
+  await client.delete(`/bottles/${bottleId}/comments/${commentId}`)
 }

@@ -1,14 +1,11 @@
-import { useState } from 'react'
+﻿import { useState } from 'react'
 import type { CSSProperties } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '../contexts/AuthContext'
-import { getBottlesByUser, addBottle, uploadBottleImage, linkBottleImage, lookupBarcode } from '../api/bottlesApi'
+import { getBottlesByUser, addBottle, uploadBottleImage, linkBottleImage, lookupBarcode, toggleBottleLike, getBottleComments, addBottleComment, deleteBottleComment } from '../api/bottlesApi'
 import type { AddBottlePayload } from '../api/bottlesApi'
 import type { Bottle, SpiritCategory, BottleCondition } from '../types'
 
-/* ------------------------------------------------------------------ */
-/*  Category palette                                                   */
-/* ------------------------------------------------------------------ */
 
 const CATEGORY_COLORS: Record<SpiritCategory, { body: string; glass: string; glow: string; label: string }> = {
   Whisky:  { body: '#5C3A00', glass: '#C8820A', glow: '#C8820A', label: 'Whisky' },
@@ -36,9 +33,6 @@ const CAP_COLOR: Record<BottleCondition, string> = {
   Empty: '#1A0C06',
 }
 
-/* ------------------------------------------------------------------ */
-/*  BottleSvg                                                          */
-/* ------------------------------------------------------------------ */
 
 const BOTTLE_PATH =
   'M 20 7 L 30 7 C 33 8 35 18 34 24 C 42 32 44 42 44 52 L 44 128 C 44 142 37 150 25 150 C 13 150 6 142 6 128 L 6 52 C 6 42 8 32 16 24 C 15 18 17 8 20 7 Z'
@@ -113,9 +107,6 @@ function BottleSvg({ category, condition }: { category: SpiritCategory; conditio
   )
 }
 
-/* ------------------------------------------------------------------ */
-/*  BottleCard                                                         */
-/* ------------------------------------------------------------------ */
 
 function BottleCard({ bottle, index, onSelect }: { bottle: Bottle; index: number; onSelect: (b: Bottle) => void }) {
   const [hover, setHover] = useState(false)
@@ -143,7 +134,7 @@ function BottleCard({ bottle, index, onSelect }: { bottle: Bottle; index: number
       }}
     >
       {bottle.isLimited && (
-        <span style={{ position: 'absolute', top: -2, right: 8, fontSize: 10, color: '#E8C870', textShadow: '0 0 6px rgba(201,168,76,0.8)', zIndex: 5 }}>◆</span>
+        <span style={{ position: 'absolute', top: -2, right: 8, fontSize: 10, color: '#E8C870', textShadow: '0 0 6px rgba(201,168,76,0.8)', zIndex: 5 }}>â—†</span>
       )}
       {bottle.isForSale && (
         <span style={{ position: 'absolute', top: 2, left: 12, width: 7, height: 7, borderRadius: '50%', background: '#4A9A6A', boxShadow: '0 0 6px rgba(74,154,106,0.9)', zIndex: 5 }} />
@@ -206,9 +197,6 @@ function BottleCard({ bottle, index, onSelect }: { bottle: Bottle; index: number
   )
 }
 
-/* ------------------------------------------------------------------ */
-/*  EmptySlot                                                          */
-/* ------------------------------------------------------------------ */
 
 function EmptySlot({ onClick }: { onClick: () => void }) {
   const [hover, setHover] = useState(false)
@@ -253,9 +241,6 @@ function EmptySlot({ onClick }: { onClick: () => void }) {
   )
 }
 
-/* ------------------------------------------------------------------ */
-/*  Shelf                                                              */
-/* ------------------------------------------------------------------ */
 
 function Shelf({
   bottles,
@@ -319,9 +304,6 @@ function Shelf({
   )
 }
 
-/* ------------------------------------------------------------------ */
-/*  VirtualBarScene                                                    */
-/* ------------------------------------------------------------------ */
 
 function VirtualBarScene({ bottles, onAdd, onSelect }: { bottles: Bottle[]; onAdd: () => void; onSelect: (b: Bottle) => void }) {
   const shelf1Bottles = bottles.slice(0, 8)
@@ -376,7 +358,7 @@ function VirtualBarScene({ bottles, onAdd, onSelect }: { bottles: Bottle[]; onAd
           textTransform: 'uppercase',
         }}
       >
-        — Virtual Bar —
+        â€” Virtual Bar â€”
       </div>
 
       <div style={{ position: 'absolute', bottom: 265, left: 0, right: 0 }}>
@@ -428,9 +410,6 @@ function VirtualBarScene({ bottles, onAdd, onSelect }: { bottles: Bottle[]; onAd
   )
 }
 
-/* ------------------------------------------------------------------ */
-/*  CategoryPill                                                       */
-/* ------------------------------------------------------------------ */
 
 function CategoryPill({
   label,
@@ -471,9 +450,6 @@ function CategoryPill({
   )
 }
 
-/* ------------------------------------------------------------------ */
-/*  StatItem                                                           */
-/* ------------------------------------------------------------------ */
 
 function StatItem({ value, label }: { value: number; label: string }) {
   return (
@@ -496,9 +472,6 @@ function StatItem({ value, label }: { value: number; label: string }) {
   )
 }
 
-/* ------------------------------------------------------------------ */
-/*  AddBottlePanel                                                     */
-/* ------------------------------------------------------------------ */
 
 const inputStyle: CSSProperties = {
   background: '#0A0502',
@@ -653,7 +626,7 @@ function AddBottlePanel({ onClose, onSuccess }: { onClose: () => void; onSuccess
               lineHeight: 1,
             }}
           >
-            ×
+            Ã—
           </button>
         </div>
 
@@ -708,7 +681,7 @@ function AddBottlePanel({ onClose, onSuccess }: { onClose: () => void; onSuccess
               </>
             ) : (
               <div style={{ textAlign: 'center', pointerEvents: 'none' }}>
-                <div style={{ fontSize: 32, marginBottom: 8, color: 'rgba(201,168,76,0.4)' }}>📷</div>
+                <div style={{ fontSize: 32, marginBottom: 8, color: 'rgba(201,168,76,0.4)' }}>ðŸ“·</div>
                 <div style={{ fontFamily: 'Cinzel, serif', fontSize: 10, letterSpacing: '0.2em', color: 'rgba(201,168,76,0.5)', marginBottom: 4 }}>
                   UPLOAD PHOTO
                 </div>
@@ -744,7 +717,7 @@ function AddBottlePanel({ onClose, onSuccess }: { onClose: () => void; onSuccess
               value={barcode}
               onChange={e => setBarcode(e.target.value)}
               onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleBarcodeSearch() } }}
-              placeholder="EAN / UPC barcode…"
+              placeholder="EAN / UPC barcodeâ€¦"
               style={{ ...inputStyle, flex: 1 }}
             />
             <button
@@ -766,12 +739,12 @@ function AddBottlePanel({ onClose, onSuccess }: { onClose: () => void; onSuccess
                 transition: 'all 0.2s',
               }}
             >
-              {barcodeLoading ? '···' : 'FIND'}
+              {barcodeLoading ? 'Â·Â·Â·' : 'FIND'}
             </button>
           </div>
           {barcodeStatus === 'found' && (
             <div style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: 14, color: '#4A9A6A', marginBottom: 14 }}>
-              ✓ Product found — fields auto-filled
+              âœ“ Product found â€” fields auto-filled
             </div>
           )}
           {barcodeStatus === 'error' && (
@@ -925,7 +898,7 @@ function AddBottlePanel({ onClose, onSuccess }: { onClose: () => void; onSuccess
             }}
           >
             <span style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: 15, color: '#C9A84C' }}>
-              Limited Edition ◆
+              Limited Edition â—†
             </span>
             <span
               style={{
@@ -961,7 +934,7 @@ function AddBottlePanel({ onClose, onSuccess }: { onClose: () => void; onSuccess
             onFocus={focusOn}
             onBlur={focusOff}
             rows={3}
-            placeholder="Tasting notes, provenance…"
+            placeholder="Tasting notes, provenanceâ€¦"
             style={{ ...inputStyle, marginBottom: 24, resize: 'vertical' }}
           />
 
@@ -997,7 +970,7 @@ function AddBottlePanel({ onClose, onSuccess }: { onClose: () => void; onSuccess
               boxShadow: '0 4px 20px rgba(201,168,76,0.3)',
             }}
           >
-            {mutation.isPending ? 'Adding…' : 'Add to Collection'}
+            {mutation.isPending ? 'Addingâ€¦' : 'Add to Collection'}
           </button>
         </form>
       </div>
@@ -1005,9 +978,231 @@ function AddBottlePanel({ onClose, onSuccess }: { onClose: () => void; onSuccess
   )
 }
 
-/* ------------------------------------------------------------------ */
-/*  DashboardPage                                                      */
-/* ------------------------------------------------------------------ */
+
+function formatRelativeTime(iso: string): string {
+  const then = new Date(iso).getTime()
+  const seconds = Math.floor((Date.now() - then) / 1000)
+
+  if (seconds < 60) return 'just now'
+
+  const units: { limit: number; div: number; name: string }[] = [
+    { limit: 3600, div: 60, name: 'minute' },
+    { limit: 86400, div: 3600, name: 'hour' },
+    { limit: 604800, div: 86400, name: 'day' },
+    { limit: 2592000, div: 604800, name: 'week' },
+    { limit: 31536000, div: 2592000, name: 'month' },
+    { limit: Infinity, div: 31536000, name: 'year' },
+  ]
+
+  for (const unit of units) {
+    if (seconds < unit.limit) {
+      const value = Math.floor(seconds / unit.div)
+      return `${value} ${unit.name}${value === 1 ? '' : 's'} ago`
+    }
+  }
+
+  return 'just now'
+}
+
+const sectionLabelStyle: CSSProperties = {
+  fontFamily: 'Cinzel, serif',
+  fontSize: 9,
+  letterSpacing: '0.2em',
+  color: '#7A6040',
+  textTransform: 'uppercase',
+  marginBottom: 12,
+}
+
+function LikesSection({ bottle, userId }: { bottle: Bottle; userId: string }) {
+  const queryClient = useQueryClient()
+
+  const mutation = useMutation({
+    mutationFn: () => toggleBottleLike(bottle.id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['bottles', userId] })
+    },
+  })
+
+  const liked = bottle.likedByMe
+
+  return (
+    <div
+      style={{
+        paddingTop: 24,
+        marginTop: 4,
+        borderTop: '1px solid rgba(201,168,76,0.1)',
+        display: 'flex',
+        alignItems: 'center',
+        gap: 12,
+      }}
+    >
+      <button
+        onClick={() => mutation.mutate()}
+        disabled={mutation.isPending}
+        aria-label={liked ? 'Unlike' : 'Like'}
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 8,
+          background: 'transparent',
+          border: 'none',
+          cursor: mutation.isPending ? 'wait' : 'pointer',
+          padding: 0,
+          opacity: mutation.isPending ? 0.6 : 1,
+          transition: 'opacity 0.2s ease',
+        }}
+      >
+        <span
+          style={{
+            fontSize: 22,
+            lineHeight: 1,
+            color: liked ? '#E8C870' : 'transparent',
+            WebkitTextStroke: liked ? '0' : '1.3px #C9A84C',
+            textShadow: liked ? '0 0 10px rgba(201,168,76,0.6)' : 'none',
+            transition: 'all 0.2s ease',
+          }}
+        >
+          â™¥
+        </span>
+        <span style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: 17, color: '#E8D4A0' }}>
+          {bottle.likesCount} {bottle.likesCount === 1 ? 'like' : 'likes'}
+        </span>
+      </button>
+    </div>
+  )
+}
+
+function CommentsSection({ bottle, currentUserId }: { bottle: Bottle; currentUserId: string }) {
+  const queryClient = useQueryClient()
+  const [draft, setDraft] = useState('')
+
+  const { data: comments = [], isLoading, isError } = useQuery({
+    queryKey: ['comments', bottle.id],
+    queryFn: () => getBottleComments(bottle.id),
+  })
+
+  const addMutation = useMutation({
+    mutationFn: (content: string) => addBottleComment(bottle.id, content),
+    onSuccess: () => {
+      setDraft('')
+      queryClient.invalidateQueries({ queryKey: ['comments', bottle.id] })
+      queryClient.invalidateQueries({ queryKey: ['bottles', bottle.userId] })
+    },
+  })
+
+  const deleteMutation = useMutation({
+    mutationFn: (commentId: string) => deleteBottleComment(bottle.id, commentId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['comments', bottle.id] })
+      queryClient.invalidateQueries({ queryKey: ['bottles', bottle.userId] })
+    },
+  })
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    const content = draft.trim()
+    if (!content) return
+    addMutation.mutate(content)
+  }
+
+  return (
+    <div style={{ paddingTop: 24, marginTop: 24, borderTop: '1px solid rgba(201,168,76,0.1)' }}>
+      <div style={sectionLabelStyle}>Comments</div>
+
+      <div style={{ maxHeight: 320, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 14 }}>
+        {isLoading && (
+          <div style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: 15, color: '#B09868' }}>
+            Loading commentsâ€¦
+          </div>
+        )}
+
+        {isError && (
+          <div style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: 15, color: '#C04040' }}>
+            Could not load comments.
+          </div>
+        )}
+
+        {!isLoading && !isError && comments.length === 0 && (
+          <div style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: 16, fontStyle: 'italic', color: '#B09868' }}>
+            Be the first to comment.
+          </div>
+        )}
+
+        {!isLoading && !isError && comments.map(comment => (
+          <div key={comment.id} style={{ display: 'flex', gap: 4, flexDirection: 'column' }}>
+            <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 8 }}>
+              <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
+                <span style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: 16, color: '#E8C870' }}>
+                  {comment.userDisplayName}
+                </span>
+                <span style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: 13, color: '#7A6040' }}>
+                  {formatRelativeTime(comment.createdAt)}
+                </span>
+              </div>
+              {comment.userId === currentUserId && (
+                <button
+                  onClick={() => deleteMutation.mutate(comment.id)}
+                  disabled={deleteMutation.isPending}
+                  aria-label="Delete comment"
+                  style={{
+                    background: 'transparent',
+                    border: 'none',
+                    color: '#7A6040',
+                    fontSize: 16,
+                    lineHeight: 1,
+                    cursor: deleteMutation.isPending ? 'wait' : 'pointer',
+                    padding: '0 2px',
+                  }}
+                >
+                  Ã—
+                </button>
+              )}
+            </div>
+            <p style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: 16, color: '#E8D4A0', lineHeight: 1.5, margin: 0 }}>
+              {comment.content}
+            </p>
+          </div>
+        ))}
+      </div>
+
+      <form onSubmit={handleSubmit} style={{ marginTop: 16 }}>
+        <textarea
+          value={draft}
+          onChange={e => setDraft(e.target.value)}
+          onFocus={focusOn}
+          onBlur={focusOff}
+          rows={2}
+          placeholder="Add a commentâ€¦"
+          style={{ ...inputStyle, resize: 'vertical', marginBottom: 10 }}
+        />
+        {addMutation.isError && (
+          <div style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: 14, color: '#C04040', marginBottom: 10 }}>
+            Could not post your comment. Please try again.
+          </div>
+        )}
+        <button
+          type="submit"
+          disabled={addMutation.isPending || !draft.trim()}
+          style={{
+            fontFamily: 'Cinzel, serif',
+            fontSize: 11,
+            letterSpacing: '0.2em',
+            textTransform: 'uppercase',
+            color: '#07030A',
+            background: 'linear-gradient(135deg, #C9A84C, #E8C870)',
+            border: 'none',
+            padding: '10px 22px',
+            borderRadius: 2,
+            cursor: addMutation.isPending || !draft.trim() ? 'not-allowed' : 'pointer',
+            opacity: addMutation.isPending || !draft.trim() ? 0.6 : 1,
+          }}
+        >
+          {addMutation.isPending ? 'Postingâ€¦' : 'Post'}
+        </button>
+      </form>
+    </div>
+  )
+}
 
 function DetailRow({ label, value }: { label: string; value: string | number }) {
   return (
@@ -1022,7 +1217,17 @@ function DetailRow({ label, value }: { label: string; value: string | number }) 
   )
 }
 
-function BottleDetailPanel({ bottle, onClose }: { bottle: Bottle; onClose: () => void }) {
+function BottleDetailPanel({
+  bottle,
+  userId,
+  currentUserId,
+  onClose,
+}: {
+  bottle: Bottle
+  userId: string
+  currentUserId: string
+  onClose: () => void
+}) {
   const col = CATEGORY_COLORS[bottle.category]
   const primaryImage = bottle.images.find(i => i.isPrimary) ?? bottle.images[0]
   const galleryImages = bottle.images.filter(i => !i.isPrimary).sort((a, b) => a.sortOrder - b.sortOrder)
@@ -1083,7 +1288,7 @@ function BottleDetailPanel({ bottle, onClose }: { bottle: Bottle; onClose: () =>
               justifyContent: 'center',
             }}
           >
-            ×
+            Ã—
           </button>
 
           <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '0 28px 20px' }}>
@@ -1112,10 +1317,10 @@ function BottleDetailPanel({ bottle, onClose }: { bottle: Bottle; onClose: () =>
                 {bottle.condition}
               </span>
               {bottle.isLimited && (
-                <span style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: 12, color: '#E8C870', letterSpacing: '0.05em' }}>◆ Limited</span>
+                <span style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: 12, color: '#E8C870', letterSpacing: '0.05em' }}>â—† Limited</span>
               )}
               {bottle.isForSale && (
-                <span style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: 12, color: '#4A9A6A' }}>● For Sale</span>
+                <span style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: 12, color: '#4A9A6A' }}>â— For Sale</span>
               )}
             </div>
 
@@ -1215,6 +1420,10 @@ function BottleDetailPanel({ bottle, onClose }: { bottle: Bottle; onClose: () =>
               </div>
             </div>
           )}
+
+          <LikesSection bottle={bottle} userId={userId} />
+
+          <CommentsSection bottle={bottle} currentUserId={currentUserId} />
         </div>
       </div>
     </div>
@@ -1405,7 +1614,7 @@ export default function DashboardPage() {
               animation: 'shimmer 1.6s ease-in-out infinite',
             }}
           >
-            POURING YOUR COLLECTION…
+            POURING YOUR COLLECTIONâ€¦
           </div>
         )}
 
@@ -1492,8 +1701,13 @@ export default function DashboardPage() {
         />
       )}
 
-      {selectedBottle && (
-        <BottleDetailPanel bottle={selectedBottle} onClose={() => setSelectedBottle(null)} />
+      {selectedBottle && user && (
+        <BottleDetailPanel
+          bottle={bottles.find(b => b.id === selectedBottle.id) ?? selectedBottle}
+          userId={user.id}
+          currentUserId={user.id}
+          onClose={() => setSelectedBottle(null)}
+        />
       )}
     </div>
   )

@@ -66,6 +66,10 @@ public static class DependencyInjection
         services.AddScoped<IProductLookupService>(sp =>
             new ProductValidationDecorator(sp.GetRequiredService<ProductLookupService>()));
 
+        services.AddScoped<UserProfileService>();
+        services.AddScoped<IUserProfileService>(sp => new UserProfileValidationDecorator(
+            sp.GetRequiredService<UserProfileService>()));
+
         return services;
     }
 }

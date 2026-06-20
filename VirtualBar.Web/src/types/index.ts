@@ -69,3 +69,26 @@ export interface AuthResponse {
   token: string
   user: User
 }
+
+export interface UserProfile {
+  id: string
+  displayName: string
+  bio?: string
+  avatarUrl?: string
+  country?: string
+  city?: string
+  bottleCount: number
+  followerCount: number
+  followingCount: number
+  isFollowedByMe: boolean
+}
+
+export interface UserSearchResult {
+  id: string
+  displayName: string
+  avatarUrl?: string
+  bio?: string
+  country?: string
+  bottleCount: number
+  followerCount: number
+}

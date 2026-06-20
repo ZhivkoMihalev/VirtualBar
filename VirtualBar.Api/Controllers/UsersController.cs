@@ -8,8 +8,35 @@ namespace VirtualBar.Api.Controllers;
 [ApiController]
 [Route("api/users")]
 [Authorize]
-public sealed class UsersController(IUserFollowService userFollowService) : ControllerBase
+public sealed class UsersController(IUserFollowService userFollowService, IUserProfileService userProfileService) : ControllerBase
 {
+    /// <summary>Returns a collector's public profile.</summary>
+    /// <param name="userId">The collector's identifier.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <response code="200">Returns the profile.</response>
+    /// <response code="404">Collector not found.</response>
+    [AllowAnonymous]
+    [HttpGet("{userId:guid}")]
+    public async Task<IActionResult> GetProfile(Guid userId, CancellationToken cancellationToken)
+    {
+        var result = await userProfileService.GetProfileAsync(userId, cancellationToken);
+        return result.Success ? Ok(result.Data) : result.ToActionResult(this);
+    }
+
+    /// <summary>Searches collectors by display name.</summary>
+    /// <param name="q">Optional search query.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <response code="200">Returns matching collectors.</response>
+    [AllowAnonymous]
+    [HttpGet]
+    public async Task<IActionResult> SearchUsers([FromQuery] string? q, CancellationToken cancellationToken)
+    {
+        var result = await userProfileService.SearchUsersAsync(q, cancellationToken);
+        return result.Success 
+            ? Ok(result.Data) 
+            : result.ToActionResult(this);
+    }
+
     /// <summary>Follows another collector on behalf of the current collector.</summary>
     /// <param name="userId">The identifier of the collector to follow.</param>
     /// <param name="cancellationToken">Cancellation token.</param>

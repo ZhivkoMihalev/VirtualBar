@@ -4,6 +4,8 @@ import { AuthProvider, useAuth } from './contexts/AuthContext'
 import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
 import DashboardPage from './pages/DashboardPage'
+import BrowsePage from './pages/BrowsePage'
+import PublicBarPage from './pages/PublicBarPage'
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { staleTime: 30_000 } },
@@ -44,6 +46,8 @@ function AppRoutes() {
         path="/"
         element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <Navigate to="/login" replace />}
       />
+      <Route path="/browse" element={<BrowsePage />} />
+      <Route path="/bar/:userId" element={<PublicBarPage />} />
       <Route path="/login" element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <LoginPage />} />
       <Route path="/register" element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <RegisterPage />} />
       <Route

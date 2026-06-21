@@ -183,6 +183,22 @@
     "loading": "LOADING…",
     "error": "Could not load messages."
   },
+  "profile": {
+    "editTitle": "EDIT PROFILE",
+    "displayName": "DISPLAY NAME",
+    "bio": "BIO",
+    "country": "COUNTRY",
+    "city": "CITY",
+    "avatar": "PHOTO",
+    "uploadAvatar": "CHANGE PHOTO",
+    "save": "SAVE",
+    "saving": "Saving…",
+    "cancel": "CANCEL",
+    "editProfile": "EDIT PROFILE",
+    "successMessage": "Profile updated.",
+    "errorMessage": "Could not save changes. Please try again.",
+    "avatarError": "Could not upload photo."
+  },
   "footer": {
     "tagline": "A digital home for collectors of rare spirits.",
     "explore": "NAVIGATE",

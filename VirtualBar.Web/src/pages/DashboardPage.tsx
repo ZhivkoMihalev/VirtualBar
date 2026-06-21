@@ -584,7 +584,6 @@ function AddBottlePanel({ onClose, onSuccess }: { onClose: () => void; onSuccess
 }
 
 
-
 export default function DashboardPage() {
   const { t } = useTranslation()
   const { user } = useAuth()
@@ -655,23 +654,25 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          <button
-            onClick={() => setAddOpen(true)}
-            style={{
-              fontFamily: 'Cinzel, serif',
-              fontSize: 12,
-              letterSpacing: '0.2em',
-              color: '#07030A',
-              background: 'linear-gradient(135deg, #C9A84C, #E8C870)',
-              border: 'none',
-              padding: '14px 28px',
-              borderRadius: 2,
-              cursor: 'pointer',
-              boxShadow: '0 4px 20px rgba(201,168,76,0.3)',
-            }}
-          >
-            {t('dashboard.addBottle')}
-          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <button
+              onClick={() => setAddOpen(true)}
+              style={{
+                fontFamily: 'Cinzel, serif',
+                fontSize: 12,
+                letterSpacing: '0.2em',
+                color: '#07030A',
+                background: 'linear-gradient(135deg, #C9A84C, #E8C870)',
+                border: 'none',
+                padding: '14px 28px',
+                borderRadius: 2,
+                cursor: 'pointer',
+                boxShadow: '0 4px 20px rgba(201,168,76,0.3)',
+              }}
+            >
+              {t('dashboard.addBottle')}
+            </button>
+          </div>
         </div>
 
         {/* Stats row */}

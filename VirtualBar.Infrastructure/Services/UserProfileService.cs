@@ -1,3 +1,5 @@
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
 using VirtualBar.Application.Common;
 using VirtualBar.Application.DTOs.Users;
@@ -6,7 +8,7 @@ using VirtualBar.Infrastructure.Persistence;
 
 namespace VirtualBar.Infrastructure.Services;
 
-public sealed class UserProfileService(AppDbContext db, ICurrentUser currentUser) : IUserProfileService
+public sealed class UserProfileService(AppDbContext db, ICurrentUser currentUser, IWebHostEnvironment env) : IUserProfileService
 {
     public async Task<Result<UserProfileDto>> GetProfileAsync(Guid userId, CancellationToken cancellationToken)
     {
@@ -67,5 +69,56 @@ public sealed class UserProfileService(AppDbContext db, ICurrentUser currentUser
             .ToListAsync(cancellationToken);
 
         return Result<List<UserSearchDto>>.Ok(users);
+    }
+
+    public async Task<Result<UpdatedProfileDto>> UpdateProfileAsync(UpdateProfileRequest request, CancellationToken cancellationToken)
+    {
+        var user = await db.Users.FindAsync([currentUser.UserId], cancellationToken);
+
+        user!.DisplayName = request.DisplayName.Trim();
+        user.Bio = string.IsNullOrWhiteSpace(request.Bio) ? null : request.Bio.Trim();
+        user.Country = string.IsNullOrWhiteSpace(request.Country) ? null : request.Country.Trim();
+        user.City = string.IsNullOrWhiteSpace(request.City) ? null : request.City.Trim();
+
+        await db.SaveChangesAsync(cancellationToken);
+
+        return Result<UpdatedProfileDto>.Ok(new UpdatedProfileDto
+        {
+            DisplayName = user.DisplayName,
+            Bio = user.Bio,
+            AvatarUrl = user.AvatarUrl,
+            Country = user.Country,
+            City = user.City,
+        });
+    }
+
+    public async Task<Result<UpdatedProfileDto>> UploadAvatarAsync(IFormFile file, CancellationToken cancellationToken)
+    {
+        var uploadsDir = Path.Combine(env.WebRootPath, "uploads", "avatars");
+        Directory.CreateDirectory(uploadsDir);
+
+        var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
+        var fileName = $"{Guid.NewGuid()}{ext}";
+        var filePath = Path.Combine(uploadsDir, fileName);
+
+        await using var stream = File.Create(filePath);
+        await file.CopyToAsync(stream, cancellationToken);
+
+        var relativeUrl = $"/uploads/avatars/{fileName}";
+
+        var user = await db.Users.FindAsync([currentUser.UserId], cancellationToken);
+
+        user!.AvatarUrl = relativeUrl;
+
+        await db.SaveChangesAsync(cancellationToken);
+
+        return Result<UpdatedProfileDto>.Ok(new UpdatedProfileDto
+        {
+            DisplayName = user.DisplayName,
+            Bio = user.Bio,
+            AvatarUrl = relativeUrl,
+            Country = user.Country,
+            City = user.City,
+        });
     }
 }

@@ -308,3 +308,37 @@
 2026-06-21 18:34:33.149 [INF] ← GET /api/bottles/4b0115d1-8079-4b84-9538-bf5a46d4b907/comments 200 | 40ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
 2026-06-21 18:34:38.998 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
 2026-06-21 18:34:39.013 [INF] ← GET /api/feed 200 | 14ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-21 19:10:40.362 [INF] → POST /api/auth/logout | IP ::1
+2026-06-21 19:10:40.502 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-21 19:10:40.535 [WRN] ← POST /api/auth/logout 401 | 181ms | user:anonymous
+2026-06-21 19:10:40.821 [ERR] An error occurred using the connection to database 'VirtualBarDb' on server 'localhost\SQLEXPRESS'.
+2026-06-21 19:10:54.050 [INF] → POST /api/auth/login | IP ::1
+2026-06-21 19:10:54.050 [INF] ← GET /api/feed 200 | 13548ms | user:anonymous
+2026-06-21 19:10:54.477 [INF] ← POST /api/auth/login 200 | 427ms | user:anonymous
+2026-06-21 19:10:54.514 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-21 19:10:54.758 [INF] ← GET /api/feed 200 | 244ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-21 19:10:58.976 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-21 19:10:59.014 [INF] ← GET /api/feed 200 | 37ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-21 19:11:00.313 [INF] → POST /api/auth/logout | IP ::1
+2026-06-21 19:11:00.319 [WRN] ← POST /api/auth/logout 401 | 5ms | user:anonymous
+2026-06-21 19:11:06.066 [INF] → POST /api/auth/login | IP ::1
+2026-06-21 19:11:06.298 [INF] ← POST /api/auth/login 200 | 232ms | user:anonymous
+2026-06-21 19:11:06.343 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-21 19:11:06.361 [INF] ← GET /api/feed 200 | 17ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-21 19:11:37.947 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-21 19:11:37.972 [INF] ← GET /api/feed 200 | 24ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-21 19:11:39.483 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-21 19:11:39.495 [INF] ← GET /api/feed 200 | 11ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-21 19:12:14.432 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-21 19:12:14.457 [INF] ← GET /api/feed 200 | 32ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-21 19:12:17.920 [INF] → GET /api/bottles?userId=8bce4454-3ef5-449c-0257-08dece31259c | IP ::1
+2026-06-21 19:12:18.036 [WRN] Compiling a query which loads related collections for more than one collection navigation, either via 'Include' or through projection, but no 'QuerySplittingBehavior' has been configured. By default, Entity Framework will use 'QuerySplittingBehavior.SingleQuery', which can potentially result in slow query performance. See https://go.microsoft.com/fwlink/?linkid=2134277 for more information. To identify the query that's triggering this warning call 'ConfigureWarnings(w => w.Throw(RelationalEventId.MultipleCollectionIncludeWarning))'.
+2026-06-21 19:12:18.254 [INF] ← GET /api/bottles 200 | 334ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-21 19:20:29.878 [INF] → GET /api/bottles?userId=8bce4454-3ef5-449c-0257-08dece31259c | IP ::1
+2026-06-21 19:20:29.939 [INF] ← GET /api/bottles 200 | 61ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-21 19:21:20.782 [INF] → GET /api/bottles?userId=8bce4454-3ef5-449c-0257-08dece31259c | IP ::1
+2026-06-21 19:21:20.820 [INF] ← GET /api/bottles 200 | 37ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-21 19:21:49.801 [INF] → GET /api/bottles?userId=8bce4454-3ef5-449c-0257-08dece31259c | IP ::1
+2026-06-21 19:21:49.824 [INF] ← GET /api/bottles 200 | 22ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-21 19:23:06.718 [INF] → GET /api/bottles?userId=8bce4454-3ef5-449c-0257-08dece31259c | IP ::1
+2026-06-21 19:23:06.747 [INF] ← GET /api/bottles 200 | 28ms | user:8bce4454-3ef5-449c-0257-08dece31259c

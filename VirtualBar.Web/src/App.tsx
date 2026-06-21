@@ -9,6 +9,7 @@ import BrowsePage from './pages/BrowsePage'
 import PublicBarPage from './pages/PublicBarPage'
 import MarketplacePage from './pages/MarketplacePage'
 import MessagesPage from './pages/MessagesPage'
+import ProfilePage from './pages/ProfilePage'
 import Footer from './components/Footer'
 
 const queryClient = new QueryClient({
@@ -65,6 +66,14 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <MessagesPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/profile"
+        element={
+          <ProtectedRoute>
+            <ProfilePage />
           </ProtectedRoute>
         }
       />

@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using VirtualBar.Api.Extensions;
+using VirtualBar.Application.DTOs.Users;
 using VirtualBar.Application.Interfaces;
 
 namespace VirtualBar.Api.Controllers;
@@ -32,6 +34,34 @@ public sealed class UsersController(IUserFollowService userFollowService, IUserP
     public async Task<IActionResult> SearchUsers([FromQuery] string? q, CancellationToken cancellationToken)
     {
         var result = await userProfileService.SearchUsersAsync(q, cancellationToken);
+        return result.Success 
+            ? Ok(result.Data) 
+            : result.ToActionResult(this);
+    }
+
+    /// <summary>Updates the current collector's profile fields.</summary>
+    /// <param name="request">The updated profile data.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <response code="200">Profile updated; returns updated profile data.</response>
+    /// <response code="400">Validation failed.</response>
+    [HttpPut("me")]
+    public async Task<IActionResult> UpdateProfile(UpdateProfileRequest request, CancellationToken cancellationToken)
+    {
+        var result = await userProfileService.UpdateProfileAsync(request, cancellationToken);
+        return result.Success 
+            ? Ok(result.Data) 
+            : result.ToActionResult(this);
+    }
+
+    /// <summary>Uploads a new avatar for the current collector.</summary>
+    /// <param name="file">The image file to upload.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <response code="200">Avatar uploaded; returns updated profile data.</response>
+    /// <response code="400">Validation failed (file too large, wrong type).</response>
+    [HttpPost("me/avatar")]
+    public async Task<IActionResult> UploadAvatar(IFormFile file, CancellationToken cancellationToken)
+    {
+        var result = await userProfileService.UploadAvatarAsync(file, cancellationToken);
         return result.Success 
             ? Ok(result.Data) 
             : result.ToActionResult(this);

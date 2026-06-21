@@ -141,3 +141,11 @@ export interface ConversationSummary {
   lastMessageIsFromMe: boolean
   unreadCount: number
 }
+
+export interface UpdatedProfile {
+  displayName: string
+  bio?: string
+  avatarUrl?: string
+  country?: string
+  city?: string
+}

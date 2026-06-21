@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using VirtualBar.Application.Common;
 using VirtualBar.Application.DTOs.Users;
@@ -9,7 +10,8 @@ namespace VirtualBar.Infrastructure.Decorators;
 
 public sealed class UserProfileValidationDecorator(
     UserProfileService inner,
-    AppDbContext db) : IUserProfileService
+    AppDbContext db,
+    ICurrentUser currentUser) : IUserProfileService
 {
     public async Task<Result<UserProfileDto>> GetProfileAsync(Guid userId, CancellationToken cancellationToken)
     {
@@ -31,5 +33,49 @@ public sealed class UserProfileValidationDecorator(
 
         var sanitized = string.IsNullOrWhiteSpace(query) ? null : query.Trim();
         return await inner.SearchUsersAsync(sanitized, cancellationToken);
+    }
+
+    public async Task<Result<UpdatedProfileDto>> UpdateProfileAsync(UpdateProfileRequest request, CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+
+        if (string.IsNullOrWhiteSpace(request.DisplayName))
+            return Result<UpdatedProfileDto>.Fail("Display name is required.");
+
+        if (request.DisplayName.Trim().Length < 2)
+            return Result<UpdatedProfileDto>.Fail("Display name must be at least 2 characters.");
+
+        if (request.DisplayName.Trim().Length > 100)
+            return Result<UpdatedProfileDto>.Fail("Display name must be at most 100 characters.");
+
+        if (request.Bio != null && request.Bio.Length > 500)
+            return Result<UpdatedProfileDto>.Fail("Bio must be at most 500 characters.");
+
+        var exists = await db.Users.AnyAsync(u => u.Id == currentUser.UserId, cancellationToken);
+        if (!exists)
+            return Result<UpdatedProfileDto>.NotFound("User not found.");
+
+        return await inner.UpdateProfileAsync(request, cancellationToken);
+    }
+
+    public async Task<Result<UpdatedProfileDto>> UploadAvatarAsync(IFormFile file, CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+
+        if (file.Length == 0)
+            return Result<UpdatedProfileDto>.Fail("File is empty.");
+
+        if (file.Length > 5 * 1024 * 1024)
+            return Result<UpdatedProfileDto>.Fail("File size must not exceed 5 MB.");
+
+        var allowedTypes = new[] { "image/jpeg", "image/png", "image/webp", "image/gif" };
+        if (!allowedTypes.Contains(file.ContentType.ToLowerInvariant()))
+            return Result<UpdatedProfileDto>.Fail("Only image files are allowed.");
+
+        var exists = await db.Users.AnyAsync(u => u.Id == currentUser.UserId, cancellationToken);
+        if (!exists)
+            return Result<UpdatedProfileDto>.NotFound("User not found.");
+
+        return await inner.UploadAvatarAsync(file, cancellationToken);
     }
 }

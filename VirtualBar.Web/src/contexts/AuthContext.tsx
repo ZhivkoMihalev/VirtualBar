@@ -11,6 +11,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<void>
   register: (email: string, password: string, displayName: string) => Promise<void>
   logout: () => void
+  updateUser: (patch: Partial<User>) => void
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -80,6 +81,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     })
   }
 
+  const updateUser = (patch: Partial<User>) => {
+    setUser(prev => {
+      if (!prev) return prev
+      const updated = { ...prev, ...patch }
+      localStorage.setItem(USER_KEY, JSON.stringify(updated))
+      return updated
+    })
+  }
+
   const value: AuthContextType = {
     user,
     token,
@@ -88,6 +98,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     login,
     register,
     logout,
+    updateUser,
   }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

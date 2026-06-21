@@ -649,6 +649,9 @@ export default function DashboardPage() {
           <Link to="/browse" style={{ fontFamily: 'Cinzel, serif', fontSize: 11, letterSpacing: '0.15em', color: '#B09868', textDecoration: 'none' }}>
             BROWSE
           </Link>
+          <Link to="/marketplace" style={{ fontFamily: 'Cinzel, serif', fontSize: 11, letterSpacing: '0.15em', color: '#B09868', textDecoration: 'none' }}>
+            MARKETPLACE
+          </Link>
           <span style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: 15, color: '#C9A84C' }}>
             {user?.displayName}
           </span>

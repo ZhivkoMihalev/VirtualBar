@@ -68,7 +68,8 @@ public static class DependencyInjection
 
         services.AddScoped<UserProfileService>();
         services.AddScoped<IUserProfileService>(sp => new UserProfileValidationDecorator(
-            sp.GetRequiredService<UserProfileService>()));
+            sp.GetRequiredService<UserProfileService>(),
+            sp.GetRequiredService<AppDbContext>()));
 
         return services;
     }

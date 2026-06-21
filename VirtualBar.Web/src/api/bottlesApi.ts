@@ -16,6 +16,21 @@ export interface AddBottlePayload {
   isLimited: boolean
 }
 
+export interface MarketplaceFilters {
+  search?: string
+  category?: string
+  sort?: 'price_asc' | 'price_desc' | 'newest'
+}
+
+export async function getMarketplace(filters: MarketplaceFilters): Promise<Bottle[]> {
+  const params: Record<string, string> = {}
+  if (filters.search) params.search = filters.search
+  if (filters.category) params.category = filters.category
+  if (filters.sort) params.sort = filters.sort
+  const { data } = await client.get<Bottle[]>('/bottles/marketplace', { params })
+  return data
+}
+
 export async function getBottlesByUser(userId: string): Promise<Bottle[]> {
   const res = await client.get<Bottle[]>('/bottles', { params: { userId } })
   return res.data
@@ -53,6 +68,14 @@ export interface BarcodeProduct {
 export async function lookupBarcode(barcode: string): Promise<BarcodeProduct> {
   const res = await client.get<BarcodeProduct>(`/products/barcode/${encodeURIComponent(barcode)}`)
   return res.data
+}
+
+export async function listBottleForSale(bottleId: string, askingPrice: number, currency: string): Promise<void> {
+  await client.post(`/bottles/${bottleId}/list-for-sale`, { askingPrice, currency })
+}
+
+export async function unlistBottleFromSale(bottleId: string): Promise<void> {
+  await client.post(`/bottles/${bottleId}/unlist`)
 }
 
 export async function toggleBottleLike(bottleId: string): Promise<void> {

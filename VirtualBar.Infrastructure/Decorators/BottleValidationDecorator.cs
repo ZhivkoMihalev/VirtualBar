@@ -100,4 +100,18 @@ public sealed class BottleValidationDecorator(
 
         return await inner.UnlistFromSaleAsync(bottleId, cancellationToken);
     }
+
+    public async Task<Result<List<BottleDto>>> GetMarketplaceAsync(MarketplaceQuery query, CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+
+        var sanitized = new MarketplaceQuery
+        {
+            Search   = string.IsNullOrWhiteSpace(query.Search) ? null : query.Search.Trim(),
+            Category = query.Category,
+            Sort     = query.Sort is "price_asc" or "price_desc" or "newest" ? query.Sort : null,
+        };
+
+        return await inner.GetMarketplaceAsync(sanitized, cancellationToken);
+    }
 }

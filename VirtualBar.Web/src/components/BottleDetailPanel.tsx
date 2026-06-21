@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import type { CSSProperties } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { toggleBottleLike, getBottleComments, addBottleComment, deleteBottleComment } from '../api/bottlesApi'
+import { toggleBottleLike, getBottleComments, addBottleComment, deleteBottleComment, listBottleForSale, unlistBottleFromSale } from '../api/bottlesApi'
 import type { Bottle } from '../types'
 import { CATEGORY_COLORS, BottleSvg } from './BarShelf'
 
@@ -250,6 +250,122 @@ function CommentsSection({ bottle, currentUserId }: { bottle: Bottle; currentUse
   )
 }
 
+const CURRENCIES = ['USD', 'EUR', 'GBP', 'BGN', 'CHF', 'JPY', 'CAD', 'AUD']
+
+function SaleSection({ bottle, userId }: { bottle: Bottle; userId: string }) {
+  const queryClient = useQueryClient()
+  const [price, setPrice] = useState(bottle.askingPrice?.toString() ?? '')
+  const [currency, setCurrency] = useState(bottle.currency ?? 'USD')
+
+  const invalidate = () => {
+    queryClient.invalidateQueries({ queryKey: ['bottles', userId] })
+    queryClient.invalidateQueries({ queryKey: ['marketplace'] })
+  }
+
+  const listMutation = useMutation({
+    mutationFn: () => listBottleForSale(bottle.id, Number(price), currency),
+    onSuccess: invalidate,
+  })
+
+  const unlistMutation = useMutation({
+    mutationFn: () => unlistBottleFromSale(bottle.id),
+    onSuccess: invalidate,
+  })
+
+  return (
+    <div style={{
+      padding: '16px 20px',
+      background: bottle.isForSale ? 'rgba(74,154,106,0.06)' : 'rgba(201,168,76,0.04)',
+      border: `1px solid ${bottle.isForSale ? 'rgba(74,154,106,0.25)' : 'rgba(201,168,76,0.12)'}`,
+      borderRadius: 4,
+      marginBottom: 20,
+    }}>
+      <div style={{ fontFamily: 'Cinzel, serif', fontSize: 9, letterSpacing: '0.2em', color: '#7A6040', textTransform: 'uppercase', marginBottom: 12 }}>
+        Sale
+      </div>
+
+      {bottle.isForSale ? (
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+          <span style={{ fontFamily: 'Playfair Display, serif', fontSize: 22, color: '#6ABF8A', fontWeight: 700 }}>
+            {bottle.currency ?? 'USD'} {bottle.askingPrice?.toLocaleString() ?? '—'}
+          </span>
+          <button
+            onClick={() => unlistMutation.mutate()}
+            disabled={unlistMutation.isPending}
+            style={{
+              fontFamily: 'Cinzel, serif',
+              fontSize: 10,
+              letterSpacing: '0.15em',
+              color: '#C04040',
+              background: 'transparent',
+              border: '1px solid rgba(192,64,64,0.4)',
+              padding: '8px 16px',
+              borderRadius: 2,
+              cursor: unlistMutation.isPending ? 'wait' : 'pointer',
+              opacity: unlistMutation.isPending ? 0.6 : 1,
+            }}
+          >
+            {unlistMutation.isPending ? '···' : 'REMOVE FROM SALE'}
+          </button>
+        </div>
+      ) : (
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+          <input
+            type="number"
+            min={0}
+            step={0.01}
+            value={price}
+            onChange={e => setPrice(e.target.value)}
+            onFocus={focusOn}
+            onBlur={focusOff}
+            placeholder="Asking price"
+            style={{ ...inputStyle, width: 140, flexShrink: 0 }}
+          />
+          <select
+            value={currency}
+            onChange={e => setCurrency(e.target.value)}
+            style={{
+              ...inputStyle,
+              width: 88,
+              flexShrink: 0,
+              cursor: 'pointer',
+              appearance: 'none' as const,
+              paddingRight: 10,
+            }}
+          >
+            {CURRENCIES.map(c => <option key={c} value={c}>{c}</option>)}
+          </select>
+          <button
+            onClick={() => listMutation.mutate()}
+            disabled={listMutation.isPending || !price || Number(price) <= 0}
+            style={{
+              fontFamily: 'Cinzel, serif',
+              fontSize: 10,
+              letterSpacing: '0.15em',
+              color: '#07030A',
+              background: 'linear-gradient(135deg, #C9A84C, #E8C870)',
+              border: 'none',
+              padding: '10px 16px',
+              borderRadius: 2,
+              cursor: listMutation.isPending || !price || Number(price) <= 0 ? 'not-allowed' : 'pointer',
+              opacity: listMutation.isPending || !price || Number(price) <= 0 ? 0.6 : 1,
+              whiteSpace: 'nowrap' as const,
+            }}
+          >
+            {listMutation.isPending ? '···' : 'LIST FOR SALE'}
+          </button>
+        </div>
+      )}
+
+      {(listMutation.isError || unlistMutation.isError) && (
+        <div style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: 14, color: '#C04040', marginTop: 10 }}>
+          Something went wrong. Please try again.
+        </div>
+      )}
+    </div>
+  )
+}
+
 function DetailRow({ label, value }: { label: string; value: string | number }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
@@ -411,7 +527,9 @@ export default function BottleDetailPanel({
             </div>
           )}
 
-          {bottle.isForSale && bottle.askingPrice != null && (
+          {bottle.userId === currentUserId ? (
+            <SaleSection bottle={bottle} userId={userId} />
+          ) : bottle.isForSale && bottle.askingPrice != null ? (
             <div style={{
               display: 'flex',
               alignItems: 'center',
@@ -429,7 +547,7 @@ export default function BottleDetailPanel({
                 {bottle.currency ?? 'USD'} {bottle.askingPrice.toLocaleString()}
               </span>
             </div>
-          )}
+          ) : null}
 
           {bottle.description && (
             <div style={{ marginBottom: 20 }}>

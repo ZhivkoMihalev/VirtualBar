@@ -136,6 +136,39 @@ public sealed class BottleService(
         return Result<bool>.Ok(true);
     }
 
+    public async Task<Result<List<BottleDto>>> GetMarketplaceAsync(MarketplaceQuery query, CancellationToken cancellationToken)
+    {
+        var q = db.Bottles
+            .Where(b => !b.IsDeleted && b.IsForSale)
+            .Include(b => b.Images.OrderBy(i => i.SortOrder))
+            .Include(b => b.Likes)
+            .Include(b => b.Comments)
+            .Include(b => b.User)
+            .AsQueryable();
+
+        if (query.Search != null)
+            q = q.Where(b => b.Name.Contains(query.Search)
+                || (b.Distillery != null 
+                && b.Distillery.Contains(query.Search)));
+
+        if (query.Category != null)
+            q = q.Where(b => b.Category == query.Category);
+
+        q = query.Sort switch
+        {
+            "price_asc"  => q.OrderBy(b => b.AskingPrice),
+            "price_desc" => q.OrderByDescending(b => b.AskingPrice),
+            _            => q.OrderByDescending(b => b.CreatedAt),
+        };
+
+        var bottles = await q.ToListAsync(cancellationToken);
+
+        return Result<List<BottleDto>>.Ok(
+            bottles
+            .Select(b => MapToDto(b, b.Likes.Count, b.Comments.Count, b.User.DisplayName))
+            .ToList());
+    }
+
     private static BottleDto MapToDto(Bottle bottle, int likesCount = 0, int commentsCount = 0, string userDisplayName = "") => new()
     {
         Id = bottle.Id,

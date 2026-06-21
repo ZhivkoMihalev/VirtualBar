@@ -41,6 +41,20 @@ public sealed class BottlesController(IBottleService bottleService) : Controller
             : result.ToActionResult(this);
     }
 
+    /// <summary>Returns all bottles currently listed for sale in the marketplace.</summary>
+    /// <param name="query">Optional filters: search text, category, sort order.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <response code="200">Returns the matching bottles.</response>
+    [AllowAnonymous]
+    [HttpGet("marketplace")]
+    public async Task<IActionResult> GetMarketplace([FromQuery] MarketplaceQuery query, CancellationToken cancellationToken)
+    {
+        var result = await bottleService.GetMarketplaceAsync(query, cancellationToken);
+        return result.Success 
+            ? Ok(result.Data) 
+            : result.ToActionResult(this);
+    }
+
     /// <summary>Adds a new bottle to the current collector's bar.</summary>
     /// <param name="request">The bottle details.</param>
     /// <param name="cancellationToken">Cancellation token.</param>

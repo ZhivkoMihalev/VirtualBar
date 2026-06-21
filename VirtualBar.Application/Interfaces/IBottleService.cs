@@ -18,4 +18,6 @@ public interface IBottleService
     Task<Result<bool>> ListForSaleAsync(Guid bottleId, ListForSaleRequest request, CancellationToken cancellationToken);
 
     Task<Result<bool>> UnlistFromSaleAsync(Guid bottleId, CancellationToken cancellationToken);
+
+    Task<Result<List<BottleDto>>> GetMarketplaceAsync(MarketplaceQuery query, CancellationToken cancellationToken);
 }

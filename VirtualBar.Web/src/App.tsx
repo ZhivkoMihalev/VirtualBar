@@ -6,6 +6,7 @@ import RegisterPage from './pages/RegisterPage'
 import DashboardPage from './pages/DashboardPage'
 import BrowsePage from './pages/BrowsePage'
 import PublicBarPage from './pages/PublicBarPage'
+import MarketplacePage from './pages/MarketplacePage'
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { staleTime: 30_000 } },
@@ -47,6 +48,7 @@ function AppRoutes() {
         element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <Navigate to="/login" replace />}
       />
       <Route path="/browse" element={<BrowsePage />} />
+      <Route path="/marketplace" element={<MarketplacePage />} />
       <Route path="/bar/:userId" element={<PublicBarPage />} />
       <Route path="/login" element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <LoginPage />} />
       <Route path="/register" element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <RegisterPage />} />

@@ -11,8 +11,6 @@ public sealed class UserProfileService(AppDbContext db, ICurrentUser currentUser
     public async Task<Result<UserProfileDto>> GetProfileAsync(Guid userId, CancellationToken cancellationToken)
     {
         var user = await db.Users.FindAsync([userId], cancellationToken);
-        if (user is null)
-            return Result<UserProfileDto>.NotFound("User not found.");
 
         var bottleCount = await db.Bottles
             .Where(b => b.UserId == userId && !b.IsDeleted)
@@ -33,7 +31,7 @@ public sealed class UserProfileService(AppDbContext db, ICurrentUser currentUser
 
         return Result<UserProfileDto>.Ok(new UserProfileDto
         {
-            Id = user.Id,
+            Id = user!.Id,
             DisplayName = user.DisplayName,
             Bio = user.Bio,
             AvatarUrl = user.AvatarUrl,
@@ -50,7 +48,7 @@ public sealed class UserProfileService(AppDbContext db, ICurrentUser currentUser
     {
         var q = db.Users.AsQueryable();
 
-        if (!string.IsNullOrWhiteSpace(query))
+        if (query != null)
             q = q.Where(u => u.DisplayName.Contains(query));
 
         var users = await q

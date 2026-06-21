@@ -6,9 +6,9 @@ This file provides guidance to Claude Code when working with code in this reposi
 
 ## What is VirtualBar
 
-VirtualBar is a platform for collectors of premium spirits (whisky, rum, cognac, vodka and more). Every user gets a **virtual bar** — a public profile showcasing their collection. Others can browse collections, follow collectors, like and comment on bottles, send direct messages, and buy/sell limited editions through a built-in marketplace.
+VirtualBar is a platform for collectors of premium spirits (whisky, rum, cognac, vodka and more). Every user gets a **virtual bar** — a public profile showcasing their collection. Others can browse collections, follow collectors, like and comment on bottles, send direct messages, and buy/sell limited editions through a built-in marketplace. The home page (`/`) is a social news feed showing admin-authored articles and activity from followed users.
 
-**One user role:** Collector (all registered users are equal).
+**User roles:** Collector (all registered users). Platform administrators have `IsAdmin = true` on their `AppUser` record — seeded via `AdminEmail` in `appsettings.Development.json` on startup.
 
 ---
 
@@ -193,6 +193,7 @@ Key DbSets:
 | `BottleComments` | Comments on a bottle |
 | `UserFollows` | Junction: follower → followed (composite PK) |
 | `Messages` | Direct messages between users |
+| `NewsPosts` | Admin-authored news articles shown on the home feed |
 
 All entities extend `BaseEntity` which adds `Id (Guid)`, `CreatedAt`, `UpdatedAt`, `IsDeleted`, `DeletedAt`.
 
@@ -209,6 +210,7 @@ All entities extend `BaseEntity` which adds `Id (Guid)`, `CreatedAt`, `UpdatedAt
 | `Bio` | `string?` | |
 | `AvatarUrl` | `string?` | Relative path under `/uploads/avatars/` |
 | `Country`, `City` | `string?` | |
+| `IsAdmin` | `bool` | Platform administrator flag (default `false`) |
 
 Relations: one user → many `Bottle`, `BottleComment`, `Message` (sent/received).
 Junction relations: `BottleLike` (liked), `UserFollow` (followers/following).
@@ -233,6 +235,7 @@ Junction relations: `BottleLike` (liked), `UserFollow` (followers/following).
 | `IsForSale` | `bool` | Listed in marketplace |
 | `AskingPrice` | `decimal?` | `decimal(18,2)` |
 | `Currency` | `string?` | ISO code e.g. "USD", "EUR" |
+| `ForSaleAt` | `DateTime?` | When the bottle was listed for sale (set by `ListForSaleAsync`, cleared by `UnlistFromSaleAsync`) |
 
 Relations: one `Bottle` → many `BottleImage`, `BottleLike`, `BottleComment`.
 
@@ -291,9 +294,22 @@ Both FK relations use `DeleteBehavior.Restrict`.
 
 ---
 
+### NewsPost
+| Property | Type | Notes |
+|---|---|---|
+| `Title` | `string` | |
+| `Excerpt` | `string` | Short summary shown in feed cards |
+| `Content` | `string` | Full article body |
+| `CoverImageUrl` | `string?` | Optional cover image |
+| `AuthorId` | `Guid` | FK → AppUser |
+
+Admin-only write (`IsAdmin` check in `NewsValidationDecorator`). Public read via `GET /api/news` and `GET /api/feed`.
+
+---
+
 ## Frontend Architecture
 
-**Auth:** JWT stored in `localStorage` (`token` + `user`). `AuthContext` exposes `user`, `login`, `logout`. The Axios `client` in `src/api/client.ts` attaches the token as a Bearer header on every request and redirects to `/login` on 401.
+**Auth:** JWT stored in `localStorage` (`token` + `user`). `AuthContext` exposes `user`, `login`, `logout`. The Axios `client` in `src/api/client.ts` attaches the token as a Bearer header on every request and redirects to `/login` on 401. The `user` object includes `isAdmin: boolean` — set from the JWT claim emitted by `AuthService`.
 
 **API layer (`src/api/`):** One file per domain (e.g., `bottlesApi.ts`, `usersApi.ts`). All use named import `{ client }` from `./client`. Return typed data directly (axios `.data` unwrapping).
 
@@ -303,11 +319,14 @@ Both FK relations use `DeleteBehavior.Restrict`.
 
 **Language:** All UI text is in **English**.
 
-**Visual theme:** Tailwind CSS 4.
-- Background: `stone-900` / `stone-800`
-- Accent: `amber-500` / `amber-600`
+**Routing:** `/` is `HomePage.tsx` (public news/social feed). Login and register redirect to `/` after success. `/dashboard` is the user's own virtual bar (protected).
+
+**Visual theme:** Tailwind CSS 4 + inline styles for the speakeasy aesthetic.
+- Background: `#07030A` / `stone-950` / `stone-900`
+- Accent gold: `#C9A84C` / `#E8C870`
 - Text: `stone-100` / `stone-300`
-- Cards/surfaces: `stone-800` with subtle `amber` borders
+- Cards/surfaces: dark semi-transparent with amber borders
+- Fonts: Playfair Display (headings), Cormorant Garamond, Cinzel (labels/nav)
 
 ---
 
@@ -333,8 +352,70 @@ Both FK relations use `DeleteBehavior.Restrict`.
 
 ---
 
+## Admin
+
+Admin is determined by `AppUser.IsAdmin` (bool, default `false`). It is:
+- Exposed via `ICurrentUser.IsAdmin` (reads the `"isAdmin"` JWT claim)
+- Emitted in the JWT by `AuthService.GenerateJwtToken`
+- Included in the auth response as `AuthUserDto.IsAdmin`
+- **Seeded on startup:** if `AdminEmail` is set in config (typically `appsettings.Development.json`, gitignored), that user's `IsAdmin` is set to `true` automatically on `dotnet run`
+
+Admin checks always live in the **`XxxValidationDecorator`** — never in controllers or inner services:
+```csharp
+if (!currentUser.IsAdmin)
+    return Result<T>.Forbidden("Only administrators can do this.");
+```
+
+---
+
+## Middleware
+
+Located in `VirtualBar.Api/Middleware/`. Registered in `Program.cs` in this exact order:
+
+```
+UseCors
+→ RequestResponseLoggingMiddleware   (outermost logger)
+  → GlobalExceptionMiddleware        (catches unhandled exceptions)
+    → UseStaticFiles
+    → UseAuthentication
+    → UseAuthorization
+    → MapControllers
+```
+
+### RequestResponseLoggingMiddleware
+
+Logs every HTTP request and response using Serilog (`ILogger<RequestResponseLoggingMiddleware>`):
+- **`→`** on arrival — method, path, query string, remote IP
+- **`←`** in `finally` — method, path, status code, elapsed ms, authenticated user ID
+
+Log level varies by status code: `Information` (2xx/3xx), `Warning` (4xx), `Error` (5xx).
+
+### GlobalExceptionMiddleware
+
+Catches all unhandled exceptions that escape the controller/service layer:
+- `OperationCanceledException` when client disconnected → `LogDebug`, no response written
+- Any other `Exception` → `LogError` with full stack trace, returns `500` JSON:
+  ```json
+  { "status": 500, "title": "An unexpected error occurred.", "traceId": "..." }
+  ```
+- If response has already started streaming → does nothing (can't change headers)
+
+**Order matters:** `GlobalExceptionMiddleware` is placed *inside* `RequestResponseLoggingMiddleware` so the logger reads the correct status code (500) after the exception middleware sets it.
+
+### Serilog
+
+Configured in `appsettings.json` under the `"Serilog"` key. Two sinks:
+- **Console** — development output
+- **File** — `logs/virtualbar-YYYYMMDD.log`, daily rotation, 7-day retention
+
+Microsoft and EF Core namespaces are overridden to `Warning` to suppress noise.
+`builder.Host.UseSerilog(...)` in `Program.cs` replaces the default .NET logging provider.
+
+---
+
 ## Startup Behavior
 
 On `dotnet run`:
 1. Pending EF Core migrations are applied automatically (`MigrateAsync`).
-2. Swagger/OpenAPI available at `/openapi/v1.json` (development only).
+2. If `AdminEmail` is configured, that user's `IsAdmin` flag is set to `true`.
+3. Swagger/OpenAPI available at `/openapi/v1.json` (development only).

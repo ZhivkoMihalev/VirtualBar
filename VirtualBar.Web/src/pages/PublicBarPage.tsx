@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Link, useParams, useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../contexts/AuthContext'
@@ -96,6 +96,7 @@ function FollowButton({ profile, userId }: { profile: UserProfile; userId: strin
 export default function PublicBarPage() {
   const { t } = useTranslation()
   const { userId } = useParams<{ userId: string }>()
+  const navigate = useNavigate()
   const { user } = useAuth()
   const [selectedBottle, setSelectedBottle] = useState<Bottle | null>(null)
 
@@ -199,8 +200,25 @@ export default function PublicBarPage() {
               </div>
 
               {canFollow && (
-                <div style={{ flexShrink: 0 }}>
+                <div style={{ flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 10 }}>
                   <FollowButton profile={profile} userId={profile.id} />
+                  <button
+                    onClick={() => navigate(`/messages?with=${profile.id}`)}
+                    style={{
+                      fontFamily: 'Cinzel, serif',
+                      fontSize: 11,
+                      letterSpacing: '0.2em',
+                      textTransform: 'uppercase',
+                      padding: '10px 24px',
+                      borderRadius: 2,
+                      cursor: 'pointer',
+                      color: '#C9A84C',
+                      background: 'transparent',
+                      border: '1px solid rgba(201,168,76,0.4)',
+                    }}
+                  >
+                    {t('messages.sendMessage')}
+                  </button>
                 </div>
               )}
             </div>

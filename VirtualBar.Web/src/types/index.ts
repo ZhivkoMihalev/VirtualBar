@@ -131,3 +131,13 @@ export interface FeedItem {
   askingPrice?: number
   currency?: string
 }
+
+export interface ConversationSummary {
+  otherUserId: string
+  otherUserDisplayName: string
+  otherUserAvatarUrl?: string
+  lastMessageContent: string
+  lastMessageAt: string
+  lastMessageIsFromMe: boolean
+  unreadCount: number
+}

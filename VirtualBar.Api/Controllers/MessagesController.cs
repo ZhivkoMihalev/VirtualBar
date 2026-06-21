@@ -11,6 +11,18 @@ namespace VirtualBar.Api.Controllers;
 [Authorize]
 public sealed class MessagesController(IMessageService messageService) : ControllerBase
 {
+    /// <summary>Returns the inbox — one summary per conversation, sorted by most recent.</summary>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <response code="200">Returns the list of conversation summaries.</response>
+    [HttpGet]
+    public async Task<IActionResult> GetInbox(CancellationToken cancellationToken)
+    {
+        var result = await messageService.GetInboxAsync(cancellationToken);
+        return result.Success 
+            ? Ok(result.Data) 
+            : result.ToActionResult(this);
+    }
+
     /// <summary>Sends a direct message to another collector.</summary>
     /// <param name="request">The recipient and message content.</param>
     /// <param name="cancellationToken">Cancellation token.</param>

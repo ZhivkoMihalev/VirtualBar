@@ -5,6 +5,7 @@
     "browse": "BROWSE",
     "marketplace": "MARKETPLACE",
     "myBar": "MY BAR",
+    "messages": "MESSAGES",
     "login": "LOGIN",
     "register": "REGISTER",
     "logout": "SIGN OUT",
@@ -169,6 +170,18 @@
     "listForSale": "LIST FOR SALE",
     "removeFromSale": "REMOVE FROM SALE",
     "errorSale": "Something went wrong. Please try again."
+  },
+  "messages": {
+    "title": "MESSAGES",
+    "noConversations": "No conversations yet.",
+    "selectConversation": "Select a conversation from the list on the left.",
+    "inputPlaceholder": "Write a message…",
+    "send": "SEND",
+    "you": "You",
+    "sending": "Sending…",
+    "sendMessage": "MESSAGE",
+    "loading": "LOADING…",
+    "error": "Could not load messages."
   },
   "footer": {
     "tagline": "A digital home for collectors of rare spirits.",

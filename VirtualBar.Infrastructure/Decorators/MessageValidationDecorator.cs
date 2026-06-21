@@ -12,6 +12,13 @@ public sealed class MessageValidationDecorator(
     AppDbContext db,
     ICurrentUser currentUser) : IMessageService
 {
+    public Task<Result<List<ConversationSummaryDto>>> GetInboxAsync(CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+
+        return inner.GetInboxAsync(cancellationToken);
+    }
+
     public async Task<Result<MessageDto>> SendAsync(SendMessageRequest request, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();

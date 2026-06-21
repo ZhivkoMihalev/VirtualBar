@@ -64,6 +64,9 @@ export default function NavBar() {
         {isAuthenticated && (
           <Link to="/dashboard" style={navLinkStyle}>{t('nav.myBar')}</Link>
         )}
+        {isAuthenticated && (
+          <Link to="/messages" style={navLinkStyle}>{t('nav.messages')}</Link>
+        )}
       </div>
 
       {/* Auth — right */}

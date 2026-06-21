@@ -5,6 +5,8 @@ namespace VirtualBar.Application.Interfaces;
 
 public interface IMessageService
 {
+    Task<Result<List<ConversationSummaryDto>>> GetInboxAsync(CancellationToken cancellationToken);
+
     Task<Result<MessageDto>> SendAsync(SendMessageRequest request, CancellationToken cancellationToken);
 
     Task<Result<List<MessageDto>>> GetConversationAsync(Guid withUserId, CancellationToken cancellationToken);

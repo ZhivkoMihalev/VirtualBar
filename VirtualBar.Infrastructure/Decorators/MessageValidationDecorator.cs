@@ -29,7 +29,7 @@ public sealed class MessageValidationDecorator(
         if (request.ReceiverId == currentUser.UserId)
             return Result<MessageDto>.Fail("Cannot send a message to yourself.");
 
-        var receiver = await db.Users.FindAsync(new object[] { request.ReceiverId }, cancellationToken);
+        var receiver = await db.Users.FindAsync([request.ReceiverId], cancellationToken);
         if (receiver is null)
             return Result<MessageDto>.NotFound("Recipient not found.");
 

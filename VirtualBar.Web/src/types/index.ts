@@ -149,3 +149,37 @@ export interface UpdatedProfile {
   country?: string
   city?: string
 }
+
+export interface AddBottlePayload {
+  name: string
+  distillery?: string
+  region?: string
+  country?: string
+  category: SpiritCategory
+  age?: number
+  vintageYear?: number
+  abvPercent?: number
+  volumeMl?: number
+  condition: BottleCondition
+  description?: string
+  isLimited: boolean
+}
+
+export interface MarketplaceFilters {
+  search?: string
+  category?: string
+  sort?: 'price_asc' | 'price_desc' | 'newest'
+}
+
+export interface BarcodeProduct {
+  name: string
+  brand?: string
+  imageUrl?: string
+  volumeMl?: number
+  abvPercent?: number
+}
+
+export interface CreateNewsPostPayload {
+  coverImageUrl?: string
+  translations: NewsPostTranslation[]
+}

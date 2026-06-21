@@ -19,7 +19,7 @@ public sealed class UserFollowValidationDecorator(
         if (targetUserId == currentUser.UserId)
             return Result<bool>.Fail("Cannot follow yourself.");
 
-        var target = await db.Users.FindAsync(new object[] { targetUserId }, cancellationToken);
+        var target = await db.Users.FindAsync([targetUserId], cancellationToken);
         if (target is null)
             return Result<bool>.NotFound("User not found.");
 
@@ -38,7 +38,7 @@ public sealed class UserFollowValidationDecorator(
         if (targetUserId == currentUser.UserId)
             return Result<bool>.Fail("Cannot unfollow yourself.");
 
-        var target = await db.Users.FindAsync(new object[] { targetUserId }, cancellationToken);
+        var target = await db.Users.FindAsync([targetUserId], cancellationToken);
         if (target is null)
             return Result<bool>.NotFound("User not found.");
 

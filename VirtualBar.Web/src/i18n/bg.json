@@ -169,7 +169,20 @@
     "askingPrice": "Искана цена",
     "listForSale": "ПУСНИ ЗА ПРОДАЖБА",
     "removeFromSale": "СПРИ ПРОДАЖБАТА",
-    "errorSale": "Нещо се обърка. Моля, опитайте отново."
+    "errorSale": "Нещо се обърка. Моля, опитайте отново.",
+    "justNow": "току-що",
+    "minutesAgo_one": "преди {{count}} минута",
+    "minutesAgo_other": "преди {{count}} минути",
+    "hoursAgo_one": "преди {{count}} час",
+    "hoursAgo_other": "преди {{count}} часа",
+    "daysAgo_one": "преди {{count}} ден",
+    "daysAgo_other": "преди {{count}} дни",
+    "weeksAgo_one": "преди {{count}} седмица",
+    "weeksAgo_other": "преди {{count}} седмици",
+    "monthsAgo_one": "преди {{count}} месец",
+    "monthsAgo_other": "преди {{count}} месеца",
+    "yearsAgo_one": "преди {{count}} година",
+    "yearsAgo_other": "преди {{count}} години"
   },
   "messages": {
     "title": "СЪОБЩЕНИЯ",
@@ -236,6 +249,16 @@
     "cancelPost": "ОТКАЗ",
     "confirmDelete": "Сигурни ли сте, че искате да изтриете тази статия?",
     "confirmDeleteBtn": "Изтрий",
-    "cancelBtn": "Отказ"
+    "cancelBtn": "Отказ",
+    "authorBy": "от {{name}}",
+    "editBtn": "РЕДАКТИРАЙ",
+    "deleteBtn": "ИЗТРИЙ",
+    "postTitlePlaceholder": "Заглавие на статията",
+    "postContentPlaceholder": "Пълният разказ…",
+    "errorSubmit": "Нещо се обърка. Моля, опитайте отново."
+  },
+  "barShelf": {
+    "addBottle": "Добави бутилка",
+    "virtualBar": "Виртуален Бар"
   }
 }

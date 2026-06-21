@@ -48,17 +48,21 @@ public sealed class MessageServiceTests
         return user;
     }
 
-    private static Message SeedMessage(AppDbContext db, Guid senderId, Guid receiverId, bool isRead = false)
+    private static Message SeedMessage(AppDbContext db, Guid senderId, Guid receiverId, bool isRead = false, bool isDeleted = false)
     {
         var message = new Message
         {
             SenderId = senderId,
             ReceiverId = receiverId,
             Content = "Hello there.",
-            IsRead = isRead
+            IsRead = isRead,
+            IsDeleted = isDeleted,
+            DeletedAt = isDeleted ? DateTime.UtcNow : null
         };
+
         db.Messages.Add(message);
         db.SaveChanges();
+
         return message;
     }
 
@@ -248,6 +252,122 @@ public sealed class MessageServiceTests
 
         await Assert.ThrowsAsync<OperationCanceledException>(
             () => service.MarkReadAsync(Guid.NewGuid(), cts.Token));
+    }
+
+    #endregion
+
+    #region GetInboxAsync
+
+    [Fact]
+    public async Task GetInboxAsync_WhenNoMessages_ReturnsEmptyList()
+    {
+        var db = CreateDbContext();
+        var me = SeedUser(db, "Me");
+        var service = CreateMessageService(db, me.Id);
+
+        var result = await service.GetInboxAsync(CancellationToken.None);
+
+        Assert.True(result.Success);
+        Assert.Empty(result.Data!);
+    }
+
+    [Fact]
+    public async Task GetInboxAsync_WhenHasSentMessage_ReturnsConversation()
+    {
+        var db = CreateDbContext();
+        var me = SeedUser(db, "Me");
+        var other = SeedUser(db, "Other");
+        SeedMessage(db, me.Id, other.Id);
+        var service = CreateMessageService(db, me.Id);
+
+        var result = await service.GetInboxAsync(CancellationToken.None);
+
+        Assert.True(result.Success);
+        var conversation = Assert.Single(result.Data!);
+        Assert.Equal(other.Id, conversation.OtherUserId);
+        Assert.Equal("Other", conversation.OtherUserDisplayName);
+        Assert.True(conversation.LastMessageIsFromMe);
+        Assert.Equal(0, conversation.UnreadCount);
+    }
+
+    [Fact]
+    public async Task GetInboxAsync_WhenHasReceivedMessage_ReturnsConversation()
+    {
+        var db = CreateDbContext();
+        var me = SeedUser(db, "Me");
+        var other = SeedUser(db, "Other");
+        SeedMessage(db, other.Id, me.Id);
+        var service = CreateMessageService(db, me.Id);
+
+        var result = await service.GetInboxAsync(CancellationToken.None);
+
+        Assert.True(result.Success);
+        var conversation = Assert.Single(result.Data!);
+        Assert.Equal(other.Id, conversation.OtherUserId);
+        Assert.Equal("Other", conversation.OtherUserDisplayName);
+        Assert.False(conversation.LastMessageIsFromMe);
+    }
+
+    [Fact]
+    public async Task GetInboxAsync_CountsUnreadReceivedMessages()
+    {
+        var db = CreateDbContext();
+        var me = SeedUser(db, "Me");
+        var other = SeedUser(db, "Other");
+        SeedMessage(db, other.Id, me.Id, isRead: false);
+        SeedMessage(db, other.Id, me.Id, isRead: false);
+        var service = CreateMessageService(db, me.Id);
+
+        var result = await service.GetInboxAsync(CancellationToken.None);
+
+        Assert.True(result.Success);
+        var conversation = Assert.Single(result.Data!);
+        Assert.Equal(2, conversation.UnreadCount);
+    }
+
+    [Fact]
+    public async Task GetInboxAsync_GroupsByOtherUser()
+    {
+        var db = CreateDbContext();
+        var me = SeedUser(db, "Me");
+        var other = SeedUser(db, "Other");
+        SeedMessage(db, me.Id, other.Id);
+        SeedMessage(db, other.Id, me.Id);
+        SeedMessage(db, me.Id, other.Id);
+        var service = CreateMessageService(db, me.Id);
+
+        var result = await service.GetInboxAsync(CancellationToken.None);
+
+        Assert.True(result.Success);
+        var conversation = Assert.Single(result.Data!);
+        Assert.Equal(other.Id, conversation.OtherUserId);
+    }
+
+    [Fact]
+    public async Task GetInboxAsync_ExcludesDeletedMessages()
+    {
+        var db = CreateDbContext();
+        var me = SeedUser(db, "Me");
+        var other = SeedUser(db, "Other");
+        SeedMessage(db, me.Id, other.Id, isDeleted: true);
+        var service = CreateMessageService(db, me.Id);
+
+        var result = await service.GetInboxAsync(CancellationToken.None);
+
+        Assert.True(result.Success);
+        Assert.Empty(result.Data!);
+    }
+
+    [Fact]
+    public async Task GetInboxAsync_WithCancelledToken_Throws()
+    {
+        var db = CreateDbContext();
+        var service = CreateMessageService(db, Guid.NewGuid());
+        using var cts = new CancellationTokenSource();
+        cts.Cancel();
+
+        await Assert.ThrowsAsync<OperationCanceledException>(
+            () => service.GetInboxAsync(cts.Token));
     }
 
     #endregion

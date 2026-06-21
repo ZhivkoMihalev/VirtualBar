@@ -12,14 +12,13 @@ import {
   uploadNewsCover,
 } from '../api/newsApi'
 import { getFeed } from '../api/feedApi'
-import type { CreateNewsPostPayload } from '../api/newsApi'
+import type { CreateNewsPostPayload } from '../types'
 import type { FeedItem, NewsPost } from '../types'
 import NavBar from '../components/NavBar'
 
 const LANGS = ['bg', 'en'] as const
 type LangCode = (typeof LANGS)[number]
 
-const LANG_LABELS: Record<LangCode, string> = { bg: 'Български', en: 'English' }
 
 interface TranslationDraft {
   title: string
@@ -212,7 +211,7 @@ function NewsPostCard({
           }}
         >
           <span style={{ width: 24, height: 1, background: '#C9A84C' }} />
-          THE CHRONICLE
+          {t('hero.title')}
         </div>
 
         <h2
@@ -281,7 +280,7 @@ function NewsPostCard({
               color: '#B09868',
             }}
           >
-            By {post.authorDisplayName} &middot; {formatDate(post.createdAt)}
+            {t('home.authorBy', { name: post.authorDisplayName })} &middot; {formatDate(post.createdAt)}
           </div>
 
           {isAdmin && (
@@ -301,7 +300,7 @@ function NewsPostCard({
                   cursor: 'pointer',
                 }}
               >
-                EDIT
+                {t('home.editBtn')}
               </button>
               <button
                 onClick={onDelete}
@@ -318,7 +317,7 @@ function NewsPostCard({
                   cursor: 'pointer',
                 }}
               >
-                DELETE
+                {t('home.deleteBtn')}
               </button>
             </div>
           )}
@@ -652,7 +651,7 @@ function PostFormPanel({
                   marginBottom: -1,
                 }}
               >
-                {LANG_LABELS[lc]}
+                {t(`lang.${lc}`)}
               </button>
             ))}
           </div>
@@ -663,7 +662,7 @@ function PostFormPanel({
             onChange={(e) => updateDraft(activeLang, 'title', e.target.value)}
             onFocus={focusOn}
             onBlur={focusOff}
-            placeholder="A rare cask emerges"
+            placeholder={t('home.postTitlePlaceholder')}
             style={{ ...inputStyle, marginBottom: 18 }}
           />
 
@@ -674,7 +673,7 @@ function PostFormPanel({
             onFocus={focusOn}
             onBlur={focusOff}
             rows={10}
-            placeholder="The full story&hellip;"
+            placeholder={t('home.postContentPlaceholder')}
             style={{ ...inputStyle, marginBottom: 18, resize: 'vertical', lineHeight: 1.5 }}
           />
 
@@ -785,7 +784,7 @@ function PostFormPanel({
                 marginBottom: 16,
               }}
             >
-              Something went wrong. Please try again.
+              {t('home.errorSubmit')}
             </div>
           )}
 

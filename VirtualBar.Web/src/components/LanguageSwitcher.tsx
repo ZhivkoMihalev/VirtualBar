@@ -22,7 +22,7 @@ export default function LanguageSwitcher() {
   ]
 
   const currentCode = i18n.language?.startsWith('bg') ? 'bg' : 'en'
-  const currentLabel = currentCode === 'bg' ? 'БГ' : 'EN'
+  const currentLabel = currentCode === 'bg' ? 'BG' : 'EN'
 
   return (
     <div ref={ref} style={{ position: 'relative' }}>

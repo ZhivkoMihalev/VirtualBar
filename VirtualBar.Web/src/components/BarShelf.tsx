@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import type { Bottle, SpiritCategory, BottleCondition } from '../types'
 
 export const CATEGORY_COLORS: Record<SpiritCategory, { body: string; glass: string; glow: string; label: string }> = {
@@ -181,6 +182,7 @@ export function BottleCard({ bottle, index, onSelect }: { bottle: Bottle; index:
 }
 
 export function EmptySlot({ onClick }: { onClick: () => void }) {
+  const { t } = useTranslation()
   const [hover, setHover] = useState(false)
 
   return (
@@ -216,7 +218,7 @@ export function EmptySlot({ onClick }: { onClick: () => void }) {
             letterSpacing: '0.05em',
           }}
         >
-          Add bottle
+          {t('barShelf.addBottle')}
         </span>
       )}
     </div>
@@ -285,6 +287,7 @@ export function Shelf({
 }
 
 export function VirtualBarScene({ bottles, onAdd, onSelect }: { bottles: Bottle[]; onAdd?: () => void; onSelect: (b: Bottle) => void }) {
+  const { t } = useTranslation()
   const shelf1Bottles = bottles.slice(0, 8)
   const shelf2Bottles = bottles.slice(8, 16)
 
@@ -334,7 +337,7 @@ export function VirtualBarScene({ bottles, onAdd, onSelect }: { bottles: Bottle[
           textTransform: 'uppercase',
         }}
       >
-        — Virtual Bar —
+        — {t('barShelf.virtualBar')} —
       </div>
 
       <div style={{ position: 'absolute', bottom: 265, left: 0, right: 0 }}>

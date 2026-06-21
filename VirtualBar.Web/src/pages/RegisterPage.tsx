@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useMutation } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
+import type { AxiosError } from 'axios'
 import { useAuth } from '../contexts/AuthContext'
 import LanguageSwitcher from '../components/LanguageSwitcher'
 
@@ -22,8 +23,9 @@ export default function RegisterPage() {
     onSuccess: () => {
       navigate('/dashboard')
     },
-    onError: (err: any) => {
-      const message = err.response?.data?.message || t('register.errorFailed')
+    onError: (err: unknown) => {
+      const axiosErr = err as AxiosError<{ message?: string }>
+      const message = axiosErr.response?.data?.message || t('register.errorFailed')
       setError(message)
     },
   })

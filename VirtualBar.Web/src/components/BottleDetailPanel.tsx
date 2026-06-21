@@ -2,6 +2,7 @@ import { useState } from 'react'
 import type { CSSProperties } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
+import type { TFunction } from 'i18next'
 import { toggleBottleLike, getBottleComments, addBottleComment, deleteBottleComment, listBottleForSale, unlistBottleFromSale } from '../api/bottlesApi'
 import type { Bottle } from '../types'
 import { CATEGORY_COLORS, BottleSvg } from './BarShelf'
@@ -26,29 +27,28 @@ function focusOff(e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) {
   e.currentTarget.style.border = '1px solid rgba(201,168,76,0.2)'
 }
 
-function formatRelativeTime(iso: string): string {
-  const then = new Date(iso).getTime()
-  const seconds = Math.floor((Date.now() - then) / 1000)
+function formatRelativeTime(iso: string, t: TFunction): string {
+  const seconds = Math.floor((Date.now() - new Date(iso).getTime()) / 1000)
 
-  if (seconds < 60) return 'just now'
+  if (seconds < 60) return t('bottle.justNow')
 
-  const units: { limit: number; div: number; name: string }[] = [
-    { limit: 3600, div: 60, name: 'minute' },
-    { limit: 86400, div: 3600, name: 'hour' },
-    { limit: 604800, div: 86400, name: 'day' },
-    { limit: 2592000, div: 604800, name: 'week' },
-    { limit: 31536000, div: 2592000, name: 'month' },
-    { limit: Infinity, div: 31536000, name: 'year' },
+  const units: { limit: number; div: number; key: string }[] = [
+    { limit: 3600,      div: 60,      key: 'minutesAgo' },
+    { limit: 86400,     div: 3600,    key: 'hoursAgo'   },
+    { limit: 604800,    div: 86400,   key: 'daysAgo'    },
+    { limit: 2592000,   div: 604800,  key: 'weeksAgo'   },
+    { limit: 31536000,  div: 2592000, key: 'monthsAgo'  },
+    { limit: Infinity,  div: 31536000, key: 'yearsAgo'  },
   ]
 
   for (const unit of units) {
     if (seconds < unit.limit) {
-      const value = Math.floor(seconds / unit.div)
-      return `${value} ${unit.name}${value === 1 ? '' : 's'} ago`
+      const count = Math.floor(seconds / unit.div)
+      return t(`bottle.${unit.key}`, { count })
     }
   }
 
-  return 'just now'
+  return t('bottle.justNow')
 }
 
 const sectionLabelStyle: CSSProperties = {
@@ -185,7 +185,7 @@ function CommentsSection({ bottle, currentUserId }: { bottle: Bottle; currentUse
                   {comment.userDisplayName}
                 </span>
                 <span style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: 13, color: '#7A6040' }}>
-                  {formatRelativeTime(comment.createdAt)}
+                  {formatRelativeTime(comment.createdAt, t)}
                 </span>
               </div>
               {comment.userId === currentUserId && (

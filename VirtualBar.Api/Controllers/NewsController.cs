@@ -106,7 +106,6 @@ public sealed class NewsController(INewsService newsService, IWebHostEnvironment
     /// <response code="400">Validation error.</response>
     /// <response code="403">Not an administrator.</response>
     [HttpPost("upload-cover")]
-    [Authorize]
     public async Task<IActionResult> UploadCover(IFormFile file, CancellationToken cancellationToken)
     {
         var saveDirectory = Path.Combine(

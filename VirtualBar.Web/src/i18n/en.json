@@ -169,7 +169,20 @@
     "askingPrice": "Asking price",
     "listForSale": "LIST FOR SALE",
     "removeFromSale": "REMOVE FROM SALE",
-    "errorSale": "Something went wrong. Please try again."
+    "errorSale": "Something went wrong. Please try again.",
+    "justNow": "just now",
+    "minutesAgo_one": "{{count}} minute ago",
+    "minutesAgo_other": "{{count}} minutes ago",
+    "hoursAgo_one": "{{count}} hour ago",
+    "hoursAgo_other": "{{count}} hours ago",
+    "daysAgo_one": "{{count}} day ago",
+    "daysAgo_other": "{{count}} days ago",
+    "weeksAgo_one": "{{count}} week ago",
+    "weeksAgo_other": "{{count}} weeks ago",
+    "monthsAgo_one": "{{count}} month ago",
+    "monthsAgo_other": "{{count}} months ago",
+    "yearsAgo_one": "{{count}} year ago",
+    "yearsAgo_other": "{{count}} years ago"
   },
   "messages": {
     "title": "MESSAGES",
@@ -236,6 +249,16 @@
     "cancelPost": "CANCEL",
     "confirmDelete": "Are you sure you want to delete this article?",
     "confirmDeleteBtn": "Delete",
-    "cancelBtn": "Cancel"
+    "cancelBtn": "Cancel",
+    "authorBy": "By {{name}}",
+    "editBtn": "EDIT",
+    "deleteBtn": "DELETE",
+    "postTitlePlaceholder": "A rare cask emerges",
+    "postContentPlaceholder": "The full story…",
+    "errorSubmit": "Something went wrong. Please try again."
+  },
+  "barShelf": {
+    "addBottle": "Add bottle",
+    "virtualBar": "Virtual Bar"
   }
 }

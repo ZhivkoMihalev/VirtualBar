@@ -1,10 +1,5 @@
 import { client } from './client'
-import type { NewsPost, NewsPostTranslation } from '../types'
-
-export interface CreateNewsPostPayload {
-  coverImageUrl?: string
-  translations: NewsPostTranslation[]
-}
+import type { NewsPost, CreateNewsPostPayload } from '../types'
 
 export async function getNewsPosts(lang: string): Promise<NewsPost[]> {
   const { data } = await client.get<NewsPost[]>('/news', { params: { lang } })

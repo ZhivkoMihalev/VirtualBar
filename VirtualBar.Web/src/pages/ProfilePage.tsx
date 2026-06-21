@@ -236,7 +236,7 @@ export default function ProfilePage() {
           />
 
           {saved && !saveMutation.isError && (
-            <div style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: 14, color: '#4CAF50', marginBottom: 16 }}>
+            <div style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: 14, color: '#4A9A6A', marginBottom: 16 }}>
               {t('profile.successMessage')}
             </div>
           )}

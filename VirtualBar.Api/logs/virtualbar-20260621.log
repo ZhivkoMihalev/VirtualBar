@@ -1,0 +1,310 @@
+2026-06-21 16:20:36.510 [INF] → GET /api/feed?skip=0&take=50 | IP ::1
+2026-06-21 16:20:37.274 [INF] ← GET /api/feed 200 | 771ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-21 16:21:25.180 [INF] → GET /api/feed?skip=0&take=50 | IP ::1
+2026-06-21 16:21:25.333 [INF] ← GET /api/feed 200 | 153ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-21 16:21:28.861 [INF] → GET /api/users | IP ::1
+2026-06-21 16:21:28.972 [INF] ← GET /api/users 200 | 110ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-21 16:22:10.740 [INF] → GET /api/users | IP ::1
+2026-06-21 16:22:10.802 [INF] ← GET /api/users 200 | 64ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-21 16:22:15.537 [INF] → GET /api/users | IP ::1
+2026-06-21 16:22:15.550 [INF] ← GET /api/users 200 | 12ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-21 16:22:38.417 [INF] → GET /api/feed?skip=0&take=50 | IP ::1
+2026-06-21 16:22:38.434 [INF] ← GET /api/feed 200 | 16ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-21 16:23:10.211 [INF] → GET /api/feed?skip=0&take=50 | IP ::1
+2026-06-21 16:23:10.250 [INF] ← GET /api/feed 200 | 38ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-21 16:24:00.617 [INF] → GET /api/feed?skip=0&take=50 | IP ::1
+2026-06-21 16:24:00.635 [INF] ← GET /api/feed 200 | 17ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-21 16:24:12.250 [INF] → GET /api/bottles?userId=8bce4454-3ef5-449c-0257-08dece31259c | IP ::1
+2026-06-21 16:24:12.354 [WRN] Compiling a query which loads related collections for more than one collection navigation, either via 'Include' or through projection, but no 'QuerySplittingBehavior' has been configured. By default, Entity Framework will use 'QuerySplittingBehavior.SingleQuery', which can potentially result in slow query performance. See https://go.microsoft.com/fwlink/?linkid=2134277 for more information. To identify the query that's triggering this warning call 'ConfigureWarnings(w => w.Throw(RelationalEventId.MultipleCollectionIncludeWarning))'.
+2026-06-21 16:24:12.631 [INF] ← GET /api/bottles 200 | 381ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-21 16:24:12.657 [INF] → GET /uploads/bottles/c4155032-bb2a-4d89-9314-d4448d202f59.jpg | IP ::1
+2026-06-21 16:24:12.690 [INF] ← GET /uploads/bottles/c4155032-bb2a-4d89-9314-d4448d202f59.jpg 304 | 32ms | user:anonymous
+2026-06-21 16:24:23.585 [INF] → GET /api/bottles/4b0115d1-8079-4b84-9538-bf5a46d4b907/comments | IP ::1
+2026-06-21 16:24:23.714 [INF] ← GET /api/bottles/4b0115d1-8079-4b84-9538-bf5a46d4b907/comments 200 | 129ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-21 16:25:56.410 [INF] → GET /api/bottles/4b0115d1-8079-4b84-9538-bf5a46d4b907/comments | IP ::1
+2026-06-21 16:25:56.442 [INF] ← GET /api/bottles/4b0115d1-8079-4b84-9538-bf5a46d4b907/comments 200 | 31ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-21 16:26:12.928 [INF] → GET /api/bottles?userId=8bce4454-3ef5-449c-0257-08dece31259c | IP ::1
+2026-06-21 16:26:12.960 [INF] ← GET /api/bottles 200 | 32ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-21 16:26:36.993 [INF] → GET /api/feed?skip=0&take=50 | IP ::1
+2026-06-21 16:26:37.015 [INF] ← GET /api/feed 200 | 21ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-21 16:53:23.077 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-21 16:53:23.786 [INF] ← GET /api/feed 200 | 717ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-21 16:53:42.427 [INF] → POST /api/auth/logout | IP ::1
+2026-06-21 16:53:42.444 [WRN] ← POST /api/auth/logout 401 | 16ms | user:anonymous
+2026-06-21 16:53:51.551 [INF] → POST /api/auth/login | IP ::1
+2026-06-21 16:53:51.949 [INF] ← POST /api/auth/login 200 | 398ms | user:anonymous
+2026-06-21 16:53:51.984 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-21 16:53:52.009 [INF] ← GET /api/feed 200 | 25ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-21 16:58:03.378 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-21 16:58:03.407 [INF] ← GET /api/feed 200 | 29ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-21 16:59:11.419 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-21 16:59:11.487 [INF] ← GET /api/feed 200 | 68ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-21 17:04:34.281 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-21 17:04:35.019 [INF] ← GET /api/feed 200 | 747ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-21 17:07:34.976 [INF] → POST /api/news | IP ::1
+2026-06-21 17:07:35.486 [INF] ← POST /api/news 201 | 510ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-21 17:07:35.498 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-21 17:07:35.568 [INF] ← GET /api/feed 200 | 69ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-21 17:08:16.762 [INF] → POST /api/auth/logout | IP ::1
+2026-06-21 17:08:16.771 [WRN] ← POST /api/auth/logout 401 | 8ms | user:anonymous
+2026-06-21 17:08:24.377 [INF] → POST /api/auth/login | IP ::1
+2026-06-21 17:08:24.445 [WRN] ← POST /api/auth/login 400 | 68ms | user:anonymous
+2026-06-21 17:08:40.433 [INF] → POST /api/auth/register | IP ::1
+2026-06-21 17:08:40.771 [INF] ← POST /api/auth/register 200 | 337ms | user:anonymous
+2026-06-21 17:08:40.803 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-21 17:08:40.829 [INF] ← GET /api/feed 200 | 26ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-21 17:08:58.534 [INF] → GET /api/feed?skip=0&take=50&lang=en | IP ::1
+2026-06-21 17:08:58.565 [INF] ← GET /api/feed 200 | 31ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-21 17:11:37.779 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-21 17:11:37.819 [INF] ← GET /api/feed 200 | 40ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-21 17:11:41.583 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-21 17:11:41.594 [INF] ← GET /api/feed 200 | 10ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-21 17:12:15.443 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-21 17:12:15.452 [INF] ← GET /api/feed 200 | 9ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-21 17:12:32.579 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-21 17:12:32.604 [INF] ← GET /api/feed 200 | 24ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-21 17:12:34.544 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-21 17:12:34.556 [INF] ← GET /api/feed 200 | 11ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-21 17:21:07.318 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-21 17:21:08.140 [INF] ← GET /api/feed 200 | 829ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-21 17:23:42.412 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-21 17:23:42.559 [INF] ← GET /api/feed 200 | 147ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-21 17:24:10.690 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-21 17:24:10.709 [INF] ← GET /api/feed 200 | 18ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-21 17:24:15.562 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-21 17:24:15.572 [INF] ← GET /api/feed 200 | 10ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-21 17:24:49.070 [INF] → GET /api/feed?skip=0&take=50&lang=en | IP ::1
+2026-06-21 17:24:49.100 [INF] ← GET /api/feed 200 | 31ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-21 17:24:54.231 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-21 17:24:54.244 [INF] ← GET /api/feed 200 | 13ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-21 17:26:40.618 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-21 17:26:40.647 [INF] ← GET /api/feed 200 | 28ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-21 17:27:17.747 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-21 17:27:17.799 [INF] ← GET /api/feed 200 | 52ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-21 17:28:41.273 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-21 17:28:41.308 [INF] ← GET /api/feed 200 | 35ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-21 17:30:22.623 [INF] → GET /api/users | IP ::1
+2026-06-21 17:30:22.719 [INF] ← GET /api/users 200 | 95ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-21 17:30:30.111 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-21 17:30:30.130 [INF] ← GET /api/feed 200 | 19ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-21 17:30:33.214 [INF] → GET /api/bottles?userId=f755f1be-cd7b-4d85-f377-08decf9e98b5 | IP ::1
+2026-06-21 17:30:33.277 [WRN] Compiling a query which loads related collections for more than one collection navigation, either via 'Include' or through projection, but no 'QuerySplittingBehavior' has been configured. By default, Entity Framework will use 'QuerySplittingBehavior.SingleQuery', which can potentially result in slow query performance. See https://go.microsoft.com/fwlink/?linkid=2134277 for more information. To identify the query that's triggering this warning call 'ConfigureWarnings(w => w.Throw(RelationalEventId.MultipleCollectionIncludeWarning))'.
+2026-06-21 17:30:33.393 [INF] ← GET /api/bottles 200 | 179ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-21 17:30:39.428 [INF] → GET /api/bottles/marketplace?sort=newest | IP ::1
+2026-06-21 17:30:39.472 [WRN] Compiling a query which loads related collections for more than one collection navigation, either via 'Include' or through projection, but no 'QuerySplittingBehavior' has been configured. By default, Entity Framework will use 'QuerySplittingBehavior.SingleQuery', which can potentially result in slow query performance. See https://go.microsoft.com/fwlink/?linkid=2134277 for more information. To identify the query that's triggering this warning call 'ConfigureWarnings(w => w.Throw(RelationalEventId.MultipleCollectionIncludeWarning))'.
+2026-06-21 17:30:39.542 [INF] ← GET /api/bottles/marketplace 200 | 114ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-21 17:31:19.110 [INF] → GET /api/users | IP ::1
+2026-06-21 17:31:19.190 [INF] ← GET /api/users 200 | 79ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-21 17:32:09.501 [INF] → GET /api/bottles?userId=f755f1be-cd7b-4d85-f377-08decf9e98b5 | IP ::1
+2026-06-21 17:32:09.529 [INF] ← GET /api/bottles 200 | 28ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-21 17:32:23.129 [INF] → GET /api/users | IP ::1
+2026-06-21 17:32:23.162 [INF] ← GET /api/users 200 | 33ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-21 17:32:23.571 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-21 17:32:23.617 [INF] ← GET /api/feed 200 | 46ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-21 17:32:54.500 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-21 17:32:54.517 [INF] ← GET /api/feed 200 | 50ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-21 17:36:30.705 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-21 17:36:30.854 [INF] ← GET /api/feed 200 | 149ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-21 17:36:32.553 [INF] → GET /api/bottles/marketplace?sort=newest | IP ::1
+2026-06-21 17:36:32.581 [INF] ← GET /api/bottles/marketplace 200 | 28ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-21 17:36:34.179 [INF] → GET /api/users | IP ::1
+2026-06-21 17:36:34.198 [INF] ← GET /api/users 200 | 19ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-21 17:36:45.130 [INF] → GET /api/bottles?userId=f755f1be-cd7b-4d85-f377-08decf9e98b5 | IP ::1
+2026-06-21 17:36:45.156 [INF] ← GET /api/bottles 200 | 26ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-21 17:37:40.163 [INF] → POST /api/auth/logout | IP ::1
+2026-06-21 17:37:40.176 [WRN] ← POST /api/auth/logout 401 | 12ms | user:anonymous
+2026-06-21 17:37:45.405 [INF] → POST /api/auth/login | IP ::1
+2026-06-21 17:37:45.676 [INF] ← POST /api/auth/login 200 | 271ms | user:anonymous
+2026-06-21 17:37:45.708 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-21 17:37:45.810 [INF] ← GET /api/feed 200 | 102ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-21 17:37:49.730 [INF] → GET /api/bottles?userId=8bce4454-3ef5-449c-0257-08dece31259c | IP ::1
+2026-06-21 17:37:49.890 [INF] ← GET /api/bottles 200 | 160ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-21 17:37:51.144 [INF] → GET /api/bottles/4b0115d1-8079-4b84-9538-bf5a46d4b907/comments | IP ::1
+2026-06-21 17:37:51.201 [INF] ← GET /api/bottles/4b0115d1-8079-4b84-9538-bf5a46d4b907/comments 200 | 56ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-21 17:37:58.577 [INF] → POST /api/bottles/4b0115d1-8079-4b84-9538-bf5a46d4b907/list-for-sale | IP ::1
+2026-06-21 17:37:58.796 [INF] ← POST /api/bottles/4b0115d1-8079-4b84-9538-bf5a46d4b907/list-for-sale 200 | 219ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-21 17:37:58.808 [INF] → GET /api/bottles?userId=8bce4454-3ef5-449c-0257-08dece31259c | IP ::1
+2026-06-21 17:37:58.819 [INF] ← GET /api/bottles 200 | 11ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-21 17:38:09.063 [INF] → GET /api/bottles/marketplace?sort=newest | IP ::1
+2026-06-21 17:38:09.093 [INF] ← GET /api/bottles/marketplace 200 | 30ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-21 17:38:25.591 [INF] → GET /api/bottles/marketplace?category=Whisky&sort=newest | IP ::1
+2026-06-21 17:38:25.607 [WRN] Compiling a query which loads related collections for more than one collection navigation, either via 'Include' or through projection, but no 'QuerySplittingBehavior' has been configured. By default, Entity Framework will use 'QuerySplittingBehavior.SingleQuery', which can potentially result in slow query performance. See https://go.microsoft.com/fwlink/?linkid=2134277 for more information. To identify the query that's triggering this warning call 'ConfigureWarnings(w => w.Throw(RelationalEventId.MultipleCollectionIncludeWarning))'.
+2026-06-21 17:38:25.690 [INF] ← GET /api/bottles/marketplace 200 | 98ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-21 17:38:26.917 [INF] → GET /api/bottles/marketplace?category=Rum&sort=newest | IP ::1
+2026-06-21 17:38:26.924 [INF] ← GET /api/bottles/marketplace 200 | 7ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-21 17:38:27.592 [INF] → GET /api/bottles/marketplace?category=Cognac&sort=newest | IP ::1
+2026-06-21 17:38:27.597 [INF] ← GET /api/bottles/marketplace 200 | 5ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-21 17:38:27.937 [INF] → GET /api/bottles/marketplace?category=Vodka&sort=newest | IP ::1
+2026-06-21 17:38:27.966 [INF] ← GET /api/bottles/marketplace 200 | 28ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-21 17:38:28.362 [INF] → GET /api/bottles/marketplace?category=Gin&sort=newest | IP ::1
+2026-06-21 17:38:28.369 [INF] ← GET /api/bottles/marketplace 200 | 6ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-21 17:38:28.773 [INF] → GET /api/bottles/marketplace?category=Tequila&sort=newest | IP ::1
+2026-06-21 17:38:28.781 [INF] ← GET /api/bottles/marketplace 200 | 7ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-21 17:38:29.632 [INF] → GET /api/bottles/marketplace?category=Brandy&sort=newest | IP ::1
+2026-06-21 17:38:29.638 [INF] ← GET /api/bottles/marketplace 200 | 5ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-21 17:38:30.032 [INF] → GET /api/bottles/marketplace?category=Other&sort=newest | IP ::1
+2026-06-21 17:38:30.038 [INF] ← GET /api/bottles/marketplace 200 | 6ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-21 17:38:40.935 [INF] → GET /api/feed?skip=0&take=50&lang=en | IP ::1
+2026-06-21 17:38:40.959 [INF] ← GET /api/feed 200 | 24ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-21 17:38:50.000 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-21 17:38:50.022 [INF] ← GET /api/feed 200 | 22ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-21 17:46:37.586 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-21 17:46:37.724 [INF] ← GET /api/feed 200 | 144ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-21 17:47:23.554 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-21 17:47:23.574 [INF] ← GET /api/feed 200 | 20ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-21 17:47:58.050 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-21 17:47:58.077 [INF] ← GET /api/feed 200 | 27ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-21 17:48:17.825 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-21 17:48:17.832 [INF] ← GET /api/feed 200 | 6ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-21 17:48:22.674 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-21 17:48:22.681 [INF] ← GET /api/feed 200 | 6ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-21 17:48:30.434 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-21 17:48:30.443 [INF] ← GET /api/feed 200 | 8ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-21 17:48:44.848 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-21 17:48:44.867 [INF] ← GET /api/feed 200 | 18ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-21 17:48:47.121 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-21 17:48:47.131 [INF] ← GET /api/feed 200 | 10ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-21 17:48:48.149 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-21 17:48:48.156 [INF] ← GET /api/feed 200 | 6ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-21 17:48:48.812 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-21 17:48:48.820 [INF] ← GET /api/feed 200 | 8ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-21 17:49:09.219 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-21 17:49:09.238 [INF] ← GET /api/feed 200 | 18ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-21 17:49:10.855 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-21 17:49:10.863 [INF] ← GET /api/feed 200 | 7ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-21 17:50:50.389 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-21 17:50:50.418 [INF] ← GET /api/feed 200 | 28ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-21 17:52:14.832 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-21 17:52:15.657 [INF] ← GET /api/feed 200 | 832ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-21 17:52:16.377 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-21 17:52:16.467 [INF] ← GET /api/feed 200 | 90ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-21 17:52:18.902 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-21 17:52:18.953 [INF] ← GET /api/feed 200 | 51ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-21 17:52:19.820 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-21 17:52:19.830 [INF] ← GET /api/feed 200 | 9ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-21 17:52:20.520 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-21 17:52:20.533 [INF] ← GET /api/feed 200 | 13ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-21 17:52:41.456 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-21 17:52:41.499 [INF] ← GET /api/feed 200 | 70ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-21 17:52:42.517 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-21 17:52:42.526 [INF] ← GET /api/feed 200 | 9ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-21 17:52:43.390 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-21 17:52:43.401 [INF] ← GET /api/feed 200 | 10ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-21 17:52:44.004 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-21 17:52:44.012 [INF] ← GET /api/feed 200 | 8ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-21 17:52:44.351 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-21 17:52:44.360 [INF] ← GET /api/feed 200 | 9ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-21 17:52:44.527 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-21 17:52:44.542 [INF] ← GET /api/feed 200 | 15ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-21 17:52:44.689 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-21 17:52:44.701 [INF] ← GET /api/feed 200 | 11ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-21 17:52:44.854 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-21 17:52:44.862 [INF] ← GET /api/feed 200 | 8ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-21 17:52:44.975 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-21 17:52:44.987 [INF] ← GET /api/feed 200 | 12ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-21 17:54:00.618 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-21 17:54:00.646 [INF] ← GET /api/feed 200 | 28ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-21 17:55:08.962 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-21 17:55:08.985 [INF] ← GET /api/feed 200 | 23ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-21 17:56:48.875 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-21 17:56:48.905 [INF] ← GET /api/feed 200 | 30ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-21 17:57:54.611 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-21 17:57:54.632 [INF] ← GET /api/feed 200 | 21ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-21 18:00:22.214 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-21 18:00:22.239 [INF] ← GET /api/feed 200 | 24ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-21 18:02:05.309 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-21 18:02:05.335 [INF] ← GET /api/feed 200 | 26ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-21 18:02:10.088 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-21 18:02:10.096 [INF] ← GET /api/feed 200 | 7ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-21 18:02:17.149 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-21 18:02:17.167 [INF] ← GET /api/feed 200 | 18ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-21 18:06:38.122 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-21 18:06:38.147 [INF] ← GET /api/feed 200 | 54ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-21 18:06:40.250 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-21 18:06:40.260 [INF] ← GET /api/feed 200 | 9ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-21 18:10:04.792 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-21 18:10:04.821 [INF] ← GET /api/feed 200 | 29ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-21 18:10:06.864 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-21 18:10:06.871 [INF] ← GET /api/feed 200 | 6ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-21 18:13:28.710 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-21 18:13:28.731 [INF] ← GET /api/feed 200 | 21ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-21 18:16:17.710 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-21 18:16:17.733 [INF] ← GET /api/feed 200 | 52ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-21 18:17:09.283 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-21 18:17:09.319 [INF] ← GET /api/feed 200 | 37ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-21 18:17:13.943 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-21 18:17:13.961 [INF] ← GET /api/feed 200 | 18ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-21 18:17:15.672 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-21 18:17:15.694 [INF] ← GET /api/feed 200 | 21ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-21 18:17:26.504 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-21 18:17:26.512 [INF] ← GET /api/feed 200 | 8ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-21 18:18:48.840 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-21 18:18:48.871 [INF] ← GET /api/feed 200 | 30ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-21 18:18:52.839 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-21 18:18:52.849 [INF] ← GET /api/feed 200 | 9ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-21 18:22:20.731 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-21 18:22:20.762 [INF] ← GET /api/feed 200 | 30ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-21 18:23:26.792 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-21 18:23:26.822 [INF] ← GET /api/feed 200 | 29ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-21 18:23:29.059 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-21 18:23:29.067 [INF] ← GET /api/feed 200 | 7ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-21 18:25:31.702 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-21 18:25:31.722 [INF] ← GET /api/feed 200 | 20ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-21 18:26:29.516 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-21 18:26:29.584 [INF] ← GET /api/feed 200 | 64ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-21 18:26:31.282 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-21 18:26:31.289 [INF] ← GET /api/feed 200 | 6ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-21 18:26:31.905 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-21 18:26:31.911 [INF] ← GET /api/feed 200 | 6ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-21 18:32:28.537 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-21 18:32:29.343 [INF] ← GET /api/feed 200 | 815ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-21 18:33:06.881 [INF] → POST /api/auth/logout | IP ::1
+2026-06-21 18:33:06.897 [WRN] ← POST /api/auth/logout 401 | 16ms | user:anonymous
+2026-06-21 18:33:12.097 [INF] → POST /api/auth/login | IP ::1
+2026-06-21 18:33:12.450 [INF] ← POST /api/auth/login 200 | 352ms | user:anonymous
+2026-06-21 18:33:12.487 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-21 18:33:12.513 [INF] ← GET /api/feed 200 | 25ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-21 18:33:15.711 [INF] → GET /api/users | IP ::1
+2026-06-21 18:33:15.787 [INF] ← GET /api/users 200 | 76ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-21 18:33:26.249 [INF] → GET /api/users?q=Zhivko | IP ::1
+2026-06-21 18:33:26.331 [INF] ← GET /api/users 200 | 81ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-21 18:33:28.534 [INF] → GET /api/users/8bce4454-3ef5-449c-0257-08dece31259c | IP ::1
+2026-06-21 18:33:28.534 [INF] → GET /api/bottles?userId=8bce4454-3ef5-449c-0257-08dece31259c | IP ::1
+2026-06-21 18:33:28.592 [WRN] Compiling a query which loads related collections for more than one collection navigation, either via 'Include' or through projection, but no 'QuerySplittingBehavior' has been configured. By default, Entity Framework will use 'QuerySplittingBehavior.SingleQuery', which can potentially result in slow query performance. See https://go.microsoft.com/fwlink/?linkid=2134277 for more information. To identify the query that's triggering this warning call 'ConfigureWarnings(w => w.Throw(RelationalEventId.MultipleCollectionIncludeWarning))'.
+2026-06-21 18:33:28.679 [INF] ← GET /api/users/8bce4454-3ef5-449c-0257-08dece31259c 200 | 145ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-21 18:33:28.872 [INF] ← GET /api/bottles 200 | 338ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-21 18:33:31.688 [INF] → POST /api/users/8bce4454-3ef5-449c-0257-08dece31259c/follow | IP ::1
+2026-06-21 18:33:31.896 [INF] ← POST /api/users/8bce4454-3ef5-449c-0257-08dece31259c/follow 200 | 208ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-21 18:33:31.908 [INF] → GET /api/users/8bce4454-3ef5-449c-0257-08dece31259c | IP ::1
+2026-06-21 18:33:31.919 [INF] ← GET /api/users/8bce4454-3ef5-449c-0257-08dece31259c 200 | 10ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-21 18:33:39.968 [INF] → POST /api/auth/logout | IP ::1
+2026-06-21 18:33:39.973 [WRN] ← POST /api/auth/logout 401 | 4ms | user:anonymous
+2026-06-21 18:33:45.511 [INF] → POST /api/auth/login | IP ::1
+2026-06-21 18:33:45.698 [INF] ← POST /api/auth/login 200 | 186ms | user:anonymous
+2026-06-21 18:33:45.728 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-21 18:33:45.755 [INF] ← GET /api/feed 200 | 26ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-21 18:33:48.750 [INF] → GET /api/bottles?userId=8bce4454-3ef5-449c-0257-08dece31259c | IP ::1
+2026-06-21 18:33:48.774 [INF] ← GET /api/bottles 200 | 24ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-21 18:33:49.848 [INF] → GET /api/bottles/4b0115d1-8079-4b84-9538-bf5a46d4b907/comments | IP ::1
+2026-06-21 18:33:49.904 [INF] ← GET /api/bottles/4b0115d1-8079-4b84-9538-bf5a46d4b907/comments 200 | 56ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-21 18:33:51.576 [INF] → POST /api/bottles/4b0115d1-8079-4b84-9538-bf5a46d4b907/unlist | IP ::1
+2026-06-21 18:33:51.651 [INF] ← POST /api/bottles/4b0115d1-8079-4b84-9538-bf5a46d4b907/unlist 200 | 75ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-21 18:33:51.665 [INF] → GET /api/bottles?userId=8bce4454-3ef5-449c-0257-08dece31259c | IP ::1
+2026-06-21 18:33:51.671 [INF] ← GET /api/bottles 200 | 6ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-21 18:33:53.744 [INF] → POST /api/bottles/4b0115d1-8079-4b84-9538-bf5a46d4b907/list-for-sale | IP ::1
+2026-06-21 18:33:53.797 [INF] ← POST /api/bottles/4b0115d1-8079-4b84-9538-bf5a46d4b907/list-for-sale 200 | 53ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-21 18:33:53.808 [INF] → GET /api/bottles?userId=8bce4454-3ef5-449c-0257-08dece31259c | IP ::1
+2026-06-21 18:33:53.816 [INF] ← GET /api/bottles 200 | 7ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-21 18:33:55.619 [INF] → POST /api/auth/logout | IP ::1
+2026-06-21 18:33:55.623 [WRN] ← POST /api/auth/logout 401 | 3ms | user:anonymous
+2026-06-21 18:33:59.982 [INF] → POST /api/auth/login | IP ::1
+2026-06-21 18:34:00.144 [INF] ← POST /api/auth/login 200 | 162ms | user:anonymous
+2026-06-21 18:34:00.178 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-21 18:34:00.468 [INF] ← GET /api/feed 200 | 289ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-21 18:34:29.052 [INF] → GET /api/bottles/marketplace?sort=newest | IP ::1
+2026-06-21 18:34:29.085 [WRN] Compiling a query which loads related collections for more than one collection navigation, either via 'Include' or through projection, but no 'QuerySplittingBehavior' has been configured. By default, Entity Framework will use 'QuerySplittingBehavior.SingleQuery', which can potentially result in slow query performance. See https://go.microsoft.com/fwlink/?linkid=2134277 for more information. To identify the query that's triggering this warning call 'ConfigureWarnings(w => w.Throw(RelationalEventId.MultipleCollectionIncludeWarning))'.
+2026-06-21 18:34:29.160 [INF] ← GET /api/bottles/marketplace 200 | 107ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-21 18:34:33.109 [INF] → GET /api/bottles/4b0115d1-8079-4b84-9538-bf5a46d4b907/comments | IP ::1
+2026-06-21 18:34:33.149 [INF] ← GET /api/bottles/4b0115d1-8079-4b84-9538-bf5a46d4b907/comments 200 | 40ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-21 18:34:38.998 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-21 18:34:39.013 [INF] ← GET /api/feed 200 | 14ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5

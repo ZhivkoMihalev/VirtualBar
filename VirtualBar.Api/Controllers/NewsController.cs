@@ -9,11 +9,12 @@ namespace VirtualBar.Api.Controllers;
 [ApiController]
 [Route("api/[controller]")]
 [Authorize]
-public sealed class NewsController(INewsService newsService) : ControllerBase
+public sealed class NewsController(INewsService newsService, IWebHostEnvironment env) : ControllerBase
 {
     /// <summary>Get paginated news posts.</summary>
     /// <param name="skip">Number of posts to skip.</param>
     /// <param name="take">Number of posts to return (max 100).</param>
+    /// <param name="lang">Language code for translated content (defaults to "bg").</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <response code="200">List of news posts.</response>
     [HttpGet]
@@ -21,9 +22,10 @@ public sealed class NewsController(INewsService newsService) : ControllerBase
     public async Task<IActionResult> GetAll(
         [FromQuery] int skip = 0,
         [FromQuery] int take = 20,
+        [FromQuery] string lang = "bg",
         CancellationToken cancellationToken = default)
     {
-        var result = await newsService.GetAllAsync(skip, take, cancellationToken);
+        var result = await newsService.GetAllAsync(skip, take, lang, cancellationToken);
         return result.Success 
             ? Ok(result.Data) 
             : result.ToActionResult(this);
@@ -31,14 +33,18 @@ public sealed class NewsController(INewsService newsService) : ControllerBase
 
     /// <summary>Get a single news post by ID.</summary>
     /// <param name="id">News post ID.</param>
+    /// <param name="lang">Language code for translated content (defaults to "bg").</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <response code="200">News post details.</response>
     /// <response code="404">Post not found.</response>
     [HttpGet("{id:guid}")]
     [AllowAnonymous]
-    public async Task<IActionResult> GetById(Guid id, CancellationToken cancellationToken)
+    public async Task<IActionResult> GetById(
+        Guid id,
+        [FromQuery] string lang = "bg",
+        CancellationToken cancellationToken = default)
     {
-        var result = await newsService.GetByIdAsync(id, cancellationToken);
+        var result = await newsService.GetByIdAsync(id, lang, cancellationToken);
         return result.Success 
             ? Ok(result.Data) 
             : result.ToActionResult(this);
@@ -91,5 +97,25 @@ public sealed class NewsController(INewsService newsService) : ControllerBase
     {
         var result = await newsService.DeleteAsync(id, cancellationToken);
         return result.Success ? NoContent() : result.ToActionResult(this);
+    }
+
+    /// <summary>Upload a cover image for a news post.</summary>
+    /// <param name="file">The image file to upload.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <response code="200">Returns the relative URL of the uploaded image.</response>
+    /// <response code="400">Validation error.</response>
+    /// <response code="403">Not an administrator.</response>
+    [HttpPost("upload-cover")]
+    [Authorize]
+    public async Task<IActionResult> UploadCover(IFormFile file, CancellationToken cancellationToken)
+    {
+        var saveDirectory = Path.Combine(
+            env.WebRootPath ?? Path.Combine(env.ContentRootPath, "wwwroot"),
+            "uploads", "news");
+
+        Directory.CreateDirectory(saveDirectory);
+
+        var result = await newsService.UploadCoverAsync(file, saveDirectory, cancellationToken);
+        return result.Success ? Ok(new { url = result.Data }) : result.ToActionResult(this);
     }
 }

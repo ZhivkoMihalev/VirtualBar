@@ -8,6 +8,7 @@ import DashboardPage from './pages/DashboardPage'
 import BrowsePage from './pages/BrowsePage'
 import PublicBarPage from './pages/PublicBarPage'
 import MarketplacePage from './pages/MarketplacePage'
+import Footer from './components/Footer'
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { staleTime: 30_000 } },
@@ -68,7 +69,32 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <BrowserRouter>
-          <AppRoutes />
+          <img
+            src="/bg-room.png"
+            alt=""
+            aria-hidden="true"
+            style={{
+              position: 'fixed',
+              top: 0, left: 0,
+              width: '100%', height: '100%',
+              objectFit: 'cover',
+              objectPosition: 'center center',
+              zIndex: -2,
+              pointerEvents: 'none',
+            }}
+          />
+          <div style={{
+            position: 'fixed',
+            top: 0, left: 0,
+            width: '100%', height: '100%',
+            background: 'rgba(4, 2, 1, 0.38)',
+            zIndex: -1,
+            pointerEvents: 'none',
+          }} />
+          <div style={{ minHeight: '100vh' }}>
+            <AppRoutes />
+          </div>
+          <Footer />
         </BrowserRouter>
       </AuthProvider>
     </QueryClientProvider>

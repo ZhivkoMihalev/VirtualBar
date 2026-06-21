@@ -1,10 +1,13 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useMutation } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import { useAuth } from '../contexts/AuthContext'
+import LanguageSwitcher from '../components/LanguageSwitcher'
 
 export default function RegisterPage() {
   const navigate = useNavigate()
+  const { t } = useTranslation()
   const { register } = useAuth()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -20,17 +23,13 @@ export default function RegisterPage() {
       navigate('/dashboard')
     },
     onError: (err: any) => {
-      const message = err.response?.data?.message || 'Registration failed. Please try again.'
+      const message = err.response?.data?.message || t('register.errorFailed')
       setError(message)
     },
   })
 
-  const validatePassword = (pwd: string): string[] => {
-    const errors: string[] = []
-    if (pwd.length < 8) errors.push('at least 8 characters')
-    if (!/[A-Z]/.test(pwd)) errors.push('1 uppercase letter')
-    if (!/\d/.test(pwd)) errors.push('1 digit')
-    return errors
+  const isPasswordValid = (pwd: string): boolean => {
+    return pwd.length >= 8 && /[A-Z]/.test(pwd) && /\d/.test(pwd)
   }
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -39,28 +38,27 @@ export default function RegisterPage() {
 
     // Client-side validation
     if (!email || !password || !confirmPassword || !displayName) {
-      setError('All fields are required.')
+      setError(t('register.errorRequired'))
       return
     }
 
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      setError('Please enter a valid email address.')
+      setError(t('register.errorInvalidEmail'))
       return
     }
 
-    const passwordErrors = validatePassword(password)
-    if (passwordErrors.length > 0) {
-      setError(`Password must contain ${passwordErrors.join(', ')}.`)
+    if (!isPasswordValid(password)) {
+      setError(t('register.errorPasswordFormat'))
       return
     }
 
     if (password !== confirmPassword) {
-      setError('Passwords do not match.')
+      setError(t('register.errorPasswordMatch'))
       return
     }
 
     if (displayName.trim().length < 2) {
-      setError('Display name must be at least 2 characters.')
+      setError(t('register.errorDisplayNameLength'))
       return
     }
 
@@ -70,9 +68,12 @@ export default function RegisterPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-stone-900 px-4">
       <div className="w-full max-w-md">
+        <div className="flex justify-end mb-4">
+          <LanguageSwitcher />
+        </div>
         <div className="bg-stone-800 rounded-lg shadow-xl p-8 border border-amber-500/20">
           <h1 className="text-3xl font-bold text-amber-500 text-center mb-2">VirtualBar</h1>
-          <p className="text-stone-400 text-center mb-8">Create your account</p>
+          <p className="text-stone-400 text-center mb-8">{t('register.subtitle')}</p>
 
           {error && (
             <div className="mb-6 p-4 bg-red-900/20 border border-red-700 rounded text-red-200 text-sm">
@@ -83,14 +84,14 @@ export default function RegisterPage() {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label htmlFor="displayName" className="block text-stone-300 text-sm font-medium mb-2">
-                Display Name
+                {t('register.displayNameLabel')}
               </label>
               <input
                 id="displayName"
                 type="text"
                 value={displayName}
                 onChange={(e) => setDisplayName(e.target.value)}
-                placeholder="Your collector name"
+                placeholder={t('register.displayNamePlaceholder')}
                 required
                 disabled={registerMutation.isPending}
                 className="w-full px-4 py-2 bg-stone-700 border border-stone-600 rounded text-stone-100 placeholder-stone-500 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -99,14 +100,14 @@ export default function RegisterPage() {
 
             <div>
               <label htmlFor="email" className="block text-stone-300 text-sm font-medium mb-2">
-                Email
+                {t('register.emailLabel')}
               </label>
               <input
                 id="email"
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="you@example.com"
+                placeholder={t('register.emailPlaceholder')}
                 required
                 disabled={registerMutation.isPending}
                 className="w-full px-4 py-2 bg-stone-700 border border-stone-600 rounded text-stone-100 placeholder-stone-500 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -115,14 +116,14 @@ export default function RegisterPage() {
 
             <div>
               <label htmlFor="password" className="block text-stone-300 text-sm font-medium mb-2">
-                Password
+                {t('register.passwordLabel')}
               </label>
               <input
                 id="password"
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="Min 8 chars, 1 uppercase, 1 digit"
+                placeholder={t('register.passwordPlaceholder')}
                 required
                 disabled={registerMutation.isPending}
                 className="w-full px-4 py-2 bg-stone-700 border border-stone-600 rounded text-stone-100 placeholder-stone-500 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -131,14 +132,14 @@ export default function RegisterPage() {
 
             <div>
               <label htmlFor="confirmPassword" className="block text-stone-300 text-sm font-medium mb-2">
-                Confirm Password
+                {t('register.confirmPasswordLabel')}
               </label>
               <input
                 id="confirmPassword"
                 type="password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                placeholder="Re-enter your password"
+                placeholder={t('register.confirmPasswordPlaceholder')}
                 required
                 disabled={registerMutation.isPending}
                 className="w-full px-4 py-2 bg-stone-700 border border-stone-600 rounded text-stone-100 placeholder-stone-500 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -150,14 +151,14 @@ export default function RegisterPage() {
               disabled={registerMutation.isPending}
               className="w-full py-2 mt-6 bg-amber-600 hover:bg-amber-500 text-white font-semibold rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {registerMutation.isPending ? 'Creating Account...' : 'Create Account'}
+              {registerMutation.isPending ? t('register.submittingBtn') : t('register.submitBtn')}
             </button>
           </form>
 
           <p className="text-center text-stone-400 mt-6 text-sm">
-            Already have an account?{' '}
+            {t('register.haveAccount')}{' '}
             <Link to="/login" className="text-amber-500 hover:text-amber-400 font-medium">
-              Sign In
+              {t('register.loginLink')}
             </Link>
           </p>
         </div>

@@ -1,27 +1,18 @@
 import { client } from './client'
-import type { NewsPost } from '../types'
+import type { NewsPost, NewsPostTranslation } from '../types'
 
 export interface CreateNewsPostPayload {
-  title: string
-  excerpt: string
-  content: string
   coverImageUrl?: string
+  translations: NewsPostTranslation[]
 }
 
-export interface UpdateNewsPostPayload {
-  title?: string
-  excerpt?: string
-  content?: string
-  coverImageUrl?: string
-}
-
-export async function getNewsPosts(skip = 0, take = 20): Promise<NewsPost[]> {
-  const { data } = await client.get<NewsPost[]>('/news', { params: { skip, take } })
+export async function getNewsPosts(lang: string): Promise<NewsPost[]> {
+  const { data } = await client.get<NewsPost[]>('/news', { params: { lang } })
   return data
 }
 
-export async function getNewsPost(id: string): Promise<NewsPost> {
-  const { data } = await client.get<NewsPost>(`/news/${id}`)
+export async function getNewsPost(id: string, lang: string): Promise<NewsPost> {
+  const { data } = await client.get<NewsPost>(`/news/${id}`, { params: { lang } })
   return data
 }
 
@@ -30,11 +21,20 @@ export async function createNewsPost(payload: CreateNewsPostPayload): Promise<Ne
   return data
 }
 
-export async function updateNewsPost(id: string, payload: UpdateNewsPostPayload): Promise<NewsPost> {
+export async function updateNewsPost(id: string, payload: CreateNewsPostPayload): Promise<NewsPost> {
   const { data } = await client.put<NewsPost>(`/news/${id}`, payload)
   return data
 }
 
 export async function deleteNewsPost(id: string): Promise<void> {
   await client.delete(`/news/${id}`)
+}
+
+export async function uploadNewsCover(file: File): Promise<string> {
+  const formData = new FormData()
+  formData.append('file', file)
+  const res = await client.post<{ url: string }>('/news/upload-cover', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  })
+  return res.data.url
 }

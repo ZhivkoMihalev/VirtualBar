@@ -12,7 +12,7 @@ public sealed class FeedItemDto
 
     public string? PostTitle { get; set; }
 
-    public string? PostExcerpt { get; set; }
+    public string? PostContent { get; set; }
 
     public string? PostCoverImageUrl { get; set; }
 

@@ -94,16 +94,22 @@ export interface UserSearchResult {
   followerCount: number
 }
 
+export interface NewsPostTranslation {
+  languageCode: string
+  title: string
+  content: string
+}
+
 export interface NewsPost {
   id: string
   title: string
-  excerpt: string
   content: string
   coverImageUrl?: string
   authorId: string
   authorDisplayName: string
   createdAt: string
   updatedAt: string
+  translations: NewsPostTranslation[]
 }
 
 export type FeedItemType = 'News' | 'NewBottle' | 'ForSale'
@@ -113,7 +119,7 @@ export interface FeedItem {
   timestamp: string
   postId?: string
   postTitle?: string
-  postExcerpt?: string
+  postContent?: string
   postCoverImageUrl?: string
   postAuthorDisplayName?: string
   bottleId?: string

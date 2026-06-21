@@ -5,5 +5,5 @@ namespace VirtualBar.Application.Interfaces;
 
 public interface IFeedService
 {
-    Task<Result<List<FeedItemDto>>> GetFeedAsync(int skip, int take, CancellationToken cancellationToken);
+    Task<Result<List<FeedItemDto>>> GetFeedAsync(int skip, int take, string lang, CancellationToken cancellationToken);
 }

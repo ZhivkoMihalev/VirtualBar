@@ -6,8 +6,6 @@ public sealed class NewsPostDto
 
     public string Title { get; set; } = string.Empty;
 
-    public string Excerpt { get; set; } = string.Empty;
-
     public string Content { get; set; } = string.Empty;
 
     public string? CoverImageUrl { get; set; }
@@ -19,4 +17,6 @@ public sealed class NewsPostDto
     public DateTime CreatedAt { get; set; }
 
     public DateTime UpdatedAt { get; set; }
+
+    public List<NewsPostTranslationDto> Translations { get; set; } = [];
 }

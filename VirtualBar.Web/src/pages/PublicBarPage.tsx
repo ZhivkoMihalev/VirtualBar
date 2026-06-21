@@ -1,12 +1,14 @@
 import { useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import { useAuth } from '../contexts/AuthContext'
 import { getBottlesByUser } from '../api/bottlesApi'
 import { getUserProfile, followUser, unfollowUser } from '../api/usersApi'
 import type { Bottle, UserProfile } from '../types'
 import { VirtualBarScene } from '../components/BarShelf'
 import BottleDetailPanel from '../components/BottleDetailPanel'
+import NavBar from '../components/NavBar'
 
 function Avatar({ name, url, size }: { name: string; url?: string; size: number }) {
   const initial = name.trim().charAt(0).toUpperCase() || '?'
@@ -51,6 +53,7 @@ function Avatar({ name, url, size }: { name: string; url?: string; size: number 
 }
 
 function FollowButton({ profile, userId }: { profile: UserProfile; userId: string }) {
+  const { t } = useTranslation()
   const queryClient = useQueryClient()
   const [hover, setHover] = useState(false)
 
@@ -85,12 +88,13 @@ function FollowButton({ profile, userId }: { profile: UserProfile; userId: strin
         boxShadow: following ? 'none' : '0 4px 20px rgba(201,168,76,0.3)',
       }}
     >
-      {following ? (hover ? 'Unfollow' : 'Following') : 'Follow'}
+      {following ? (hover ? t('publicBar.unfollow') : t('publicBar.following')) : t('publicBar.follow')}
     </button>
   )
 }
 
 export default function PublicBarPage() {
+  const { t } = useTranslation()
   const { userId } = useParams<{ userId: string }>()
   const { user } = useAuth()
   const [selectedBottle, setSelectedBottle] = useState<Bottle | null>(null)
@@ -120,49 +124,8 @@ export default function PublicBarPage() {
   const canFollow = !!user && !!profile && user.id !== profile.id
 
   return (
-    <div style={{ minHeight: '100vh', background: '#07030A', color: '#F0DDB4' }}>
-      <nav
-        style={{
-          borderBottom: '1px solid rgba(201,168,76,0.12)',
-          background: 'rgba(7,3,10,0.95)',
-          backdropFilter: 'blur(8px)',
-          position: 'sticky',
-          top: 0,
-          zIndex: 40,
-          padding: '0 40px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          height: 64,
-        }}
-      >
-        <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: 12, textDecoration: 'none' }}>
-          <div
-            style={{
-              width: 36,
-              height: 36,
-              borderRadius: '50%',
-              border: '1.5px solid #C9A84C',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontFamily: 'Cinzel, serif',
-              fontSize: 12,
-              color: '#C9A84C',
-              letterSpacing: '0.05em',
-            }}
-          >
-            VB
-          </div>
-          <span style={{ fontFamily: 'Playfair Display, serif', fontSize: 18, color: '#E8C870', letterSpacing: '0.05em' }}>
-            VirtualBar
-          </span>
-        </Link>
-
-        <Link to="/browse" style={{ fontFamily: 'Cinzel, serif', fontSize: 11, letterSpacing: '0.15em', color: '#B09868', textDecoration: 'none' }}>
-          ← BROWSE COLLECTORS
-        </Link>
-      </nav>
+    <div style={{ minHeight: '100vh', color: '#F0DDB4' }}>
+      <NavBar />
 
       <main style={{ maxWidth: 1200, margin: '0 auto', padding: '40px 40px' }}>
         {isLoading && (
@@ -177,13 +140,13 @@ export default function PublicBarPage() {
               animation: 'shimmer 1.6s ease-in-out infinite',
             }}
           >
-            POURING THE COLLECTION…
+            {t('publicBar.loading')}
           </div>
         )}
 
         {isError && !isLoading && (
           <div style={{ textAlign: 'center', padding: '100px 0', fontFamily: 'Cormorant Garamond, serif', fontSize: 20, fontStyle: 'italic', color: '#C04040' }}>
-            This bar could not be found.
+            {t('publicBar.error')}
           </div>
         )}
 
@@ -191,7 +154,7 @@ export default function PublicBarPage() {
           <>
             <div style={{ marginBottom: 24 }}>
               <Link to="/browse" style={{ fontFamily: 'Cinzel, serif', fontSize: 11, letterSpacing: '0.15em', color: '#B09868', textDecoration: 'none' }}>
-                ← Browse collectors
+                {t('publicBar.backToBrowse')}
               </Link>
             </div>
 
@@ -227,11 +190,11 @@ export default function PublicBarPage() {
                 )}
 
                 <div style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: 15, color: '#C9A84C', marginTop: 14, letterSpacing: '0.02em' }}>
-                  {profile.bottleCount} {profile.bottleCount === 1 ? 'bottle' : 'bottles'}
-                  {' · '}
-                  {profile.followerCount} {profile.followerCount === 1 ? 'follower' : 'followers'}
-                  {' · '}
-                  {profile.followingCount} following
+                  {t('publicBar.stats', {
+                    bottles: t('publicBar.bottles', { count: profile.bottleCount }),
+                    followers: t('publicBar.followers', { count: profile.followerCount }),
+                    following: t('publicBar.following', { count: profile.followingCount }),
+                  })}
                 </div>
               </div>
 
@@ -246,7 +209,7 @@ export default function PublicBarPage() {
               <VirtualBarScene bottles={bottles} onSelect={setSelectedBottle} />
             ) : (
               <div style={{ textAlign: 'center', padding: '80px 0', fontFamily: 'Cormorant Garamond, serif', fontSize: 20, fontStyle: 'italic', color: '#B09868' }}>
-                This bar is empty.
+                {t('publicBar.empty')}
               </div>
             )}
           </>

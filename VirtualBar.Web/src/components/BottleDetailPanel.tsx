@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import type { CSSProperties } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import { toggleBottleLike, getBottleComments, addBottleComment, deleteBottleComment, listBottleForSale, unlistBottleFromSale } from '../api/bottlesApi'
 import type { Bottle } from '../types'
 import { CATEGORY_COLORS, BottleSvg } from './BarShelf'
@@ -60,6 +61,7 @@ const sectionLabelStyle: CSSProperties = {
 }
 
 function LikesSection({ bottle, userId }: { bottle: Bottle; userId: string }) {
+  const { t } = useTranslation()
   const queryClient = useQueryClient()
 
   const mutation = useMutation({
@@ -111,7 +113,7 @@ function LikesSection({ bottle, userId }: { bottle: Bottle; userId: string }) {
           ♥
         </span>
         <span style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: 17, color: '#E8D4A0' }}>
-          {bottle.likesCount} {bottle.likesCount === 1 ? 'like' : 'likes'}
+          {t('bottle.likes', { count: bottle.likesCount })}
         </span>
       </button>
     </div>
@@ -119,6 +121,7 @@ function LikesSection({ bottle, userId }: { bottle: Bottle; userId: string }) {
 }
 
 function CommentsSection({ bottle, currentUserId }: { bottle: Bottle; currentUserId: string }) {
+  const { t } = useTranslation()
   const queryClient = useQueryClient()
   const [draft, setDraft] = useState('')
 
@@ -153,24 +156,24 @@ function CommentsSection({ bottle, currentUserId }: { bottle: Bottle; currentUse
 
   return (
     <div style={{ paddingTop: 24, marginTop: 24, borderTop: '1px solid rgba(201,168,76,0.1)' }}>
-      <div style={sectionLabelStyle}>Comments</div>
+      <div style={sectionLabelStyle}>{t('bottle.comments')}</div>
 
       <div style={{ maxHeight: 320, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 14 }}>
         {isLoading && (
           <div style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: 15, color: '#B09868' }}>
-            Loading comments…
+            {t('bottle.loadingComments')}
           </div>
         )}
 
         {isError && (
           <div style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: 15, color: '#C04040' }}>
-            Could not load comments.
+            {t('bottle.errorComments')}
           </div>
         )}
 
         {!isLoading && !isError && comments.length === 0 && (
           <div style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: 16, fontStyle: 'italic', color: '#B09868' }}>
-            Be the first to comment.
+            {t('bottle.noComments')}
           </div>
         )}
 
@@ -218,12 +221,12 @@ function CommentsSection({ bottle, currentUserId }: { bottle: Bottle; currentUse
           onFocus={focusOn}
           onBlur={focusOff}
           rows={2}
-          placeholder="Add a comment…"
+          placeholder={t('bottle.commentPlaceholder')}
           style={{ ...inputStyle, resize: 'vertical', marginBottom: 10 }}
         />
         {addMutation.isError && (
           <div style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: 14, color: '#C04040', marginBottom: 10 }}>
-            Could not post your comment. Please try again.
+            {t('bottle.errorComment')}
           </div>
         )}
         <button
@@ -243,7 +246,7 @@ function CommentsSection({ bottle, currentUserId }: { bottle: Bottle; currentUse
             opacity: addMutation.isPending || !draft.trim() ? 0.6 : 1,
           }}
         >
-          {addMutation.isPending ? 'Posting…' : 'Post'}
+          {addMutation.isPending ? t('bottle.posting') : t('bottle.post')}
         </button>
       </form>
     </div>
@@ -253,6 +256,7 @@ function CommentsSection({ bottle, currentUserId }: { bottle: Bottle; currentUse
 const CURRENCIES = ['USD', 'EUR', 'GBP', 'BGN', 'CHF', 'JPY', 'CAD', 'AUD']
 
 function SaleSection({ bottle, userId }: { bottle: Bottle; userId: string }) {
+  const { t } = useTranslation()
   const queryClient = useQueryClient()
   const [price, setPrice] = useState(bottle.askingPrice?.toString() ?? '')
   const [currency, setCurrency] = useState(bottle.currency ?? 'USD')
@@ -281,7 +285,7 @@ function SaleSection({ bottle, userId }: { bottle: Bottle; userId: string }) {
       marginBottom: 20,
     }}>
       <div style={{ fontFamily: 'Cinzel, serif', fontSize: 9, letterSpacing: '0.2em', color: '#7A6040', textTransform: 'uppercase', marginBottom: 12 }}>
-        Sale
+        {t('bottle.saleLabel')}
       </div>
 
       {bottle.isForSale ? (
@@ -305,7 +309,7 @@ function SaleSection({ bottle, userId }: { bottle: Bottle; userId: string }) {
               opacity: unlistMutation.isPending ? 0.6 : 1,
             }}
           >
-            {unlistMutation.isPending ? '···' : 'REMOVE FROM SALE'}
+            {unlistMutation.isPending ? '···' : t('bottle.removeFromSale')}
           </button>
         </div>
       ) : (
@@ -318,7 +322,7 @@ function SaleSection({ bottle, userId }: { bottle: Bottle; userId: string }) {
             onChange={e => setPrice(e.target.value)}
             onFocus={focusOn}
             onBlur={focusOff}
-            placeholder="Asking price"
+            placeholder={t('bottle.askingPrice')}
             style={{ ...inputStyle, width: 140, flexShrink: 0 }}
           />
           <select
@@ -352,14 +356,14 @@ function SaleSection({ bottle, userId }: { bottle: Bottle; userId: string }) {
               whiteSpace: 'nowrap' as const,
             }}
           >
-            {listMutation.isPending ? '···' : 'LIST FOR SALE'}
+            {listMutation.isPending ? '···' : t('bottle.listForSale')}
           </button>
         </div>
       )}
 
       {(listMutation.isError || unlistMutation.isError) && (
         <div style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: 14, color: '#C04040', marginTop: 10 }}>
-          Something went wrong. Please try again.
+          {t('bottle.errorSale')}
         </div>
       )}
     </div>
@@ -390,26 +394,27 @@ export default function BottleDetailPanel({
   currentUserId: string
   onClose: () => void
 }) {
+  const { t } = useTranslation()
   const col = CATEGORY_COLORS[bottle.category]
   const primaryImage = bottle.images.find(i => i.isPrimary) ?? bottle.images[0]
   const galleryImages = bottle.images.filter(i => !i.isPrimary).sort((a, b) => a.sortOrder - b.sortOrder)
 
   return (
-    <div style={{ position: 'fixed', inset: 0, zIndex: 50 }}>
-      <div onClick={onClose} style={{ position: 'absolute', inset: 0, background: 'rgba(4,2,1,0.85)' }} />
+    <div style={{ position: 'fixed', inset: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px 16px' }}>
+      <div onClick={onClose} style={{ position: 'absolute', inset: 0, background: 'rgba(4,2,1,0.88)' }} />
 
       <div
         style={{
-          position: 'absolute',
-          right: 0,
-          top: 0,
-          width: 520,
-          maxWidth: '100%',
-          height: '100%',
+          position: 'relative',
+          width: '100%',
+          maxWidth: 680,
+          maxHeight: '90vh',
           background: 'linear-gradient(180deg, #0F0604, #130805)',
-          borderLeft: '1px solid rgba(201,168,76,0.2)',
+          border: '1px solid rgba(201,168,76,0.22)',
+          borderRadius: 8,
           overflowY: 'auto',
-          animation: 'fadeInUp 0.28s ease-out',
+          animation: 'fadeInUp 0.22s ease-out',
+          boxShadow: '0 32px 80px rgba(0,0,0,0.7), 0 0 0 1px rgba(201,168,76,0.08)',
         }}
       >
         <div style={{ position: 'relative', width: '100%', height: 280, background: '#0A0402', overflow: 'hidden', flexShrink: 0 }}>
@@ -475,13 +480,13 @@ export default function BottleDetailPanel({
                 border: '1px solid rgba(201,168,76,0.25)',
                 color: '#C9A84C',
               }}>
-                {bottle.condition}
+                {t(`addBottle.condition${bottle.condition}`)}
               </span>
               {bottle.isLimited && (
-                <span style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: 12, color: '#E8C870', letterSpacing: '0.05em' }}>◆ Limited</span>
+                <span style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: 12, color: '#E8C870', letterSpacing: '0.05em' }}>{t('bottle.limited')}</span>
               )}
               {bottle.isForSale && (
-                <span style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: 12, color: '#4A9A6A' }}>● For Sale</span>
+                <span style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: 12, color: '#4A9A6A' }}>{t('bottle.forSale')}</span>
               )}
             </div>
 
@@ -509,17 +514,17 @@ export default function BottleDetailPanel({
               borderRadius: 4,
               marginBottom: 20,
             }}>
-              {bottle.age != null && <DetailRow label="Age" value={`${bottle.age} yr`} />}
-              {bottle.abvPercent != null && <DetailRow label="ABV" value={`${bottle.abvPercent}%`} />}
-              {bottle.volumeMl != null && <DetailRow label="Volume" value={`${bottle.volumeMl} ml`} />}
-              {bottle.vintageYear != null && <DetailRow label="Vintage" value={bottle.vintageYear} />}
+              {bottle.age != null && <DetailRow label={t('bottle.age')} value={`${bottle.age} yr`} />}
+              {bottle.abvPercent != null && <DetailRow label={t('bottle.abv')} value={`${bottle.abvPercent}%`} />}
+              {bottle.volumeMl != null && <DetailRow label={t('bottle.volume')} value={`${bottle.volumeMl} ml`} />}
+              {bottle.vintageYear != null && <DetailRow label={t('bottle.vintage')} value={bottle.vintageYear} />}
             </div>
           )}
 
           {(bottle.region || bottle.country) && (
             <div style={{ marginBottom: 20 }}>
               <div style={{ fontFamily: 'Cinzel, serif', fontSize: 9, letterSpacing: '0.2em', color: '#7A6040', textTransform: 'uppercase', marginBottom: 6 }}>
-                Origin
+                {t('bottle.origin')}
               </div>
               <div style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: 16, color: '#E8D4A0' }}>
                 {[bottle.region, bottle.country].filter(Boolean).join(', ')}
@@ -541,7 +546,7 @@ export default function BottleDetailPanel({
               marginBottom: 20,
             }}>
               <span style={{ fontFamily: 'Cinzel, serif', fontSize: 10, letterSpacing: '0.2em', color: '#4A9A6A', textTransform: 'uppercase' }}>
-                Asking Price
+                {t('bottle.askingPrice')}
               </span>
               <span style={{ fontFamily: 'Playfair Display, serif', fontSize: 22, color: '#6ABF8A', fontWeight: 700 }}>
                 {bottle.currency ?? 'USD'} {bottle.askingPrice.toLocaleString()}
@@ -552,7 +557,7 @@ export default function BottleDetailPanel({
           {bottle.description && (
             <div style={{ marginBottom: 20 }}>
               <div style={{ fontFamily: 'Cinzel, serif', fontSize: 9, letterSpacing: '0.2em', color: '#7A6040', textTransform: 'uppercase', marginBottom: 8 }}>
-                Notes
+                {t('bottle.notes')}
               </div>
               <p style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: 17, color: '#C9A84C', lineHeight: 1.65, margin: 0, fontStyle: 'italic' }}>
                 {bottle.description}
@@ -563,7 +568,7 @@ export default function BottleDetailPanel({
           {galleryImages.length > 0 && (
             <div>
               <div style={{ fontFamily: 'Cinzel, serif', fontSize: 9, letterSpacing: '0.2em', color: '#7A6040', textTransform: 'uppercase', marginBottom: 8 }}>
-                Gallery
+                {t('bottle.gallery')}
               </div>
               <div style={{ display: 'flex', gap: 8, overflowX: 'auto', scrollbarWidth: 'none' }}>
                 {galleryImages.map(img => (

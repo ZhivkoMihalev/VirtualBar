@@ -2,9 +2,10 @@ import { useState, useEffect } from 'react'
 import type { CSSProperties } from 'react'
 import { Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
-import { useAuth } from '../contexts/AuthContext'
+import { useTranslation } from 'react-i18next'
 import { searchUsers } from '../api/usersApi'
 import type { UserSearchResult } from '../types'
+import NavBar from '../components/NavBar'
 
 function useDebounced<T>(value: T, delay: number): T {
   const [debounced, setDebounced] = useState(value)
@@ -72,6 +73,7 @@ function Avatar({ name, url, size }: { name: string; url?: string; size: number 
 }
 
 function CollectorCard({ collector }: { collector: UserSearchResult }) {
+  const { t } = useTranslation()
   const [hover, setHover] = useState(false)
 
   return (
@@ -133,7 +135,7 @@ function CollectorCard({ collector }: { collector: UserSearchResult }) {
           overflow: 'hidden',
         }}
       >
-        {collector.bio || 'A collector of fine spirits.'}
+        {collector.bio || t('browse.defaultBio')}
       </p>
 
       <div
@@ -147,14 +149,14 @@ function CollectorCard({ collector }: { collector: UserSearchResult }) {
       >
         <div style={{ display: 'flex', gap: 16, fontFamily: 'Cormorant Garamond, serif', fontSize: 14, color: '#B09868' }}>
           <span>
-            {collector.bottleCount} {collector.bottleCount === 1 ? 'bottle' : 'bottles'}
+            {t('browse.bottles', { count: collector.bottleCount })}
           </span>
           <span>
-            {collector.followerCount} {collector.followerCount === 1 ? 'follower' : 'followers'}
+            {t('browse.followers', { count: collector.followerCount })}
           </span>
         </div>
         <span style={{ fontFamily: 'Cinzel, serif', fontSize: 11, letterSpacing: '0.15em', color: hover ? '#E8C870' : '#C9A84C' }}>
-          VIEW BAR →
+          {t('browse.viewBar')}
         </span>
       </div>
     </Link>
@@ -162,7 +164,7 @@ function CollectorCard({ collector }: { collector: UserSearchResult }) {
 }
 
 export default function BrowsePage() {
-  const { isAuthenticated, user, logout } = useAuth()
+  const { t } = useTranslation()
   const [search, setSearch] = useState('')
   const query = useDebounced(search.trim(), 300)
 
@@ -172,102 +174,19 @@ export default function BrowsePage() {
   })
 
   return (
-    <div style={{ minHeight: '100vh', background: '#07030A', color: '#F0DDB4' }}>
-      <nav
-        style={{
-          borderBottom: '1px solid rgba(201,168,76,0.12)',
-          background: 'rgba(7,3,10,0.95)',
-          backdropFilter: 'blur(8px)',
-          position: 'sticky',
-          top: 0,
-          zIndex: 40,
-          padding: '0 40px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          height: 64,
-        }}
-      >
-        <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: 12, textDecoration: 'none' }}>
-          <div
-            style={{
-              width: 36,
-              height: 36,
-              borderRadius: '50%',
-              border: '1.5px solid #C9A84C',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontFamily: 'Cinzel, serif',
-              fontSize: 12,
-              color: '#C9A84C',
-              letterSpacing: '0.05em',
-            }}
-          >
-            VB
-          </div>
-          <span style={{ fontFamily: 'Playfair Display, serif', fontSize: 18, color: '#E8C870', letterSpacing: '0.05em' }}>
-            VirtualBar
-          </span>
-        </Link>
-
-        <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
-          {isAuthenticated ? (
-            <>
-              <Link to="/dashboard" style={{ fontFamily: 'Cinzel, serif', fontSize: 11, letterSpacing: '0.15em', color: '#B09868', textDecoration: 'none' }}>
-                ← BACK TO MY BAR
-              </Link>
-              <span style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: 15, color: '#C9A84C' }}>
-                {user?.displayName}
-              </span>
-              <button
-                onClick={logout}
-                style={{
-                  fontFamily: 'Cinzel, serif',
-                  fontSize: 11,
-                  letterSpacing: '0.15em',
-                  color: '#B09868',
-                  border: '1px solid rgba(201,168,76,0.2)',
-                  background: 'transparent',
-                  padding: '6px 16px',
-                  borderRadius: 2,
-                  cursor: 'pointer',
-                }}
-              >
-                SIGN OUT
-              </button>
-            </>
-          ) : (
-            <Link
-              to="/login"
-              style={{
-                fontFamily: 'Cinzel, serif',
-                fontSize: 11,
-                letterSpacing: '0.15em',
-                color: '#B09868',
-                border: '1px solid rgba(201,168,76,0.2)',
-                background: 'transparent',
-                padding: '6px 16px',
-                borderRadius: 2,
-                textDecoration: 'none',
-              }}
-            >
-              SIGN IN
-            </Link>
-          )}
-        </div>
-      </nav>
+    <div style={{ minHeight: '100vh', color: '#F0DDB4' }}>
+      <NavBar />
 
       <main style={{ maxWidth: 1100, margin: '0 auto', padding: '40px 40px' }}>
         <div style={{ marginBottom: 28 }}>
           <div style={{ fontFamily: 'Cinzel, serif', fontSize: 13, letterSpacing: '0.4em', color: '#B09868', marginBottom: 8 }}>
-            DISCOVER
+            {t('browse.discover')}
           </div>
           <h1 style={{ fontFamily: 'Playfair Display, serif', fontSize: 38, fontWeight: 700, color: '#E8C870', margin: 0, lineHeight: 1.1 }}>
-            Browse Collectors
+            {t('browse.title')}
           </h1>
           <div style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: 18, fontStyle: 'italic', color: '#C9A84C', marginTop: 6 }}>
-            Explore the virtual bars of fellow connoisseurs
+            {t('browse.subtitle')}
           </div>
         </div>
 
@@ -288,7 +207,7 @@ export default function BrowsePage() {
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search collectors by name…"
+            placeholder={t('browse.searchPlaceholder')}
             onFocus={(e) => { e.currentTarget.style.border = '1px solid rgba(201,168,76,0.5)' }}
             onBlur={(e) => { e.currentTarget.style.border = '1px solid rgba(201,168,76,0.2)' }}
             style={inputStyle}
@@ -307,19 +226,19 @@ export default function BrowsePage() {
               animation: 'shimmer 1.6s ease-in-out infinite',
             }}
           >
-            SEARCHING…
+            {t('browse.loading')}
           </div>
         )}
 
         {isError && !isLoading && (
           <div style={{ textAlign: 'center', padding: '60px 0', fontFamily: 'Cormorant Garamond, serif', fontSize: 18, fontStyle: 'italic', color: '#C04040' }}>
-            Could not load collectors. Please try again.
+            {t('browse.error')}
           </div>
         )}
 
         {!isLoading && !isError && collectors.length === 0 && (
           <div style={{ textAlign: 'center', padding: '60px 0', fontFamily: 'Cormorant Garamond, serif', fontSize: 20, fontStyle: 'italic', color: '#B09868' }}>
-            No collectors found.
+            {t('browse.noResults')}
           </div>
         )}
 

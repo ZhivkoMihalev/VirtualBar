@@ -1,8 +1,9 @@
 ﻿import { useState } from 'react'
 import type { CSSProperties } from 'react'
-import { Link } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import { useAuth } from '../contexts/AuthContext'
+import NavBar from '../components/NavBar'
 import { getBottlesByUser, addBottle, uploadBottleImage, linkBottleImage, lookupBarcode } from '../api/bottlesApi'
 import type { AddBottlePayload } from '../api/bottlesApi'
 import type { Bottle, SpiritCategory, BottleCondition } from '../types'
@@ -106,6 +107,7 @@ function focusOff(e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) {
 }
 
 function AddBottlePanel({ onClose, onSuccess }: { onClose: () => void; onSuccess: () => void }) {
+  const { t } = useTranslation()
   const [category, setCategory] = useState<SpiritCategory>('Whisky')
   const [condition, setCondition] = useState<BottleCondition>('Sealed')
   const [name, setName] = useState('')
@@ -215,7 +217,7 @@ function AddBottlePanel({ onClose, onSuccess }: { onClose: () => void; onSuccess
               color: '#C9A84C',
             }}
           >
-            ADD TO YOUR BAR
+            {t('addBottle.title')}
           </div>
           <button
             onClick={onClose}
@@ -228,7 +230,7 @@ function AddBottlePanel({ onClose, onSuccess }: { onClose: () => void; onSuccess
               lineHeight: 1,
             }}
           >
-            Ã—
+            ×
           </button>
         </div>
 
@@ -277,18 +279,18 @@ function AddBottlePanel({ onClose, onSuccess }: { onClose: () => void; onSuccess
                   onMouseLeave={e => (e.currentTarget as HTMLElement).style.opacity = '0'}
                 >
                   <span style={{ fontFamily: 'Cinzel, serif', fontSize: 11, letterSpacing: '0.2em', color: '#E8C870' }}>
-                    CHANGE PHOTO
+                    {t('addBottle.changePhoto')}
                   </span>
                 </div>
               </>
             ) : (
               <div style={{ textAlign: 'center', pointerEvents: 'none' }}>
-                <div style={{ fontSize: 32, marginBottom: 8, color: 'rgba(201,168,76,0.4)' }}>ðŸ“·</div>
+                <div style={{ fontSize: 32, marginBottom: 8, color: 'rgba(201,168,76,0.4)' }}>📷</div>
                 <div style={{ fontFamily: 'Cinzel, serif', fontSize: 10, letterSpacing: '0.2em', color: 'rgba(201,168,76,0.5)', marginBottom: 4 }}>
-                  UPLOAD PHOTO
+                  {t('addBottle.uploadPhoto')}
                 </div>
                 <div style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: 13, color: 'rgba(201,168,76,0.3)' }}>
-                  Click or drag &amp; drop
+                  {t('addBottle.clickOrDrag')}
                 </div>
               </div>
             )}
@@ -313,13 +315,13 @@ function AddBottlePanel({ onClose, onSuccess }: { onClose: () => void; onSuccess
 
         <form onSubmit={handleSubmit}>
           {/* barcode lookup */}
-          <label style={labelStyle}>Barcode Lookup</label>
+          <label style={labelStyle}>{t('addBottle.barcodeLookup')}</label>
           <div style={{ display: 'flex', gap: 8, marginBottom: 6 }}>
             <input
               value={barcode}
               onChange={e => setBarcode(e.target.value)}
               onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleBarcodeSearch() } }}
-              placeholder="EAN / UPC barcodeâ€¦"
+              placeholder={t('addBottle.barcodePlaceholder')}
               style={{ ...inputStyle, flex: 1 }}
             />
             <button
@@ -341,23 +343,23 @@ function AddBottlePanel({ onClose, onSuccess }: { onClose: () => void; onSuccess
                 transition: 'all 0.2s',
               }}
             >
-              {barcodeLoading ? 'Â·Â·Â·' : 'FIND'}
+              {barcodeLoading ? '···' : t('addBottle.barcodeFind')}
             </button>
           </div>
           {barcodeStatus === 'found' && (
             <div style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: 14, color: '#4A9A6A', marginBottom: 14 }}>
-              âœ“ Product found â€” fields auto-filled
+              {t('addBottle.barcodeSuccess')}
             </div>
           )}
           {barcodeStatus === 'error' && (
             <div style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: 14, color: '#C04040', marginBottom: 14 }}>
-              Product not found. Try a different barcode or fill in manually.
+              {t('addBottle.barcodeNotFound')}
             </div>
           )}
           {barcodeStatus === 'idle' && <div style={{ marginBottom: 18 }} />}
 
           {/* category selector */}
-          <label style={labelStyle}>Category</label>
+          <label style={labelStyle}>{t('addBottle.category')}</label>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8, marginBottom: 18 }}>
             {CATEGORIES.map((cat) => {
               const c = CATEGORY_COLORS[cat]
@@ -391,32 +393,32 @@ function AddBottlePanel({ onClose, onSuccess }: { onClose: () => void; onSuccess
           </div>
 
           {/* name */}
-          <label style={labelStyle}>Name *</label>
+          <label style={labelStyle}>{t('addBottle.name')}</label>
           <input
             value={name}
             onChange={(e) => setName(e.target.value)}
             onFocus={focusOn}
             onBlur={focusOff}
             required
-            placeholder="e.g. Glenfiddich 18"
+            placeholder={t('addBottle.namePlaceholder')}
             style={{ ...inputStyle, marginBottom: 18 }}
           />
 
           {/* distillery */}
-          <label style={labelStyle}>Distillery</label>
+          <label style={labelStyle}>{t('addBottle.distillery')}</label>
           <input
             value={distillery}
             onChange={(e) => setDistillery(e.target.value)}
             onFocus={focusOn}
             onBlur={focusOff}
-            placeholder="e.g. Glenfiddich"
+            placeholder={t('addBottle.distilleryPlaceholder')}
             style={{ ...inputStyle, marginBottom: 18 }}
           />
 
           {/* age / abv / volume */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, marginBottom: 18 }}>
             <div>
-              <label style={labelStyle}>Age</label>
+              <label style={labelStyle}>{t('addBottle.age')}</label>
               <input
                 type="number"
                 min={0}
@@ -429,7 +431,7 @@ function AddBottlePanel({ onClose, onSuccess }: { onClose: () => void; onSuccess
               />
             </div>
             <div>
-              <label style={labelStyle}>ABV %</label>
+              <label style={labelStyle}>{t('addBottle.abv')}</label>
               <input
                 type="number"
                 min={0}
@@ -443,7 +445,7 @@ function AddBottlePanel({ onClose, onSuccess }: { onClose: () => void; onSuccess
               />
             </div>
             <div>
-              <label style={labelStyle}>Volume ml</label>
+              <label style={labelStyle}>{t('addBottle.volume')}</label>
               <input
                 type="number"
                 min={0}
@@ -457,10 +459,11 @@ function AddBottlePanel({ onClose, onSuccess }: { onClose: () => void; onSuccess
           </div>
 
           {/* condition */}
-          <label style={labelStyle}>Condition</label>
+          <label style={labelStyle}>{t('addBottle.condition')}</label>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, marginBottom: 18 }}>
             {CONDITIONS.map((cond) => {
               const selected = condition === cond
+              const conditionLabel = t(`addBottle.condition${cond}`)
               return (
                 <button
                   key={cond}
@@ -478,7 +481,7 @@ function AddBottlePanel({ onClose, onSuccess }: { onClose: () => void; onSuccess
                     transition: 'all 0.15s ease',
                   }}
                 >
-                  {cond}
+                  {conditionLabel}
                 </button>
               )
             })}
@@ -500,7 +503,7 @@ function AddBottlePanel({ onClose, onSuccess }: { onClose: () => void; onSuccess
             }}
           >
             <span style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: 15, color: '#C9A84C' }}>
-              Limited Edition â—†
+              {t('addBottle.limited')}
             </span>
             <span
               style={{
@@ -529,14 +532,14 @@ function AddBottlePanel({ onClose, onSuccess }: { onClose: () => void; onSuccess
           </div>
 
           {/* description */}
-          <label style={labelStyle}>Description</label>
+          <label style={labelStyle}>{t('addBottle.description')}</label>
           <textarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             onFocus={focusOn}
             onBlur={focusOff}
             rows={3}
-            placeholder="Tasting notes, provenanceâ€¦"
+            placeholder={t('addBottle.descriptionPlaceholder')}
             style={{ ...inputStyle, marginBottom: 24, resize: 'vertical' }}
           />
 
@@ -549,7 +552,7 @@ function AddBottlePanel({ onClose, onSuccess }: { onClose: () => void; onSuccess
                 marginBottom: 16,
               }}
             >
-              Something went wrong. Please try again.
+              {t('addBottle.error')}
             </div>
           )}
 
@@ -572,7 +575,7 @@ function AddBottlePanel({ onClose, onSuccess }: { onClose: () => void; onSuccess
               boxShadow: '0 4px 20px rgba(201,168,76,0.3)',
             }}
           >
-            {mutation.isPending ? 'Addingâ€¦' : 'Add to Collection'}
+            {mutation.isPending ? t('addBottle.submitting') : t('addBottle.submit')}
           </button>
         </form>
       </div>
@@ -583,7 +586,8 @@ function AddBottlePanel({ onClose, onSuccess }: { onClose: () => void; onSuccess
 
 
 export default function DashboardPage() {
-  const { user, logout } = useAuth()
+  const { t } = useTranslation()
+  const { user } = useAuth()
   const queryClient = useQueryClient()
   const [addOpen, setAddOpen] = useState(false)
   const [selectedBottle, setSelectedBottle] = useState<Bottle | null>(null)
@@ -605,74 +609,8 @@ export default function DashboardPage() {
   }, {} as Record<SpiritCategory, number>)
 
   return (
-    <div style={{ minHeight: '100vh', background: '#07030A', color: '#F0DDB4' }}>
-      {/* TOP NAVIGATION */}
-      <nav
-        style={{
-          borderBottom: '1px solid rgba(201,168,76,0.12)',
-          background: 'rgba(7,3,10,0.95)',
-          backdropFilter: 'blur(8px)',
-          position: 'sticky',
-          top: 0,
-          zIndex: 40,
-          padding: '0 40px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          height: 64,
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <div
-            style={{
-              width: 36,
-              height: 36,
-              borderRadius: '50%',
-              border: '1.5px solid #C9A84C',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontFamily: 'Cinzel, serif',
-              fontSize: 12,
-              color: '#C9A84C',
-              letterSpacing: '0.05em',
-            }}
-          >
-            VB
-          </div>
-          <span style={{ fontFamily: 'Playfair Display, serif', fontSize: 18, color: '#E8C870', letterSpacing: '0.05em' }}>
-            VirtualBar
-          </span>
-        </div>
-
-        <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
-          <Link to="/browse" style={{ fontFamily: 'Cinzel, serif', fontSize: 11, letterSpacing: '0.15em', color: '#B09868', textDecoration: 'none' }}>
-            BROWSE
-          </Link>
-          <Link to="/marketplace" style={{ fontFamily: 'Cinzel, serif', fontSize: 11, letterSpacing: '0.15em', color: '#B09868', textDecoration: 'none' }}>
-            MARKETPLACE
-          </Link>
-          <span style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: 15, color: '#C9A84C' }}>
-            {user?.displayName}
-          </span>
-          <button
-            onClick={logout}
-            style={{
-              fontFamily: 'Cinzel, serif',
-              fontSize: 11,
-              letterSpacing: '0.15em',
-              color: '#B09868',
-              border: '1px solid rgba(201,168,76,0.2)',
-              background: 'transparent',
-              padding: '6px 16px',
-              borderRadius: 2,
-              cursor: 'pointer',
-            }}
-          >
-            SIGN OUT
-          </button>
-        </div>
-      </nav>
+    <div style={{ minHeight: '100vh', color: '#F0DDB4' }}>
+      <NavBar />
 
       {/* MAIN CONTENT */}
       <main style={{ maxWidth: 1200, margin: '0 auto', padding: '40px 40px' }}>
@@ -688,7 +626,7 @@ export default function DashboardPage() {
                 marginBottom: 8,
               }}
             >
-              YOUR COLLECTION
+              {t('dashboard.yourCollection')}
             </div>
             <h1
               style={{
@@ -700,7 +638,7 @@ export default function DashboardPage() {
                 lineHeight: 1.1,
               }}
             >
-              Virtual Bar
+              {t('dashboard.virtualBar')}
             </h1>
             <div
               style={{
@@ -712,8 +650,8 @@ export default function DashboardPage() {
               }}
             >
               {bottles.length === 0
-                ? 'Your collection awaits'
-                : `${bottles.length} ${bottles.length === 1 ? 'bottle' : 'bottles'} in your collection`}
+                ? t('dashboard.collectionAwaits')
+                : t('dashboard.bottlesInCollection', { count: bottles.length })}
             </div>
           </div>
 
@@ -732,7 +670,7 @@ export default function DashboardPage() {
               boxShadow: '0 4px 20px rgba(201,168,76,0.3)',
             }}
           >
-            + ADD BOTTLE
+            {t('dashboard.addBottle')}
           </button>
         </div>
 
@@ -749,13 +687,13 @@ export default function DashboardPage() {
               borderRadius: 4,
             }}
           >
-            <StatItem value={bottles.length} label="Total Bottles" />
+            <StatItem value={bottles.length} label={t('dashboard.totalBottles')} />
             <div style={{ width: 1, background: 'rgba(201,168,76,0.15)' }} />
-            <StatItem value={bottles.filter((b) => b.condition === 'Sealed').length} label="Sealed" />
+            <StatItem value={bottles.filter((b) => b.condition === 'Sealed').length} label={t('dashboard.sealed')} />
             <div style={{ width: 1, background: 'rgba(201,168,76,0.15)' }} />
-            <StatItem value={bottles.filter((b) => b.isForSale).length} label="For Sale" />
+            <StatItem value={bottles.filter((b) => b.isForSale).length} label={t('dashboard.forSale')} />
             <div style={{ width: 1, background: 'rgba(201,168,76,0.15)' }} />
-            <StatItem value={bottles.filter((b) => b.isLimited).length} label="Limited" />
+            <StatItem value={bottles.filter((b) => b.isLimited).length} label={t('dashboard.limited')} />
           </div>
         )}
 
@@ -772,7 +710,7 @@ export default function DashboardPage() {
               animation: 'shimmer 1.6s ease-in-out infinite',
             }}
           >
-            POURING YOUR COLLECTIONâ€¦
+            {t('dashboard.loading')}
           </div>
         )}
 
@@ -784,7 +722,7 @@ export default function DashboardPage() {
         {bottles.length > 0 && (
           <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: 28 }}>
             <CategoryPill
-              label="All"
+              label={t('marketplace.allCategories')}
               active={activeCategory === null}
               color="#C9A84C"
               count={bottles.length}
@@ -815,7 +753,7 @@ export default function DashboardPage() {
                 marginBottom: 16,
               }}
             >
-              THE BAR IS EMPTY
+              {t('dashboard.emptyTitle')}
             </div>
             <p
               style={{
@@ -827,7 +765,7 @@ export default function DashboardPage() {
                 margin: '0 auto 28px',
               }}
             >
-              Begin your collection. Add your first bottle to the bar.
+              {t('dashboard.emptySubtitle')}
             </p>
             <button
               onClick={() => setAddOpen(true)}
@@ -843,7 +781,7 @@ export default function DashboardPage() {
                 cursor: 'pointer',
               }}
             >
-              ADD YOUR FIRST BOTTLE
+              {t('dashboard.emptyButton')}
             </button>
           </div>
         )}

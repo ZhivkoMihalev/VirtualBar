@@ -2,11 +2,13 @@ import { useState, useEffect } from 'react'
 import type { CSSProperties } from 'react'
 import { Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import { useAuth } from '../contexts/AuthContext'
 import { getMarketplace } from '../api/bottlesApi'
 import type { Bottle, SpiritCategory } from '../types'
 import { CATEGORY_COLORS, BottleSvg } from '../components/BarShelf'
 import BottleDetailPanel from '../components/BottleDetailPanel'
+import NavBar from '../components/NavBar'
 
 const CATEGORIES = Object.keys(CATEGORY_COLORS) as SpiritCategory[]
 
@@ -87,6 +89,7 @@ const conditionColor: Record<string, string> = {
 }
 
 function MarketplaceCard({ bottle, onView }: { bottle: Bottle; onView: () => void }) {
+  const { t } = useTranslation()
   const [hover, setHover] = useState(false)
   const cat = CATEGORY_COLORS[bottle.category]
   const primaryImage = bottle.images.find((i) => i.isPrimary) ?? bottle.images[0]
@@ -158,7 +161,7 @@ function MarketplaceCard({ bottle, onView }: { bottle: Bottle; onView: () => voi
               color: conditionColor[bottle.condition],
             }}
           >
-            {bottle.condition}
+            {t(`addBottle.condition${bottle.condition}`)}
           </span>
           {bottle.isLimited && (
             <span style={{ fontFamily: 'Cinzel, serif', fontSize: 11, color: '#E8C870' }}>◆</span>
@@ -218,7 +221,7 @@ function MarketplaceCard({ bottle, onView }: { bottle: Bottle; onView: () => voi
           >
             {bottle.askingPrice != null
               ? `${bottle.currency ?? ''} ${bottle.askingPrice.toLocaleString()}`.trim()
-              : 'Price on request'}
+              : t('marketplace.priceOnRequest')}
           </div>
 
           <Link
@@ -233,7 +236,7 @@ function MarketplaceCard({ bottle, onView }: { bottle: Bottle; onView: () => voi
               marginBottom: 12,
             }}
           >
-            by {bottle.userDisplayName}
+            {t('marketplace.by', { name: bottle.userDisplayName })}
           </Link>
 
           <button
@@ -253,7 +256,7 @@ function MarketplaceCard({ bottle, onView }: { bottle: Bottle; onView: () => voi
               transition: 'all 0.2s ease',
             }}
           >
-            View Bottle →
+            {t('marketplace.viewBottle')}
           </button>
         </div>
       </div>
@@ -262,7 +265,8 @@ function MarketplaceCard({ bottle, onView }: { bottle: Bottle; onView: () => voi
 }
 
 export default function MarketplacePage() {
-  const { user, logout, isAuthenticated } = useAuth()
+  const { t } = useTranslation()
+  const { user } = useAuth()
   const [search, setSearch] = useState('')
   const [category, setCategory] = useState<string>('')
   const [sort, setSort] = useState<SortOption>('newest')
@@ -280,93 +284,8 @@ export default function MarketplacePage() {
   })
 
   return (
-    <div style={{ minHeight: '100vh', background: '#07030A', color: '#F0DDB4' }}>
-      <nav
-        style={{
-          borderBottom: '1px solid rgba(201,168,76,0.12)',
-          background: 'rgba(7,3,10,0.95)',
-          backdropFilter: 'blur(8px)',
-          position: 'sticky',
-          top: 0,
-          zIndex: 40,
-          padding: '0 40px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          height: 64,
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <div
-            style={{
-              width: 36,
-              height: 36,
-              borderRadius: '50%',
-              border: '1.5px solid #C9A84C',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontFamily: 'Cinzel, serif',
-              fontSize: 12,
-              color: '#C9A84C',
-              letterSpacing: '0.05em',
-            }}
-          >
-            VB
-          </div>
-          <span style={{ fontFamily: 'Playfair Display, serif', fontSize: 18, color: '#E8C870', letterSpacing: '0.05em' }}>
-            VirtualBar
-          </span>
-        </div>
-
-        <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
-          {isAuthenticated && (
-            <Link to="/dashboard" style={{ fontFamily: 'Cinzel, serif', fontSize: 11, letterSpacing: '0.15em', color: '#B09868', textDecoration: 'none' }}>
-              ← My Bar
-            </Link>
-          )}
-          {isAuthenticated ? (
-            <>
-              <span style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: 15, color: '#C9A84C' }}>
-                {user?.displayName}
-              </span>
-              <button
-                onClick={logout}
-                style={{
-                  fontFamily: 'Cinzel, serif',
-                  fontSize: 11,
-                  letterSpacing: '0.15em',
-                  color: '#B09868',
-                  border: '1px solid rgba(201,168,76,0.2)',
-                  background: 'transparent',
-                  padding: '6px 16px',
-                  borderRadius: 2,
-                  cursor: 'pointer',
-                }}
-              >
-                SIGN OUT
-              </button>
-            </>
-          ) : (
-            <Link
-              to="/login"
-              style={{
-                fontFamily: 'Cinzel, serif',
-                fontSize: 11,
-                letterSpacing: '0.15em',
-                color: '#B09868',
-                border: '1px solid rgba(201,168,76,0.2)',
-                background: 'transparent',
-                padding: '6px 16px',
-                borderRadius: 2,
-                textDecoration: 'none',
-              }}
-            >
-              SIGN IN
-            </Link>
-          )}
-        </div>
-      </nav>
+    <div style={{ minHeight: '100vh', color: '#F0DDB4' }}>
+      <NavBar />
 
       <div
         style={{
@@ -408,13 +327,13 @@ export default function MarketplacePage() {
               onChange={(e) => setSearch(e.target.value)}
               onFocus={focusOn}
               onBlur={focusOff}
-              placeholder="Search name or distillery…"
+              placeholder={t('marketplace.searchPlaceholder')}
               style={{ ...inputStyle, paddingLeft: 40 }}
             />
           </div>
 
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', flex: 1 }}>
-            <CategoryPill label="All" active={category === ''} color="#C9A84C" onClick={() => setCategory('')} />
+            <CategoryPill label={t('marketplace.allCategories')} active={category === ''} color="#C9A84C" onClick={() => setCategory('')} />
             {CATEGORIES.map((cat) => (
               <CategoryPill
                 key={cat}
@@ -441,9 +360,9 @@ export default function MarketplacePage() {
               cursor: 'pointer',
             }}
           >
-            <option value="newest">Newest first</option>
-            <option value="price_asc">Price: Low → High</option>
-            <option value="price_desc">Price: High → Low</option>
+            <option value="newest">{t('marketplace.sortNewest')}</option>
+            <option value="price_asc">{t('marketplace.sortPriceAsc')}</option>
+            <option value="price_desc">{t('marketplace.sortPriceDesc')}</option>
           </select>
         </div>
       </div>
@@ -459,7 +378,7 @@ export default function MarketplacePage() {
               marginBottom: 8,
             }}
           >
-            THE MARKETPLACE
+            {t('marketplace.label')}
           </div>
           <h1
             style={{
@@ -471,7 +390,7 @@ export default function MarketplacePage() {
               lineHeight: 1.1,
             }}
           >
-            Bottles for Sale
+            {t('marketplace.title')}
           </h1>
         </div>
 
@@ -487,7 +406,7 @@ export default function MarketplacePage() {
               animation: 'shimmer 1.6s ease-in-out infinite',
             }}
           >
-            SEARCHING THE CELLAR…
+            {t('marketplace.loading')}
           </div>
         )}
 
@@ -501,7 +420,7 @@ export default function MarketplacePage() {
                 color: '#C9A84C',
               }}
             >
-              No bottles for sale at the moment.
+              {t('marketplace.empty')}
             </p>
           </div>
         )}

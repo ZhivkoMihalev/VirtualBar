@@ -15,6 +15,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
     public DbSet<UserFollow> UserFollows => Set<UserFollow>();
     public DbSet<Message> Messages => Set<Message>();
     public DbSet<NewsPost> NewsPosts => Set<NewsPost>();
+    public DbSet<NewsPostTranslation> NewsPostTranslations => Set<NewsPostTranslation>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -62,5 +63,14 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
 
         builder.Entity<AppUser>()
             .HasIndex(u => u.DisplayName);
+
+        builder.Entity<NewsPostTranslation>(e =>
+        {
+            e.HasKey(t => new { t.PostId, t.LanguageCode });
+            e.HasOne(t => t.Post)
+                .WithMany(p => p.Translations)
+                .HasForeignKey(t => t.PostId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
     }
 }

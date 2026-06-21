@@ -9,23 +9,34 @@ namespace VirtualBar.Infrastructure.Services;
 
 public sealed class FeedService(AppDbContext db, ICurrentUser currentUser) : IFeedService
 {
-    public async Task<Result<List<FeedItemDto>>> GetFeedAsync(int skip, int take, CancellationToken cancellationToken)
+    public async Task<Result<List<FeedItemDto>>> GetFeedAsync(int skip, int take, string lang, CancellationToken cancellationToken)
     {
-        var newsItems = await db.NewsPosts
+        var newsPosts = await db.NewsPosts
             .Where(p => !p.IsDeleted)
+            .Include(p => p.Author)
+            .Include(p => p.Translations)
             .OrderByDescending(p => p.CreatedAt)
             .Take(50)
-            .Select(p => new FeedItemDto
-            {
-                Type = FeedItemType.News,
-                Timestamp = p.CreatedAt,
-                PostId = p.Id,
-                PostTitle = p.Title,
-                PostExcerpt = p.Excerpt,
-                PostCoverImageUrl = p.CoverImageUrl,
-                PostAuthorDisplayName = p.Author.DisplayName,
-            })
             .ToListAsync(cancellationToken);
+
+        var newsItems = newsPosts
+            .Select(p =>
+            {
+                var translation = p.Translations.FirstOrDefault(t => t.LanguageCode == lang)
+                    ?? p.Translations.FirstOrDefault(t => t.LanguageCode == "bg");
+
+                return new FeedItemDto
+                {
+                    Type = FeedItemType.News,
+                    Timestamp = p.CreatedAt,
+                    PostId = p.Id,
+                    PostTitle = translation?.Title ?? string.Empty,
+                    PostContent = translation?.Content ?? string.Empty,
+                    PostCoverImageUrl = p.CoverImageUrl,
+                    PostAuthorDisplayName = p.Author.DisplayName,
+                };
+            })
+            .ToList();
 
         var items = new List<FeedItemDto>(newsItems);
 

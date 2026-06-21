@@ -4,13 +4,15 @@
 
 body {
   margin: 0;
-  background: #07030A;
+  background-color: #07030A;
   font-family: 'Cormorant Garamond', Georgia, serif;
   -webkit-font-smoothing: antialiased;
   color: #F0DDB4;
 }
 
-#root { min-height: 100vh; }
+#root {
+  min-height: 100vh;
+}
 
 /* Scrollbar */
 ::-webkit-scrollbar { width: 6px; height: 6px; }

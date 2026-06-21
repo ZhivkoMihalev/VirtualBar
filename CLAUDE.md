@@ -317,7 +317,7 @@ Admin-only write (`IsAdmin` check in `NewsValidationDecorator`). Public read via
 
 **Types:** All shared TypeScript types in `src/types/index.ts`. No per-file type definitions.
 
-**Language:** All UI text is in **English**.
+**Internationalisation:** `react-i18next` + `i18next-browser-languagedetector`. Bulgarian is the default language (`lng: 'bg'`). English is optional. Language choice is persisted in `localStorage` under key `vbar_lang`. Translation files: `src/i18n/bg.json` and `src/i18n/en.json`. i18next is initialised in `src/i18n/index.ts` and imported as the first line of `src/main.tsx`. Every page and component uses `const { t } = useTranslation()`. The `LanguageSwitcher` component (`src/components/LanguageSwitcher.tsx`) renders a speakeasy-styled dropdown (БГ/EN) placed inside the NavBar of every page.
 
 **Routing:** `/` is `HomePage.tsx` (public news/social feed). Login and register redirect to `/` after success. `/dashboard` is the user's own virtual bar (protected).
 

@@ -72,6 +72,7 @@ public sealed class AuthService(
                 AvatarUrl = user.AvatarUrl,
                 Country = user.Country,
                 City = user.City,
+                IsAdmin = user.IsAdmin,
                 CreatedAt = user.CreatedAt
             }
         };
@@ -88,6 +89,7 @@ public sealed class AuthService(
         {
             new(ClaimTypes.NameIdentifier, user.Id.ToString()),
             new(ClaimTypes.Email, user.Email ?? string.Empty),
+            new("isAdmin", user.IsAdmin.ToString().ToLowerInvariant()),
             new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
         };
 

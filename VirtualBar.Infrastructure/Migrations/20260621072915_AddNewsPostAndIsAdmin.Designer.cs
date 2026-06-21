@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using VirtualBar.Infrastructure.Persistence;
 
@@ -11,9 +12,11 @@ using VirtualBar.Infrastructure.Persistence;
 namespace VirtualBar.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260621072915_AddNewsPostAndIsAdmin")]
+    partial class AddNewsPostAndIsAdmin
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -281,9 +284,6 @@ namespace VirtualBar.Infrastructure.Migrations
 
                     b.Property<string>("Distillery")
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime?>("ForSaleAt")
-                        .HasColumnType("datetime2");
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");

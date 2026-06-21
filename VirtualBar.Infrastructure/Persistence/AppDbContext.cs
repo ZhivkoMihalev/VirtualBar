@@ -14,6 +14,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
     public DbSet<BottleComment> BottleComments => Set<BottleComment>();
     public DbSet<UserFollow> UserFollows => Set<UserFollow>();
     public DbSet<Message> Messages => Set<Message>();
+    public DbSet<NewsPost> NewsPosts => Set<NewsPost>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

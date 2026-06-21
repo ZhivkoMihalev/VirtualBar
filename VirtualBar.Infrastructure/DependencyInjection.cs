@@ -71,6 +71,16 @@ public static class DependencyInjection
             sp.GetRequiredService<UserProfileService>(),
             sp.GetRequiredService<AppDbContext>()));
 
+        services.AddScoped<NewsService>();
+        services.AddScoped<INewsService>(sp => new NewsValidationDecorator(
+            sp.GetRequiredService<NewsService>(),
+            sp.GetRequiredService<AppDbContext>(),
+            sp.GetRequiredService<ICurrentUser>()));
+
+        services.AddScoped<FeedService>();
+        services.AddScoped<IFeedService>(sp => new FeedValidationDecorator(
+            sp.GetRequiredService<FeedService>()));
+
         return services;
     }
 }

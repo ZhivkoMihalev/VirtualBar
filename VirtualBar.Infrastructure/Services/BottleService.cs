@@ -114,6 +114,7 @@ public sealed class BottleService(
         bottle!.IsForSale = true;
         bottle.AskingPrice = request.AskingPrice;
         bottle.Currency = request.Currency;
+        bottle.ForSaleAt = DateTime.UtcNow;
         bottle.UpdatedAt = DateTime.UtcNow;
 
         await db.SaveChangesAsync(cancellationToken);
@@ -129,6 +130,7 @@ public sealed class BottleService(
         bottle!.IsForSale = false;
         bottle.AskingPrice = null;
         bottle.Currency = null;
+        bottle.ForSaleAt = null;
         bottle.UpdatedAt = DateTime.UtcNow;
 
         await db.SaveChangesAsync(cancellationToken);

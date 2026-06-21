@@ -16,5 +16,7 @@ public sealed class AuthUserDto
 
     public string? City { get; set; }
 
+    public bool IsAdmin { get; set; }
+
     public DateTime CreatedAt { get; set; }
 }

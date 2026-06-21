@@ -71,6 +71,17 @@ using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     await db.Database.MigrateAsync();
+
+    var adminEmail = app.Configuration["AdminEmail"];
+    if (!string.IsNullOrWhiteSpace(adminEmail))
+    {
+        var adminUser = await db.Users.FirstOrDefaultAsync(u => u.Email == adminEmail);
+        if (adminUser is not null && !adminUser.IsAdmin)
+        {
+            adminUser.IsAdmin = true;
+            await db.SaveChangesAsync();
+        }
+    }
 }
 
 var uploadsPath = Path.Combine(

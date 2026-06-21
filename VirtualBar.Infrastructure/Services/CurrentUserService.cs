@@ -19,4 +19,7 @@ public sealed class CurrentUserService(IHttpContextAccessor httpContextAccessor)
 
     public bool IsAuthenticated =>
         httpContextAccessor.HttpContext?.User.Identity?.IsAuthenticated ?? false;
+
+    public bool IsAdmin =>
+        httpContextAccessor.HttpContext?.User.FindFirstValue("isAdmin") == "true";
 }

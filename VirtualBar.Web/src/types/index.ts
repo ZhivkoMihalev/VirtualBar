@@ -10,6 +10,7 @@ export interface User {
   country?: string
   city?: string
   createdAt: string
+  isAdmin: boolean
 }
 
 export interface Bottle {
@@ -91,4 +92,36 @@ export interface UserSearchResult {
   country?: string
   bottleCount: number
   followerCount: number
+}
+
+export interface NewsPost {
+  id: string
+  title: string
+  excerpt: string
+  content: string
+  coverImageUrl?: string
+  authorId: string
+  authorDisplayName: string
+  createdAt: string
+  updatedAt: string
+}
+
+export type FeedItemType = 'News' | 'NewBottle' | 'ForSale'
+
+export interface FeedItem {
+  type: FeedItemType
+  timestamp: string
+  postId?: string
+  postTitle?: string
+  postExcerpt?: string
+  postCoverImageUrl?: string
+  postAuthorDisplayName?: string
+  bottleId?: string
+  bottleName?: string
+  bottleCategory?: string
+  bottlePrimaryImageUrl?: string
+  bottleUserId?: string
+  bottleUserDisplayName?: string
+  askingPrice?: number
+  currency?: string
 }

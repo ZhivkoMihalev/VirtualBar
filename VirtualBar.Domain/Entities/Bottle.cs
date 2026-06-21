@@ -38,6 +38,8 @@ public class Bottle : BaseEntity
 
     public string? Currency { get; set; }
 
+    public DateTime? ForSaleAt { get; set; }
+
     public ICollection<BottleImage> Images { get; set; } = [];
 
     public ICollection<BottleLike> Likes { get; set; } = [];

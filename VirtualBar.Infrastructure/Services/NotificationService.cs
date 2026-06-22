@@ -74,7 +74,8 @@ public sealed class NotificationService(
             .Select(u => u.DisplayName)
             .FirstOrDefaultAsync(cancellationToken);
 
-        if (actorDisplayName is null) return;
+        if (actorDisplayName is null) 
+            return;
 
         db.Notifications.Add(new Notification
         {
@@ -93,14 +94,16 @@ public sealed class NotificationService(
     public async Task CreateBulkAsync(IEnumerable<Guid> recipientIds, NotificationType type, Guid? resourceId, string? resourceName, CancellationToken cancellationToken)
     {
         var ids = recipientIds.ToList();
-        if (ids.Count == 0) return;
+        if (ids.Count == 0) 
+            return;
 
         var actorDisplayName = await db.Users
             .Where(u => u.Id == currentUser.UserId)
             .Select(u => u.DisplayName)
             .FirstOrDefaultAsync(cancellationToken);
 
-        if (actorDisplayName is null) return;
+        if (actorDisplayName is null) 
+            return;
 
         db.Notifications.AddRange(ids.Select(recipientId => new Notification
         {

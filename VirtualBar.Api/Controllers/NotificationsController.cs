@@ -17,7 +17,9 @@ public sealed class NotificationsController(INotificationService notificationSer
     public async Task<IActionResult> GetNotifications(CancellationToken cancellationToken)
     {
         var result = await notificationService.GetNotificationsAsync(cancellationToken);
-        return result.Success ? Ok(result.Data) : result.ToActionResult(this);
+        return result.Success 
+            ? Ok(result.Data) 
+            : result.ToActionResult(this);
     }
 
     /// <summary>Marks a single notification as read.</summary>
@@ -30,7 +32,9 @@ public sealed class NotificationsController(INotificationService notificationSer
     public async Task<IActionResult> MarkRead(Guid id, CancellationToken cancellationToken)
     {
         var result = await notificationService.MarkReadAsync(id, cancellationToken);
-        return result.Success ? Ok() : result.ToActionResult(this);
+        return result.Success 
+            ? Ok() 
+            : result.ToActionResult(this);
     }
 
     /// <summary>Marks all notifications for the current user as read.</summary>
@@ -40,6 +44,8 @@ public sealed class NotificationsController(INotificationService notificationSer
     public async Task<IActionResult> MarkAllRead(CancellationToken cancellationToken)
     {
         var result = await notificationService.MarkAllReadAsync(cancellationToken);
-        return result.Success ? Ok() : result.ToActionResult(this);
+        return result.Success 
+            ? Ok() 
+            : result.ToActionResult(this);
     }
 }

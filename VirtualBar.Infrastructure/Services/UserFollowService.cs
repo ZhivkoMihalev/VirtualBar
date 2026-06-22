@@ -9,7 +9,8 @@ namespace VirtualBar.Infrastructure.Services;
 
 public sealed class UserFollowService(
     AppDbContext db,
-    ICurrentUser currentUser) : IUserFollowService
+    ICurrentUser currentUser,
+    INotificationService notificationService) : IUserFollowService
 {
     public async Task<Result<bool>> FollowAsync(Guid targetUserId, CancellationToken cancellationToken)
     {
@@ -22,6 +23,8 @@ public sealed class UserFollowService(
 
         db.UserFollows.Add(follow);
         await db.SaveChangesAsync(cancellationToken);
+
+        await notificationService.CreateAsync(targetUserId, NotificationType.NewFollower, null, null, cancellationToken);
 
         return Result<bool>.Ok(true);
     }

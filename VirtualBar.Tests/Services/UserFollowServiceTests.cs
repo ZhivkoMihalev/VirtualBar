@@ -29,7 +29,7 @@ public sealed class UserFollowServiceTests
     private static IUserFollowService CreateUserFollowService(AppDbContext db, Guid currentUserId)
     {
         var currentUser = CreateCurrentUser(currentUserId);
-        var inner = new UserFollowService(db, currentUser);
+        var inner = new UserFollowService(db, currentUser, Mock.Of<INotificationService>());
         return new UserFollowValidationDecorator(inner, db, currentUser);
     }
 

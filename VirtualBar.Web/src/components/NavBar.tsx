@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../contexts/AuthContext'
 import LanguageSwitcher from './LanguageSwitcher'
+import NotificationBell from './NotificationBell'
 import Avatar from './Avatar'
 import type { CSSProperties } from 'react'
 
@@ -83,6 +84,7 @@ export default function NavBar() {
                 {user?.displayName}
               </span>
             </Link>
+            <NotificationBell />
             <LanguageSwitcher />
             <button
               onClick={logout}

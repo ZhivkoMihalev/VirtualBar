@@ -30,7 +30,7 @@ public sealed class BottleLikeServiceTests
     private static IBottleLikeService CreateBottleLikeService(AppDbContext db, Guid currentUserId)
     {
         var currentUser = CreateCurrentUser(currentUserId);
-        var inner = new BottleLikeService(db, currentUser);
+        var inner = new BottleLikeService(db, currentUser, Mock.Of<INotificationService>());
         return new BottleLikeValidationDecorator(inner, db, currentUser);
     }
 

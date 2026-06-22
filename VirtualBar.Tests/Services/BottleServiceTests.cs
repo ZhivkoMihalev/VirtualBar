@@ -28,10 +28,10 @@ public sealed class BottleServiceTests
         return mock.Object;
     }
 
-    private static IBottleService CreateBottleService(AppDbContext db, Guid currentUserId)
+    private static IBottleService CreateBottleService(AppDbContext db, Guid currentUserId, INotificationService? notificationService = null)
     {
         var currentUser = CreateCurrentUser(currentUserId);
-        var inner = new BottleService(db, currentUser);
+        var inner = new BottleService(db, currentUser, notificationService ?? Mock.Of<INotificationService>());
         return new BottleValidationDecorator(inner, db, currentUser);
     }
 
@@ -543,6 +543,57 @@ public sealed class BottleServiceTests
 
         await Assert.ThrowsAsync<OperationCanceledException>(
             () => service.UnlistFromSaleAsync(Guid.NewGuid(), cts.Token));
+    }
+
+    #endregion
+
+    #region Follower notifications
+
+    [Fact]
+    public async Task AddBottleAsync_WhenUserHasFollowers_NotifiesFollowers()
+    {
+        var db = CreateDbContext();
+        var user = SeedUser(db);
+        var follower1 = SeedUser(db, "Follower1");
+        var follower2 = SeedUser(db, "Follower2");
+        db.UserFollows.AddRange(
+            new UserFollow { FollowerId = follower1.Id, FollowedId = user.Id, FollowedAt = DateTime.UtcNow },
+            new UserFollow { FollowerId = follower2.Id, FollowedId = user.Id, FollowedAt = DateTime.UtcNow });
+        db.SaveChanges();
+
+        var notificationMock = new Mock<INotificationService>();
+        var service = CreateBottleService(db, user.Id, notificationMock.Object);
+
+        await service.AddBottleAsync(new AddBottleRequest { Name = "Lagavulin 16", Category = SpiritCategory.Whisky, Condition = BottleCondition.Sealed }, CancellationToken.None);
+
+        notificationMock.Verify(n => n.CreateBulkAsync(
+            It.Is<IEnumerable<Guid>>(ids => ids.Contains(follower1.Id) && ids.Contains(follower2.Id)),
+            NotificationType.NewBottleFromFollowing,
+            It.IsAny<Guid?>(),
+            "Lagavulin 16",
+            CancellationToken.None), Times.Once);
+    }
+
+    [Fact]
+    public async Task ListForSaleAsync_WhenUserHasFollowers_NotifiesFollowers()
+    {
+        var db = CreateDbContext();
+        var user = SeedUser(db);
+        var follower = SeedUser(db, "Follower");
+        db.UserFollows.Add(new UserFollow { FollowerId = follower.Id, FollowedId = user.Id, FollowedAt = DateTime.UtcNow });
+        var bottle = SeedBottle(db, user.Id, "Glenfarclas 25");
+
+        var notificationMock = new Mock<INotificationService>();
+        var service = CreateBottleService(db, user.Id, notificationMock.Object);
+
+        await service.ListForSaleAsync(bottle.Id, new ListForSaleRequest { AskingPrice = 500m, Currency = "USD" }, CancellationToken.None);
+
+        notificationMock.Verify(n => n.CreateBulkAsync(
+            It.Is<IEnumerable<Guid>>(ids => ids.Contains(follower.Id)),
+            NotificationType.BottleListedForSale,
+            bottle.Id,
+            "Glenfarclas 25",
+            CancellationToken.None), Times.Once);
     }
 
     #endregion

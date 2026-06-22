@@ -53,6 +53,7 @@ public static class DependencyInjection
             sp.GetRequiredService<AppDbContext>(),
             sp.GetRequiredService<ICurrentUser>()));
 
+
         services.AddScoped<BottleImageService>();
         services.AddScoped<IBottleImageService>(sp => new BottleImageValidationDecorator(
             sp.GetRequiredService<BottleImageService>(),
@@ -81,6 +82,12 @@ public static class DependencyInjection
         services.AddScoped<FeedService>();
         services.AddScoped<IFeedService>(sp => new FeedValidationDecorator(
             sp.GetRequiredService<FeedService>()));
+
+        services.AddScoped<NotificationService>();
+        services.AddScoped<INotificationService>(sp => new NotificationValidationDecorator(
+            sp.GetRequiredService<NotificationService>(),
+            sp.GetRequiredService<AppDbContext>(),
+            sp.GetRequiredService<ICurrentUser>()));
 
         return services;
     }

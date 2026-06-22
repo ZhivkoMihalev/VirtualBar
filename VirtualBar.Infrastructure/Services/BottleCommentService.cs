@@ -9,7 +9,8 @@ namespace VirtualBar.Infrastructure.Services;
 
 public sealed class BottleCommentService(
     AppDbContext db,
-    ICurrentUser currentUser) : IBottleCommentService
+    ICurrentUser currentUser,
+    INotificationService notificationService) : IBottleCommentService
 {
     public async Task<Result<List<CommentDto>>> GetCommentsAsync(Guid bottleId, CancellationToken cancellationToken)
     {
@@ -35,6 +36,13 @@ public sealed class BottleCommentService(
         await db.SaveChangesAsync(cancellationToken);
 
         await db.Entry(comment).Reference(c => c.User).LoadAsync(cancellationToken);
+
+        var bottleInfo = await db.Bottles
+            .Where(b => b.Id == bottleId && !b.IsDeleted)
+            .Select(b => new { b.UserId, b.Name })
+            .FirstAsync(cancellationToken);
+
+        await notificationService.CreateAsync(bottleInfo.UserId, NotificationType.BottleCommented, bottleId, bottleInfo.Name, cancellationToken);
 
         return Result<CommentDto>.Ok(MapToDto(comment));
     }

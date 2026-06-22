@@ -8,7 +8,8 @@ namespace VirtualBar.Infrastructure.Services;
 
 public sealed class BottleLikeService(
     AppDbContext db,
-    ICurrentUser currentUser) : IBottleLikeService
+    ICurrentUser currentUser,
+    INotificationService notificationService) : IBottleLikeService
 {
     public async Task<Result<bool>> LikeAsync(Guid bottleId, CancellationToken cancellationToken)
     {
@@ -21,6 +22,13 @@ public sealed class BottleLikeService(
 
         db.BottleLikes.Add(like);
         await db.SaveChangesAsync(cancellationToken);
+
+        var bottle = await db.Bottles
+            .Where(b => b.Id == bottleId && !b.IsDeleted)
+            .Select(b => new { b.UserId, b.Id, b.Name })
+            .FirstAsync(cancellationToken);
+
+        await notificationService.CreateAsync(bottle.UserId, NotificationType.BottleLiked, bottle.Id, bottle.Name, cancellationToken);
 
         return Result<bool>.Ok(true);
     }

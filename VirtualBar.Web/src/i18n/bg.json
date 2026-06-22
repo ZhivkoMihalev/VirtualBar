@@ -165,6 +165,12 @@
     "errorComment": "Коментарът не можа да бъде публикуван. Моля, опитайте отново.",
     "post": "Публикувай",
     "posting": "Публикуване…",
+    "remove": "ПРЕМАХНИ ОТ КОЛЕКЦИЯТА",
+    "removeConfirmText": "Изтриването е необратимо. Сигурни ли сте?",
+    "removeConfirm": "ДА, ИЗТРИЙ",
+    "removeCancel": "ОТКАЗ",
+    "removing": "Изтриване…",
+    "removeError": "Грешка при изтриване. Опитайте отново.",
     "saleLabel": "Продажба",
     "askingPrice": "Искана цена",
     "listForSale": "ПУСНИ ЗА ПРОДАЖБА",
@@ -260,5 +266,24 @@
   "barShelf": {
     "addBottle": "Добави бутилка",
     "virtualBar": "Виртуален Бар"
+  },
+  "notifications": {
+    "title": "Известия",
+    "empty": "Няма известия",
+    "markAllRead": "Маркирай всички",
+    "bottleLiked": "хареса {{bottle}}",
+    "bottleLikedNoName": "хареса твоя бутилка",
+    "bottleCommented": "коментира {{bottle}}",
+    "bottleCommentedNoName": "коментира твоята бутилка",
+    "newFollower": "те последва",
+    "newMessage": "ти изпрати съобщение",
+    "newBottleFromFollowing": "добави {{bottle}}",
+    "newBottleFromFollowingNoName": "добави нова бутилка",
+    "bottleListedForSale": "пусна {{bottle}} за продажба",
+    "bottleListedForSaleNoName": "пусна бутилка за продажба",
+    "justNow": "сега",
+    "minutesAgo": "{{count}}м",
+    "hoursAgo": "{{count}}ч",
+    "daysAgo": "{{count}}д"
   }
 }

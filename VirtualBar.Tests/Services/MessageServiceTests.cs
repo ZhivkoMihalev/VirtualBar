@@ -30,7 +30,7 @@ public sealed class MessageServiceTests
     private static IMessageService CreateMessageService(AppDbContext db, Guid currentUserId)
     {
         var currentUser = CreateCurrentUser(currentUserId);
-        var inner = new MessageService(db, currentUser);
+        var inner = new MessageService(db, currentUser, Mock.Of<INotificationService>());
         return new MessageValidationDecorator(inner, db, currentUser);
     }
 

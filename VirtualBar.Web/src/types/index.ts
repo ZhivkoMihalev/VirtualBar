@@ -183,3 +183,21 @@ export interface CreateNewsPostPayload {
   coverImageUrl?: string
   translations: NewsPostTranslation[]
 }
+
+export type NotificationType = 'BottleLiked' | 'BottleCommented' | 'NewFollower' | 'NewMessage' | 'NewBottleFromFollowing' | 'BottleListedForSale'
+
+export interface NotificationItem {
+  id: string
+  type: NotificationType
+  actorId: string
+  actorDisplayName: string
+  resourceId?: string
+  resourceName?: string
+  isRead: boolean
+  createdAt: string
+}
+
+export interface NotificationSummary {
+  notifications: NotificationItem[]
+  unreadCount: number
+}

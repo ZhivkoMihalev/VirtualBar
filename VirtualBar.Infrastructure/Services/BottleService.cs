@@ -9,7 +9,8 @@ namespace VirtualBar.Infrastructure.Services;
 
 public sealed class BottleService(
     AppDbContext db,
-    ICurrentUser currentUser) : IBottleService
+    ICurrentUser currentUser,
+    INotificationService notificationService) : IBottleService
 {
     public async Task<Result<List<BottleDto>>> GetBottlesByUserAsync(Guid userId, CancellationToken cancellationToken)
     {
@@ -62,6 +63,13 @@ public sealed class BottleService(
 
         db.Bottles.Add(bottle);
         await db.SaveChangesAsync(cancellationToken);
+
+        var followerIds = await db.UserFollows
+            .Where(f => f.FollowedId == currentUser.UserId)
+            .Select(f => f.FollowerId)
+            .ToListAsync(cancellationToken);
+
+        await notificationService.CreateBulkAsync(followerIds, NotificationType.NewBottleFromFollowing, bottle.Id, bottle.Name, cancellationToken);
 
         return Result<BottleDto>.Ok(MapToDto(bottle));
     }
@@ -118,6 +126,13 @@ public sealed class BottleService(
         bottle.UpdatedAt = DateTime.UtcNow;
 
         await db.SaveChangesAsync(cancellationToken);
+
+        var followerIds = await db.UserFollows
+            .Where(f => f.FollowedId == currentUser.UserId)
+            .Select(f => f.FollowerId)
+            .ToListAsync(cancellationToken);
+
+        await notificationService.CreateBulkAsync(followerIds, NotificationType.BottleListedForSale, bottle.Id, bottle.Name, cancellationToken);
 
         return Result<bool>.Ok(true);
     }

@@ -810,6 +810,10 @@ export default function DashboardPage() {
           userId={user.id}
           currentUserId={user.id}
           onClose={() => setSelectedBottle(null)}
+          onDelete={() => {
+            queryClient.invalidateQueries({ queryKey: ['bottles', user.id] })
+            setSelectedBottle(null)
+          }}
         />
       )}
     </div>

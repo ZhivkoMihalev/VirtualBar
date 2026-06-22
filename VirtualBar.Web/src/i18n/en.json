@@ -165,6 +165,12 @@
     "errorComment": "Could not post your comment. Please try again.",
     "post": "Post",
     "posting": "Posting…",
+    "remove": "REMOVE FROM COLLECTION",
+    "removeConfirmText": "This cannot be undone. Are you sure?",
+    "removeConfirm": "YES, REMOVE",
+    "removeCancel": "CANCEL",
+    "removing": "Removing…",
+    "removeError": "Failed to remove bottle. Please try again.",
     "saleLabel": "Sale",
     "askingPrice": "Asking price",
     "listForSale": "LIST FOR SALE",
@@ -260,5 +266,24 @@
   "barShelf": {
     "addBottle": "Add bottle",
     "virtualBar": "Virtual Bar"
+  },
+  "notifications": {
+    "title": "Notifications",
+    "empty": "No notifications",
+    "markAllRead": "Mark all read",
+    "bottleLiked": "liked {{bottle}}",
+    "bottleLikedNoName": "liked your bottle",
+    "bottleCommented": "commented on {{bottle}}",
+    "bottleCommentedNoName": "commented on your bottle",
+    "newFollower": "started following you",
+    "newMessage": "sent you a message",
+    "newBottleFromFollowing": "added {{bottle}}",
+    "newBottleFromFollowingNoName": "added a new bottle",
+    "bottleListedForSale": "listed {{bottle}} for sale",
+    "bottleListedForSaleNoName": "listed a bottle for sale",
+    "justNow": "now",
+    "minutesAgo": "{{count}}m",
+    "hoursAgo": "{{count}}h",
+    "daysAgo": "{{count}}d"
   }
 }

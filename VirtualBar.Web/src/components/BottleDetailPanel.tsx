@@ -3,7 +3,7 @@ import type { CSSProperties } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import type { TFunction } from 'i18next'
-import { toggleBottleLike, getBottleComments, addBottleComment, deleteBottleComment, listBottleForSale, unlistBottleFromSale } from '../api/bottlesApi'
+import { toggleBottleLike, getBottleComments, addBottleComment, deleteBottleComment, listBottleForSale, unlistBottleFromSale, removeBottle } from '../api/bottlesApi'
 import type { Bottle } from '../types'
 import { CATEGORY_COLORS, BottleSvg } from './BarShelf'
 
@@ -370,6 +370,104 @@ function SaleSection({ bottle, userId }: { bottle: Bottle; userId: string }) {
   )
 }
 
+function DeleteSection({ bottle, onDelete }: { bottle: Bottle; onDelete?: () => void }) {
+  const { t } = useTranslation()
+  const queryClient = useQueryClient()
+  const [confirming, setConfirming] = useState(false)
+
+  const deleteMutation = useMutation({
+    mutationFn: () => removeBottle(bottle.id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['bottles', bottle.userId] })
+      onDelete?.()
+    },
+  })
+
+  return (
+    <div style={{ marginBottom: 20 }}>
+      {!confirming ? (
+        <button
+          onClick={() => setConfirming(true)}
+          style={{
+            fontFamily: 'Cinzel, serif',
+            fontSize: 10,
+            letterSpacing: '0.15em',
+            textTransform: 'uppercase',
+            color: '#C04040',
+            background: 'rgba(192,64,64,0.07)',
+            border: '1px solid rgba(192,64,64,0.45)',
+            padding: '10px 20px',
+            borderRadius: 2,
+            cursor: 'pointer',
+            width: '100%',
+          }}
+        >
+          {t('bottle.remove')}
+        </button>
+      ) : (
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 10,
+          padding: '12px 16px',
+          background: 'rgba(180,60,60,0.05)',
+          border: '1px solid rgba(180,60,60,0.2)',
+          borderRadius: 4,
+          flexWrap: 'wrap',
+        }}>
+          <span style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: 15, color: '#C04040', flex: 1, minWidth: 160 }}>
+            {t('bottle.removeConfirmText')}
+          </span>
+          <button
+            onClick={() => deleteMutation.mutate()}
+            disabled={deleteMutation.isPending}
+            style={{
+              fontFamily: 'Cinzel, serif',
+              fontSize: 9,
+              letterSpacing: '0.15em',
+              textTransform: 'uppercase',
+              color: '#C04040',
+              background: 'transparent',
+              border: '1px solid rgba(192,64,64,0.5)',
+              padding: '8px 14px',
+              borderRadius: 2,
+              cursor: deleteMutation.isPending ? 'wait' : 'pointer',
+              opacity: deleteMutation.isPending ? 0.6 : 1,
+              whiteSpace: 'nowrap',
+            }}
+          >
+            {deleteMutation.isPending ? t('bottle.removing') : t('bottle.removeConfirm')}
+          </button>
+          <button
+            onClick={() => setConfirming(false)}
+            disabled={deleteMutation.isPending}
+            style={{
+              fontFamily: 'Cinzel, serif',
+              fontSize: 9,
+              letterSpacing: '0.15em',
+              textTransform: 'uppercase',
+              color: '#B09868',
+              background: 'transparent',
+              border: '1px solid rgba(201,168,76,0.2)',
+              padding: '8px 14px',
+              borderRadius: 2,
+              cursor: deleteMutation.isPending ? 'wait' : 'pointer',
+              opacity: deleteMutation.isPending ? 0.6 : 1,
+            }}
+          >
+            {t('bottle.removeCancel')}
+          </button>
+        </div>
+      )}
+      {deleteMutation.isError && (
+        <div style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: 14, color: '#C04040', marginTop: 8 }}>
+          {t('bottle.removeError')}
+        </div>
+      )}
+    </div>
+  )
+}
+
 function DetailRow({ label, value }: { label: string; value: string | number }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
@@ -388,11 +486,13 @@ export default function BottleDetailPanel({
   userId,
   currentUserId,
   onClose,
+  onDelete,
 }: {
   bottle: Bottle
   userId: string
   currentUserId: string
   onClose: () => void
+  onDelete?: () => void
 }) {
   const { t } = useTranslation()
   const col = CATEGORY_COLORS[bottle.category]
@@ -533,7 +633,10 @@ export default function BottleDetailPanel({
           )}
 
           {bottle.userId === currentUserId ? (
-            <SaleSection bottle={bottle} userId={userId} />
+            <>
+              <SaleSection bottle={bottle} userId={userId} />
+              <DeleteSection bottle={bottle} onDelete={onDelete ?? onClose} />
+            </>
           ) : bottle.isForSale && bottle.askingPrice != null ? (
             <div style={{
               display: 'flex',

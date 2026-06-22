@@ -31,7 +31,7 @@ public sealed class BottleCommentServiceTests
     private static IBottleCommentService CreateBottleCommentService(AppDbContext db, Guid currentUserId)
     {
         var currentUser = CreateCurrentUser(currentUserId);
-        var inner = new BottleCommentService(db, currentUser);
+        var inner = new BottleCommentService(db, currentUser, Mock.Of<INotificationService>());
         return new BottleCommentValidationDecorator(inner, db, currentUser);
     }
 

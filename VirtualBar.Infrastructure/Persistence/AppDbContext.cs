@@ -16,6 +16,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
     public DbSet<Message> Messages => Set<Message>();
     public DbSet<NewsPost> NewsPosts => Set<NewsPost>();
     public DbSet<NewsPostTranslation> NewsPostTranslations => Set<NewsPostTranslation>();
+    public DbSet<Notification> Notifications => Set<Notification>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -86,6 +87,21 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
                 .WithMany(p => p.Translations)
                 .HasForeignKey(t => t.PostId)
                 .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        builder.Entity<Notification>(e =>
+        {
+            e.HasOne(n => n.User)
+                .WithMany()
+                .HasForeignKey(n => n.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            e.HasOne(n => n.Actor)
+                .WithMany()
+                .HasForeignKey(n => n.ActorId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            e.HasIndex(n => new { n.UserId, n.IsDeleted, n.CreatedAt });
         });
     }
 }

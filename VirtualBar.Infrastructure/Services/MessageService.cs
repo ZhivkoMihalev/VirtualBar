@@ -9,7 +9,8 @@ namespace VirtualBar.Infrastructure.Services;
 
 public sealed class MessageService(
     AppDbContext db,
-    ICurrentUser currentUser) : IMessageService
+    ICurrentUser currentUser,
+    INotificationService notificationService) : IMessageService
 {
     public async Task<Result<List<ConversationSummaryDto>>> GetInboxAsync(CancellationToken cancellationToken)
     {
@@ -70,6 +71,8 @@ public sealed class MessageService(
         await db.SaveChangesAsync(cancellationToken);
 
         await db.Entry(message).Reference(m => m.Sender).LoadAsync(cancellationToken);
+
+        await notificationService.CreateAsync(request.ReceiverId, NotificationType.NewMessage, message.Id, null, cancellationToken);
 
         return Result<MessageDto>.Ok(MapToDto(message));
     }

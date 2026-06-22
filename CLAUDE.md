@@ -6,7 +6,7 @@ This file provides guidance to Claude Code when working with code in this reposi
 
 ## What is VirtualBar
 
-VirtualBar is a platform for collectors of premium spirits (whisky, rum, cognac, vodka and more). Every user gets a **virtual bar** — a public profile showcasing their collection. Others can browse collections, follow collectors, like and comment on bottles, send direct messages, and buy/sell limited editions through a built-in marketplace. The home page (`/`) is a social news feed showing admin-authored articles and activity from followed users.
+VirtualBar is a platform for collectors of premium spirits (whisky, rum, cognac, vodka and more). Every user gets a **virtual bar** — a public profile showcasing their collection. Others can browse collections, follow collectors, like and comment on bottles, send direct messages, and buy/sell limited editions through a built-in marketplace. The home page (`/`) is a social news feed showing admin-authored articles and activity from followed users. Users receive **in-app notifications** when someone likes/comments their bottle, follows them, sends a message, or when someone they follow adds a bottle or lists one for sale.
 
 **User roles:** Collector (all registered users). Platform administrators have `IsAdmin = true` on their `AppUser` record — seeded via `AdminEmail` in `appsettings.Development.json` on startup.
 
@@ -139,7 +139,8 @@ if (bottle.UserId != currentUser.UserId)
 ```csharp
 public sealed class BottleService(
     AppDbContext db,
-    ICurrentUser currentUser) : IBottleService
+    ICurrentUser currentUser,
+    INotificationService notificationService) : IBottleService
 ```
 
 ### Controller XML docs
@@ -193,7 +194,9 @@ Key DbSets:
 | `BottleComments` | Comments on a bottle |
 | `UserFollows` | Junction: follower → followed (composite PK) |
 | `Messages` | Direct messages between users |
-| `NewsPosts` | Admin-authored news articles shown on the home feed |
+| `NewsPosts` | Admin-authored news articles (multilingual via `NewsPostTranslations`) |
+| `NewsPostTranslations` | Per-language title + content for a `NewsPost` |
+| `Notifications` | In-app notifications for users |
 
 All entities extend `BaseEntity` which adds `Id (Guid)`, `CreatedAt`, `UpdatedAt`, `IsDeleted`, `DeletedAt`.
 
@@ -297,13 +300,53 @@ Both FK relations use `DeleteBehavior.Restrict`.
 ### NewsPost
 | Property | Type | Notes |
 |---|---|---|
-| `Title` | `string` | |
-| `Excerpt` | `string` | Short summary shown in feed cards |
-| `Content` | `string` | Full article body |
-| `CoverImageUrl` | `string?` | Optional cover image |
+| `CoverImageUrl` | `string?` | Optional cover image (shared across languages) |
 | `AuthorId` | `Guid` | FK → AppUser |
 
-Admin-only write (`IsAdmin` check in `NewsValidationDecorator`). Public read via `GET /api/news` and `GET /api/feed`.
+Has `ICollection<NewsPostTranslation> Translations`. The flat `Title`/`Excerpt`/`Content` columns were removed by migration — all text is in the translations table. Admin-only write (`IsAdmin` check in `NewsValidationDecorator`). Public read via `GET /api/news?lang=bg` and `GET /api/feed?lang=bg`.
+
+### NewsPostTranslation
+Composite PK: `(PostId, LanguageCode)`. Cascade delete from `NewsPost`.
+| Property | Type | Notes |
+|---|---|---|
+| `PostId` | `Guid` | FK → NewsPost |
+| `LanguageCode` | `string` | e.g. `"bg"`, `"en"` |
+| `Title` | `string` | |
+| `Content` | `string` | Full article body |
+
+`NewsService.Resolve(post, lang)` returns the translation matching `lang`, falls back to `"bg"`. Bulgarian translation is required — enforced in `NewsValidationDecorator`.
+
+---
+
+### Notification
+| Property | Type | Notes |
+|---|---|---|
+| `UserId` | `Guid` | FK → AppUser (recipient) |
+| `Type` | `NotificationType` | See enum below |
+| `ActorId` | `Guid` | FK → AppUser (who triggered it) |
+| `ActorDisplayName` | `string` | Denormalised — avoids join on read |
+| `ResourceId` | `Guid?` | Bottle ID (for bottle-related types) or Message ID |
+| `ResourceName` | `string?` | Bottle name (for bottle-related types) |
+| `IsRead` | `bool` | |
+
+Both FK relations use `DeleteBehavior.Restrict`. Composite index on `(UserId, IsDeleted, CreatedAt)`.
+
+**NotificationType enum:**
+| Value | Triggered by |
+|---|---|
+| `BottleLiked` | `BottleLikeService.LikeAsync` |
+| `BottleCommented` | `BottleCommentService.AddCommentAsync` |
+| `NewFollower` | `UserFollowService.FollowAsync` |
+| `NewMessage` | `MessageService.SendAsync` |
+| `NewBottleFromFollowing` | `BottleService.AddBottleAsync` — fan-out to all followers |
+| `BottleListedForSale` | `BottleService.ListForSaleAsync` — fan-out to all followers |
+
+**INotificationService methods:**
+- `CreateAsync(recipientId, type, resourceId, resourceName, ct)` — single recipient; decorator skips if `recipientId == currentUser.UserId` (no self-notifications).
+- `CreateBulkAsync(recipientIds, type, resourceId, resourceName, ct)` — fan-out; queries actor display name once, `AddRange` + single `SaveChangesAsync`. Decorator filters out self from the list.
+- Both are fire-and-forget calls from trigger services (not controller-exposed). They return `Task` (not `Result<T>`).
+- `GET /api/notifications` — returns last 30 + global unread count.
+- `PATCH /api/notifications/{id}/read` and `POST /api/notifications/read-all`.
 
 ---
 
@@ -311,7 +354,7 @@ Admin-only write (`IsAdmin` check in `NewsValidationDecorator`). Public read via
 
 **Auth:** JWT stored in `localStorage` (`token` + `user`). `AuthContext` exposes `user`, `login`, `logout`. The Axios `client` in `src/api/client.ts` attaches the token as a Bearer header on every request and redirects to `/login` on 401. The `user` object includes `isAdmin: boolean` — set from the JWT claim emitted by `AuthService`.
 
-**API layer (`src/api/`):** One file per domain (e.g., `bottlesApi.ts`, `usersApi.ts`). All use named import `{ client }` from `./client`. Return typed data directly (axios `.data` unwrapping).
+**API layer (`src/api/`):** One file per domain (e.g., `bottlesApi.ts`, `usersApi.ts`, `notificationsApi.ts`). All use named import `{ client }` from `./client`. Return typed data directly (axios `.data` unwrapping).
 
 **Data fetching:** TanStack Query (`useQuery` / `useMutation`). `queryClient.invalidateQueries` after mutations. Global `staleTime: 30_000`.
 
@@ -321,12 +364,23 @@ Admin-only write (`IsAdmin` check in `NewsValidationDecorator`). Public read via
 
 **Routing:** `/` is `HomePage.tsx` (public news/social feed). Login and register redirect to `/` after success. `/dashboard` is the user's own virtual bar (protected).
 
+**Shared components:**
+- `src/components/NavBar.tsx` — imported by every page; contains `<NotificationBell />` and `<LanguageSwitcher />` in the right slot (authenticated only).
+- `src/components/Avatar.tsx` — props: `displayName`, `avatarUrl?`, `size`. Renders `<img>` when avatarUrl present, initials div otherwise. Used in NavBar, MessagesPage, ProfilePage, PublicBarPage.
+- `src/components/NotificationBell.tsx` — bell icon with gold badge (unread count), dropdown with last 30 notifications, mark-read / mark-all-read. Polls every 30 s via `refetchInterval`.
+- `src/components/Footer.tsx` — mounted once in `App.tsx`; fully opaque `#07030A` background.
+- `src/components/BottleDetailPanel.tsx` — full-screen overlay for bottle details. Shows `SaleSection` + `DeleteSection` for the owner, `LikesSection` and `CommentsSection` for all. `onDelete` prop (DashboardPage only) invalidates bottles query and closes panel.
+
+**App shell (`src/App.tsx`):** Fixed background image (`/public/bg-room.png`) + darkening overlay both `position: fixed; z-index: -1/-2`, content wrapper, then `<Footer />` outside the wrapper.
+
 **Visual theme:** Tailwind CSS 4 + inline styles for the speakeasy aesthetic.
 - Background: `#07030A` / `stone-950` / `stone-900`
 - Accent gold: `#C9A84C` / `#E8C870`
 - Text: `stone-100` / `stone-300`
 - Cards/surfaces: dark semi-transparent with amber borders
 - Fonts: Playfair Display (headings), Cormorant Garamond, Cinzel (labels/nav)
+
+**Static inline styles:** Module-level `CSSProperties` constants (never created inside render). Dynamic values (hover state, `item.isRead` background) stay inline.
 
 ---
 
@@ -336,7 +390,8 @@ Admin-only write (`IsAdmin` check in `NewsValidationDecorator`). Public read via
 - Method naming: `<MethodName>_When<Condition>_<ExpectedOutcome>`.
 - Each test creates an isolated InMemory DB: `Guid.NewGuid().ToString()` as the DB name.
 - Use **EF Core InMemory** by default. Switch to **SQLite in-memory** only when the method calls `ExecuteUpdateAsync` or `ExecuteDeleteAsync`.
-- Mock only `ICurrentUser` — never mock `AppDbContext`.
+- Mock only `ICurrentUser` and `INotificationService` — never mock `AppDbContext`.
+- Services that depend on `INotificationService` receive `Mock.Of<INotificationService>()` in their `CreateXxxService` helper (optional parameter with default).
 - Seed helpers are `private static` methods in the test class: `SeedUser`, `SeedBottle`, `SeedComment`, etc.
 - Cover every branch: every `if`, every `switch` arm, every `?.`, `??`, `&&`, `||`.
 

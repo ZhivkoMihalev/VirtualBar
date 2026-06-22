@@ -8,49 +8,8 @@ import { getUserProfile, followUser, unfollowUser } from '../api/usersApi'
 import type { Bottle, UserProfile } from '../types'
 import { VirtualBarScene } from '../components/BarShelf'
 import BottleDetailPanel from '../components/BottleDetailPanel'
+import Avatar from '../components/Avatar'
 import NavBar from '../components/NavBar'
-
-function Avatar({ name, url, size }: { name: string; url?: string; size: number }) {
-  const initial = name.trim().charAt(0).toUpperCase() || '?'
-
-  if (url) {
-    return (
-      <img
-        src={url}
-        alt={name}
-        style={{
-          width: size,
-          height: size,
-          borderRadius: '50%',
-          objectFit: 'cover',
-          border: '2px solid rgba(201,168,76,0.4)',
-          flexShrink: 0,
-        }}
-      />
-    )
-  }
-
-  return (
-    <div
-      style={{
-        width: size,
-        height: size,
-        borderRadius: '50%',
-        border: '2px solid rgba(201,168,76,0.4)',
-        background: 'radial-gradient(ellipse at 50% 30%, rgba(201,168,76,0.15), rgba(10,5,2,0.6))',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        fontFamily: 'Playfair Display, serif',
-        fontSize: size * 0.42,
-        color: '#E8C870',
-        flexShrink: 0,
-      }}
-    >
-      {initial}
-    </div>
-  )
-}
 
 function FollowButton({ profile, userId }: { profile: UserProfile; userId: string }) {
   const { t } = useTranslation()
@@ -171,7 +130,7 @@ export default function PublicBarPage() {
                 borderRadius: 6,
               }}
             >
-              <Avatar name={profile.displayName} url={profile.avatarUrl} size={72} />
+              <Avatar displayName={profile.displayName} avatarUrl={profile.avatarUrl} size={72} />
 
               <div style={{ flex: 1, minWidth: 0 }}>
                 <h1 style={{ fontFamily: 'Playfair Display, serif', fontSize: 32, fontWeight: 700, color: '#E8C870', margin: 0, lineHeight: 1.15 }}>

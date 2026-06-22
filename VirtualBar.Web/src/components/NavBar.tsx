@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../contexts/AuthContext'
 import LanguageSwitcher from './LanguageSwitcher'
+import Avatar from './Avatar'
 import type { CSSProperties } from 'react'
 
 const navLinkStyle: CSSProperties = {
@@ -77,39 +78,7 @@ export default function NavBar() {
               to="/profile"
               style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}
             >
-              {user?.avatarUrl ? (
-                <img
-                  src={user.avatarUrl}
-                  alt={user.displayName}
-                  style={{
-                    width: 32,
-                    height: 32,
-                    borderRadius: '50%',
-                    objectFit: 'cover',
-                    border: '1.5px solid rgba(201,168,76,0.5)',
-                    flexShrink: 0,
-                  }}
-                />
-              ) : (
-                <div
-                  style={{
-                    width: 32,
-                    height: 32,
-                    borderRadius: '50%',
-                    border: '1.5px solid rgba(201,168,76,0.5)',
-                    background: 'radial-gradient(ellipse at 50% 30%, rgba(201,168,76,0.15), rgba(10,5,2,0.6))',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontFamily: 'Playfair Display, serif',
-                    fontSize: 13,
-                    color: '#E8C870',
-                    flexShrink: 0,
-                  }}
-                >
-                  {user?.displayName.trim().charAt(0).toUpperCase()}
-                </div>
-              )}
+              {user && <Avatar displayName={user.displayName} avatarUrl={user.avatarUrl} size={32} />}
               <span style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: 15, color: '#C9A84C' }}>
                 {user?.displayName}
               </span>

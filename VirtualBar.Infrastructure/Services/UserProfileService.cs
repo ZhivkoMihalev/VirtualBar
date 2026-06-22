@@ -12,38 +12,26 @@ public sealed class UserProfileService(AppDbContext db, ICurrentUser currentUser
 {
     public async Task<Result<UserProfileDto>> GetProfileAsync(Guid userId, CancellationToken cancellationToken)
     {
-        var user = await db.Users.FindAsync([userId], cancellationToken);
+        var dto = await db.Users
+            .Where(u => u.Id == userId)
+            .Select(u => new UserProfileDto
+            {
+                Id = u.Id,
+                DisplayName = u.DisplayName,
+                Bio = u.Bio,
+                AvatarUrl = u.AvatarUrl,
+                Country = u.Country,
+                City = u.City,
+                BottleCount = u.Bottles.Count(b => !b.IsDeleted),
+                FollowerCount = u.Followers.Count,
+                FollowingCount = u.Following.Count,
+                IsFollowedByMe = u.Followers.Any(f => f.FollowerId == currentUser.UserId),
+            })
+            .FirstAsync(cancellationToken);
 
-        var bottleCount = await db.Bottles
-            .Where(b => b.UserId == userId && !b.IsDeleted)
-            .CountAsync(cancellationToken);
+        dto.IsFollowedByMe = currentUser.IsAuthenticated && dto.IsFollowedByMe;
 
-        var followerCount = await db.UserFollows
-            .Where(f => f.FollowedId == userId)
-            .CountAsync(cancellationToken);
-
-        var followingCount = await db.UserFollows
-            .Where(f => f.FollowerId == userId)
-            .CountAsync(cancellationToken);
-
-        var isFollowedByMe = currentUser.IsAuthenticated
-            && await db.UserFollows.AnyAsync(
-                f => f.FollowerId == currentUser.UserId && f.FollowedId == userId,
-                cancellationToken);
-
-        return Result<UserProfileDto>.Ok(new UserProfileDto
-        {
-            Id = user!.Id,
-            DisplayName = user.DisplayName,
-            Bio = user.Bio,
-            AvatarUrl = user.AvatarUrl,
-            Country = user.Country,
-            City = user.City,
-            BottleCount = bottleCount,
-            FollowerCount = followerCount,
-            FollowingCount = followingCount,
-            IsFollowedByMe = isFollowedByMe,
-        });
+        return Result<UserProfileDto>.Ok(dto);
     }
 
     public async Task<Result<List<UserSearchDto>>> SearchUsersAsync(string? query, CancellationToken cancellationToken)
@@ -63,8 +51,8 @@ public sealed class UserProfileService(AppDbContext db, ICurrentUser currentUser
                 AvatarUrl = u.AvatarUrl,
                 Bio = u.Bio,
                 Country = u.Country,
-                BottleCount = db.Bottles.Count(b => b.UserId == u.Id && !b.IsDeleted),
-                FollowerCount = db.UserFollows.Count(f => f.FollowedId == u.Id),
+                BottleCount = u.Bottles.Count(b => !b.IsDeleted),
+                FollowerCount = u.Followers.Count,
             })
             .ToListAsync(cancellationToken);
 

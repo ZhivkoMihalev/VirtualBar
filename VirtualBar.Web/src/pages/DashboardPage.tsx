@@ -1,4 +1,4 @@
-﻿import { useState } from 'react'
+﻿import { useState, useMemo } from 'react'
 import type { CSSProperties } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
@@ -53,23 +53,26 @@ function CategoryPill({
 }
 
 
+const statValueStyle: CSSProperties = {
+  fontFamily: 'Playfair Display, serif',
+  fontSize: 24,
+  fontWeight: 700,
+  color: '#C9A84C',
+}
+
+const statLabelStyle: CSSProperties = {
+  fontFamily: 'Cormorant Garamond, serif',
+  fontSize: 14,
+  color: '#B09868',
+  letterSpacing: '0.1em',
+  textTransform: 'uppercase',
+}
+
 function StatItem({ value, label }: { value: number; label: string }) {
   return (
     <div>
-      <div style={{ fontFamily: 'Playfair Display, serif', fontSize: 24, fontWeight: 700, color: '#C9A84C' }}>
-        {value}
-      </div>
-      <div
-        style={{
-          fontFamily: 'Cormorant Garamond, serif',
-          fontSize: 14,
-          color: '#B09868',
-          letterSpacing: '0.1em',
-          textTransform: 'uppercase',
-        }}
-      >
-        {label}
-      </div>
+      <div style={statValueStyle}>{value}</div>
+      <div style={statLabelStyle}>{label}</div>
     </div>
   )
 }
@@ -597,14 +600,18 @@ export default function DashboardPage() {
     enabled: !!user?.id,
   })
 
-  const displayedBottles = activeCategory
-    ? bottles.filter((b) => b.category === activeCategory)
-    : bottles
+  const displayedBottles = useMemo(
+    () => activeCategory ? bottles.filter(b => b.category === activeCategory) : bottles,
+    [bottles, activeCategory],
+  )
 
-  const categoryCounts = CATEGORIES.reduce((acc, cat) => {
-    acc[cat] = bottles.filter((b) => b.category === cat).length
-    return acc
-  }, {} as Record<SpiritCategory, number>)
+  const categoryCounts = useMemo(
+    () => CATEGORIES.reduce((acc, cat) => {
+      acc[cat] = bottles.filter(b => b.category === cat).length
+      return acc
+    }, {} as Record<SpiritCategory, number>),
+    [bottles],
+  )
 
   return (
     <div style={{ minHeight: '100vh', color: '#F0DDB4' }}>

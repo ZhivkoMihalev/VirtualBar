@@ -64,6 +64,21 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
         builder.Entity<AppUser>()
             .HasIndex(u => u.DisplayName);
 
+        builder.Entity<Bottle>()
+            .HasIndex(b => new { b.UserId, b.IsDeleted });
+
+        builder.Entity<UserFollow>()
+            .HasIndex(f => f.FollowedId);
+
+        builder.Entity<Message>()
+            .HasIndex(m => m.SenderId);
+
+        builder.Entity<Message>()
+            .HasIndex(m => m.ReceiverId);
+
+        builder.Entity<BottleComment>()
+            .HasIndex(c => c.BottleId);
+
         builder.Entity<NewsPostTranslation>(e =>
         {
             e.HasKey(t => new { t.PostId, t.LanguageCode });

@@ -6,6 +6,7 @@ import { useAuth } from '../contexts/AuthContext'
 import { getInbox, getConversation, sendMessage, markRead } from '../api/messagesApi'
 import type { ConversationSummary, Message } from '../types'
 import NavBar from '../components/NavBar'
+import Avatar from '../components/Avatar'
 
 function formatTime(iso: string): string {
   const date = new Date(iso)
@@ -20,50 +21,6 @@ function formatTime(iso: string): string {
   }
 
   return date.toLocaleDateString([], { day: '2-digit', month: 'short' })
-}
-
-function initials(name: string): string {
-  return name.trim().charAt(0).toUpperCase() || '?'
-}
-
-function Avatar({ name, url, size }: { name: string; url?: string; size: number }) {
-  if (url) {
-    return (
-      <img
-        src={url}
-        alt={name}
-        style={{
-          width: size,
-          height: size,
-          borderRadius: '50%',
-          objectFit: 'cover',
-          border: '2px solid rgba(201,168,76,0.4)',
-          flexShrink: 0,
-        }}
-      />
-    )
-  }
-
-  return (
-    <div
-      style={{
-        width: size,
-        height: size,
-        borderRadius: '50%',
-        border: '2px solid rgba(201,168,76,0.4)',
-        background: 'radial-gradient(ellipse at 50% 30%, rgba(201,168,76,0.15), rgba(10,5,2,0.6))',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        fontFamily: 'Playfair Display, serif',
-        fontSize: size * 0.42,
-        color: '#E8C870',
-        flexShrink: 0,
-      }}
-    >
-      {initials(name)}
-    </div>
-  )
 }
 
 function ConversationCard({
@@ -100,7 +57,7 @@ function ConversationCard({
         cursor: 'pointer',
       }}
     >
-      <Avatar name={conversation.otherUserDisplayName} url={conversation.otherUserAvatarUrl} size={44} />
+      <Avatar displayName={conversation.otherUserDisplayName} avatarUrl={conversation.otherUserAvatarUrl} size={44} />
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 8 }}>
           <span

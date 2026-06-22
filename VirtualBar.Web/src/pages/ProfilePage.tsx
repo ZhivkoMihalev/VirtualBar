@@ -4,6 +4,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../contexts/AuthContext'
 import NavBar from '../components/NavBar'
+import Avatar from '../components/Avatar'
 import { updateProfile, uploadAvatar } from '../api/usersApi'
 import type { UpdatedProfile } from '../types'
 
@@ -93,8 +94,6 @@ export default function ProfilePage() {
     saveMutation.mutate()
   }
 
-  const initial = displayName.trim().charAt(0).toUpperCase() || '?'
-
   return (
     <div style={{ minHeight: '100vh', color: '#F0DDB4' }}>
       <NavBar />
@@ -127,39 +126,7 @@ export default function ProfilePage() {
 
         <label style={labelStyle}>{t('profile.avatar')}</label>
         <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 8 }}>
-          {avatarUrl ? (
-            <img
-              src={avatarUrl}
-              alt={displayName}
-              style={{
-                width: 80,
-                height: 80,
-                borderRadius: '50%',
-                objectFit: 'cover',
-                border: '2px solid rgba(201,168,76,0.4)',
-                flexShrink: 0,
-              }}
-            />
-          ) : (
-            <div
-              style={{
-                width: 80,
-                height: 80,
-                borderRadius: '50%',
-                border: '2px solid rgba(201,168,76,0.4)',
-                background: 'radial-gradient(ellipse at 50% 30%, rgba(201,168,76,0.15), rgba(10,5,2,0.6))',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontFamily: 'Playfair Display, serif',
-                fontSize: 34,
-                color: '#E8C870',
-                flexShrink: 0,
-              }}
-            >
-              {initial}
-            </div>
-          )}
+          <Avatar displayName={displayName} avatarUrl={avatarUrl ?? undefined} size={80} />
 
           <button
             type="button"

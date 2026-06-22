@@ -15,32 +15,44 @@ public sealed class MessageService(
     {
         var userId = currentUser.UserId;
 
-        var messages = await db.Messages
+        var grouped = await db.Messages
             .Where(m => !m.IsDeleted && (m.SenderId == userId || m.ReceiverId == userId))
-            .Include(m => m.Sender)
-            .Include(m => m.Receiver)
-            .OrderByDescending(m => m.CreatedAt)
+            .GroupBy(m => m.SenderId == userId ? m.ReceiverId : m.SenderId)
+            .Select(g => new
+            {
+                OtherUserId         = g.Key,
+                LastMessageAt       = g.Max(m => m.CreatedAt),
+                UnreadCount         = g.Count(m => m.ReceiverId == userId && !m.IsRead),
+                LastMessageContent  = g.OrderByDescending(m => m.CreatedAt).Select(m => m.Content).First(),
+                LastMessageIsFromMe = g.OrderByDescending(m => m.CreatedAt).Select(m => m.SenderId == userId).First(),
+            })
+            .OrderByDescending(g => g.LastMessageAt)
             .ToListAsync(cancellationToken);
 
-        var conversations = messages
-            .GroupBy(m => m.SenderId == userId ? m.ReceiverId : m.SenderId)
-            .Select(g =>
+        if (grouped.Count == 0)
+            return Result<List<ConversationSummaryDto>>.Ok([]);
+
+        var otherUserIds = grouped.Select(g => g.OtherUserId).ToList();
+        var users = await db.Users
+            .Where(u => otherUserIds.Contains(u.Id))
+            .Select(u => new { u.Id, u.DisplayName, u.AvatarUrl })
+            .ToListAsync(cancellationToken);
+        var userMap = users.ToDictionary(u => u.Id);
+
+        var conversations = grouped.Select(g =>
+        {
+            var other = userMap[g.OtherUserId];
+            return new ConversationSummaryDto
             {
-                var lastMsg = g.First();
-                var otherUser = lastMsg.SenderId == userId ? lastMsg.Receiver : lastMsg.Sender;
-                return new ConversationSummaryDto
-                {
-                    OtherUserId = otherUser.Id,
-                    OtherUserDisplayName = otherUser.DisplayName,
-                    OtherUserAvatarUrl = otherUser.AvatarUrl,
-                    LastMessageContent = lastMsg.Content,
-                    LastMessageAt = lastMsg.CreatedAt,
-                    LastMessageIsFromMe = lastMsg.SenderId == userId,
-                    UnreadCount = g.Count(m => m.ReceiverId == userId && !m.IsRead)
-                };
-            })
-            .OrderByDescending(c => c.LastMessageAt)
-            .ToList();
+                OtherUserId          = g.OtherUserId,
+                OtherUserDisplayName = other.DisplayName,
+                OtherUserAvatarUrl   = other.AvatarUrl,
+                LastMessageAt        = g.LastMessageAt,
+                LastMessageContent   = g.LastMessageContent,
+                LastMessageIsFromMe  = g.LastMessageIsFromMe,
+                UnreadCount          = g.UnreadCount,
+            };
+        }).ToList();
 
         return Result<List<ConversationSummaryDto>>.Ok(conversations);
     }

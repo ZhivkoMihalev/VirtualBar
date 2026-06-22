@@ -37,6 +37,18 @@ const inputStyle: CSSProperties = {
   width: '100%',
 }
 
+const selectStyle: CSSProperties = {
+  background: '#0A0502',
+  border: '1px solid rgba(201,168,76,0.2)',
+  color: '#F0DDB4',
+  fontFamily: 'Cormorant Garamond, serif',
+  fontSize: 15,
+  padding: '10px 14px',
+  borderRadius: 4,
+  outline: 'none',
+  cursor: 'pointer',
+}
+
 function focusOn(e: React.FocusEvent<HTMLInputElement>) {
   e.currentTarget.style.border = '1px solid rgba(201,168,76,0.5)'
 }
@@ -348,17 +360,7 @@ export default function MarketplacePage() {
           <select
             value={sort}
             onChange={(e) => setSort(e.target.value as SortOption)}
-            style={{
-              background: '#0A0502',
-              border: '1px solid rgba(201,168,76,0.2)',
-              color: '#F0DDB4',
-              fontFamily: 'Cormorant Garamond, serif',
-              fontSize: 15,
-              padding: '10px 14px',
-              borderRadius: 4,
-              outline: 'none',
-              cursor: 'pointer',
-            }}
+            style={selectStyle}
           >
             <option value="newest">{t('marketplace.sortNewest')}</option>
             <option value="price_asc">{t('marketplace.sortPriceAsc')}</option>

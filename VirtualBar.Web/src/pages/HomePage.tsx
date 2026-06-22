@@ -66,75 +66,75 @@ function focusOff(e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) {
   e.currentTarget.style.border = '1px solid rgba(201,168,76,0.2)'
 }
 
+const heroLabelStyle: CSSProperties = {
+  fontFamily: 'Cinzel, serif',
+  fontSize: 12,
+  letterSpacing: '0.5em',
+  color: '#B09868',
+  marginBottom: 18,
+}
+
+const heroTitleStyle: CSSProperties = {
+  fontFamily: 'Playfair Display, serif',
+  fontSize: 64,
+  fontWeight: 700,
+  color: '#E8C870',
+  margin: 0,
+  lineHeight: 1,
+  letterSpacing: '0.04em',
+}
+
+const heroDividerStyle: CSSProperties = {
+  width: 180,
+  height: 2,
+  margin: '24px auto',
+  background: 'linear-gradient(90deg, transparent, #C9A84C, transparent)',
+}
+
+const heroSubtitleStyle: CSSProperties = {
+  fontFamily: 'Cormorant Garamond, serif',
+  fontSize: 21,
+  fontStyle: 'italic',
+  color: '#C9A84C',
+  maxWidth: 620,
+  margin: '0 auto',
+  lineHeight: 1.5,
+}
+
 function Hero() {
   const { t } = useTranslation()
   return (
     <header style={{ textAlign: 'center', padding: '64px 24px 48px', position: 'relative' }}>
-      <div
-        style={{
-          fontFamily: 'Cinzel, serif',
-          fontSize: 12,
-          letterSpacing: '0.5em',
-          color: '#B09868',
-          marginBottom: 18,
-        }}
-      >
-        {t('hero.vol')}
-      </div>
-      <h1
-        style={{
-          fontFamily: 'Playfair Display, serif',
-          fontSize: 64,
-          fontWeight: 700,
-          color: '#E8C870',
-          margin: 0,
-          lineHeight: 1,
-          letterSpacing: '0.04em',
-        }}
-      >
-        {t('hero.title')}
-      </h1>
-      <div
-        style={{
-          width: 180,
-          height: 2,
-          margin: '24px auto',
-          background: 'linear-gradient(90deg, transparent, #C9A84C, transparent)',
-        }}
-      />
-      <p
-        style={{
-          fontFamily: 'Cormorant Garamond, serif',
-          fontSize: 21,
-          fontStyle: 'italic',
-          color: '#C9A84C',
-          maxWidth: 620,
-          margin: '0 auto',
-          lineHeight: 1.5,
-        }}
-      >
-        {t('hero.subtitle')}
-      </p>
+      <div style={heroLabelStyle}>{t('hero.vol')}</div>
+      <h1 style={heroTitleStyle}>{t('hero.title')}</h1>
+      <div style={heroDividerStyle} />
+      <p style={heroSubtitleStyle}>{t('hero.subtitle')}</p>
     </header>
   )
 }
 
+const skeletonCardStyle: CSSProperties = {
+  background: 'rgba(201,168,76,0.04)',
+  borderLeft: '3px solid rgba(201,168,76,0.2)',
+  borderRadius: 6,
+  padding: 28,
+  animation: 'shimmer 1.6s ease-in-out infinite',
+}
+
+const skeletonLine1Style: CSSProperties = { height: 12, width: 110, background: 'rgba(201,168,76,0.18)', borderRadius: 2, marginBottom: 18 }
+const skeletonLine2Style: CSSProperties = { height: 28, width: '70%', background: 'rgba(201,168,76,0.14)', borderRadius: 2, marginBottom: 16 }
+const skeletonLine3Style: CSSProperties = { height: 14, width: '100%', background: 'rgba(201,168,76,0.08)', borderRadius: 2, marginBottom: 8 }
+const skeletonLine4Style: CSSProperties = { height: 14, width: '85%', background: 'rgba(201,168,76,0.08)', borderRadius: 2, marginBottom: 8 }
+const skeletonLine5Style: CSSProperties = { height: 14, width: '60%', background: 'rgba(201,168,76,0.08)', borderRadius: 2 }
+
 function SkeletonCard() {
   return (
-    <div
-      style={{
-        background: 'rgba(201,168,76,0.04)',
-        borderLeft: '3px solid rgba(201,168,76,0.2)',
-        borderRadius: 6,
-        padding: 28,
-        animation: 'shimmer 1.6s ease-in-out infinite',
-      }}
-    >
-      <div style={{ height: 12, width: 110, background: 'rgba(201,168,76,0.18)', borderRadius: 2, marginBottom: 18 }} />
-      <div style={{ height: 28, width: '70%', background: 'rgba(201,168,76,0.14)', borderRadius: 2, marginBottom: 16 }} />
-      <div style={{ height: 14, width: '100%', background: 'rgba(201,168,76,0.08)', borderRadius: 2, marginBottom: 8 }} />
-      <div style={{ height: 14, width: '85%', background: 'rgba(201,168,76,0.08)', borderRadius: 2, marginBottom: 8 }} />
-      <div style={{ height: 14, width: '60%', background: 'rgba(201,168,76,0.08)', borderRadius: 2 }} />
+    <div style={skeletonCardStyle}>
+      <div style={skeletonLine1Style} />
+      <div style={skeletonLine2Style} />
+      <div style={skeletonLine3Style} />
+      <div style={skeletonLine4Style} />
+      <div style={skeletonLine5Style} />
     </div>
   )
 }

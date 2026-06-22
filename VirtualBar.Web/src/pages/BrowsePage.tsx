@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next'
 import { searchUsers } from '../api/usersApi'
 import type { UserSearchResult } from '../types'
 import NavBar from '../components/NavBar'
+import Avatar from '../components/Avatar'
 
 function useDebounced<T>(value: T, delay: number): T {
   const [debounced, setDebounced] = useState(value)
@@ -28,48 +29,6 @@ const inputStyle: CSSProperties = {
   borderRadius: 4,
   outline: 'none',
   width: '100%',
-}
-
-function Avatar({ name, url, size }: { name: string; url?: string; size: number }) {
-  const initial = name.trim().charAt(0).toUpperCase() || '?'
-
-  if (url) {
-    return (
-      <img
-        src={url}
-        alt={name}
-        style={{
-          width: size,
-          height: size,
-          borderRadius: '50%',
-          objectFit: 'cover',
-          border: '1.5px solid rgba(201,168,76,0.4)',
-          flexShrink: 0,
-        }}
-      />
-    )
-  }
-
-  return (
-    <div
-      style={{
-        width: size,
-        height: size,
-        borderRadius: '50%',
-        border: '1.5px solid rgba(201,168,76,0.4)',
-        background: 'radial-gradient(ellipse at 50% 30%, rgba(201,168,76,0.15), rgba(10,5,2,0.6))',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        fontFamily: 'Playfair Display, serif',
-        fontSize: size * 0.42,
-        color: '#E8C870',
-        flexShrink: 0,
-      }}
-    >
-      {initial}
-    </div>
-  )
 }
 
 function CollectorCard({ collector }: { collector: UserSearchResult }) {
@@ -96,7 +55,7 @@ function CollectorCard({ collector }: { collector: UserSearchResult }) {
       }}
     >
       <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-        <Avatar name={collector.displayName} url={collector.avatarUrl} size={56} />
+        <Avatar displayName={collector.displayName} avatarUrl={collector.avatarUrl} size={56} />
         <div style={{ minWidth: 0 }}>
           <div
             style={{

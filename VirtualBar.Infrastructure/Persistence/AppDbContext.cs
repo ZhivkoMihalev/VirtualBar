@@ -18,6 +18,8 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
     public DbSet<NewsPostTranslation> NewsPostTranslations => Set<NewsPostTranslation>();
     public DbSet<Notification> Notifications => Set<Notification>();
     public DbSet<WishListItem> WishListItems => Set<WishListItem>();
+    public DbSet<Distillery> Distilleries => Set<Distillery>();
+    public DbSet<DistilleryCategory> DistilleryCategories => Set<DistilleryCategory>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -112,7 +114,32 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
                 .HasForeignKey(w => w.UserId)
                 .OnDelete(DeleteBehavior.Restrict);
 
+            e.HasOne(w => w.Distillery)
+                .WithMany()
+                .HasForeignKey(w => w.DistilleryId)
+                .OnDelete(DeleteBehavior.Restrict);
+
             e.HasIndex(w => new { w.UserId, w.IsDeleted });
         });
+
+        builder.Entity<Distillery>(e =>
+        {
+            e.HasIndex(d => d.Name)
+                .IsUnique();
+
+            e.HasMany(d => d.Bottles)
+                .WithOne(b => b.Distillery)
+                .HasForeignKey(b => b.DistilleryId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        builder.Entity<DistilleryCategory>()
+            .HasKey(dc => new { dc.DistilleryId, dc.Category });
+
+        builder.Entity<DistilleryCategory>()
+            .HasOne(dc => dc.Distillery)
+            .WithMany(d => d.Categories)
+            .HasForeignKey(dc => dc.DistilleryId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }

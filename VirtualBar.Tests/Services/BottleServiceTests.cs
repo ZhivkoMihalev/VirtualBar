@@ -56,12 +56,14 @@ public sealed class BottleServiceTests
         bool isForSale = false,
         bool isDeleted = false,
         decimal? askingPrice = null,
-        string? currency = null)
+        string? currency = null,
+        Guid? distilleryId = null)
     {
         var bottle = new Bottle
         {
             UserId = userId,
             Name = name,
+            DistilleryId = distilleryId,
             Category = SpiritCategory.Whisky,
             Condition = BottleCondition.Sealed,
             IsForSale = isForSale,
@@ -73,6 +75,14 @@ public sealed class BottleServiceTests
         db.Bottles.Add(bottle);
         db.SaveChanges();
         return bottle;
+    }
+
+    private static Distillery SeedDistillery(AppDbContext db, string name = "Lagavulin")
+    {
+        var distillery = new Distillery { Name = name };
+        db.Distilleries.Add(distillery);
+        db.SaveChanges();
+        return distillery;
     }
 
     #region GetBottlesByUserAsync
@@ -238,6 +248,19 @@ public sealed class BottleServiceTests
     }
 
     [Fact]
+    public async Task AddBottleAsync_WhenDistilleryIdNotFound_ReturnsNotFound()
+    {
+        var db = CreateDbContext();
+        var service = CreateBottleService(db, Guid.NewGuid());
+        var request = new AddBottleRequest { Name = "Valid", DistilleryId = Guid.NewGuid() };
+
+        var result = await service.AddBottleAsync(request, CancellationToken.None);
+
+        Assert.False(result.Success);
+        Assert.Equal("Distillery not found.", result.Error);
+    }
+
+    [Fact]
     public async Task AddBottleAsync_WhenValid_ReturnsCreatedBottle()
     {
         var db = CreateDbContext();
@@ -316,6 +339,21 @@ public sealed class BottleServiceTests
 
         Assert.False(result.Success);
         Assert.Equal("Forbidden.", result.Error);
+    }
+
+    [Fact]
+    public async Task UpdateBottleAsync_WhenDistilleryIdNotFound_ReturnsNotFound()
+    {
+        var db = CreateDbContext();
+        var user = SeedUser(db);
+        var bottle = SeedBottle(db, user.Id, "Old Name");
+        var service = CreateBottleService(db, user.Id);
+        var request = new UpdateBottleRequest { Name = "New Name", DistilleryId = Guid.NewGuid() };
+
+        var result = await service.UpdateBottleAsync(bottle.Id, request, CancellationToken.None);
+
+        Assert.False(result.Success);
+        Assert.Equal("Distillery not found.", result.Error);
     }
 
     [Fact]
@@ -606,12 +644,12 @@ public sealed class BottleServiceTests
         var db = CreateDbContext();
         var seller = SeedUser(db, "Seller");
         var wisher = SeedUser(db, "Wisher");
-        var bottle = SeedBottle(db, seller.Id, "Lagavulin 16");
-        bottle.Distillery = "Lagavulin";
+        var lagavulin = SeedDistillery(db, "Lagavulin");
+        var bottle = SeedBottle(db, seller.Id, "Lagavulin 16", distilleryId: lagavulin.Id);
         db.WishListItems.Add(new WishListItem
         {
             UserId = wisher.Id,
-            Distillery = "Lagavulin",
+            DistilleryId = lagavulin.Id,
             Category = SpiritCategory.Whisky
         });
         db.SaveChanges();
@@ -635,12 +673,13 @@ public sealed class BottleServiceTests
         var db = CreateDbContext();
         var seller = SeedUser(db, "Seller");
         var wisher = SeedUser(db, "Wisher");
-        var bottle = SeedBottle(db, seller.Id, "Lagavulin 16");
-        bottle.Distillery = "Lagavulin";
+        var lagavulin = SeedDistillery(db, "Lagavulin");
+        var macallan = SeedDistillery(db, "Macallan");
+        var bottle = SeedBottle(db, seller.Id, "Lagavulin 16", distilleryId: lagavulin.Id);
         db.WishListItems.Add(new WishListItem
         {
             UserId = wisher.Id,
-            Distillery = "Macallan",
+            DistilleryId = macallan.Id,
             Category = SpiritCategory.Whisky
         });
         db.SaveChanges();
@@ -664,12 +703,11 @@ public sealed class BottleServiceTests
         var db = CreateDbContext();
         var seller = SeedUser(db, "Seller");
         var wisher = SeedUser(db, "Wisher");
-        var bottle = SeedBottle(db, seller.Id, "Lagavulin 16");
-        bottle.Distillery = null;
+        var bottle = SeedBottle(db, seller.Id, "Lagavulin 16", distilleryId: null);
         db.WishListItems.Add(new WishListItem
         {
             UserId = wisher.Id,
-            Distillery = null,
+            DistilleryId = null,
             Category = SpiritCategory.Whisky
         });
         db.SaveChanges();
@@ -693,12 +731,12 @@ public sealed class BottleServiceTests
         var db = CreateDbContext();
         var seller = SeedUser(db, "Seller");
         var wisher = SeedUser(db, "Wisher");
-        var bottle = SeedBottle(db, seller.Id, "Lagavulin 16");
-        bottle.Distillery = "Lagavulin";
+        var lagavulin = SeedDistillery(db, "Lagavulin");
+        var bottle = SeedBottle(db, seller.Id, "Lagavulin 16", distilleryId: lagavulin.Id);
         db.WishListItems.Add(new WishListItem
         {
             UserId = wisher.Id,
-            Distillery = "Lagavulin",
+            DistilleryId = lagavulin.Id,
             Category = null
         });
         db.SaveChanges();
@@ -722,12 +760,12 @@ public sealed class BottleServiceTests
         var db = CreateDbContext();
         var seller = SeedUser(db, "Seller");
         var wisher = SeedUser(db, "Wisher");
-        var bottle = SeedBottle(db, seller.Id, "Lagavulin 16");
-        bottle.Distillery = null;
+        var lagavulin = SeedDistillery(db, "Lagavulin");
+        var bottle = SeedBottle(db, seller.Id, "Lagavulin 16", distilleryId: null);
         db.WishListItems.Add(new WishListItem
         {
             UserId = wisher.Id,
-            Distillery = "Lagavulin",
+            DistilleryId = lagavulin.Id,
             Category = SpiritCategory.Whisky
         });
         db.SaveChanges();
@@ -750,12 +788,12 @@ public sealed class BottleServiceTests
     {
         var db = CreateDbContext();
         var seller = SeedUser(db, "Seller");
-        var bottle = SeedBottle(db, seller.Id, "Lagavulin 16");
-        bottle.Distillery = "Lagavulin";
+        var lagavulin = SeedDistillery(db, "Lagavulin");
+        var bottle = SeedBottle(db, seller.Id, "Lagavulin 16", distilleryId: lagavulin.Id);
         db.WishListItems.Add(new WishListItem
         {
             UserId = seller.Id,
-            Distillery = "Lagavulin",
+            DistilleryId = lagavulin.Id,
             Category = SpiritCategory.Whisky
         });
         db.SaveChanges();
@@ -779,19 +817,19 @@ public sealed class BottleServiceTests
         var db = CreateDbContext();
         var seller = SeedUser(db, "Seller");
         var wisher = SeedUser(db, "Wisher");
-        var bottle = SeedBottle(db, seller.Id, "Lagavulin 16");
-        bottle.Distillery = "Lagavulin";
+        var lagavulin = SeedDistillery(db, "Lagavulin");
+        var bottle = SeedBottle(db, seller.Id, "Lagavulin 16", distilleryId: lagavulin.Id);
         db.WishListItems.AddRange(
             new WishListItem
             {
                 UserId = wisher.Id,
-                Distillery = "Lagavulin",
+                DistilleryId = lagavulin.Id,
                 Category = SpiritCategory.Whisky
             },
             new WishListItem
             {
                 UserId = wisher.Id,
-                Distillery = null,
+                DistilleryId = null,
                 Category = SpiritCategory.Whisky
             });
         db.SaveChanges();
@@ -807,6 +845,76 @@ public sealed class BottleServiceTests
             It.IsAny<Guid?>(),
             It.IsAny<string?>(),
             It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    #endregion
+
+    #region DistilleryName
+
+    [Fact]
+    public async Task GetBottlesByUserAsync_WhenBottleHasDistillery_ReturnsDistilleryName()
+    {
+        var db = CreateDbContext();
+        var user = SeedUser(db);
+        var distillery = SeedDistillery(db, "Macallan");
+        SeedBottle(db, user.Id, "Macallan 18", distilleryId: distillery.Id);
+        var service = CreateBottleService(db, user.Id);
+
+        var result = await service.GetBottlesByUserAsync(user.Id, CancellationToken.None);
+
+        Assert.True(result.Success);
+        Assert.Single(result.Data!);
+        Assert.Equal(distillery.Name, result.Data![0].DistilleryName);
+    }
+
+    [Fact]
+    public async Task GetBottlesByUserAsync_WhenBottleHasNoDistillery_ReturnsNullDistilleryName()
+    {
+        var db = CreateDbContext();
+        var user = SeedUser(db);
+        SeedBottle(db, user.Id, "No Distillery", distilleryId: null);
+        var service = CreateBottleService(db, user.Id);
+
+        var result = await service.GetBottlesByUserAsync(user.Id, CancellationToken.None);
+
+        Assert.True(result.Success);
+        Assert.Single(result.Data!);
+        Assert.Null(result.Data![0].DistilleryName);
+    }
+
+    #endregion
+
+    #region Marketplace search
+
+    [Fact]
+    public async Task GetMarketplaceAsync_WhenSearchMatchesDistilleryName_ReturnsBottle()
+    {
+        var db = CreateDbContext();
+        var user = SeedUser(db);
+        var distillery = SeedDistillery(db, "Macallan");
+        var bottle = SeedBottle(db, user.Id, "Sherry Oak", isForSale: true, distilleryId: distillery.Id);
+        var service = CreateBottleService(db, user.Id);
+
+        var result = await service.GetMarketplaceAsync(new MarketplaceQuery { Search = "Macallan" }, CancellationToken.None);
+
+        Assert.True(result.Success);
+        Assert.Single(result.Data!);
+        Assert.Equal(bottle.Id, result.Data![0].Id);
+    }
+
+    [Fact]
+    public async Task GetMarketplaceAsync_WhenSearchDoesNotMatchDistilleryName_ReturnsEmpty()
+    {
+        var db = CreateDbContext();
+        var user = SeedUser(db);
+        var distillery = SeedDistillery(db, "Macallan");
+        SeedBottle(db, user.Id, "Sherry Oak", isForSale: true, distilleryId: distillery.Id);
+        var service = CreateBottleService(db, user.Id);
+
+        var result = await service.GetMarketplaceAsync(new MarketplaceQuery { Search = "Glenfiddich" }, CancellationToken.None);
+
+        Assert.True(result.Success);
+        Assert.Empty(result.Data!);
     }
 
     #endregion

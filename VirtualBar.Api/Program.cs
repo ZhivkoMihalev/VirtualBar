@@ -88,6 +88,8 @@ using (var scope = app.Services.CreateScope())
             await db.SaveChangesAsync();
         }
     }
+
+    await DistillerySeeder.SeedDistilleriesAsync(db);
 }
 
 var uploadsPath = Path.Combine(

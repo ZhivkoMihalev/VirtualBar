@@ -10,6 +10,7 @@ import type { AddWishListItemRequest } from '../api/wishListApi'
 import type { Bottle, SpiritCategory, PublicWishListItem } from '../types'
 import { CATEGORY_COLORS, BottleSvg } from '../components/BarShelf'
 import BottleDetailPanel from '../components/BottleDetailPanel'
+import DistillerySelect from '../components/DistillerySelect'
 import NavBar from '../components/NavBar'
 
 const CATEGORIES = Object.keys(CATEGORY_COLORS) as SpiritCategory[]
@@ -86,12 +87,70 @@ const tabInactiveStyle: CSSProperties = {
   borderBottom: '2px solid transparent',
 }
 
-const wishFormCardStyle: CSSProperties = {
+const publishSearchBarStyle: CSSProperties = {
   marginBottom: 32,
-  padding: 24,
-  background: 'rgba(201,168,76,0.04)',
-  border: '1px solid rgba(201,168,76,0.15)',
-  borderRadius: 6,
+}
+
+const publishSearchButtonStyle: CSSProperties = {
+  fontFamily: 'Cinzel, serif',
+  fontSize: 12,
+  letterSpacing: '0.25em',
+  textTransform: 'uppercase',
+  color: '#07030A',
+  background: 'linear-gradient(135deg, #C9A84C, #E8C870)',
+  border: 'none',
+  padding: '13px 30px',
+  borderRadius: 2,
+  cursor: 'pointer',
+  boxShadow: '0 4px 20px rgba(201,168,76,0.3)',
+}
+
+const modalBackdropStyle: CSSProperties = {
+  position: 'fixed',
+  inset: 0,
+  zIndex: 1000,
+  background: 'rgba(0,0,0,0.75)',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  padding: '2rem',
+}
+
+const modalPanelStyle: CSSProperties = {
+  position: 'relative',
+  background: '#0D0804',
+  border: '1px solid rgba(201,168,76,0.25)',
+  borderRadius: 8,
+  padding: 40,
+  maxWidth: 640,
+  width: '90%',
+}
+
+const modalCloseStyle: CSSProperties = {
+  position: 'absolute',
+  top: 16,
+  right: 20,
+  width: 32,
+  height: 32,
+  borderRadius: '50%',
+  border: '1px solid rgba(201,168,76,0.35)',
+  background: 'transparent',
+  color: '#E8C870',
+  fontFamily: 'Cormorant Garamond, serif',
+  fontSize: 22,
+  lineHeight: '28px',
+  textAlign: 'center',
+  cursor: 'pointer',
+  padding: 0,
+}
+
+const modalTitleStyle: CSSProperties = {
+  fontFamily: 'Cinzel, serif',
+  fontSize: 18,
+  letterSpacing: '0.2em',
+  textTransform: 'uppercase',
+  color: '#E8C870',
+  margin: '0 0 28px',
 }
 
 const wishLabelStyle: CSSProperties = {
@@ -488,7 +547,7 @@ function MarketplaceCard({ bottle, onView }: { bottle: Bottle; onView: () => voi
           {bottle.name}
         </div>
 
-        {bottle.distillery && (
+        {bottle.distilleryName && (
           <div
             style={{
               fontFamily: 'Cormorant Garamond, serif',
@@ -498,7 +557,7 @@ function MarketplaceCard({ bottle, onView }: { bottle: Bottle; onView: () => voi
               marginBottom: 8,
             }}
           >
-            {bottle.distillery}
+            {bottle.distilleryName}
           </div>
         )}
 
@@ -596,7 +655,7 @@ function WishCard({ item, isOwn }: { item: PublicWishListItem; isOwn: boolean })
         <div style={wishUserStyle}>{item.userDisplayName}</div>
         {item.bottleName && <div style={wishCardTitleStyle}>{item.bottleName}</div>}
         <div style={wishChipRowStyle}>
-          {item.distillery && <span style={wishDistilleryChipStyle}>{item.distillery}</span>}
+          {item.distilleryName && <span style={wishDistilleryChipStyle}>{item.distilleryName}</span>}
           {item.category && <span style={wishCategoryChipStyle}>{CATEGORY_COLORS[item.category].label}</span>}
         </div>
         <div style={wishDateStyle}>{formatDate(item.createdAt)}</div>
@@ -621,11 +680,12 @@ function SearchTab() {
   const queryClient = useQueryClient()
 
   const [bottleName, setBottleName] = useState('')
-  const [distillery, setDistillery] = useState('')
+  const [distilleryId, setDistilleryId] = useState<string | null>(null)
   const [category, setCategory] = useState<SpiritCategory | ''>('')
   const [imageUrl, setImageUrl] = useState('')
   const [imageTab, setImageTab] = useState<'url' | 'upload'>('url')
   const [validationError, setValidationError] = useState<string | null>(null)
+  const [modalOpen, setModalOpen] = useState(false)
 
   const { data: items = [], isLoading } = useQuery({
     queryKey: ['wishlist', 'all'],
@@ -642,12 +702,13 @@ function SearchTab() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['wishlist', 'all'] })
       setBottleName('')
-      setDistillery('')
+      setDistilleryId(null)
       setCategory('')
       setImageUrl('')
       setImageTab('url')
       uploadMutation.reset()
       setValidationError(null)
+      setModalOpen(false)
     },
   })
 
@@ -659,15 +720,14 @@ function SearchTab() {
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    const trimmedDistillery = distillery.trim()
-    if (!trimmedDistillery && !category) {
+    if (!distilleryId && !category) {
       setValidationError(t('wishList.atLeastOne'))
       return
     }
     setValidationError(null)
     addMutation.mutate({
       bottleName: bottleName.trim() || undefined,
-      distillery: trimmedDistillery || undefined,
+      distilleryId: distilleryId,
       category: category || undefined,
       imageUrl: imageUrl || undefined,
     })
@@ -676,113 +736,135 @@ function SearchTab() {
   return (
     <>
       {isAuthenticated && (
-        <form style={wishFormCardStyle} onSubmit={handleSubmit}>
-          <div style={wishFieldGridStyle}>
-            <div>
-              <label style={wishLabelStyle}>{t('wishList.bottleName')}</label>
-              <input
-                value={bottleName}
-                onChange={(e) => setBottleName(e.target.value)}
-                onFocus={focusOn}
-                onBlur={focusOff}
-                placeholder={t('wishList.bottleNamePlaceholder')}
-                style={inputStyle}
-              />
-            </div>
-            <div>
-              <label style={wishLabelStyle}>{t('wishList.distillery')}</label>
-              <input
-                value={distillery}
-                onChange={(e) => setDistillery(e.target.value)}
-                onFocus={focusOn}
-                onBlur={focusOff}
-                placeholder={t('wishList.distilleryPlaceholder')}
-                style={inputStyle}
-              />
-            </div>
-            <div>
-              <label style={wishLabelStyle}>{t('wishList.category')}</label>
-              <select
-                value={category}
-                onChange={(e) => setCategory(e.target.value as SpiritCategory | '')}
-                onFocus={focusOn}
-                onBlur={focusOff}
-                style={selectStyle}
-              >
-                <option value="">{t('wishList.categoryAny')}</option>
-                {CATEGORIES.map((cat) => (
-                  <option key={cat} value={cat}>{CATEGORY_COLORS[cat].label}</option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          <div style={wishImageSectionStyle}>
-            <div style={wishImageToggleRowStyle}>
-              <button
-                type="button"
-                onClick={() => setImageTab('url')}
-                style={imageTab === 'url' ? wishImageToggleActiveStyle : wishImageToggleInactiveStyle}
-              >
-                {t('wishList.imageTabUrl')}
-              </button>
-              <button
-                type="button"
-                onClick={() => setImageTab('upload')}
-                style={imageTab === 'upload' ? wishImageToggleActiveStyle : wishImageToggleInactiveStyle}
-              >
-                {t('wishList.imageTabUpload')}
-              </button>
-            </div>
-
-            {imageTab === 'url' && (
-              <div>
-                <label style={wishLabelStyle}>{t('wishList.imageUrl')}</label>
-                <input
-                  value={imageUrl}
-                  onChange={(e) => setImageUrl(e.target.value)}
-                  onFocus={focusOn}
-                  onBlur={focusOff}
-                  placeholder={t('wishList.imageUrlPlaceholder')}
-                  style={inputStyle}
-                />
-              </div>
-            )}
-
-            {imageTab === 'upload' && (
-              <div>
-                <label style={wishLabelStyle}>{t('wishList.uploadImage')}</label>
-                <label style={wishChooseFileButtonStyle}>
-                  {t('wishList.chooseFile')}
-                  <input
-                    type="file"
-                    accept="image/jpeg,image/png,image/webp"
-                    style={{ display: 'none' }}
-                    onChange={handleFileChange}
-                  />
-                </label>
-                {uploadMutation.isPending && <div style={wishUploadingStyle}>{t('wishList.uploading')}</div>}
-                {uploadMutation.isError && <div style={wishErrorStyle}>{t('wishList.uploadError')}</div>}
-              </div>
-            )}
-
-            {imageUrl && (
-              <div style={wishImagePreviewWrapStyle}>
-                <img src={imageUrl} alt="" style={wishImagePreviewStyle} />
-                <button type="button" onClick={() => setImageUrl('')} style={wishImageRemoveStyle}>
-                  ×
-                </button>
-              </div>
-            )}
-          </div>
-
-          {validationError && <div style={wishErrorStyle}>{validationError}</div>}
-          {addMutation.isError && <div style={wishErrorStyle}>{t('wishList.addFailed')}</div>}
-
-          <button type="submit" disabled={addMutation.isPending} style={wishAddButtonStyle}>
-            {addMutation.isPending ? t('wishList.adding') : t('wishList.addBtn')}
+        <div style={publishSearchBarStyle}>
+          <button type="button" onClick={() => setModalOpen(true)} style={publishSearchButtonStyle}>
+            {t('wishList.publishSearch')}
           </button>
-        </form>
+        </div>
+      )}
+
+      {isAuthenticated && modalOpen && (
+        <div style={modalBackdropStyle} onClick={() => setModalOpen(false)}>
+          <div style={modalPanelStyle} onClick={(e) => e.stopPropagation()}>
+            <button
+              type="button"
+              onClick={() => setModalOpen(false)}
+              style={modalCloseStyle}
+              aria-label={t('wishList.close')}
+            >
+              ×
+            </button>
+            <h2 style={modalTitleStyle}>{t('wishList.publishSearchTitle')}</h2>
+            <form onSubmit={handleSubmit}>
+              <div style={wishFieldGridStyle}>
+                <div>
+                  <label style={wishLabelStyle}>{t('wishList.bottleName')}</label>
+                  <input
+                    value={bottleName}
+                    onChange={(e) => setBottleName(e.target.value)}
+                    onFocus={focusOn}
+                    onBlur={focusOff}
+                    placeholder={t('wishList.bottleNamePlaceholder')}
+                    style={inputStyle}
+                  />
+                </div>
+                <div>
+                  <label style={wishLabelStyle}>{t('wishList.distillery')}</label>
+                  <DistillerySelect
+                    value={distilleryId}
+                    onChange={(id) => setDistilleryId(id)}
+                    category={category || undefined}
+                    placeholder={t('wishList.distilleryPlaceholder')}
+                  />
+                </div>
+                <div>
+                  <label style={wishLabelStyle}>{t('wishList.category')}</label>
+                  <select
+                    value={category}
+                    onChange={(e) => {
+                      setCategory(e.target.value as SpiritCategory | '')
+                      setDistilleryId(null)
+                    }}
+                    onFocus={focusOn}
+                    onBlur={focusOff}
+                    style={selectStyle}
+                  >
+                    <option value="">{t('wishList.categoryAny')}</option>
+                    {CATEGORIES.map((cat) => (
+                      <option key={cat} value={cat}>{CATEGORY_COLORS[cat].label}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div style={wishImageSectionStyle}>
+                <div style={wishImageToggleRowStyle}>
+                  <button
+                    type="button"
+                    onClick={() => setImageTab('url')}
+                    style={imageTab === 'url' ? wishImageToggleActiveStyle : wishImageToggleInactiveStyle}
+                  >
+                    {t('wishList.imageTabUrl')}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setImageTab('upload')}
+                    style={imageTab === 'upload' ? wishImageToggleActiveStyle : wishImageToggleInactiveStyle}
+                  >
+                    {t('wishList.imageTabUpload')}
+                  </button>
+                </div>
+
+                {imageTab === 'url' && (
+                  <div>
+                    <label style={wishLabelStyle}>{t('wishList.imageUrl')}</label>
+                    <input
+                      value={imageUrl}
+                      onChange={(e) => setImageUrl(e.target.value)}
+                      onFocus={focusOn}
+                      onBlur={focusOff}
+                      placeholder={t('wishList.imageUrlPlaceholder')}
+                      style={inputStyle}
+                    />
+                  </div>
+                )}
+
+                {imageTab === 'upload' && (
+                  <div>
+                    <label style={wishLabelStyle}>{t('wishList.uploadImage')}</label>
+                    <label style={wishChooseFileButtonStyle}>
+                      {t('wishList.chooseFile')}
+                      <input
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp"
+                        style={{ display: 'none' }}
+                        onChange={handleFileChange}
+                      />
+                    </label>
+                    {uploadMutation.isPending && <div style={wishUploadingStyle}>{t('wishList.uploading')}</div>}
+                    {uploadMutation.isError && <div style={wishErrorStyle}>{t('wishList.uploadError')}</div>}
+                  </div>
+                )}
+
+                {imageUrl && (
+                  <div style={wishImagePreviewWrapStyle}>
+                    <img src={imageUrl} alt="" style={wishImagePreviewStyle} />
+                    <button type="button" onClick={() => setImageUrl('')} style={wishImageRemoveStyle}>
+                      ×
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {validationError && <div style={wishErrorStyle}>{validationError}</div>}
+              {addMutation.isError && <div style={wishErrorStyle}>{t('wishList.addFailed')}</div>}
+
+              <button type="submit" disabled={addMutation.isPending} style={wishAddButtonStyle}>
+                {addMutation.isPending ? t('wishList.adding') : t('wishList.addBtn')}
+              </button>
+            </form>
+          </div>
+        </div>
       )}
 
       {isLoading && <div style={wishLoadingStyle}>···</div>}

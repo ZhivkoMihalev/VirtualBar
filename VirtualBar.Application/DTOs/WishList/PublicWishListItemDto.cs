@@ -8,7 +8,9 @@ public sealed class PublicWishListItemDto
 
     public string? BottleName { get; set; }
 
-    public string? Distillery { get; set; }
+    public Guid? DistilleryId { get; set; }
+
+    public string? DistilleryName { get; set; }
 
     public SpiritCategory? Category { get; set; }
 

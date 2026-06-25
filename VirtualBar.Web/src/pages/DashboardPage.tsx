@@ -8,6 +8,7 @@ import { getBottlesByUser, addBottle, uploadBottleImage, linkBottleImage, lookup
 import type { Bottle, SpiritCategory, BottleCondition, AddBottlePayload } from '../types'
 import { CATEGORY_COLORS, BottleSvg, VirtualBarScene } from '../components/BarShelf'
 import BottleDetailPanel from '../components/BottleDetailPanel'
+import DistillerySelect from '../components/DistillerySelect'
 
 const CATEGORIES = Object.keys(CATEGORY_COLORS) as SpiritCategory[]
 const CONDITIONS: BottleCondition[] = ['Sealed', 'Opened', 'Empty']
@@ -113,7 +114,7 @@ function AddBottlePanel({ onClose, onSuccess }: { onClose: () => void; onSuccess
   const [category, setCategory] = useState<SpiritCategory>('Whisky')
   const [condition, setCondition] = useState<BottleCondition>('Sealed')
   const [name, setName] = useState('')
-  const [distillery, setDistillery] = useState('')
+  const [distilleryId, setDistilleryId] = useState<string | null>(null)
   const [age, setAge] = useState('')
   const [abv, setAbv] = useState('')
   const [volume, setVolume] = useState('')
@@ -143,7 +144,6 @@ function AddBottlePanel({ onClose, onSuccess }: { onClose: () => void; onSuccess
     try {
       const product = await lookupBarcode(code)
       if (product.name) setName(product.name)
-      if (product.brand) setDistillery(product.brand)
       if (product.volumeMl) setVolume(String(product.volumeMl))
       if (product.abvPercent) setAbv(String(product.abvPercent))
       if (product.imageUrl) {
@@ -177,7 +177,7 @@ function AddBottlePanel({ onClose, onSuccess }: { onClose: () => void; onSuccess
     if (!name.trim()) return
     const payload: AddBottlePayload = {
       name: name.trim(),
-      distillery: distillery.trim() || undefined,
+      distilleryId: distilleryId,
       category,
       condition,
       isLimited,
@@ -370,7 +370,10 @@ function AddBottlePanel({ onClose, onSuccess }: { onClose: () => void; onSuccess
                 <button
                   key={cat}
                   type="button"
-                  onClick={() => setCategory(cat)}
+                  onClick={() => {
+                    setCategory(cat)
+                    setDistilleryId(null)
+                  }}
                   style={{
                     display: 'flex',
                     flexDirection: 'column',
@@ -408,13 +411,12 @@ function AddBottlePanel({ onClose, onSuccess }: { onClose: () => void; onSuccess
 
           {/* distillery */}
           <label style={labelStyle}>{t('addBottle.distillery')}</label>
-          <input
-            value={distillery}
-            onChange={(e) => setDistillery(e.target.value)}
-            onFocus={focusOn}
-            onBlur={focusOff}
+          <DistillerySelect
+            value={distilleryId}
+            onChange={(id) => setDistilleryId(id)}
+            category={category || undefined}
             placeholder={t('addBottle.distilleryPlaceholder')}
-            style={{ ...inputStyle, marginBottom: 18 }}
+            style={{ marginBottom: 18 }}
           />
 
           {/* age / abv / volume */}

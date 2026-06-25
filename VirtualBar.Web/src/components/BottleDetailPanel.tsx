@@ -593,9 +593,9 @@ export default function BottleDetailPanel({
             <h2 style={{ fontFamily: 'Playfair Display, serif', fontSize: 26, fontWeight: 700, color: '#E8C870', margin: '0 0 4px', lineHeight: 1.15 }}>
               {bottle.name}
             </h2>
-            {bottle.distillery && (
+            {bottle.distilleryName && (
               <div style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: 16, fontStyle: 'italic', color: '#C9A84C' }}>
-                {bottle.distillery}
+                {bottle.distilleryName}
               </div>
             )}
           </div>

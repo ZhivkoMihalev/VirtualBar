@@ -10,7 +10,9 @@ public sealed class BottleDto
 
     public string Name { get; set; } = string.Empty;
 
-    public string? Distillery { get; set; }
+    public Guid? DistilleryId { get; set; }
+
+    public string? DistilleryName { get; set; }
 
     public string? Region { get; set; }
 

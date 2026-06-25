@@ -30,8 +30,16 @@ public sealed class WishListValidationDecorator(
     {
         cancellationToken.ThrowIfCancellationRequested();
 
-        if (string.IsNullOrWhiteSpace(request.Distillery) && request.Category is null)
+        if (request.DistilleryId is null && request.Category is null)
             return Result<WishListItemDto>.Fail("At least one matching criterion (distillery or category) is required.");
+
+        if (request.DistilleryId is Guid distilleryId)
+        {
+            var distilleryExists = await db.Distilleries
+                .AnyAsync(d => d.Id == distilleryId && !d.IsDeleted, cancellationToken);
+            if (!distilleryExists)
+                return Result<WishListItemDto>.NotFound("Distillery not found.");
+        }
 
         return await inner.AddItemAsync(request, cancellationToken);
     }

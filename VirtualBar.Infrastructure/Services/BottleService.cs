@@ -20,6 +20,7 @@ public sealed class BottleService(
             .Include(b => b.Likes)
             .Include(b => b.Comments)
             .Include(b => b.User)
+            .Include(b => b.Distillery)
             .OrderByDescending(b => b.CreatedAt)
             .ToListAsync(cancellationToken);
 
@@ -34,6 +35,7 @@ public sealed class BottleService(
             .Include(b => b.Likes)
             .Include(b => b.Comments)
             .Include(b => b.User)
+            .Include(b => b.Distillery)
             .FirstOrDefaultAsync(b => b.Id == bottleId && !b.IsDeleted, cancellationToken);
 
         if (bottle is null)
@@ -48,7 +50,7 @@ public sealed class BottleService(
         {
             UserId = currentUser.UserId,
             Name = request.Name,
-            Distillery = request.Distillery,
+            DistilleryId = request.DistilleryId,
             Region = request.Region,
             Country = request.Country,
             Category = request.Category,
@@ -80,7 +82,7 @@ public sealed class BottleService(
             .FirstOrDefaultAsync(b => b.Id == bottleId && !b.IsDeleted, cancellationToken);
 
         bottle!.Name = request.Name;
-        bottle.Distillery = request.Distillery;
+        bottle.DistilleryId = request.DistilleryId;
         bottle.Region = request.Region;
         bottle.Country = request.Country;
         bottle.Category = request.Category;
@@ -138,7 +140,7 @@ public sealed class BottleService(
             .Where(w => !w.IsDeleted
                 && w.UserId != currentUser.UserId
                 && (w.Category == null || w.Category == bottle.Category)
-                && (w.Distillery == null || bottle.Distillery == w.Distillery))
+                && (w.DistilleryId == null || w.DistilleryId == bottle.DistilleryId))
             .Select(w => w.UserId)
             .Distinct()
             .ToListAsync(cancellationToken);
@@ -172,12 +174,13 @@ public sealed class BottleService(
             .Include(b => b.Likes)
             .Include(b => b.Comments)
             .Include(b => b.User)
+            .Include(b => b.Distillery)
             .AsQueryable();
 
         if (query.Search != null)
             q = q.Where(b => b.Name.Contains(query.Search)
-                || (b.Distillery != null 
-                && b.Distillery.Contains(query.Search)));
+                || (b.Distillery != null
+                && b.Distillery.Name.Contains(query.Search)));
 
         if (query.Category != null)
             q = q.Where(b => b.Category == query.Category);
@@ -203,7 +206,8 @@ public sealed class BottleService(
         UserId = bottle.UserId,
         UserDisplayName = userDisplayName,
         Name = bottle.Name,
-        Distillery = bottle.Distillery,
+        DistilleryId = bottle.DistilleryId,
+        DistilleryName = bottle.Distillery is { IsDeleted: false } ? bottle.Distillery.Name : null,
         Region = bottle.Region,
         Country = bottle.Country,
         Category = bottle.Category,

@@ -30,7 +30,8 @@ public sealed class WishListService(
             {
                 Id = w.Id,
                 BottleName = w.BottleName,
-                Distillery = w.Distillery,
+                DistilleryId = w.DistilleryId,
+                DistilleryName = w.Distillery != null && !w.Distillery.IsDeleted ? w.Distillery.Name : null,
                 Category = w.Category,
                 ImageUrl = w.ImageUrl,
                 CreatedAt = w.CreatedAt,
@@ -49,7 +50,8 @@ public sealed class WishListService(
             {
                 Id = w.Id,
                 BottleName = w.BottleName,
-                Distillery = w.Distillery,
+                DistilleryId = w.DistilleryId,
+                DistilleryName = w.Distillery != null && !w.Distillery.IsDeleted ? w.Distillery.Name : null,
                 Category = w.Category,
                 ImageUrl = w.ImageUrl,
                 UserId = w.UserId,
@@ -67,7 +69,7 @@ public sealed class WishListService(
         {
             UserId = currentUser.UserId,
             BottleName = request.BottleName,
-            Distillery = request.Distillery,
+            DistilleryId = request.DistilleryId,
             Category = request.Category,
             ImageUrl = request.ImageUrl,
         };
@@ -75,11 +77,19 @@ public sealed class WishListService(
         db.WishListItems.Add(item);
         await db.SaveChangesAsync(cancellationToken);
 
+        var distilleryName = item.DistilleryId is null
+            ? null
+            : await db.Distilleries
+                .Where(d => d.Id == item.DistilleryId && !d.IsDeleted)
+                .Select(d => d.Name)
+                .FirstOrDefaultAsync(cancellationToken);
+
         return Result<WishListItemDto>.Ok(new WishListItemDto
         {
             Id = item.Id,
             BottleName = item.BottleName,
-            Distillery = item.Distillery,
+            DistilleryId = item.DistilleryId,
+            DistilleryName = distilleryName,
             Category = item.Category,
             ImageUrl = item.ImageUrl,
             CreatedAt = item.CreatedAt,

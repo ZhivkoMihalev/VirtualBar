@@ -6,7 +6,7 @@ public sealed class AddWishListItemRequest
 {
     public string? BottleName { get; set; }
 
-    public string? Distillery { get; set; }
+    public Guid? DistilleryId { get; set; }
 
     public SpiritCategory? Category { get; set; }
 

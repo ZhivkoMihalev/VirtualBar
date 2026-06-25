@@ -8,7 +8,9 @@ public sealed class WishListItem : BaseEntity
 
     public string? BottleName { get; set; }
 
-    public string? Distillery { get; set; }
+    public Guid? DistilleryId { get; set; }
+
+    public Distillery? Distillery { get; set; }
 
     public SpiritCategory? Category { get; set; }
 

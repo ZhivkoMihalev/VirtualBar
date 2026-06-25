@@ -83,7 +83,7 @@
     "name": "Name *",
     "namePlaceholder": "e.g. Glenfiddich 18",
     "distillery": "Distillery",
-    "distilleryPlaceholder": "e.g. Glenfiddich",
+    "distilleryPlaceholder": "Search distillery...",
     "age": "Age",
     "abv": "ABV %",
     "volume": "Volume ml",
@@ -302,7 +302,7 @@
     "bottleName": "Description (optional)",
     "bottleNamePlaceholder": "e.g. Macallan 18",
     "distillery": "Distillery",
-    "distilleryPlaceholder": "e.g. Macallan",
+    "distilleryPlaceholder": "Search distillery...",
     "category": "Category",
     "categoryAny": "Any category",
     "addBtn": "Add",
@@ -319,6 +319,13 @@
     "uploading": "Uploading...",
     "uploadError": "Upload failed. Please try again.",
     "imageTabUrl": "IMAGE URL",
-    "imageTabUpload": "UPLOAD IMAGE"
+    "imageTabUpload": "UPLOAD IMAGE",
+    "publishSearch": "POST A SEARCH",
+    "publishSearchTitle": "Post a Search",
+    "close": "Close"
+  },
+  "distillerySelect": {
+    "placeholder": "Search distillery...",
+    "noOptions": "No distilleries found"
   }
 }

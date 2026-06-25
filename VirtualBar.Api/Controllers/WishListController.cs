@@ -59,7 +59,9 @@ public sealed class WishListController(IWishListService wishListService) : Contr
     public async Task<IActionResult> UploadImage(IFormFile file, CancellationToken cancellationToken)
     {
         var result = await wishListService.UploadImageAsync(file, cancellationToken);
-        return result.Success ? Ok(new { url = result.Data }) : result.ToActionResult(this);
+        return result.Success 
+            ? Ok(new { url = result.Data }) 
+            : result.ToActionResult(this);
     }
 
     /// <summary>Removes an item from the current collector's wish list.</summary>

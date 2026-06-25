@@ -75,11 +75,19 @@ public sealed class WishListServiceTests
         return user;
     }
 
+    private static Distillery SeedDistillery(AppDbContext db, string name = "Lagavulin")
+    {
+        var distillery = new Distillery { Name = name };
+        db.Distilleries.Add(distillery);
+        db.SaveChanges();
+        return distillery;
+    }
+
     private static WishListItem SeedItem(
         AppDbContext db,
         Guid userId,
         string? bottleName = "Looking for Lagavulin",
-        string? distillery = "Lagavulin",
+        Guid? distilleryId = null,
         SpiritCategory? category = SpiritCategory.Whisky,
         string? imageUrl = null,
         bool isDeleted = false)
@@ -88,7 +96,7 @@ public sealed class WishListServiceTests
         {
             UserId = userId,
             BottleName = bottleName,
-            Distillery = distillery,
+            DistilleryId = distilleryId,
             Category = category,
             ImageUrl = imageUrl,
             IsDeleted = isDeleted,
@@ -121,15 +129,17 @@ public sealed class WishListServiceTests
         var db = CreateDbContext();
         var user = SeedUser(db, "User");
         var other = SeedUser(db, "Other");
-        SeedItem(db, user.Id, distillery: "Ardbeg");
-        SeedItem(db, other.Id, distillery: "Macallan");
+        var ardbeg = SeedDistillery(db, "Ardbeg");
+        var macallan = SeedDistillery(db, "Macallan");
+        SeedItem(db, user.Id, distilleryId: ardbeg.Id);
+        SeedItem(db, other.Id, distilleryId: macallan.Id);
         var service = CreateService(db, user.Id);
 
         var result = await service.GetWishListAsync(CancellationToken.None);
 
         Assert.True(result.Success);
         Assert.Single(result.Data!);
-        Assert.Equal("Ardbeg", result.Data![0].Distillery);
+        Assert.Equal("Ardbeg", result.Data![0].DistilleryName);
     }
 
     [Fact]
@@ -137,15 +147,17 @@ public sealed class WishListServiceTests
     {
         var db = CreateDbContext();
         var user = SeedUser(db);
-        SeedItem(db, user.Id, distillery: "Visible");
-        SeedItem(db, user.Id, distillery: "Deleted", isDeleted: true);
+        var visible = SeedDistillery(db, "Visible");
+        var deleted = SeedDistillery(db, "Deleted");
+        SeedItem(db, user.Id, distilleryId: visible.Id);
+        SeedItem(db, user.Id, distilleryId: deleted.Id, isDeleted: true);
         var service = CreateService(db, user.Id);
 
         var result = await service.GetWishListAsync(CancellationToken.None);
 
         Assert.True(result.Success);
         Assert.Single(result.Data!);
-        Assert.Equal("Visible", result.Data![0].Distillery);
+        Assert.Equal("Visible", result.Data![0].DistilleryName);
     }
 
     [Fact]
@@ -184,8 +196,10 @@ public sealed class WishListServiceTests
         var db = CreateDbContext();
         var userA = SeedUser(db, "Alice");
         var userB = SeedUser(db, "Bob");
-        SeedItem(db, userA.Id, distillery: "Ardbeg", imageUrl: "/uploads/wishlist/ardbeg.jpg");
-        SeedItem(db, userB.Id, distillery: "Macallan");
+        var ardbeg = SeedDistillery(db, "Ardbeg");
+        var macallan = SeedDistillery(db, "Macallan");
+        SeedItem(db, userA.Id, distilleryId: ardbeg.Id, imageUrl: "/uploads/wishlist/ardbeg.jpg");
+        SeedItem(db, userB.Id, distilleryId: macallan.Id);
         var service = CreateService(db, userA.Id);
 
         var result = await service.GetAllAsync(CancellationToken.None);
@@ -193,12 +207,12 @@ public sealed class WishListServiceTests
         Assert.True(result.Success);
         Assert.Equal(2, result.Data!.Count);
 
-        var alice = Assert.Single(result.Data, i => i.Distillery == "Ardbeg");
+        var alice = Assert.Single(result.Data, i => i.DistilleryName == "Ardbeg");
         Assert.Equal(userA.Id, alice.UserId);
         Assert.Equal("Alice", alice.UserDisplayName);
         Assert.Equal("/uploads/wishlist/ardbeg.jpg", alice.ImageUrl);
 
-        var bob = Assert.Single(result.Data, i => i.Distillery == "Macallan");
+        var bob = Assert.Single(result.Data, i => i.DistilleryName == "Macallan");
         Assert.Equal(userB.Id, bob.UserId);
         Assert.Equal("Bob", bob.UserDisplayName);
     }
@@ -208,15 +222,17 @@ public sealed class WishListServiceTests
     {
         var db = CreateDbContext();
         var user = SeedUser(db);
-        SeedItem(db, user.Id, distillery: "Visible");
-        SeedItem(db, user.Id, distillery: "Deleted", isDeleted: true);
+        var visible = SeedDistillery(db, "Visible");
+        var deleted = SeedDistillery(db, "Deleted");
+        SeedItem(db, user.Id, distilleryId: visible.Id);
+        SeedItem(db, user.Id, distilleryId: deleted.Id, isDeleted: true);
         var service = CreateService(db, user.Id);
 
         var result = await service.GetAllAsync(CancellationToken.None);
 
         Assert.True(result.Success);
         Assert.Single(result.Data!);
-        Assert.Equal("Visible", result.Data![0].Distillery);
+        Assert.Equal("Visible", result.Data![0].DistilleryName);
     }
 
     [Fact]
@@ -240,14 +256,14 @@ public sealed class WishListServiceTests
         var older = new WishListItem
         {
             UserId = user.Id,
-            Distillery = "Older",
+            BottleName = "Older",
             Category = SpiritCategory.Whisky,
             CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc)
         };
         var newer = new WishListItem
         {
             UserId = user.Id,
-            Distillery = "Newer",
+            BottleName = "Newer",
             Category = SpiritCategory.Whisky,
             CreatedAt = new DateTime(2026, 6, 1, 0, 0, 0, DateTimeKind.Utc)
         };
@@ -260,8 +276,8 @@ public sealed class WishListServiceTests
 
         Assert.True(result.Success);
         Assert.Equal(2, result.Data!.Count);
-        Assert.Equal("Newer", result.Data![0].Distillery);
-        Assert.Equal("Older", result.Data![1].Distillery);
+        Assert.Equal("Newer", result.Data![0].BottleName);
+        Assert.Equal("Older", result.Data![1].BottleName);
     }
 
     #endregion
@@ -274,7 +290,7 @@ public sealed class WishListServiceTests
         var db = CreateDbContext();
         var user = SeedUser(db);
         var service = CreateService(db, user.Id);
-        var request = new AddWishListItemRequest { BottleName = "Something", Distillery = null, Category = null };
+        var request = new AddWishListItemRequest { BottleName = "Something", DistilleryId = null, Category = null };
 
         var result = await service.AddItemAsync(request, CancellationToken.None);
 
@@ -283,18 +299,34 @@ public sealed class WishListServiceTests
     }
 
     [Fact]
-    public async Task AddItemAsync_WhenOnlyDistillery_Succeeds()
+    public async Task AddWishListItem_WhenDistilleryIdNotFound_ReturnsNotFound()
     {
         var db = CreateDbContext();
         var user = SeedUser(db);
         var service = CreateService(db, user.Id);
-        var request = new AddWishListItemRequest { Distillery = "Springbank", Category = null, ImageUrl = "/uploads/wishlist/abc.jpg" };
+        var request = new AddWishListItemRequest { DistilleryId = Guid.NewGuid() };
+
+        var result = await service.AddItemAsync(request, CancellationToken.None);
+
+        Assert.False(result.Success);
+        Assert.Equal("Distillery not found.", result.Error);
+    }
+
+    [Fact]
+    public async Task AddItemAsync_WhenOnlyDistillery_Succeeds()
+    {
+        var db = CreateDbContext();
+        var user = SeedUser(db);
+        var distillery = SeedDistillery(db, "Springbank");
+        var service = CreateService(db, user.Id);
+        var request = new AddWishListItemRequest { DistilleryId = distillery.Id, Category = null, ImageUrl = "/uploads/wishlist/abc.jpg" };
 
         var result = await service.AddItemAsync(request, CancellationToken.None);
 
         Assert.True(result.Success);
         Assert.NotNull(result.Data);
-        Assert.Equal("Springbank", result.Data.Distillery);
+        Assert.Equal(distillery.Id, result.Data.DistilleryId);
+        Assert.Equal("Springbank", result.Data.DistilleryName);
         Assert.Null(result.Data.Category);
         Assert.Equal("/uploads/wishlist/abc.jpg", result.Data.ImageUrl);
         Assert.NotEqual(Guid.Empty, result.Data.Id);
@@ -305,8 +337,9 @@ public sealed class WishListServiceTests
     {
         var db = CreateDbContext();
         var user = SeedUser(db);
+        var distillery = SeedDistillery(db, "Bowmore");
         var service = CreateService(db, user.Id);
-        var request = new AddWishListItemRequest { Distillery = "Bowmore", ImageUrl = "https://example.com/img.jpg" };
+        var request = new AddWishListItemRequest { DistilleryId = distillery.Id, ImageUrl = "https://example.com/img.jpg" };
 
         var result = await service.AddItemAsync(request, CancellationToken.None);
 
@@ -324,13 +357,14 @@ public sealed class WishListServiceTests
         var db = CreateDbContext();
         var user = SeedUser(db);
         var service = CreateService(db, user.Id);
-        var request = new AddWishListItemRequest { Distillery = null, Category = SpiritCategory.Rum };
+        var request = new AddWishListItemRequest { DistilleryId = null, Category = SpiritCategory.Rum };
 
         var result = await service.AddItemAsync(request, CancellationToken.None);
 
         Assert.True(result.Success);
         Assert.NotNull(result.Data);
-        Assert.Null(result.Data.Distillery);
+        Assert.Null(result.Data.DistilleryId);
+        Assert.Null(result.Data.DistilleryName);
         Assert.Equal(SpiritCategory.Rum, result.Data.Category);
     }
 
@@ -339,11 +373,12 @@ public sealed class WishListServiceTests
     {
         var db = CreateDbContext();
         var user = SeedUser(db);
+        var distillery = SeedDistillery(db, "Glenfarclas");
         var service = CreateService(db, user.Id);
         var request = new AddWishListItemRequest
         {
             BottleName = "Dream bottle",
-            Distillery = "Glenfarclas",
+            DistilleryId = distillery.Id,
             Category = SpiritCategory.Whisky
         };
 
@@ -352,7 +387,8 @@ public sealed class WishListServiceTests
         Assert.True(result.Success);
         Assert.NotNull(result.Data);
         Assert.Equal("Dream bottle", result.Data.BottleName);
-        Assert.Equal("Glenfarclas", result.Data.Distillery);
+        Assert.Equal(distillery.Id, result.Data.DistilleryId);
+        Assert.Equal("Glenfarclas", result.Data.DistilleryName);
         Assert.Equal(SpiritCategory.Whisky, result.Data.Category);
 
         var stored = await db.WishListItems.SingleAsync();
@@ -368,7 +404,7 @@ public sealed class WishListServiceTests
         cts.Cancel();
 
         await Assert.ThrowsAsync<OperationCanceledException>(
-            () => service.AddItemAsync(new AddWishListItemRequest { Distillery = "Valid" }, cts.Token));
+            () => service.AddItemAsync(new AddWishListItemRequest { DistilleryId = Guid.NewGuid() }, cts.Token));
     }
 
     #endregion

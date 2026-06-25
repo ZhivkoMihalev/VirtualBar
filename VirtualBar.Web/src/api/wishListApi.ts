@@ -3,7 +3,7 @@ import type { WishListItem, PublicWishListItem } from '../types'
 
 export interface AddWishListItemRequest {
   bottleName?: string
-  distillery?: string
+  distilleryId?: string | null
   category?: string
   imageUrl?: string
 }

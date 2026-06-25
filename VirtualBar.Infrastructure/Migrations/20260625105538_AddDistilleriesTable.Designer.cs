@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using VirtualBar.Infrastructure.Persistence;
 
@@ -11,9 +12,11 @@ using VirtualBar.Infrastructure.Persistence;
 namespace VirtualBar.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260625105538_AddDistilleriesTable")]
+    partial class AddDistilleriesTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -451,19 +454,6 @@ namespace VirtualBar.Infrastructure.Migrations
                     b.ToTable("Distilleries");
                 });
 
-            modelBuilder.Entity("VirtualBar.Domain.Entities.DistilleryCategory", b =>
-                {
-                    b.Property<Guid>("DistilleryId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<int>("Category")
-                        .HasColumnType("int");
-
-                    b.HasKey("DistilleryId", "Category");
-
-                    b.ToTable("DistilleryCategories");
-                });
-
             modelBuilder.Entity("VirtualBar.Domain.Entities.Message", b =>
                 {
                     b.Property<Guid>("Id")
@@ -783,17 +773,6 @@ namespace VirtualBar.Infrastructure.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("VirtualBar.Domain.Entities.DistilleryCategory", b =>
-                {
-                    b.HasOne("VirtualBar.Domain.Entities.Distillery", "Distillery")
-                        .WithMany("Categories")
-                        .HasForeignKey("DistilleryId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Distillery");
-                });
-
             modelBuilder.Entity("VirtualBar.Domain.Entities.Message", b =>
                 {
                     b.HasOne("VirtualBar.Domain.Entities.AppUser", "Receiver")
@@ -920,8 +899,6 @@ namespace VirtualBar.Infrastructure.Migrations
             modelBuilder.Entity("VirtualBar.Domain.Entities.Distillery", b =>
                 {
                     b.Navigation("Bottles");
-
-                    b.Navigation("Categories");
                 });
 
             modelBuilder.Entity("VirtualBar.Domain.Entities.NewsPost", b =>

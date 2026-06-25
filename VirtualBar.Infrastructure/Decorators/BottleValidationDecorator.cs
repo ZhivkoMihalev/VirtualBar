@@ -36,6 +36,14 @@ public sealed class BottleValidationDecorator(
         if (string.IsNullOrWhiteSpace(request.Name))
             return Result<BottleDto>.Fail("Name is required.");
 
+        if (request.DistilleryId is Guid distilleryId)
+        {
+            var distilleryExists = await db.Distilleries
+                .AnyAsync(d => d.Id == distilleryId && !d.IsDeleted, cancellationToken);
+            if (!distilleryExists)
+                return Result<BottleDto>.NotFound("Distillery not found.");
+        }
+
         return await inner.AddBottleAsync(request, cancellationToken);
     }
 
@@ -52,6 +60,14 @@ public sealed class BottleValidationDecorator(
 
         if (bottle.UserId != currentUser.UserId)
             return Result<BottleDto>.Forbidden("Forbidden.");
+
+        if (request.DistilleryId is Guid distilleryId)
+        {
+            var distilleryExists = await db.Distilleries
+                .AnyAsync(d => d.Id == distilleryId && !d.IsDeleted, cancellationToken);
+            if (!distilleryExists)
+                return Result<BottleDto>.NotFound("Distillery not found.");
+        }
 
         return await inner.UpdateBottleAsync(bottleId, request, cancellationToken);
     }

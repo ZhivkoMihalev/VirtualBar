@@ -99,6 +99,10 @@ public static class DependencyInjection
             sp.GetRequiredService<AppDbContext>(),
             sp.GetRequiredService<ICurrentUser>()));
 
+        services.AddScoped<DistilleryService>();
+        services.AddScoped<IDistilleryService>(sp => new DistilleryValidationDecorator(
+            sp.GetRequiredService<DistilleryService>()));
+
         return services;
     }
 }

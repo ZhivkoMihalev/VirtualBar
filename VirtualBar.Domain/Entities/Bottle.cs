@@ -10,7 +10,9 @@ public class Bottle : BaseEntity
 
     public string Name { get; set; } = string.Empty;
 
-    public string? Distillery { get; set; }
+    public Guid? DistilleryId { get; set; }
+
+    public Distillery? Distillery { get; set; }
 
     public string? Region { get; set; }
 

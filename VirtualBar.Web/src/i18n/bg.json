@@ -83,7 +83,7 @@
     "name": "Наименование *",
     "namePlaceholder": "напр. Glenfiddich 18",
     "distillery": "Дестилерия",
-    "distilleryPlaceholder": "напр. Glenfiddich",
+    "distilleryPlaceholder": "Търси дестилерия...",
     "age": "Възраст",
     "abv": "ABV %",
     "volume": "Обем мл",
@@ -302,7 +302,7 @@
     "bottleName": "Описание (незадължително)",
     "bottleNamePlaceholder": "напр. Macallan 18",
     "distillery": "Дестилерия",
-    "distilleryPlaceholder": "напр. Macallan",
+    "distilleryPlaceholder": "Търси дестилерия...",
     "category": "Категория",
     "categoryAny": "Всяка категория",
     "addBtn": "Добави",
@@ -319,6 +319,13 @@
     "uploading": "Качване...",
     "uploadError": "Грешка при качване. Опитайте отново.",
     "imageTabUrl": "URL НА СНИМКА",
-    "imageTabUpload": "ПРИКАЧИ СНИМКА"
+    "imageTabUpload": "ПРИКАЧИ СНИМКА",
+    "publishSearch": "ПУБЛИКУВАНЕ НА ТЪРСЕНЕ",
+    "publishSearchTitle": "Публикуване на търсене",
+    "close": "Затвори"
+  },
+  "distillerySelect": {
+    "placeholder": "Търси дестилерия...",
+    "noOptions": "Няма намерени дестилерии"
   }
 }

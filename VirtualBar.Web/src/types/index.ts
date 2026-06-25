@@ -1,6 +1,14 @@
 export type SpiritCategory = 'Whisky' | 'Rum' | 'Cognac' | 'Vodka' | 'Gin' | 'Tequila' | 'Brandy' | 'Other'
 export type BottleCondition = 'Sealed' | 'Opened' | 'Empty'
 
+export interface Distillery {
+  id: string
+  name: string
+  country: string | null
+  region: string | null
+  categories: string[]
+}
+
 export interface User {
   id: string
   email: string
@@ -18,7 +26,8 @@ export interface Bottle {
   userId: string
   userDisplayName: string
   name: string
-  distillery?: string
+  distilleryId: string | null
+  distilleryName: string | null
   region?: string
   country?: string
   category: SpiritCategory
@@ -152,7 +161,7 @@ export interface UpdatedProfile {
 
 export interface AddBottlePayload {
   name: string
-  distillery?: string
+  distilleryId?: string | null
   region?: string
   country?: string
   category: SpiritCategory
@@ -187,7 +196,8 @@ export interface CreateNewsPostPayload {
 export interface WishListItem {
   id: string
   bottleName: string | null
-  distillery: string | null
+  distilleryId: string | null
+  distilleryName: string | null
   category: SpiritCategory | null
   imageUrl: string | null
   createdAt: string
@@ -196,7 +206,8 @@ export interface WishListItem {
 export interface PublicWishListItem {
   id: string
   bottleName: string | null
-  distillery: string | null
+  distilleryId: string | null
+  distilleryName: string | null
   category: SpiritCategory | null
   imageUrl: string | null
   userId: string

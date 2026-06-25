@@ -134,6 +134,17 @@ public sealed class BottleService(
 
         await notificationService.CreateBulkAsync(followerIds, NotificationType.BottleListedForSale, bottle.Id, bottle.Name, cancellationToken);
 
+        var matchingUserIds = await db.WishListItems
+            .Where(w => !w.IsDeleted
+                && w.UserId != currentUser.UserId
+                && (w.Category == null || w.Category == bottle.Category)
+                && (w.Distillery == null || bottle.Distillery == w.Distillery))
+            .Select(w => w.UserId)
+            .Distinct()
+            .ToListAsync(cancellationToken);
+
+        await notificationService.CreateBulkAsync(matchingUserIds, NotificationType.WishListMatch, bottle.Id, bottle.Name, cancellationToken);
+
         return Result<bool>.Ok(true);
     }
 

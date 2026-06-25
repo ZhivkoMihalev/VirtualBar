@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -86,6 +87,15 @@ public static class DependencyInjection
         services.AddScoped<NotificationService>();
         services.AddScoped<INotificationService>(sp => new NotificationValidationDecorator(
             sp.GetRequiredService<NotificationService>(),
+            sp.GetRequiredService<AppDbContext>(),
+            sp.GetRequiredService<ICurrentUser>()));
+
+        services.AddScoped<WishListService>(sp => new WishListService(
+            sp.GetRequiredService<AppDbContext>(),
+            sp.GetRequiredService<ICurrentUser>(),
+            sp.GetRequiredService<IWebHostEnvironment>()));
+        services.AddScoped<IWishListService>(sp => new WishListValidationDecorator(
+            sp.GetRequiredService<WishListService>(),
             sp.GetRequiredService<AppDbContext>(),
             sp.GetRequiredService<ICurrentUser>()));
 

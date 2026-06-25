@@ -597,4 +597,217 @@ public sealed class BottleServiceTests
     }
 
     #endregion
+
+    #region WishList notifications
+
+    [Fact]
+    public async Task ListForSaleAsync_WhenMatchingWishListItem_NotifiesWishListOwner()
+    {
+        var db = CreateDbContext();
+        var seller = SeedUser(db, "Seller");
+        var wisher = SeedUser(db, "Wisher");
+        var bottle = SeedBottle(db, seller.Id, "Lagavulin 16");
+        bottle.Distillery = "Lagavulin";
+        db.WishListItems.Add(new WishListItem
+        {
+            UserId = wisher.Id,
+            Distillery = "Lagavulin",
+            Category = SpiritCategory.Whisky
+        });
+        db.SaveChanges();
+
+        var notificationMock = new Mock<INotificationService>();
+        var service = CreateBottleService(db, seller.Id, notificationMock.Object);
+
+        await service.ListForSaleAsync(bottle.Id, new ListForSaleRequest { AskingPrice = 500m, Currency = "USD" }, CancellationToken.None);
+
+        notificationMock.Verify(n => n.CreateBulkAsync(
+            It.Is<IEnumerable<Guid>>(ids => ids.Contains(wisher.Id)),
+            NotificationType.WishListMatch,
+            bottle.Id,
+            "Lagavulin 16",
+            CancellationToken.None), Times.Once);
+    }
+
+    [Fact]
+    public async Task ListForSaleAsync_WhenNoMatchingWishList_DoesNotNotifyForWishList()
+    {
+        var db = CreateDbContext();
+        var seller = SeedUser(db, "Seller");
+        var wisher = SeedUser(db, "Wisher");
+        var bottle = SeedBottle(db, seller.Id, "Lagavulin 16");
+        bottle.Distillery = "Lagavulin";
+        db.WishListItems.Add(new WishListItem
+        {
+            UserId = wisher.Id,
+            Distillery = "Macallan",
+            Category = SpiritCategory.Whisky
+        });
+        db.SaveChanges();
+
+        var notificationMock = new Mock<INotificationService>();
+        var service = CreateBottleService(db, seller.Id, notificationMock.Object);
+
+        await service.ListForSaleAsync(bottle.Id, new ListForSaleRequest { AskingPrice = 500m, Currency = "USD" }, CancellationToken.None);
+
+        notificationMock.Verify(n => n.CreateBulkAsync(
+            It.Is<IEnumerable<Guid>>(ids => !ids.Any()),
+            NotificationType.WishListMatch,
+            bottle.Id,
+            "Lagavulin 16",
+            CancellationToken.None), Times.Once);
+    }
+
+    [Fact]
+    public async Task ListForSaleAsync_WhenWishListMatchesByCategoryOnly_Notifies()
+    {
+        var db = CreateDbContext();
+        var seller = SeedUser(db, "Seller");
+        var wisher = SeedUser(db, "Wisher");
+        var bottle = SeedBottle(db, seller.Id, "Lagavulin 16");
+        bottle.Distillery = null;
+        db.WishListItems.Add(new WishListItem
+        {
+            UserId = wisher.Id,
+            Distillery = null,
+            Category = SpiritCategory.Whisky
+        });
+        db.SaveChanges();
+
+        var notificationMock = new Mock<INotificationService>();
+        var service = CreateBottleService(db, seller.Id, notificationMock.Object);
+
+        await service.ListForSaleAsync(bottle.Id, new ListForSaleRequest { AskingPrice = 500m, Currency = "USD" }, CancellationToken.None);
+
+        notificationMock.Verify(n => n.CreateBulkAsync(
+            It.Is<IEnumerable<Guid>>(ids => ids.Contains(wisher.Id)),
+            NotificationType.WishListMatch,
+            It.IsAny<Guid?>(),
+            It.IsAny<string?>(),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task ListForSaleAsync_WhenWishListMatchesByDistilleryOnly_Notifies()
+    {
+        var db = CreateDbContext();
+        var seller = SeedUser(db, "Seller");
+        var wisher = SeedUser(db, "Wisher");
+        var bottle = SeedBottle(db, seller.Id, "Lagavulin 16");
+        bottle.Distillery = "Lagavulin";
+        db.WishListItems.Add(new WishListItem
+        {
+            UserId = wisher.Id,
+            Distillery = "Lagavulin",
+            Category = null
+        });
+        db.SaveChanges();
+
+        var notificationMock = new Mock<INotificationService>();
+        var service = CreateBottleService(db, seller.Id, notificationMock.Object);
+
+        await service.ListForSaleAsync(bottle.Id, new ListForSaleRequest { AskingPrice = 500m, Currency = "USD" }, CancellationToken.None);
+
+        notificationMock.Verify(n => n.CreateBulkAsync(
+            It.Is<IEnumerable<Guid>>(ids => ids.Contains(wisher.Id)),
+            NotificationType.WishListMatch,
+            It.IsAny<Guid?>(),
+            It.IsAny<string?>(),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task ListForSaleAsync_WhenBottleDistilleryIsNullAndWishItemSpecifiesDistillery_DoesNotNotify()
+    {
+        var db = CreateDbContext();
+        var seller = SeedUser(db, "Seller");
+        var wisher = SeedUser(db, "Wisher");
+        var bottle = SeedBottle(db, seller.Id, "Lagavulin 16");
+        bottle.Distillery = null;
+        db.WishListItems.Add(new WishListItem
+        {
+            UserId = wisher.Id,
+            Distillery = "Lagavulin",
+            Category = SpiritCategory.Whisky
+        });
+        db.SaveChanges();
+
+        var notificationMock = new Mock<INotificationService>();
+        var service = CreateBottleService(db, seller.Id, notificationMock.Object);
+
+        await service.ListForSaleAsync(bottle.Id, new ListForSaleRequest { AskingPrice = 500m, Currency = "USD" }, CancellationToken.None);
+
+        notificationMock.Verify(n => n.CreateBulkAsync(
+            It.Is<IEnumerable<Guid>>(ids => ids.Contains(wisher.Id)),
+            NotificationType.WishListMatch,
+            It.IsAny<Guid?>(),
+            It.IsAny<string?>(),
+            It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task ListForSaleAsync_WhenSellerHasMatchingWishListItem_DoesNotNotifySelf()
+    {
+        var db = CreateDbContext();
+        var seller = SeedUser(db, "Seller");
+        var bottle = SeedBottle(db, seller.Id, "Lagavulin 16");
+        bottle.Distillery = "Lagavulin";
+        db.WishListItems.Add(new WishListItem
+        {
+            UserId = seller.Id,
+            Distillery = "Lagavulin",
+            Category = SpiritCategory.Whisky
+        });
+        db.SaveChanges();
+
+        var notificationMock = new Mock<INotificationService>();
+        var service = CreateBottleService(db, seller.Id, notificationMock.Object);
+
+        await service.ListForSaleAsync(bottle.Id, new ListForSaleRequest { AskingPrice = 500m, Currency = "USD" }, CancellationToken.None);
+
+        notificationMock.Verify(n => n.CreateBulkAsync(
+            It.Is<IEnumerable<Guid>>(ids => ids.Contains(seller.Id)),
+            NotificationType.WishListMatch,
+            It.IsAny<Guid?>(),
+            It.IsAny<string?>(),
+            It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task ListForSaleAsync_WhenSameUserHasTwoMatchingWishItems_NotifiesOnce()
+    {
+        var db = CreateDbContext();
+        var seller = SeedUser(db, "Seller");
+        var wisher = SeedUser(db, "Wisher");
+        var bottle = SeedBottle(db, seller.Id, "Lagavulin 16");
+        bottle.Distillery = "Lagavulin";
+        db.WishListItems.AddRange(
+            new WishListItem
+            {
+                UserId = wisher.Id,
+                Distillery = "Lagavulin",
+                Category = SpiritCategory.Whisky
+            },
+            new WishListItem
+            {
+                UserId = wisher.Id,
+                Distillery = null,
+                Category = SpiritCategory.Whisky
+            });
+        db.SaveChanges();
+
+        var notificationMock = new Mock<INotificationService>();
+        var service = CreateBottleService(db, seller.Id, notificationMock.Object);
+
+        await service.ListForSaleAsync(bottle.Id, new ListForSaleRequest { AskingPrice = 500m, Currency = "USD" }, CancellationToken.None);
+
+        notificationMock.Verify(n => n.CreateBulkAsync(
+            It.Is<IEnumerable<Guid>>(ids => ids.Count(id => id == wisher.Id) == 1),
+            NotificationType.WishListMatch,
+            It.IsAny<Guid?>(),
+            It.IsAny<string?>(),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    #endregion
 }

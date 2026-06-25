@@ -184,7 +184,27 @@ export interface CreateNewsPostPayload {
   translations: NewsPostTranslation[]
 }
 
-export type NotificationType = 'BottleLiked' | 'BottleCommented' | 'NewFollower' | 'NewMessage' | 'NewBottleFromFollowing' | 'BottleListedForSale'
+export interface WishListItem {
+  id: string
+  bottleName: string | null
+  distillery: string | null
+  category: SpiritCategory | null
+  imageUrl: string | null
+  createdAt: string
+}
+
+export interface PublicWishListItem {
+  id: string
+  bottleName: string | null
+  distillery: string | null
+  category: SpiritCategory | null
+  imageUrl: string | null
+  userId: string
+  userDisplayName: string
+  createdAt: string
+}
+
+export type NotificationType = 'BottleLiked' | 'BottleCommented' | 'NewFollower' | 'NewMessage' | 'NewBottleFromFollowing' | 'BottleListedForSale' | 'WishListMatch'
 
 export interface NotificationItem {
   id: string

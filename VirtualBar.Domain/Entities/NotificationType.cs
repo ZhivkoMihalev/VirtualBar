@@ -8,4 +8,5 @@ public enum NotificationType
     NewMessage,
     NewBottleFromFollowing,
     BottleListedForSale,
+    WishListMatch,
 }

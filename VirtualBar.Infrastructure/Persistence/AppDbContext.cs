@@ -17,6 +17,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
     public DbSet<NewsPost> NewsPosts => Set<NewsPost>();
     public DbSet<NewsPostTranslation> NewsPostTranslations => Set<NewsPostTranslation>();
     public DbSet<Notification> Notifications => Set<Notification>();
+    public DbSet<WishListItem> WishListItems => Set<WishListItem>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -102,6 +103,16 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
                 .OnDelete(DeleteBehavior.Restrict);
 
             e.HasIndex(n => new { n.UserId, n.IsDeleted, n.CreatedAt });
+        });
+
+        builder.Entity<WishListItem>(e =>
+        {
+            e.HasOne(w => w.User)
+                .WithMany()
+                .HasForeignKey(w => w.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            e.HasIndex(w => new { w.UserId, w.IsDeleted });
         });
     }
 }

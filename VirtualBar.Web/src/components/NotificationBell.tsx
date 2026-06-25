@@ -140,6 +140,10 @@ function describe(item: NotificationItem, t: (key: string, opts?: Record<string,
       return item.resourceName
         ? t('notifications.bottleListedForSale', { bottle: item.resourceName })
         : t('notifications.bottleListedForSaleNoName')
+    case 'WishListMatch':
+      return item.resourceName
+        ? t('notifications.wishListMatch', { bottle: item.resourceName })
+        : t('notifications.wishListMatchNoName')
   }
 }
 
@@ -153,6 +157,8 @@ function targetPath(item: NotificationItem): string {
       return `/bar/${item.actorId}`
     case 'NewMessage':
       return `/messages?with=${item.actorId}`
+    case 'WishListMatch':
+      return '/marketplace'
   }
 }
 

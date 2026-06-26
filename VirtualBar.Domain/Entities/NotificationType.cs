@@ -9,4 +9,7 @@ public enum NotificationType
     NewBottleFromFollowing,
     BottleListedForSale,
     WishListMatch,
+    OfferReceived,
+    OfferAccepted,
+    OfferDeclined,
 }

@@ -4,7 +4,9 @@ import { Link } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../contexts/AuthContext'
+import { useChat } from '../contexts/ChatContext'
 import { getMarketplace } from '../api/bottlesApi'
+import { sendMessage } from '../api/messagesApi'
 import { getAllWishListItems, addWishListItem, removeWishListItem, uploadWishListImage } from '../api/wishListApi'
 import type { AddWishListItemRequest } from '../api/wishListApi'
 import type { Bottle, SpiritCategory, PublicWishListItem } from '../types'
@@ -400,6 +402,61 @@ const wishLoadingStyle: CSSProperties = {
   color: '#C9A84C',
 }
 
+const wishContactButtonStyle: CSSProperties = {
+  fontFamily: 'Cinzel, serif',
+  fontSize: 10,
+  letterSpacing: '0.15em',
+  color: '#07030A',
+  background: 'linear-gradient(135deg, #C9A84C, #E8C870)',
+  border: 'none',
+  padding: '8px 16px',
+  borderRadius: 2,
+  cursor: 'pointer',
+  whiteSpace: 'nowrap',
+  flexShrink: 0,
+}
+
+const wishActionsStyle: CSSProperties = {
+  display: 'flex',
+  flexDirection: 'column',
+  gap: 8,
+  flexShrink: 0,
+}
+
+const contactTextareaStyle: CSSProperties = {
+  background: '#0A0502',
+  border: '1px solid rgba(201,168,76,0.2)',
+  color: '#F0DDB4',
+  fontFamily: 'Cormorant Garamond, serif',
+  fontSize: 16,
+  padding: '12px 14px',
+  borderRadius: 4,
+  outline: 'none',
+  width: '100%',
+  minHeight: 120,
+  resize: 'vertical',
+  marginBottom: 18,
+}
+
+const contactButtonRowStyle: CSSProperties = {
+  display: 'flex',
+  gap: 12,
+  justifyContent: 'flex-end',
+}
+
+const contactCancelButtonStyle: CSSProperties = {
+  fontFamily: 'Cinzel, serif',
+  fontSize: 11,
+  letterSpacing: '0.2em',
+  textTransform: 'uppercase',
+  color: '#B09868',
+  background: 'transparent',
+  border: '1px solid rgba(201,168,76,0.25)',
+  padding: '12px 24px',
+  borderRadius: 2,
+  cursor: 'pointer',
+}
+
 function focusOn(e: React.FocusEvent<HTMLInputElement | HTMLSelectElement>) {
   e.currentTarget.style.border = '1px solid rgba(201,168,76,0.5)'
 }
@@ -631,10 +688,58 @@ function MarketplaceCard({ bottle, onView }: { bottle: Bottle; onView: () => voi
   )
 }
 
-function WishCard({ item, isOwn }: { item: PublicWishListItem; isOwn: boolean }) {
+function ContactModal({ item, onClose }: { item: PublicWishListItem; onClose: () => void }) {
+  const { t } = useTranslation()
+  const { openChat } = useChat()
+  const [content, setContent] = useState(() => t('wishList.contactDefaultMessage'))
+
+  const sendMutation = useMutation({
+    mutationFn: () => sendMessage(item.userId, content.trim()),
+    onSuccess: () => {
+      openChat(item.userId)
+      onClose()
+    },
+  })
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    if (!content.trim()) return
+    sendMutation.mutate()
+  }
+
+  return (
+    <div style={modalBackdropStyle} onClick={onClose}>
+      <div style={modalPanelStyle} onClick={(e) => e.stopPropagation()}>
+        <button type="button" onClick={onClose} style={modalCloseStyle} aria-label={t('wishList.contactCancel')}>
+          ×
+        </button>
+        <h2 style={modalTitleStyle}>{t('wishList.contactTitle')}</h2>
+        <form onSubmit={handleSubmit}>
+          <textarea
+            value={content}
+            onChange={(e) => setContent(e.target.value)}
+            style={contactTextareaStyle}
+          />
+          {sendMutation.isError && <div style={wishErrorStyle}>{t('wishList.contactError')}</div>}
+          <div style={contactButtonRowStyle}>
+            <button type="button" onClick={onClose} style={contactCancelButtonStyle}>
+              {t('wishList.contactCancel')}
+            </button>
+            <button type="submit" disabled={sendMutation.isPending || !content.trim()} style={wishAddButtonStyle}>
+              {sendMutation.isPending ? t('wishList.contactSending') : t('wishList.contactSend')}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  )
+}
+
+function WishCard({ item, isOwn, canContact }: { item: PublicWishListItem; isOwn: boolean; canContact: boolean }) {
   const { t } = useTranslation()
   const queryClient = useQueryClient()
   const [confirming, setConfirming] = useState(false)
+  const [contactOpen, setContactOpen] = useState(false)
 
   const removeMutation = useMutation({
     mutationFn: () => removeWishListItem(item.id),
@@ -670,6 +775,14 @@ function WishCard({ item, isOwn }: { item: PublicWishListItem; isOwn: boolean })
           {confirming ? t('wishList.removeConfirm') : t('wishList.remove')}
         </button>
       )}
+      {!isOwn && canContact && (
+        <div style={wishActionsStyle}>
+          <button onClick={() => setContactOpen(true)} style={wishContactButtonStyle}>
+            {t('wishList.contactBtn')}
+          </button>
+        </div>
+      )}
+      {contactOpen && <ContactModal item={item} onClose={() => setContactOpen(false)} />}
     </div>
   )
 }
@@ -876,7 +989,12 @@ function SearchTab() {
       {!isLoading && items.length > 0 && (
         <div style={wishListStyle}>
           {items.map((item) => (
-            <WishCard key={item.id} item={item} isOwn={item.userId === user?.id} />
+            <WishCard
+              key={item.id}
+              item={item}
+              isOwn={item.userId === user?.id}
+              canContact={isAuthenticated}
+            />
           ))}
         </div>
       )}

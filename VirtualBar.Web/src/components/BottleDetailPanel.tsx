@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import type { TFunction } from 'i18next'
 import { toggleBottleLike, getBottleComments, addBottleComment, deleteBottleComment, listBottleForSale, unlistBottleFromSale, removeBottle } from '../api/bottlesApi'
+import { createOffer } from '../api/offersApi'
 import type { Bottle } from '../types'
 import { CATEGORY_COLORS, BottleSvg } from './BarShelf'
 
@@ -468,6 +469,197 @@ function DeleteSection({ bottle, onDelete }: { bottle: Bottle; onDelete?: () => 
   )
 }
 
+const offerLabelStyle: CSSProperties = {
+  fontFamily: 'Cinzel, serif',
+  fontSize: 11,
+  letterSpacing: '0.2em',
+  color: '#B09868',
+  textTransform: 'uppercase',
+  marginBottom: 6,
+  display: 'block',
+}
+
+const offerOverlayStyle: CSSProperties = {
+  position: 'fixed',
+  inset: 0,
+  zIndex: 60,
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  padding: '24px 16px',
+}
+
+const offerCardStyle: CSSProperties = {
+  position: 'relative',
+  width: '100%',
+  maxWidth: 440,
+  background: 'linear-gradient(180deg, #0F0604, #130805)',
+  border: '1px solid rgba(201,168,76,0.22)',
+  borderRadius: 8,
+  padding: 28,
+  animation: 'fadeInUp 0.22s ease-out',
+  boxShadow: '0 32px 80px rgba(0,0,0,0.7), 0 0 0 1px rgba(201,168,76,0.08)',
+}
+
+const offerSubmitStyle: CSSProperties = {
+  flex: 1,
+  fontFamily: 'Cinzel, serif',
+  fontSize: 12,
+  letterSpacing: '0.2em',
+  textTransform: 'uppercase',
+  color: '#07030A',
+  background: 'linear-gradient(135deg, #C9A84C, #E8C870)',
+  border: 'none',
+  padding: '12px',
+  borderRadius: 2,
+}
+
+const offerCancelStyle: CSSProperties = {
+  fontFamily: 'Cinzel, serif',
+  fontSize: 12,
+  letterSpacing: '0.2em',
+  textTransform: 'uppercase',
+  color: '#B09868',
+  background: 'transparent',
+  border: '1px solid rgba(201,168,76,0.2)',
+  padding: '12px 22px',
+  borderRadius: 2,
+  cursor: 'pointer',
+}
+
+function MakeOfferSection({ bottle }: { bottle: Bottle }) {
+  const { t } = useTranslation()
+  const queryClient = useQueryClient()
+  const [open, setOpen] = useState(false)
+  const [price, setPrice] = useState(bottle.askingPrice?.toString() ?? '')
+  const [currency, setCurrency] = useState(bottle.currency ?? 'USD')
+  const [message, setMessage] = useState('')
+
+  const mutation = useMutation({
+    mutationFn: () => createOffer({
+      bottleId: bottle.id,
+      offeredPrice: Number(price),
+      currency,
+      message: message.trim() || undefined,
+    }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['offers'] })
+      setOpen(false)
+      setMessage('')
+    },
+  })
+
+  const canSubmit = !!price && Number(price) > 0 && !mutation.isPending
+
+  return (
+    <div style={{ marginBottom: 20 }}>
+      <button
+        onClick={() => setOpen(true)}
+        style={{
+          width: '100%',
+          fontFamily: 'Cinzel, serif',
+          fontSize: 12,
+          letterSpacing: '0.2em',
+          textTransform: 'uppercase',
+          color: '#07030A',
+          background: 'linear-gradient(135deg, #C9A84C, #E8C870)',
+          border: 'none',
+          padding: '13px',
+          borderRadius: 2,
+          cursor: 'pointer',
+          boxShadow: '0 4px 20px rgba(201,168,76,0.25)',
+        }}
+      >
+        {t('offers.makeOffer')}
+      </button>
+
+      {open && (
+        <div style={offerOverlayStyle}>
+          <div onClick={() => setOpen(false)} style={{ position: 'absolute', inset: 0, background: 'rgba(4,2,1,0.88)' }} />
+
+          <div style={offerCardStyle}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+              <div style={{ fontFamily: 'Cinzel, serif', fontSize: 13, letterSpacing: '0.25em', color: '#C9A84C', textTransform: 'uppercase' }}>
+                {t('offers.offerModalTitle')}
+              </div>
+              <button
+                onClick={() => setOpen(false)}
+                style={{ background: 'transparent', border: 'none', color: '#B09868', fontSize: 24, cursor: 'pointer', lineHeight: 1 }}
+              >
+                ×
+              </button>
+            </div>
+
+            <div style={{ fontFamily: 'Playfair Display, serif', fontSize: 20, color: '#E8C870', marginBottom: 20 }}>
+              {bottle.name}
+            </div>
+
+            <div style={{ display: 'flex', gap: 12, marginBottom: 18 }}>
+              <div style={{ flex: 1 }}>
+                <label style={offerLabelStyle}>{t('offers.price')}</label>
+                <input
+                  type="number"
+                  min={0}
+                  step={0.01}
+                  value={price}
+                  onChange={e => setPrice(e.target.value)}
+                  onFocus={focusOn}
+                  onBlur={focusOff}
+                  style={inputStyle}
+                />
+              </div>
+              <div style={{ width: 110 }}>
+                <label style={offerLabelStyle}>{t('offers.currency')}</label>
+                <select
+                  value={currency}
+                  onChange={e => setCurrency(e.target.value)}
+                  style={{ ...inputStyle, cursor: 'pointer', appearance: 'none' }}
+                >
+                  {CURRENCIES.map(c => <option key={c} value={c}>{c}</option>)}
+                </select>
+              </div>
+            </div>
+
+            <label style={offerLabelStyle}>{t('offers.message')}</label>
+            <textarea
+              value={message}
+              onChange={e => setMessage(e.target.value)}
+              onFocus={focusOn}
+              onBlur={focusOff}
+              rows={3}
+              placeholder={t('offers.messagePlaceholder')}
+              style={{ ...inputStyle, resize: 'vertical', marginBottom: 20 }}
+            />
+
+            {mutation.isError && (
+              <div style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: 14, color: '#C04040', marginBottom: 16 }}>
+                {t('offers.errorCreate')}
+              </div>
+            )}
+
+            <div style={{ display: 'flex', gap: 12 }}>
+              <button
+                onClick={() => mutation.mutate()}
+                disabled={!canSubmit}
+                style={{
+                  ...offerSubmitStyle,
+                  cursor: canSubmit ? 'pointer' : 'not-allowed',
+                  opacity: canSubmit ? 1 : 0.6,
+                }}
+              >
+                {mutation.isPending ? t('offers.submitting') : t('offers.submit')}
+              </button>
+              <button onClick={() => setOpen(false)} disabled={mutation.isPending} style={offerCancelStyle}>
+                {t('offers.cancel')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
 function DetailRow({ label, value }: { label: string; value: string | number }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
@@ -637,25 +829,30 @@ export default function BottleDetailPanel({
               <SaleSection bottle={bottle} userId={userId} />
               <DeleteSection bottle={bottle} onDelete={onDelete ?? onClose} />
             </>
-          ) : bottle.isForSale && bottle.askingPrice != null ? (
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              padding: '14px 20px',
-              background: 'rgba(74,154,106,0.06)',
-              border: '1px solid rgba(74,154,106,0.25)',
-              borderRadius: 4,
-              marginBottom: 20,
-            }}>
-              <span style={{ fontFamily: 'Cinzel, serif', fontSize: 10, letterSpacing: '0.2em', color: '#4A9A6A', textTransform: 'uppercase' }}>
-                {t('bottle.askingPrice')}
-              </span>
-              <span style={{ fontFamily: 'Playfair Display, serif', fontSize: 22, color: '#6ABF8A', fontWeight: 700 }}>
-                {bottle.currency ?? 'USD'} {bottle.askingPrice.toLocaleString()}
-              </span>
-            </div>
-          ) : null}
+          ) : (
+            <>
+              {bottle.isForSale && bottle.askingPrice != null && (
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  padding: '14px 20px',
+                  background: 'rgba(74,154,106,0.06)',
+                  border: '1px solid rgba(74,154,106,0.25)',
+                  borderRadius: 4,
+                  marginBottom: 20,
+                }}>
+                  <span style={{ fontFamily: 'Cinzel, serif', fontSize: 10, letterSpacing: '0.2em', color: '#4A9A6A', textTransform: 'uppercase' }}>
+                    {t('bottle.askingPrice')}
+                  </span>
+                  <span style={{ fontFamily: 'Playfair Display, serif', fontSize: 22, color: '#6ABF8A', fontWeight: 700 }}>
+                    {bottle.currency ?? 'USD'} {bottle.askingPrice.toLocaleString()}
+                  </span>
+                </div>
+              )}
+              {currentUserId && <MakeOfferSection bottle={bottle} />}
+            </>
+          )}
 
           {bottle.description && (
             <div style={{ marginBottom: 20 }}>

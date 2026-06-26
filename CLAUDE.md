@@ -6,7 +6,7 @@ This file provides guidance to Claude Code when working with code in this reposi
 
 ## What is VirtualBar
 
-VirtualBar is a platform for collectors of premium spirits (whisky, rum, cognac, vodka and more). Every user gets a **virtual bar** — a public profile showcasing their collection. Others can browse collections, follow collectors, like and comment on bottles, send direct messages, and buy/sell limited editions through a built-in marketplace. The home page (`/`) is a social news feed showing admin-authored articles and activity from followed users. Users receive **in-app notifications** when someone likes/comments their bottle, follows them, sends a message, or when someone they follow adds a bottle or lists one for sale.
+VirtualBar is a platform for collectors of premium spirits (whisky, rum, cognac, vodka and more). Every user gets a **virtual bar** — a public profile showcasing their collection. Others can browse collections, follow collectors, like and comment on bottles, send direct messages, and buy/sell limited editions through a built-in marketplace. The home page (`/`) is a social news feed showing admin-authored articles and activity from followed users. Users receive **in-app notifications** when someone likes/comments their bottle, follows them, sends a message, or when someone they follow adds a bottle or lists one for sale. Users can add bottles to a **wish list** and get notified when a matching bottle appears for sale. Any user can **make an offer** on any bottle in another collector's bar (regardless of whether it is listed for sale); the seller receives a notification and can accept, decline, or ignore. Direct messaging is handled via a **floating chat widget** (Facebook Messenger style) accessible from every page.
 
 **User roles:** Collector (all registered users). Platform administrators have `IsAdmin = true` on their `AppUser` record — seeded via `AdminEmail` in `appsettings.Development.json` on startup.
 
@@ -197,10 +197,14 @@ Key DbSets:
 | `NewsPosts` | Admin-authored news articles (multilingual via `NewsPostTranslations`) |
 | `NewsPostTranslations` | Per-language title + content for a `NewsPost` |
 | `Notifications` | In-app notifications for users |
+| `Distilleries` | Master list of distilleries (seeded on startup via `DistillerySeeder`) |
+| `DistilleryCategories` | Junction: distillery → spirit category (composite PK; one distillery can have multiple categories) |
+| `WishListItems` | A collector's desired bottle criteria — matched against listings |
+| `Offers` | Purchase offers from one user to another on a specific bottle |
 
 All entities extend `BaseEntity` which adds `Id (Guid)`, `CreatedAt`, `UpdatedAt`, `IsDeleted`, `DeletedAt`.
 
-`BottleLike` and `UserFollow` are junction tables with composite PKs — no `BaseEntity`.
+`BottleLike`, `UserFollow`, and `DistilleryCategory` are junction tables with composite PKs — no `BaseEntity`.
 
 ---
 
@@ -225,7 +229,7 @@ Junction relations: `BottleLike` (liked), `UserFollow` (followers/following).
 |---|---|---|
 | `UserId` | `Guid` | FK → AppUser (owner) |
 | `Name` | `string` | |
-| `Distillery` | `string?` | |
+| `DistilleryId` | `Guid?` | FK → Distillery (nullable; soft-delete aware in MapToDto) |
 | `Region`, `Country` | `string?` | |
 | `Category` | `SpiritCategory` | Whisky/Rum/Cognac/Vodka/Gin/Tequila/Brandy/Other |
 | `Age` | `int?` | Age statement in years |
@@ -340,6 +344,10 @@ Both FK relations use `DeleteBehavior.Restrict`. Composite index on `(UserId, Is
 | `NewMessage` | `MessageService.SendAsync` |
 | `NewBottleFromFollowing` | `BottleService.AddBottleAsync` — fan-out to all followers |
 | `BottleListedForSale` | `BottleService.ListForSaleAsync` — fan-out to all followers |
+| `WishListMatch` | `BottleService.ListForSaleAsync` — fan-out to wish list owners whose criteria match the listed bottle |
+| `OfferReceived` | `OfferService.CreateAsync` — sent to the seller |
+| `OfferAccepted` | `OfferService.AcceptAsync` — sent to the buyer |
+| `OfferDeclined` | `OfferService.DeclineAsync` — sent to the buyer |
 
 **INotificationService methods:**
 - `CreateAsync(recipientId, type, resourceId, resourceName, ct)` — single recipient; decorator skips if `recipientId == currentUser.UserId` (no self-notifications).
@@ -347,6 +355,63 @@ Both FK relations use `DeleteBehavior.Restrict`. Composite index on `(UserId, Is
 - Both are fire-and-forget calls from trigger services (not controller-exposed). They return `Task` (not `Result<T>`).
 - `GET /api/notifications` — returns last 30 + global unread count.
 - `PATCH /api/notifications/{id}/read` and `POST /api/notifications/read-all`.
+
+---
+
+### Distillery
+| Property | Type | Notes |
+|---|---|---|
+| `Name` | `string` | Unique index |
+| `Country` | `string?` | |
+| `Region` | `string?` | |
+
+Has `ICollection<DistilleryCategory> Categories` and `ICollection<Bottle> Bottles`. Seeded on startup by `DistillerySeeder` (~710 entries across Whisky/Rum/Vodka/Cognac/Brandy/Tequila/Gin). **No `POST /api/distilleries`** — seeder is the single source of truth. Public read via `GET /api/distilleries?category=Rum` (AllowAnonymous).
+
+### DistilleryCategory
+Composite PK: `(DistilleryId, Category)`. No `BaseEntity`. Cascade delete from `Distillery`.
+| Property | Type |
+|---|---|
+| `DistilleryId` | `Guid` |
+| `Category` | `SpiritCategory` |
+
+---
+
+### WishListItem
+| Property | Type | Notes |
+|---|---|---|
+| `UserId` | `Guid` | FK → AppUser (`DeleteBehavior.Restrict`) |
+| `BottleName` | `string?` | User label only — NOT used in matching |
+| `DistilleryId` | `Guid?` | FK → Distillery — matching criterion (exact FK match) |
+| `Category` | `SpiritCategory?` | Matching criterion (exact enum match) |
+| `ImageUrl` | `string?` | Optional display image |
+
+At least one of `DistilleryId` or `Category` must be set (enforced by `WishListValidationDecorator`). Matching in `BottleService.ListForSaleAsync` uses AND of all non-null criteria. Publicly visible in Marketplace "LOOKING FOR" tab — other users can click "СЪОБЩЕНИЕ" to open a chat with the searcher.
+
+---
+
+### Offer
+| Property | Type | Notes |
+|---|---|---|
+| `BottleId` | `Guid` | FK → Bottle (`DeleteBehavior.Restrict`) |
+| `BuyerId` | `Guid` | FK → AppUser |
+| `SellerId` | `Guid` | FK → AppUser |
+| `OfferedPrice` | `decimal` | `decimal(18,2)` |
+| `Currency` | `string` | ISO code e.g. "USD" |
+| `Message` | `string?` | Optional note from buyer |
+| `Status` | `OfferStatus` | Pending/Accepted/Declined/Withdrawn |
+| `RespondedAt` | `DateTime?` | Set when seller accepts or declines |
+
+**Design:** Offers can be made on **any** non-deleted bottle, regardless of `IsForSale`. One pending offer per buyer per bottle (enforced by decorator). All FK relations `DeleteBehavior.Restrict`.
+
+**OfferStatus enum:** `Pending`, `Accepted`, `Declined`, `Withdrawn`
+
+**API endpoints (`/api/offers`, all require `[Authorize]`):**
+- `POST /api/offers` — buyer creates offer
+- `GET /api/offers/received` — seller views received offers
+- `GET /api/offers/sent` — buyer views sent offers
+- `PATCH /api/offers/{id}/accept` — seller accepts
+- `PATCH /api/offers/{id}/decline` — seller declines
+- `PATCH /api/offers/{id}/withdraw` — buyer withdraws
 
 ---
 
@@ -362,16 +427,24 @@ Both FK relations use `DeleteBehavior.Restrict`. Composite index on `(UserId, Is
 
 **Internationalisation:** `react-i18next` + `i18next-browser-languagedetector`. Bulgarian is the default language (`lng: 'bg'`). English is optional. Language choice is persisted in `localStorage` under key `vbar_lang`. Translation files: `src/i18n/bg.json` and `src/i18n/en.json`. i18next is initialised in `src/i18n/index.ts` and imported as the first line of `src/main.tsx`. Every page and component uses `const { t } = useTranslation()`. The `LanguageSwitcher` component (`src/components/LanguageSwitcher.tsx`) renders a speakeasy-styled dropdown (БГ/EN) placed inside the NavBar of every page.
 
-**Routing:** `/` is `HomePage.tsx` (public news/social feed). Login and register redirect to `/` after success. `/dashboard` is the user's own virtual bar (protected).
+Current translation namespaces: `nav`, `lang`, `login`, `register`, `dashboard`, `addBottle`, `browse`, `marketplace`, `publicBar`, `bottle`, `messages`, `profile`, `footer`, `hero`, `home`, `barShelf`, `notifications`, `wishList`, `distillerySelect`, `offers`.
+
+**Routing:** `/` is `HomePage.tsx` (public news/social feed). Login and register redirect to `/` after success. `/dashboard` is the user's own virtual bar (protected). `/offers` is the Offers page (protected). There is **no `/messages` route** — messaging is handled entirely by the floating `ChatWidget`.
 
 **Shared components:**
-- `src/components/NavBar.tsx` — imported by every page; contains `<NotificationBell />` and `<LanguageSwitcher />` in the right slot (authenticated only).
-- `src/components/Avatar.tsx` — props: `displayName`, `avatarUrl?`, `size`. Renders `<img>` when avatarUrl present, initials div otherwise. Used in NavBar, MessagesPage, ProfilePage, PublicBarPage.
-- `src/components/NotificationBell.tsx` — bell icon with gold badge (unread count), dropdown with last 30 notifications, mark-read / mark-all-read. Polls every 30 s via `refetchInterval`.
+- `src/components/NavBar.tsx` — imported by every page; contains `<NotificationBell />` and `<LanguageSwitcher />` in the right slot (authenticated only). The "СЪОБЩЕНИЯ" nav item is a button that calls `toggleInbox()` from `ChatContext` — not a route link.
+- `src/components/Avatar.tsx` — props: `displayName`, `avatarUrl?`, `size`. Renders `<img>` when avatarUrl present, initials div otherwise.
+- `src/components/NotificationBell.tsx` — bell icon with gold badge (unread count), dropdown with last 30 notifications, mark-read / mark-all-read. Polls every 30 s via `refetchInterval`. `NewMessage` notifications call `openChat(actorId)` from `ChatContext` instead of navigating.
 - `src/components/Footer.tsx` — mounted once in `App.tsx`; fully opaque `#07030A` background.
-- `src/components/BottleDetailPanel.tsx` — full-screen overlay for bottle details. Shows `SaleSection` + `DeleteSection` for the owner, `LikesSection` and `CommentsSection` for all. `onDelete` prop (DashboardPage only) invalidates bottles query and closes panel.
+- `src/components/BottleDetailPanel.tsx` — full-screen overlay for bottle details. Shows `SaleSection` + `DeleteSection` for the owner. Shows `MakeOfferSection` for non-owners (any authenticated user, regardless of `IsForSale`). `LikesSection` and `CommentsSection` for all. `onDelete` prop (DashboardPage only) invalidates bottles query and closes panel.
+- `src/components/ChatWidget.tsx` — floating Facebook Messenger-style chat. `position: fixed; bottom: 0; right: 20px; zIndex: 1000`. Renders only for authenticated users. Layout right-to-left: gold circular toggle button (52px, unread badge) → inbox panel (300×480px) → active conversation window (320×480px). Polls inbox every 30 s. Mark-as-read runs automatically when a thread is viewed.
+- `src/components/DistillerySelect.tsx` — autocomplete dropdown for selecting a distillery. Props: `value`, `onChange`, `category?`. ARIA roles (`combobox`/`listbox`/`option`), keyboard navigation (ArrowUp/Down/Enter/Escape), scroll-into-view. Fetches from `GET /api/distilleries?category=...`, `queryKey: ['distilleries', category ?? 'all']`, staleTime 5 min.
 
-**App shell (`src/App.tsx`):** Fixed background image (`/public/bg-room.png`) + darkening overlay both `position: fixed; z-index: -1/-2`, content wrapper, then `<Footer />` outside the wrapper.
+**Contexts:**
+- `src/contexts/AuthContext.tsx` — `user`, `login`, `logout`, `isAuthenticated`, `isLoading`.
+- `src/contexts/ChatContext.tsx` — `inboxOpen`, `openInbox`, `closeInbox`, `toggleInbox`, `activeUserId`, `openChat(userId)`, `closeChat`. Used by NavBar, NotificationBell, MarketplacePage, ChatWidget.
+
+**App shell (`src/App.tsx`):** Fixed background image (`/public/bg-room.png`) + darkening overlay both `position: fixed; z-index: -1/-2`, content wrapper wrapped in `ChatProvider`, `<ChatWidget />` before `<Footer />`.
 
 **Visual theme:** Tailwind CSS 4 + inline styles for the speakeasy aesthetic.
 - Background: `#07030A` / `stone-950` / `stone-900`

@@ -20,6 +20,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
     public DbSet<WishListItem> WishListItems => Set<WishListItem>();
     public DbSet<Distillery> Distilleries => Set<Distillery>();
     public DbSet<DistilleryCategory> DistilleryCategories => Set<DistilleryCategory>();
+    public DbSet<Offer> Offers => Set<Offer>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -141,5 +142,26 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
             .WithMany(d => d.Categories)
             .HasForeignKey(dc => dc.DistilleryId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<Offer>(e =>
+        {
+            e.Property(o => o.OfferedPrice)
+                .HasColumnType("decimal(18,2)");
+
+            e.HasOne(o => o.Bottle)
+                .WithMany()
+                .HasForeignKey(o => o.BottleId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            e.HasOne(o => o.Buyer)
+                .WithMany()
+                .HasForeignKey(o => o.BuyerId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            e.HasOne(o => o.Seller)
+                .WithMany()
+                .HasForeignKey(o => o.SellerId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
     }
 }

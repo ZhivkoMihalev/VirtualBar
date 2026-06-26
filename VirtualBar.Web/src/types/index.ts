@@ -215,7 +215,7 @@ export interface PublicWishListItem {
   createdAt: string
 }
 
-export type NotificationType = 'BottleLiked' | 'BottleCommented' | 'NewFollower' | 'NewMessage' | 'NewBottleFromFollowing' | 'BottleListedForSale' | 'WishListMatch'
+export type NotificationType = 'BottleLiked' | 'BottleCommented' | 'NewFollower' | 'NewMessage' | 'NewBottleFromFollowing' | 'BottleListedForSale' | 'WishListMatch' | 'OfferReceived' | 'OfferAccepted' | 'OfferDeclined'
 
 export interface NotificationItem {
   id: string
@@ -231,4 +231,22 @@ export interface NotificationItem {
 export interface NotificationSummary {
   notifications: NotificationItem[]
   unreadCount: number
+}
+
+export type OfferStatus = 'Pending' | 'Accepted' | 'Declined' | 'Withdrawn'
+
+export interface Offer {
+  id: string
+  bottleId: string
+  bottleName: string
+  buyerId: string
+  buyerDisplayName: string
+  sellerId: string
+  sellerDisplayName: string
+  offeredPrice: number
+  currency: string
+  message: string | null
+  status: OfferStatus
+  respondedAt: string | null
+  createdAt: string
 }

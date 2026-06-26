@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../contexts/AuthContext'
+import { useChat } from '../contexts/ChatContext'
 import LanguageSwitcher from './LanguageSwitcher'
 import NotificationBell from './NotificationBell'
 import Avatar from './Avatar'
@@ -17,6 +18,7 @@ const navLinkStyle: CSSProperties = {
 export default function NavBar() {
   const { t } = useTranslation()
   const { user, isAuthenticated, logout } = useAuth()
+  const { toggleInbox } = useChat()
 
   return (
     <nav
@@ -67,7 +69,15 @@ export default function NavBar() {
           <Link to="/dashboard" style={navLinkStyle}>{t('nav.myBar')}</Link>
         )}
         {isAuthenticated && (
-          <Link to="/messages" style={navLinkStyle}>{t('nav.messages')}</Link>
+          <Link to="/offers" style={navLinkStyle}>{t('nav.offers')}</Link>
+        )}
+        {isAuthenticated && (
+          <button
+            onClick={toggleInbox}
+            style={{ ...navLinkStyle, background: 'transparent', border: 'none', cursor: 'pointer', padding: 0 }}
+          >
+            {t('nav.messages')}
+          </button>
         )}
       </div>
 

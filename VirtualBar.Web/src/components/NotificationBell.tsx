@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import type { CSSProperties } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
+import { useChat } from '../contexts/ChatContext'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   getNotifications,
@@ -144,10 +145,22 @@ function describe(item: NotificationItem, t: (key: string, opts?: Record<string,
       return item.resourceName
         ? t('notifications.wishListMatch', { bottle: item.resourceName })
         : t('notifications.wishListMatchNoName')
+    case 'OfferReceived':
+      return item.resourceName
+        ? t('notifications.offerReceived', { bottle: item.resourceName })
+        : t('notifications.offerReceivedNoName')
+    case 'OfferAccepted':
+      return item.resourceName
+        ? t('notifications.offerAccepted', { bottle: item.resourceName })
+        : t('notifications.offerAcceptedNoName')
+    case 'OfferDeclined':
+      return item.resourceName
+        ? t('notifications.offerDeclined', { bottle: item.resourceName })
+        : t('notifications.offerDeclinedNoName')
   }
 }
 
-function targetPath(item: NotificationItem): string {
+function targetPath(item: NotificationItem): string | null {
   switch (item.type) {
     case 'BottleLiked':
     case 'BottleCommented':
@@ -156,15 +169,20 @@ function targetPath(item: NotificationItem): string {
     case 'BottleListedForSale':
       return `/bar/${item.actorId}`
     case 'NewMessage':
-      return `/messages?with=${item.actorId}`
+      return null
     case 'WishListMatch':
       return '/marketplace'
+    case 'OfferReceived':
+    case 'OfferAccepted':
+    case 'OfferDeclined':
+      return '/offers'
   }
 }
 
 export default function NotificationBell() {
   const { t } = useTranslation()
   const navigate = useNavigate()
+  const { openChat } = useChat()
   const queryClient = useQueryClient()
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
@@ -201,7 +219,12 @@ export default function NotificationBell() {
   function handleItemClick(item: NotificationItem) {
     if (!item.isRead) readMutation.mutate(item.id)
     setOpen(false)
-    navigate(targetPath(item))
+    if (item.type === 'NewMessage') {
+      openChat(item.actorId)
+      return
+    }
+    const path = targetPath(item)
+    if (path) navigate(path)
   }
 
   return (

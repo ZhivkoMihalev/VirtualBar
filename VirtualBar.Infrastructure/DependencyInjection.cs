@@ -103,6 +103,12 @@ public static class DependencyInjection
         services.AddScoped<IDistilleryService>(sp => new DistilleryValidationDecorator(
             sp.GetRequiredService<DistilleryService>()));
 
+        services.AddScoped<OfferService>();
+        services.AddScoped<IOfferService>(sp => new OfferValidationDecorator(
+            sp.GetRequiredService<OfferService>(),
+            sp.GetRequiredService<AppDbContext>(),
+            sp.GetRequiredService<ICurrentUser>()));
+
         return services;
     }
 }

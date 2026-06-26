@@ -1,16 +1,20 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
+import { ChatProvider } from './contexts/ChatContext'
 import HomePage from './pages/HomePage'
 import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
+import ForgotPasswordPage from './pages/ForgotPasswordPage'
+import ResetPasswordPage from './pages/ResetPasswordPage'
 import DashboardPage from './pages/DashboardPage'
 import BrowsePage from './pages/BrowsePage'
 import PublicBarPage from './pages/PublicBarPage'
 import MarketplacePage from './pages/MarketplacePage'
-import MessagesPage from './pages/MessagesPage'
+import OffersPage from './pages/OffersPage'
 import ProfilePage from './pages/ProfilePage'
 import Footer from './components/Footer'
+import ChatWidget from './components/ChatWidget'
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { staleTime: 30_000 } },
@@ -53,6 +57,8 @@ function AppRoutes() {
       <Route path="/bar/:userId" element={<PublicBarPage />} />
       <Route path="/login" element={isAuthenticated ? <Navigate to="/" replace /> : <LoginPage />} />
       <Route path="/register" element={isAuthenticated ? <Navigate to="/" replace /> : <RegisterPage />} />
+      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+      <Route path="/reset-password" element={<ResetPasswordPage />} />
       <Route
         path="/dashboard"
         element={
@@ -61,11 +67,12 @@ function AppRoutes() {
           </ProtectedRoute>
         }
       />
+      <Route path="/messages" element={<Navigate to="/" replace />} />
       <Route
-        path="/messages"
+        path="/offers"
         element={
           <ProtectedRoute>
-            <MessagesPage />
+            <OffersPage />
           </ProtectedRoute>
         }
       />
@@ -87,6 +94,7 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <BrowserRouter>
+          <ChatProvider>
           <img
             src="/bg-room.png"
             alt=""
@@ -112,7 +120,9 @@ function App() {
           <div style={{ minHeight: '100vh' }}>
             <AppRoutes />
           </div>
+          <ChatWidget />
           <Footer />
+          </ChatProvider>
         </BrowserRouter>
       </AuthProvider>
     </QueryClientProvider>

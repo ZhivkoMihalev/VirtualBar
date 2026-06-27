@@ -4,6 +4,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using VirtualBar.Application.Interfaces;
 using VirtualBar.Domain.Entities;
+using VirtualBar.Application.Options;
 using VirtualBar.Infrastructure.Decorators;
 using VirtualBar.Infrastructure.Options;
 using VirtualBar.Infrastructure.Persistence;
@@ -16,6 +17,9 @@ public static class DependencyInjection
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddHttpContextAccessor();
+
+        services.Configure<EmailSettings>(configuration.GetSection("Email"));
+        services.AddScoped<IEmailService, EmailService>();
 
         services.AddScoped<ICurrentUser, CurrentUserService>();
         services.AddScoped<AuthService>();

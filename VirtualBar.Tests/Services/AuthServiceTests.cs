@@ -10,6 +10,7 @@ using Microsoft.Extensions.Options;
 using Moq;
 using VirtualBar.Application.DTOs.Auth;
 using VirtualBar.Application.Interfaces;
+using VirtualBar.Application.Options;
 using VirtualBar.Domain.Entities;
 using VirtualBar.Infrastructure.Decorators;
 using VirtualBar.Infrastructure.Persistence;
@@ -105,13 +106,32 @@ public sealed class AuthServiceTests
         return signInManager;
     }
 
-    private static IAuthService CreateAuthService(AppDbContext db, IConfiguration configuration)
+    private static IAuthService CreateAuthService(
+        AppDbContext db,
+        IConfiguration configuration,
+        IEmailService? emailService = null)
     {
         var userManager = CreateUserManager(db);
         var signInManager = CreateSignInManager(db, userManager);
 
-        var authService = new AuthService(userManager, configuration);
+        emailService ??= CreateEmailServiceMock().Object;
+        var emailOptions = Options.Create(new EmailSettings());
+
+        var authService = new AuthService(userManager, configuration, emailService, emailOptions);
         return new AuthValidationDecorator(authService, userManager, signInManager);
+    }
+
+    private static Mock<IEmailService> CreateEmailServiceMock()
+    {
+        var mock = new Mock<IEmailService>();
+        mock
+            .Setup(e => e.SendPasswordResetAsync(
+                It.IsAny<string>(),
+                It.IsAny<string>(),
+                It.IsAny<string>(),
+                It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+        return mock;
     }
 
     private static async Task<AppUser> SeedUser(
@@ -412,7 +432,8 @@ public sealed class AuthServiceTests
 
         await SeedUser(db, "existing@example.com", "Existing User");
 
-        var authService = CreateAuthService(db, config);
+        var emailServiceMock = CreateEmailServiceMock();
+        var authService = CreateAuthService(db, config, emailServiceMock.Object);
         var request = new ForgotPasswordRequest
         {
             Email = "existing@example.com"
@@ -424,6 +445,13 @@ public sealed class AuthServiceTests
         // Assert
         Assert.True(result.Success);
         Assert.Equal("If an account exists, a reset link has been sent.", result.Data);
+        emailServiceMock.Verify(
+            e => e.SendPasswordResetAsync(
+                "existing@example.com",
+                It.Is<string>(link => link.Contains("/reset-password?email=") && link.Contains("token=")),
+                It.IsAny<string>(),
+                It.IsAny<CancellationToken>()),
+            Times.Once);
     }
 
     #endregion

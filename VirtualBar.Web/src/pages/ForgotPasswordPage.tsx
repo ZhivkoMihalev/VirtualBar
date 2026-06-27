@@ -6,13 +6,13 @@ import { forgotPassword } from '../api/authApi'
 import LanguageSwitcher from '../components/LanguageSwitcher'
 
 export default function ForgotPasswordPage() {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const [email, setEmail] = useState('')
   const [error, setError] = useState('')
 
   const forgotMutation = useMutation({
     mutationFn: async () => {
-      await forgotPassword(email)
+      await forgotPassword(email, i18n.language.startsWith('en') ? 'en' : 'bg')
     },
     onError: () => {
       setError(t('forgotPassword.errorFailed'))

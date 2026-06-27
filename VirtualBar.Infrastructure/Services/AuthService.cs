@@ -3,18 +3,24 @@ using System.Security.Claims;
 using System.Text;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using VirtualBar.Application.Common;
 using VirtualBar.Application.DTOs.Auth;
 using VirtualBar.Application.Interfaces;
+using VirtualBar.Application.Options;
 using VirtualBar.Domain.Entities;
 
 namespace VirtualBar.Infrastructure.Services;
 
 public sealed class AuthService(
     UserManager<AppUser> userManager,
-    IConfiguration configuration) : IAuthService
+    IConfiguration configuration,
+    IEmailService emailService,
+    IOptions<EmailSettings> emailOptions) : IAuthService
 {
+    private readonly EmailSettings _emailSettings = emailOptions.Value;
+
     public async Task<Result<AuthResponse>> RegisterAsync(RegisterRequest request, CancellationToken cancellationToken)
     {
         var user = new AppUser
@@ -43,7 +49,11 @@ public sealed class AuthService(
     public async Task<Result<string>> ForgotPasswordAsync(ForgotPasswordRequest request, CancellationToken cancellationToken)
     {
         var user = await userManager.FindByEmailAsync(request.Email);
-        await userManager.GeneratePasswordResetTokenAsync(user!);
+        var token = await userManager.GeneratePasswordResetTokenAsync(user!);
+        var encodedToken = Uri.EscapeDataString(token);
+        var encodedEmail = Uri.EscapeDataString(request.Email);
+        var resetLink = $"{_emailSettings.FrontendBaseUrl}/reset-password?email={encodedEmail}&token={encodedToken}";
+        await emailService.SendPasswordResetAsync(request.Email, resetLink, request.Language ?? "bg", cancellationToken);
         return Result<string>.Ok("If an account exists, a reset link has been sent.");
     }
 

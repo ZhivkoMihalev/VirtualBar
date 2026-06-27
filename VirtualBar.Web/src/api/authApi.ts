@@ -23,8 +23,8 @@ export async function logout(): Promise<void> {
   await client.post('/auth/logout')
 }
 
-export async function forgotPassword(email: string): Promise<void> {
-  await client.post('/auth/forgot-password', { email })
+export async function forgotPassword(email: string, language: string): Promise<void> {
+  await client.post('/auth/forgot-password', { email, language })
 }
 
 export async function resetPassword(

@@ -68,19 +68,19 @@ function focusOff(e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) {
 
 const heroLabelStyle: CSSProperties = {
   fontFamily: 'Cinzel, serif',
-  fontSize: 12,
-  letterSpacing: '0.5em',
+  fontSize: 'clamp(10px, 3vw, 12px)',
+  letterSpacing: 'clamp(0.2em, 1.2vw, 0.5em)',
   color: '#B09868',
   marginBottom: 18,
 }
 
 const heroTitleStyle: CSSProperties = {
   fontFamily: 'Playfair Display, serif',
-  fontSize: 64,
+  fontSize: 'clamp(34px, 11vw, 64px)',
   fontWeight: 700,
   color: '#E8C870',
   margin: 0,
-  lineHeight: 1,
+  lineHeight: 1.05,
   letterSpacing: '0.04em',
 }
 
@@ -93,7 +93,7 @@ const heroDividerStyle: CSSProperties = {
 
 const heroSubtitleStyle: CSSProperties = {
   fontFamily: 'Cormorant Garamond, serif',
-  fontSize: 21,
+  fontSize: 'clamp(17px, 4.5vw, 21px)',
   fontStyle: 'italic',
   color: '#C9A84C',
   maxWidth: 620,
@@ -104,7 +104,7 @@ const heroSubtitleStyle: CSSProperties = {
 function Hero() {
   const { t } = useTranslation()
   return (
-    <header style={{ textAlign: 'center', padding: '64px 24px 48px', position: 'relative' }}>
+    <header style={{ textAlign: 'center', padding: 'clamp(40px, 9vw, 64px) 24px clamp(28px, 6vw, 48px)', position: 'relative' }}>
       <div style={heroLabelStyle}>{t('hero.vol')}</div>
       <h1 style={heroTitleStyle}>{t('hero.title')}</h1>
       <div style={heroDividerStyle} />

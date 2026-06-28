@@ -1,11 +1,33 @@
-import { useState } from 'react'
+import { useMemo } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useMutation } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { z } from 'zod'
 import { resetPassword } from '../api/authApi'
-import LanguageSwitcher from '../components/LanguageSwitcher'
+import AuthLayout from '../components/AuthLayout'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
+import { PASSWORD_REGEX, type TFn } from '@/lib/validation'
 
-const PASSWORD_REGEX = /^(?=.*[A-Z])(?=.*\d).+$/
+const makeSchema = (t: TFn) =>
+  z
+    .object({
+      newPassword: z
+        .string()
+        .min(1, t('resetPassword.errorRequired'))
+        .min(8, t('resetPassword.errorPasswordFormat'))
+        .regex(PASSWORD_REGEX, t('resetPassword.errorPasswordFormat')),
+      confirmPassword: z.string().min(1, t('resetPassword.errorRequired')),
+    })
+    .refine((data) => data.newPassword === data.confirmPassword, {
+      path: ['confirmPassword'],
+      message: t('resetPassword.errorPasswordMatch'),
+    })
+
+type ResetValues = z.infer<ReturnType<typeof makeSchema>>
 
 export default function ResetPasswordPage() {
   const { t } = useTranslation()
@@ -13,130 +35,96 @@ export default function ResetPasswordPage() {
   const [searchParams] = useSearchParams()
   const email = searchParams.get('email')
   const token = searchParams.get('token')
-
-  const [newPassword, setNewPassword] = useState('')
-  const [confirmPassword, setConfirmPassword] = useState('')
-  const [error, setError] = useState('')
+  const schema = useMemo(() => makeSchema(t), [t])
+  const form = useForm<ResetValues>({
+    resolver: zodResolver(schema),
+    defaultValues: { newPassword: '', confirmPassword: '' },
+  })
 
   const resetMutation = useMutation({
-    mutationFn: async () => {
-      await resetPassword(email ?? '', token ?? '', newPassword)
-    },
-    onSuccess: () => {
-      navigate('/login')
-    },
+    mutationFn: (values: ResetValues) =>
+      resetPassword(email ?? '', token ?? '', values.newPassword),
+    onSuccess: () => navigate('/login'),
     onError: () => {
-      setError(t('resetPassword.errorFailed'))
+      form.setError('root', { message: t('resetPassword.errorFailed') })
     },
   })
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    setError('')
-
-    if (!newPassword || !confirmPassword) {
-      setError(t('resetPassword.errorRequired'))
-      return
-    }
-
-    if (newPassword.length < 8 || !PASSWORD_REGEX.test(newPassword)) {
-      setError(t('resetPassword.errorPasswordFormat'))
-      return
-    }
-
-    if (newPassword !== confirmPassword) {
-      setError(t('resetPassword.errorPasswordMatch'))
-      return
-    }
-
-    resetMutation.mutate()
-  }
+  const onSubmit = (values: ResetValues) => resetMutation.mutate(values)
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-stone-900 px-4">
-      <div className="w-full max-w-md">
-        <div className="flex justify-end mb-4">
-          <LanguageSwitcher />
+    <AuthLayout
+      title={t('resetPassword.title')}
+      subtitle={t('resetPassword.subtitle')}
+      footer={
+        <Link to="/login" className="font-medium text-primary hover:underline">
+          {t('resetPassword.backToLogin')}
+        </Link>
+      }
+    >
+      {!email || !token ? (
+        <div className="rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+          {t('resetPassword.invalidLink')}
         </div>
-        <div className="bg-stone-800 rounded-lg shadow-xl p-8 border border-amber-500/20">
-          <h1 className="text-3xl font-bold text-amber-500 text-center mb-2">
-            {t('resetPassword.title')}
-          </h1>
-          <p className="text-stone-400 text-center mb-8">{t('resetPassword.subtitle')}</p>
+      ) : (
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4" noValidate>
+            {form.formState.errors.root && (
+              <p className="rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+                {form.formState.errors.root.message}
+              </p>
+            )}
 
-          {!email || !token ? (
-            <div className="mb-6 p-4 bg-red-900/20 border border-red-700 rounded text-red-200 text-sm">
-              {t('resetPassword.invalidLink')}
-            </div>
-          ) : (
-            <>
-              {error && (
-                <div className="mb-6 p-4 bg-red-900/20 border border-red-700 rounded text-red-200 text-sm">
-                  {error}
-                </div>
+            <FormField
+              control={form.control}
+              name="newPassword"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{t('resetPassword.newPasswordLabel')}</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="password"
+                      autoComplete="new-password"
+                      className="h-9"
+                      placeholder={t('resetPassword.newPasswordPlaceholder')}
+                      disabled={resetMutation.isPending}
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
               )}
+            />
 
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div>
-                  <label
-                    htmlFor="newPassword"
-                    className="block text-stone-300 text-sm font-medium mb-2"
-                  >
-                    {t('resetPassword.newPasswordLabel')}
-                  </label>
-                  <input
-                    id="newPassword"
-                    type="password"
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    placeholder={t('resetPassword.newPasswordPlaceholder')}
-                    required
-                    minLength={8}
-                    disabled={resetMutation.isPending}
-                    className="w-full px-4 py-2 bg-stone-700 border border-stone-600 rounded text-stone-100 placeholder-stone-500 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 disabled:opacity-50 disabled:cursor-not-allowed"
-                  />
-                </div>
+            <FormField
+              control={form.control}
+              name="confirmPassword"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{t('resetPassword.confirmPasswordLabel')}</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="password"
+                      autoComplete="new-password"
+                      className="h-9"
+                      placeholder={t('resetPassword.confirmPasswordPlaceholder')}
+                      disabled={resetMutation.isPending}
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-                <div>
-                  <label
-                    htmlFor="confirmPassword"
-                    className="block text-stone-300 text-sm font-medium mb-2"
-                  >
-                    {t('resetPassword.confirmPasswordLabel')}
-                  </label>
-                  <input
-                    id="confirmPassword"
-                    type="password"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    placeholder={t('resetPassword.confirmPasswordPlaceholder')}
-                    required
-                    minLength={8}
-                    disabled={resetMutation.isPending}
-                    className="w-full px-4 py-2 bg-stone-700 border border-stone-600 rounded text-stone-100 placeholder-stone-500 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 disabled:opacity-50 disabled:cursor-not-allowed"
-                  />
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={resetMutation.isPending}
-                  className="w-full py-2 mt-6 bg-amber-600 hover:bg-amber-500 text-white font-semibold rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {resetMutation.isPending
-                    ? t('resetPassword.submittingBtn')
-                    : t('resetPassword.submitBtn')}
-                </button>
-              </form>
-            </>
-          )}
-
-          <p className="text-center mt-6 text-sm">
-            <Link to="/login" className="text-amber-500 hover:text-amber-400 font-medium">
-              {t('resetPassword.backToLogin')}
-            </Link>
-          </p>
-        </div>
-      </div>
-    </div>
+            <Button type="submit" size="lg" className="h-10 w-full" disabled={resetMutation.isPending}>
+              {resetMutation.isPending
+                ? t('resetPassword.submittingBtn')
+                : t('resetPassword.submitBtn')}
+            </Button>
+          </form>
+        </Form>
+      )}
+    </AuthLayout>
   )
 }

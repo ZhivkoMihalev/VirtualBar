@@ -19,6 +19,10 @@ public sealed class AuthService(
     IEmailService emailService,
     IOptions<EmailSettings> emailOptions) : IAuthService
 {
+    public const string SecurityStampClaim = "securityStamp";
+
+    private const int DefaultAccessTokenLifetimeMinutes = 1440;
+
     private readonly EmailSettings _emailSettings = emailOptions.Value;
 
     public async Task<Result<AuthResponse>> RegisterAsync(RegisterRequest request, CancellationToken cancellationToken)
@@ -34,17 +38,44 @@ public sealed class AuthService(
         if (!result.Succeeded)
             return Result<AuthResponse>.Fail(string.Join(" ", result.Errors.Select(e => e.Description)));
 
+        if (userManager.Options.SignIn.RequireConfirmedEmail)
+        {
+            await SendConfirmationEmailAsync(user, request.Language, cancellationToken);
+            return Result<AuthResponse>.Ok(new AuthResponse
+            {
+                RequiresEmailConfirmation = true,
+                User = MapUser(user)
+            });
+        }
+
         return Result<AuthResponse>.Ok(BuildAuthResponse(user));
     }
 
     public async Task<Result<AuthResponse>> LoginAsync(LoginRequest request, CancellationToken cancellationToken)
     {
         var user = await userManager.FindByEmailAsync(request.Email);
-        return Result<AuthResponse>.Ok(BuildAuthResponse(user!));
+        return IssueTokenFor(user!);
     }
 
     public Task<Result<bool>> LogoutAsync(CancellationToken cancellationToken) =>
         Task.FromResult(Result<bool>.Ok(true));
+
+    public async Task<Result<bool>> ConfirmEmailAsync(ConfirmEmailRequest request, CancellationToken cancellationToken)
+    {
+        var user = await userManager.FindByEmailAsync(request.Email);
+        var result = await userManager.ConfirmEmailAsync(user!, request.Token);
+        if (!result.Succeeded)
+            return Result<bool>.Fail("Invalid or expired confirmation link.");
+
+        return Result<bool>.Ok(true);
+    }
+
+    public async Task<Result<string>> ResendConfirmationAsync(ResendConfirmationRequest request, CancellationToken cancellationToken)
+    {
+        var user = await userManager.FindByEmailAsync(request.Email);
+        await SendConfirmationEmailAsync(user!, request.Language, cancellationToken);
+        return Result<string>.Ok("If an account exists, a confirmation link has been sent.");
+    }
 
     public async Task<Result<string>> ForgotPasswordAsync(ForgotPasswordRequest request, CancellationToken cancellationToken)
     {
@@ -67,26 +98,38 @@ public sealed class AuthService(
         return Result<bool>.Ok(true);
     }
 
-    private AuthResponse BuildAuthResponse(AppUser user)
+    public Result<AuthResponse> IssueTokenFor(AppUser user) =>
+        Result<AuthResponse>.Ok(BuildAuthResponse(user));
+
+    private async Task SendConfirmationEmailAsync(AppUser user, string? language, CancellationToken cancellationToken)
     {
-        var token = GenerateJwtToken(user);
-        return new AuthResponse
-        {
-            Token = token,
-            User = new AuthUserDto
-            {
-                Id = user.Id,
-                Email = user.Email ?? string.Empty,
-                DisplayName = user.DisplayName,
-                Bio = user.Bio,
-                AvatarUrl = user.AvatarUrl,
-                Country = user.Country,
-                City = user.City,
-                IsAdmin = user.IsAdmin,
-                CreatedAt = user.CreatedAt
-            }
-        };
+        var token = await userManager.GenerateEmailConfirmationTokenAsync(user);
+        var encodedToken = Uri.EscapeDataString(token);
+        var encodedEmail = Uri.EscapeDataString(user.Email!);
+        var confirmationLink = $"{_emailSettings.FrontendBaseUrl}/confirm-email?email={encodedEmail}&token={encodedToken}";
+        await emailService.SendEmailConfirmationAsync(user.Email!, confirmationLink, language ?? "bg", cancellationToken);
     }
+
+    private AuthResponse BuildAuthResponse(AppUser user) =>
+        new()
+        {
+            Token = GenerateJwtToken(user),
+            User = MapUser(user)
+        };
+
+    private static AuthUserDto MapUser(AppUser user) =>
+        new()
+        {
+            Id = user.Id,
+            Email = user.Email ?? string.Empty,
+            DisplayName = user.DisplayName,
+            Bio = user.Bio,
+            AvatarUrl = user.AvatarUrl,
+            Country = user.Country,
+            City = user.City,
+            IsAdmin = user.IsAdmin,
+            CreatedAt = user.CreatedAt
+        };
 
     private string GenerateJwtToken(AppUser user)
     {
@@ -94,12 +137,15 @@ public sealed class AuthService(
             ?? throw new InvalidOperationException("Jwt:Key is not configured.");
         var issuer = configuration["Jwt:Issuer"];
         var audience = configuration["Jwt:Audience"];
+        var lifetimeMinutes = configuration.GetValue<int?>("Jwt:AccessTokenLifetimeMinutes")
+            ?? DefaultAccessTokenLifetimeMinutes;
 
         var claims = new List<Claim>
         {
             new(ClaimTypes.NameIdentifier, user.Id.ToString()),
             new(ClaimTypes.Email, user.Email ?? string.Empty),
             new("isAdmin", user.IsAdmin.ToString().ToLowerInvariant()),
+            new(SecurityStampClaim, user.SecurityStamp ?? string.Empty),
             new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
         };
 
@@ -111,7 +157,7 @@ public sealed class AuthService(
             issuer: issuer,
             audience: audience,
             claims: claims,
-            expires: DateTime.UtcNow.AddDays(7),
+            expires: DateTime.UtcNow.AddMinutes(lifetimeMinutes),
             signingCredentials: credentials);
 
         return new JwtSecurityTokenHandler().WriteToken(token);

@@ -1,274 +1,206 @@
-import { useState, useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
+import { Menu } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { useChat } from '../contexts/ChatContext'
 import LanguageSwitcher from './LanguageSwitcher'
 import NotificationBell from './NotificationBell'
 import Avatar from './Avatar'
-import type { CSSProperties } from 'react'
-
-const navLinkStyle: CSSProperties = {
-  fontFamily: 'Cinzel, serif',
-  fontSize: 11,
-  letterSpacing: '0.15em',
-  color: '#B09868',
-  textDecoration: 'none',
-}
-
-const mobileLinkStyle: CSSProperties = {
-  ...navLinkStyle,
-  padding: '14px 24px',
-  borderBottom: '1px solid rgba(201,168,76,0.07)',
-  display: 'block',
-}
+import { Button } from '@/components/ui/button'
+import { Separator } from '@/components/ui/separator'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import {
+  Sheet,
+  SheetClose,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from '@/components/ui/sheet'
 
 export default function NavBar() {
   const { t } = useTranslation()
   const { user, isAuthenticated, logout } = useAuth()
   const { toggleInbox } = useChat()
-  const [menuOpen, setMenuOpen] = useState(false)
-  const wrapperRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    function handleClickOutside(e: MouseEvent) {
-      if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) {
-        setMenuOpen(false)
-      }
-    }
-    if (menuOpen) {
-      document.addEventListener('mousedown', handleClickOutside)
-    }
-    return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [menuOpen])
-
-  const close = () => setMenuOpen(false)
 
   return (
-    <div ref={wrapperRef} style={{ position: 'sticky', top: 0, zIndex: 40 }}>
-      {/* ── Main bar ── */}
-      <nav
-        style={{
-          borderBottom: '1px solid rgba(201,168,76,0.12)',
-          background: 'rgba(7,3,10,0.95)',
-          backdropFilter: 'blur(8px)',
-          padding: '0 24px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          height: 64,
-          gap: 16,
-        }}
-      >
+    <div className="sticky top-0 z-40">
+      <nav className="flex h-16 items-center justify-between gap-4 border-b border-border bg-background/95 px-6 backdrop-blur">
         {/* Logo */}
-        <Link
-          to="/"
-          onClick={close}
-          style={{ display: 'flex', alignItems: 'center', gap: 12, textDecoration: 'none', flexShrink: 0 }}
-        >
-          <div
-            style={{
-              width: 36,
-              height: 36,
-              borderRadius: '50%',
-              border: '1.5px solid #C9A84C',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontFamily: 'Cinzel, serif',
-              fontSize: 12,
-              color: '#C9A84C',
-              letterSpacing: '0.05em',
-            }}
-          >
+        <Link to="/" className="flex shrink-0 items-center gap-3">
+          <div className="flex h-9 w-9 items-center justify-center rounded-full border border-primary text-xs text-primary">
             VB
           </div>
-          <span style={{ fontFamily: 'Playfair Display, serif', fontSize: 18, color: '#E8C870', letterSpacing: '0.1em' }}>
-            VIRTUALBAR
-          </span>
+          <span className="text-lg font-semibold tracking-[0.1em] text-primary">VIRTUALBAR</span>
         </Link>
 
         {/* Desktop center links */}
-        <div
-          className="hidden md:flex"
-          style={{ flex: 1, alignItems: 'center', justifyContent: 'center', gap: 28 }}
-        >
-          <Link to="/" style={navLinkStyle}>{t('nav.home')}</Link>
-          <Link to="/browse" style={navLinkStyle}>{t('nav.browse')}</Link>
-          <Link to="/marketplace" style={navLinkStyle}>{t('nav.marketplace')}</Link>
-          {isAuthenticated && <Link to="/dashboard" style={navLinkStyle}>{t('nav.myBar')}</Link>}
-          {isAuthenticated && <Link to="/offers" style={navLinkStyle}>{t('nav.offers')}</Link>}
+        <div className="hidden flex-1 items-center justify-center gap-2 md:flex">
+          <Button asChild variant="ghost" size="sm">
+            <Link to="/">{t('nav.home')}</Link>
+          </Button>
+          <Button asChild variant="ghost" size="sm">
+            <Link to="/browse">{t('nav.browse')}</Link>
+          </Button>
+          <Button asChild variant="ghost" size="sm">
+            <Link to="/marketplace">{t('nav.marketplace')}</Link>
+          </Button>
           {isAuthenticated && (
-            <button
-              onClick={toggleInbox}
-              style={{ ...navLinkStyle, background: 'transparent', border: 'none', cursor: 'pointer', padding: 0 }}
-            >
+            <Button asChild variant="ghost" size="sm">
+              <Link to="/dashboard">{t('nav.myBar')}</Link>
+            </Button>
+          )}
+          {isAuthenticated && (
+            <Button asChild variant="ghost" size="sm">
+              <Link to="/offers">{t('nav.offers')}</Link>
+            </Button>
+          )}
+          {isAuthenticated && (
+            <Button variant="ghost" size="sm" onClick={toggleInbox}>
               {t('nav.messages')}
-            </button>
+            </Button>
           )}
         </div>
 
-        {/* Desktop right auth */}
-        <div
-          className="hidden md:flex"
-          style={{ alignItems: 'center', gap: 16, flexShrink: 0 }}
-        >
+        {/* Desktop right slot */}
+        <div className="hidden items-center gap-2 md:flex">
           {isAuthenticated ? (
             <>
-              <Link to="/profile" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
-                {user && <Avatar displayName={user.displayName} avatarUrl={user.avatarUrl} size={32} />}
-                <span style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: 15, color: '#C9A84C' }}>
-                  {user?.displayName}
-                </span>
-              </Link>
               <NotificationBell />
               <LanguageSwitcher />
-              <button
-                onClick={logout}
-                style={{
-                  fontFamily: 'Cinzel, serif',
-                  fontSize: 11,
-                  letterSpacing: '0.15em',
-                  color: '#B09868',
-                  border: '1px solid rgba(201,168,76,0.2)',
-                  background: 'transparent',
-                  padding: '6px 16px',
-                  borderRadius: 2,
-                  cursor: 'pointer',
-                }}
-              >
-                {t('nav.logout')}
-              </button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="sm">
+                    {user && (
+                      <Avatar displayName={user.displayName} avatarUrl={user.avatarUrl} size={32} />
+                    )}
+                    <span className="text-sm text-primary">{user?.displayName}</span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem asChild>
+                    <Link to="/profile">{user?.displayName}</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onSelect={logout}>{t('nav.logout')}</DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </>
           ) : (
             <>
-              <Link to="/login" style={navLinkStyle}>{t('nav.login')}</Link>
+              <Button asChild variant="ghost" size="sm">
+                <Link to="/login">{t('nav.login')}</Link>
+              </Button>
               <LanguageSwitcher />
-              <Link
-                to="/register"
-                style={{
-                  fontFamily: 'Cinzel, serif',
-                  fontSize: 11,
-                  letterSpacing: '0.15em',
-                  color: '#07030A',
-                  background: 'linear-gradient(135deg, #C9A84C, #E8C870)',
-                  padding: '7px 18px',
-                  borderRadius: 2,
-                  textDecoration: 'none',
-                }}
-              >
-                {t('nav.register')}
-              </Link>
+              <Button asChild>
+                <Link to="/register">{t('nav.register')}</Link>
+              </Button>
             </>
           )}
         </div>
 
-        {/* Mobile hamburger */}
-        <button
-          className="flex md:hidden"
-          onClick={() => setMenuOpen(o => !o)}
-          aria-label="Toggle menu"
-          style={{
-            background: 'transparent',
-            border: 'none',
-            cursor: 'pointer',
-            fontSize: 22,
-            color: '#C9A84C',
-            padding: '4px 8px',
-            lineHeight: 1,
-            flexShrink: 0,
-          }}
-        >
-          {menuOpen ? '✕' : '☰'}
-        </button>
+        {/* Mobile menu */}
+        <Sheet>
+          <SheetTrigger asChild>
+            <Button variant="ghost" size="icon" className="md:hidden" aria-label="Toggle menu">
+              <Menu className="size-5" />
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="right" className="w-72">
+            <SheetHeader>
+              <SheetTitle className="sr-only">{t('nav.brand')}</SheetTitle>
+            </SheetHeader>
+            <div className="flex flex-col gap-1 px-4">
+              <SheetClose asChild>
+                <Button asChild variant="ghost" className="justify-start">
+                  <Link to="/">{t('nav.home')}</Link>
+                </Button>
+              </SheetClose>
+              <SheetClose asChild>
+                <Button asChild variant="ghost" className="justify-start">
+                  <Link to="/browse">{t('nav.browse')}</Link>
+                </Button>
+              </SheetClose>
+              <SheetClose asChild>
+                <Button asChild variant="ghost" className="justify-start">
+                  <Link to="/marketplace">{t('nav.marketplace')}</Link>
+                </Button>
+              </SheetClose>
+              {isAuthenticated && (
+                <SheetClose asChild>
+                  <Button asChild variant="ghost" className="justify-start">
+                    <Link to="/dashboard">{t('nav.myBar')}</Link>
+                  </Button>
+                </SheetClose>
+              )}
+              {isAuthenticated && (
+                <SheetClose asChild>
+                  <Button asChild variant="ghost" className="justify-start">
+                    <Link to="/offers">{t('nav.offers')}</Link>
+                  </Button>
+                </SheetClose>
+              )}
+              {isAuthenticated && (
+                <SheetClose asChild>
+                  <Button variant="ghost" className="justify-start" onClick={toggleInbox}>
+                    {t('nav.messages')}
+                  </Button>
+                </SheetClose>
+              )}
+
+              <Separator className="my-3" />
+
+              {isAuthenticated ? (
+                <div className="flex flex-col gap-3">
+                  <SheetClose asChild>
+                    <Link to="/profile" className="flex items-center gap-3">
+                      {user && (
+                        <Avatar
+                          displayName={user.displayName}
+                          avatarUrl={user.avatarUrl}
+                          size={32}
+                        />
+                      )}
+                      <span className="text-sm text-primary">{user?.displayName}</span>
+                    </Link>
+                  </SheetClose>
+                  <div className="flex items-center gap-2">
+                    <NotificationBell />
+                    <LanguageSwitcher />
+                  </div>
+                  <SheetClose asChild>
+                    <Button
+                      variant="outline"
+                      className="justify-start"
+                      onClick={logout}
+                    >
+                      {t('nav.logout')}
+                    </Button>
+                  </SheetClose>
+                </div>
+              ) : (
+                <div className="flex flex-col gap-3">
+                  <SheetClose asChild>
+                    <Button asChild variant="ghost" className="justify-start">
+                      <Link to="/login">{t('nav.login')}</Link>
+                    </Button>
+                  </SheetClose>
+                  <SheetClose asChild>
+                    <Button asChild className="justify-start">
+                      <Link to="/register">{t('nav.register')}</Link>
+                    </Button>
+                  </SheetClose>
+                  <LanguageSwitcher />
+                </div>
+              )}
+            </div>
+          </SheetContent>
+        </Sheet>
       </nav>
-
-      {/* ── Mobile dropdown ── */}
-      {menuOpen && (
-        <div
-          className="flex md:hidden flex-col"
-          style={{
-            background: 'rgba(7,3,10,0.97)',
-            borderBottom: '1px solid rgba(201,168,76,0.2)',
-          }}
-        >
-          <Link to="/" onClick={close} style={mobileLinkStyle}>{t('nav.home')}</Link>
-          <Link to="/browse" onClick={close} style={mobileLinkStyle}>{t('nav.browse')}</Link>
-          <Link to="/marketplace" onClick={close} style={mobileLinkStyle}>{t('nav.marketplace')}</Link>
-          {isAuthenticated && <Link to="/dashboard" onClick={close} style={mobileLinkStyle}>{t('nav.myBar')}</Link>}
-          {isAuthenticated && <Link to="/offers" onClick={close} style={mobileLinkStyle}>{t('nav.offers')}</Link>}
-          {isAuthenticated && (
-            <button
-              onClick={() => { toggleInbox(); close() }}
-              style={{ ...mobileLinkStyle, background: 'transparent', border: 'none', cursor: 'pointer', textAlign: 'left', width: '100%' }}
-            >
-              {t('nav.messages')}
-            </button>
-          )}
-
-          <div style={{ height: 1, background: 'rgba(201,168,76,0.15)', margin: '4px 0' }} />
-
-          {isAuthenticated ? (
-            <div style={{ padding: '12px 24px', display: 'flex', flexDirection: 'column', gap: 14 }}>
-              <Link
-                to="/profile"
-                onClick={close}
-                style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}
-              >
-                {user && <Avatar displayName={user.displayName} avatarUrl={user.avatarUrl} size={32} />}
-                <span style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: 15, color: '#C9A84C' }}>
-                  {user?.displayName}
-                </span>
-              </Link>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                <NotificationBell />
-                <LanguageSwitcher />
-              </div>
-              <button
-                onClick={() => { logout(); close() }}
-                style={{
-                  fontFamily: 'Cinzel, serif',
-                  fontSize: 11,
-                  letterSpacing: '0.15em',
-                  color: '#B09868',
-                  border: '1px solid rgba(201,168,76,0.2)',
-                  background: 'transparent',
-                  padding: '8px 16px',
-                  borderRadius: 2,
-                  cursor: 'pointer',
-                  alignSelf: 'flex-start',
-                }}
-              >
-                {t('nav.logout')}
-              </button>
-            </div>
-          ) : (
-            <div style={{ padding: '12px 24px', display: 'flex', flexDirection: 'column', gap: 12 }}>
-              <Link to="/login" onClick={close} style={{ ...navLinkStyle, padding: '4px 0' }}>{t('nav.login')}</Link>
-              <Link
-                to="/register"
-                onClick={close}
-                style={{
-                  fontFamily: 'Cinzel, serif',
-                  fontSize: 11,
-                  letterSpacing: '0.15em',
-                  color: '#07030A',
-                  background: 'linear-gradient(135deg, #C9A84C, #E8C870)',
-                  padding: '8px 18px',
-                  borderRadius: 2,
-                  textDecoration: 'none',
-                  alignSelf: 'flex-start',
-                }}
-              >
-                {t('nav.register')}
-              </Link>
-              <div style={{ paddingTop: 4 }}>
-                <LanguageSwitcher />
-              </div>
-            </div>
-          )}
-        </div>
-      )}
     </div>
   )
 }

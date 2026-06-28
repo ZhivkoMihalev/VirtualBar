@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using Moq;
 using VirtualBar.Application.DTOs.Auth;
@@ -28,7 +29,7 @@ public sealed class AuthServiceTests
         return new AppDbContext(options);
     }
 
-    private static UserManager<AppUser> CreateUserManager(AppDbContext db)
+    private static UserManager<AppUser> CreateUserManager(AppDbContext db, IdentityOptions? identityOptions = null)
     {
         var userStore = new UserStore<AppUser, IdentityRole<Guid>, AppDbContext, Guid>(db);
         var mockLogger = new Mock<ILogger<UserManager<AppUser>>>();
@@ -50,7 +51,7 @@ public sealed class AuthServiceTests
 
         var userManager = new UserManager<AppUser>(
             userStore,
-            Options.Create(new IdentityOptions()),
+            Options.Create(identityOptions ?? new IdentityOptions()),
             new PasswordHasher<AppUser>(),
             new[] { mockValidator.Object },
             new[] { mockPwdValidator.Object },
@@ -82,7 +83,7 @@ public sealed class AuthServiceTests
         return userManager;
     }
 
-    private static SignInManager<AppUser> CreateSignInManager(AppDbContext db, UserManager<AppUser> userManager)
+    private static SignInManager<AppUser> CreateSignInManager(AppDbContext db, UserManager<AppUser> userManager, IdentityOptions? identityOptions = null)
     {
         var contextAccessor = new MockHttpContextAccessor();
         var mockLogger = new Mock<ILogger<SignInManager<AppUser>>>();
@@ -98,7 +99,7 @@ public sealed class AuthServiceTests
             userManager,
             contextAccessor,
             mockUserClaimsPrincipalFactory.Object,
-            Options.Create(new IdentityOptions()),
+            Options.Create(identityOptions ?? new IdentityOptions()),
             mockLogger.Object,
             new Mock<IAuthenticationSchemeProvider>().Object,
             new Mock<IUserConfirmation<AppUser>>().Object);
@@ -109,16 +110,31 @@ public sealed class AuthServiceTests
     private static IAuthService CreateAuthService(
         AppDbContext db,
         IConfiguration configuration,
-        IEmailService? emailService = null)
+        IEmailService? emailService = null,
+        ICurrentUser? currentUser = null,
+        IdentityOptions? identityOptions = null)
     {
-        var userManager = CreateUserManager(db);
-        var signInManager = CreateSignInManager(db, userManager);
+        var userManager = CreateUserManager(db, identityOptions);
+        var signInManager = CreateSignInManager(db, userManager, identityOptions);
 
         emailService ??= CreateEmailServiceMock().Object;
+        currentUser ??= Mock.Of<ICurrentUser>();
         var emailOptions = Options.Create(new EmailSettings());
 
         var authService = new AuthService(userManager, configuration, emailService, emailOptions);
-        return new AuthValidationDecorator(authService, userManager, signInManager);
+        return new AuthValidationDecorator(
+            authService,
+            userManager,
+            signInManager,
+            currentUser,
+            NullLogger<AuthValidationDecorator>.Instance);
+    }
+
+    private static IdentityOptions RequireConfirmedEmailOptions()
+    {
+        var options = new IdentityOptions();
+        options.SignIn.RequireConfirmedEmail = true;
+        return options;
     }
 
     private static Mock<IEmailService> CreateEmailServiceMock()
@@ -131,6 +147,13 @@ public sealed class AuthServiceTests
                 It.IsAny<string>(),
                 It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
+        mock
+            .Setup(e => e.SendEmailConfirmationAsync(
+                It.IsAny<string>(),
+                It.IsAny<string>(),
+                It.IsAny<string>(),
+                It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
         return mock;
     }
 
@@ -138,7 +161,8 @@ public sealed class AuthServiceTests
         AppDbContext db,
         string email,
         string displayName,
-        string password = "ValidPass123")
+        string password = "ValidPass123",
+        bool emailConfirmed = true)
     {
         var userManager = CreateUserManager(db);
 
@@ -147,7 +171,7 @@ public sealed class AuthServiceTests
             UserName = email,
             Email = email,
             DisplayName = displayName,
-            EmailConfirmed = true,
+            EmailConfirmed = emailConfirmed,
             CreatedAt = DateTime.UtcNow
         };
 
@@ -616,7 +640,7 @@ public sealed class AuthServiceTests
 
         // Assert
         Assert.False(result.Success);
-        Assert.Equal("Account not found.", result.Error);
+        Assert.Equal("Invalid or expired reset link.", result.Error);
     }
 
     [Fact]
@@ -672,6 +696,593 @@ public sealed class AuthServiceTests
         // Assert
         Assert.True(result.Success);
         Assert.True(result.Data);
+    }
+
+    #endregion
+
+    #region RegisterAsync — Email Confirmation
+
+    [Fact]
+    public async Task RegisterAsync_WhenConfirmationRequiredAndNew_OkRequiresConfirmationAndSendsEmail()
+    {
+        // Arrange
+        var db = CreateDbContext();
+        var config = CreateTestConfiguration();
+        var emailMock = CreateEmailServiceMock();
+        var authService = CreateAuthService(db, config, emailMock.Object, identityOptions: RequireConfirmedEmailOptions());
+
+        var request = new RegisterRequest
+        {
+            Email = "confirm-me@example.com",
+            Password = "ValidPass123",
+            DisplayName = "Pending User"
+        };
+
+        // Act
+        var result = await authService.RegisterAsync(request, CancellationToken.None);
+
+        // Assert
+        Assert.True(result.Success);
+        Assert.NotNull(result.Data);
+        Assert.True(result.Data.RequiresEmailConfirmation);
+        Assert.Empty(result.Data.Token);
+        Assert.NotNull(result.Data.User);
+        emailMock.Verify(
+            e => e.SendEmailConfirmationAsync(
+                "confirm-me@example.com",
+                It.Is<string>(link => link.Contains("/confirm-email?email=") && link.Contains("token=")),
+                It.IsAny<string>(),
+                It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task RegisterAsync_WhenConfirmationRequiredAndEmailExists_OkGenericWithoutEnumeration()
+    {
+        // Arrange
+        var db = CreateDbContext();
+        var config = CreateTestConfiguration();
+
+        await SeedUser(db, "taken@example.com", "Existing User");
+
+        var emailMock = CreateEmailServiceMock();
+        var authService = CreateAuthService(db, config, emailMock.Object, identityOptions: RequireConfirmedEmailOptions());
+
+        var request = new RegisterRequest
+        {
+            Email = "taken@example.com",
+            Password = "ValidPass123",
+            DisplayName = "Another User"
+        };
+
+        // Act
+        var result = await authService.RegisterAsync(request, CancellationToken.None);
+
+        // Assert — same shape as a fresh registration; existence is not revealed
+        Assert.True(result.Success);
+        Assert.NotNull(result.Data);
+        Assert.True(result.Data.RequiresEmailConfirmation);
+        emailMock.Verify(
+            e => e.SendEmailConfirmationAsync(
+                It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    [Fact]
+    public async Task RegisterAsync_WhenAccessTokenLifetimeConfigured_OkWithToken()
+    {
+        // Arrange — exercises the configured-lifetime branch of token generation
+        var db = CreateDbContext();
+        var config = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                { "Jwt:Key", "ThisIsAVeryLongSecretKeyThatIsAtLeast32BytesForHS256Algorithm" },
+                { "Jwt:Issuer", "VirtualBar" },
+                { "Jwt:Audience", "VirtualBarClient" },
+                { "Jwt:AccessTokenLifetimeMinutes", "60" }
+            })
+            .Build();
+
+        var authService = CreateAuthService(db, config);
+        var request = new RegisterRequest
+        {
+            Email = "lifetime@example.com",
+            Password = "ValidPass123",
+            DisplayName = "Lifetime User"
+        };
+
+        // Act
+        var result = await authService.RegisterAsync(request, CancellationToken.None);
+
+        // Assert
+        Assert.True(result.Success);
+        Assert.NotNull(result.Data);
+        Assert.NotEmpty(result.Data.Token);
+    }
+
+    #endregion
+
+    #region LoginAsync — Lockout & Confirmation
+
+    [Fact]
+    public async Task LoginAsync_WhenLockedOut_Fail()
+    {
+        // Arrange
+        var db = CreateDbContext();
+        var config = CreateTestConfiguration();
+
+        var user = await SeedUser(db, "locked@example.com", "Locked User", "ValidPass123");
+        var userManager = CreateUserManager(db);
+        await userManager.SetLockoutEndDateAsync(user, DateTimeOffset.UtcNow.AddMinutes(15));
+
+        var authService = CreateAuthService(db, config);
+        var request = new LoginRequest
+        {
+            Email = "locked@example.com",
+            Password = "ValidPass123"
+        };
+
+        // Act
+        var result = await authService.LoginAsync(request, CancellationToken.None);
+
+        // Assert
+        Assert.False(result.Success);
+        Assert.Equal("This account is temporarily locked due to too many failed attempts. Please try again later.", result.Error);
+    }
+
+    [Fact]
+    public async Task LoginAsync_WhenEmailNotConfirmed_Fail()
+    {
+        // Arrange
+        var db = CreateDbContext();
+        var config = CreateTestConfiguration();
+
+        await SeedUser(db, "unconfirmed@example.com", "Unconfirmed User", "ValidPass123", emailConfirmed: false);
+
+        var authService = CreateAuthService(db, config, identityOptions: RequireConfirmedEmailOptions());
+        var request = new LoginRequest
+        {
+            Email = "unconfirmed@example.com",
+            Password = "ValidPass123"
+        };
+
+        // Act
+        var result = await authService.LoginAsync(request, CancellationToken.None);
+
+        // Assert
+        Assert.False(result.Success);
+        Assert.Equal("Please confirm your email address before signing in.", result.Error);
+    }
+
+    [Fact]
+    public async Task LoginAsync_InnerService_WhenUserExists_OkWithToken()
+    {
+        // Arrange — exercises the inner service's token-issuing path directly
+        var db = CreateDbContext();
+        var config = CreateTestConfiguration();
+
+        await SeedUser(db, "inner@example.com", "Inner User", "ValidPass123");
+
+        var userManager = CreateUserManager(db);
+        var emailOptions = Options.Create(new EmailSettings());
+        var inner = new AuthService(userManager, config, CreateEmailServiceMock().Object, emailOptions);
+
+        var request = new LoginRequest
+        {
+            Email = "inner@example.com",
+            Password = "ValidPass123"
+        };
+
+        // Act
+        var result = await inner.LoginAsync(request, CancellationToken.None);
+
+        // Assert
+        Assert.True(result.Success);
+        Assert.NotNull(result.Data);
+        Assert.NotEmpty(result.Data.Token);
+    }
+
+    #endregion
+
+    #region LogoutAsync — Token Revocation
+
+    [Fact]
+    public async Task LogoutAsync_WhenUserExists_RotatesSecurityStamp()
+    {
+        // Arrange
+        var db = CreateDbContext();
+        var config = CreateTestConfiguration();
+
+        var user = await SeedUser(db, "logout@example.com", "Logout User");
+
+        var currentUser = new Mock<ICurrentUser>();
+        currentUser.Setup(c => c.UserId).Returns(user.Id);
+
+        var userManager = CreateUserManager(db);
+        var stampBefore = (await userManager.FindByIdAsync(user.Id.ToString()))!.SecurityStamp;
+
+        var authService = CreateAuthService(db, config, currentUser: currentUser.Object);
+
+        // Act
+        var result = await authService.LogoutAsync(CancellationToken.None);
+
+        // Assert
+        Assert.True(result.Success);
+        Assert.True(result.Data);
+        var stampAfter = (await userManager.FindByIdAsync(user.Id.ToString()))!.SecurityStamp;
+        Assert.NotEqual(stampBefore, stampAfter);
+    }
+
+    #endregion
+
+    #region ConfirmEmailAsync
+
+    [Fact]
+    public async Task ConfirmEmailAsync_WhenEmailEmpty_Fail()
+    {
+        var db = CreateDbContext();
+        var config = CreateTestConfiguration();
+        var authService = CreateAuthService(db, config);
+
+        var request = new ConfirmEmailRequest { Email = "", Token = "token" };
+
+        var result = await authService.ConfirmEmailAsync(request, CancellationToken.None);
+
+        Assert.False(result.Success);
+        Assert.Equal("Email is required.", result.Error);
+    }
+
+    [Fact]
+    public async Task ConfirmEmailAsync_WhenTokenEmpty_Fail()
+    {
+        var db = CreateDbContext();
+        var config = CreateTestConfiguration();
+        var authService = CreateAuthService(db, config);
+
+        var request = new ConfirmEmailRequest { Email = "test@example.com", Token = "   " };
+
+        var result = await authService.ConfirmEmailAsync(request, CancellationToken.None);
+
+        Assert.False(result.Success);
+        Assert.Equal("Confirmation token is required.", result.Error);
+    }
+
+    [Fact]
+    public async Task ConfirmEmailAsync_WhenUserNotFound_Fail()
+    {
+        var db = CreateDbContext();
+        var config = CreateTestConfiguration();
+        var authService = CreateAuthService(db, config);
+
+        var request = new ConfirmEmailRequest { Email = "nobody@example.com", Token = "token" };
+
+        var result = await authService.ConfirmEmailAsync(request, CancellationToken.None);
+
+        Assert.False(result.Success);
+        Assert.Equal("Invalid or expired confirmation link.", result.Error);
+    }
+
+    [Fact]
+    public async Task ConfirmEmailAsync_WhenTokenInvalid_Fail()
+    {
+        var db = CreateDbContext();
+        var config = CreateTestConfiguration();
+
+        await SeedUser(db, "confirm@example.com", "Confirm User", emailConfirmed: false);
+
+        var authService = CreateAuthService(db, config);
+        var request = new ConfirmEmailRequest { Email = "confirm@example.com", Token = "invalid-token" };
+
+        var result = await authService.ConfirmEmailAsync(request, CancellationToken.None);
+
+        Assert.False(result.Success);
+        Assert.Equal("Invalid or expired confirmation link.", result.Error);
+    }
+
+    [Fact]
+    public async Task ConfirmEmailAsync_WhenValid_OkTrue()
+    {
+        var db = CreateDbContext();
+        var config = CreateTestConfiguration();
+
+        var user = await SeedUser(db, "confirm@example.com", "Confirm User", emailConfirmed: false);
+
+        var userManager = CreateUserManager(db);
+        var token = await userManager.GenerateEmailConfirmationTokenAsync(user);
+
+        var authService = CreateAuthService(db, config);
+        var request = new ConfirmEmailRequest { Email = "confirm@example.com", Token = token };
+
+        var result = await authService.ConfirmEmailAsync(request, CancellationToken.None);
+
+        Assert.True(result.Success);
+        Assert.True(result.Data);
+    }
+
+    #endregion
+
+    #region ResendConfirmationAsync
+
+    [Fact]
+    public async Task ResendConfirmationAsync_WhenEmailEmpty_Fail()
+    {
+        var db = CreateDbContext();
+        var config = CreateTestConfiguration();
+        var authService = CreateAuthService(db, config);
+
+        var request = new ResendConfirmationRequest { Email = "  " };
+
+        var result = await authService.ResendConfirmationAsync(request, CancellationToken.None);
+
+        Assert.False(result.Success);
+        Assert.Equal("Email is required.", result.Error);
+    }
+
+    [Fact]
+    public async Task ResendConfirmationAsync_WhenUserNotFound_OkGeneric()
+    {
+        var db = CreateDbContext();
+        var config = CreateTestConfiguration();
+
+        var emailMock = CreateEmailServiceMock();
+        var authService = CreateAuthService(db, config, emailMock.Object);
+
+        var request = new ResendConfirmationRequest { Email = "nobody@example.com" };
+
+        var result = await authService.ResendConfirmationAsync(request, CancellationToken.None);
+
+        Assert.True(result.Success);
+        Assert.Equal("If an account exists, a confirmation link has been sent.", result.Data);
+        emailMock.Verify(
+            e => e.SendEmailConfirmationAsync(
+                It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    [Fact]
+    public async Task ResendConfirmationAsync_WhenAlreadyConfirmed_OkGeneric()
+    {
+        var db = CreateDbContext();
+        var config = CreateTestConfiguration();
+
+        await SeedUser(db, "done@example.com", "Confirmed User", emailConfirmed: true);
+
+        var emailMock = CreateEmailServiceMock();
+        var authService = CreateAuthService(db, config, emailMock.Object);
+
+        var request = new ResendConfirmationRequest { Email = "done@example.com" };
+
+        var result = await authService.ResendConfirmationAsync(request, CancellationToken.None);
+
+        Assert.True(result.Success);
+        Assert.Equal("If an account exists, a confirmation link has been sent.", result.Data);
+        emailMock.Verify(
+            e => e.SendEmailConfirmationAsync(
+                It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    [Fact]
+    public async Task ResendConfirmationAsync_WhenValid_OkGenericAndSendsEmail()
+    {
+        var db = CreateDbContext();
+        var config = CreateTestConfiguration();
+
+        await SeedUser(db, "pending@example.com", "Pending User", emailConfirmed: false);
+
+        var emailMock = CreateEmailServiceMock();
+        var authService = CreateAuthService(db, config, emailMock.Object);
+
+        var request = new ResendConfirmationRequest { Email = "pending@example.com" };
+
+        var result = await authService.ResendConfirmationAsync(request, CancellationToken.None);
+
+        Assert.True(result.Success);
+        Assert.Equal("If an account exists, a confirmation link has been sent.", result.Data);
+        emailMock.Verify(
+            e => e.SendEmailConfirmationAsync(
+                "pending@example.com",
+                It.Is<string>(link => link.Contains("/confirm-email?email=") && link.Contains("token=")),
+                It.IsAny<string>(),
+                It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task ResendConfirmationAsync_WhenEmailSendThrows_OkGeneric()
+    {
+        var db = CreateDbContext();
+        var config = CreateTestConfiguration();
+
+        await SeedUser(db, "pending@example.com", "Pending User", emailConfirmed: false);
+
+        var emailMock = new Mock<IEmailService>();
+        emailMock
+            .Setup(e => e.SendEmailConfirmationAsync(
+                It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new InvalidOperationException("SMTP unavailable."));
+
+        var authService = CreateAuthService(db, config, emailMock.Object);
+
+        var request = new ResendConfirmationRequest { Email = "pending@example.com" };
+
+        var result = await authService.ResendConfirmationAsync(request, CancellationToken.None);
+
+        Assert.True(result.Success);
+        Assert.Equal("If an account exists, a confirmation link has been sent.", result.Data);
+    }
+
+    [Fact]
+    public async Task ResendConfirmationAsync_WhenInnerCancelled_Rethrows()
+    {
+        var db = CreateDbContext();
+        var config = CreateTestConfiguration();
+
+        await SeedUser(db, "pending@example.com", "Pending User", emailConfirmed: false);
+
+        var emailMock = new Mock<IEmailService>();
+        emailMock
+            .Setup(e => e.SendEmailConfirmationAsync(
+                It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new OperationCanceledException());
+
+        var authService = CreateAuthService(db, config, emailMock.Object);
+
+        var request = new ResendConfirmationRequest { Email = "pending@example.com" };
+
+        await Assert.ThrowsAsync<OperationCanceledException>(
+            () => authService.ResendConfirmationAsync(request, CancellationToken.None));
+    }
+
+    [Fact]
+    public async Task ResendConfirmationAsync_WhenLanguageEnglish_SendsEnglishEmail()
+    {
+        var db = CreateDbContext();
+        var config = CreateTestConfiguration();
+
+        await SeedUser(db, "en@example.com", "EN User", emailConfirmed: false);
+
+        var emailMock = CreateEmailServiceMock();
+        var authService = CreateAuthService(db, config, emailMock.Object);
+
+        var request = new ResendConfirmationRequest { Email = "en@example.com", Language = "en" };
+
+        var result = await authService.ResendConfirmationAsync(request, CancellationToken.None);
+
+        Assert.True(result.Success);
+        emailMock.Verify(
+            e => e.SendEmailConfirmationAsync("en@example.com", It.IsAny<string>(), "en", It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    #endregion
+
+    #region ForgotPasswordAsync — Email Failure Containment
+
+    [Fact]
+    public async Task ForgotPasswordAsync_WhenEmailSendThrows_OkGeneric()
+    {
+        var db = CreateDbContext();
+        var config = CreateTestConfiguration();
+
+        await SeedUser(db, "existing@example.com", "Existing User");
+
+        var emailMock = new Mock<IEmailService>();
+        emailMock
+            .Setup(e => e.SendPasswordResetAsync(
+                It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new InvalidOperationException("SMTP unavailable."));
+
+        var authService = CreateAuthService(db, config, emailMock.Object);
+
+        var request = new ForgotPasswordRequest { Email = "existing@example.com" };
+
+        var result = await authService.ForgotPasswordAsync(request, CancellationToken.None);
+
+        Assert.True(result.Success);
+        Assert.Equal("If an account exists, a reset link has been sent.", result.Data);
+    }
+
+    [Fact]
+    public async Task ForgotPasswordAsync_WhenInnerCancelled_Rethrows()
+    {
+        var db = CreateDbContext();
+        var config = CreateTestConfiguration();
+
+        await SeedUser(db, "existing@example.com", "Existing User");
+
+        var emailMock = new Mock<IEmailService>();
+        emailMock
+            .Setup(e => e.SendPasswordResetAsync(
+                It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new OperationCanceledException());
+
+        var authService = CreateAuthService(db, config, emailMock.Object);
+
+        var request = new ForgotPasswordRequest { Email = "existing@example.com" };
+
+        await Assert.ThrowsAsync<OperationCanceledException>(
+            () => authService.ForgotPasswordAsync(request, CancellationToken.None));
+    }
+
+    [Fact]
+    public async Task ForgotPasswordAsync_WhenLanguageEnglish_SendsEnglishEmail()
+    {
+        var db = CreateDbContext();
+        var config = CreateTestConfiguration();
+
+        await SeedUser(db, "en2@example.com", "EN User");
+
+        var emailMock = CreateEmailServiceMock();
+        var authService = CreateAuthService(db, config, emailMock.Object);
+
+        var request = new ForgotPasswordRequest { Email = "en2@example.com", Language = "en" };
+
+        var result = await authService.ForgotPasswordAsync(request, CancellationToken.None);
+
+        Assert.True(result.Success);
+        emailMock.Verify(
+            e => e.SendPasswordResetAsync("en2@example.com", It.IsAny<string>(), "en", It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    #endregion
+
+    #region AuthService — Token Generation Edge Cases
+
+    [Fact]
+    public void IssueTokenFor_WhenUserFieldsNull_ProducesTokenWithEmptyClaims()
+    {
+        // Arrange — covers the defensive null-coalescing on Email/SecurityStamp
+        var db = CreateDbContext();
+        var config = CreateTestConfiguration();
+        var userManager = CreateUserManager(db);
+        var emailOptions = Options.Create(new EmailSettings());
+        var inner = new AuthService(userManager, config, CreateEmailServiceMock().Object, emailOptions);
+
+        var user = new AppUser
+        {
+            Id = Guid.NewGuid(),
+            DisplayName = "No Email",
+            Email = null,
+            SecurityStamp = null
+        };
+
+        // Act
+        var result = inner.IssueTokenFor(user);
+
+        // Assert
+        Assert.True(result.Success);
+        Assert.NotNull(result.Data);
+        Assert.NotEmpty(result.Data.Token);
+        Assert.NotNull(result.Data.User);
+        Assert.Equal(string.Empty, result.Data.User!.Email);
+    }
+
+    [Fact]
+    public async Task RegisterAsync_WhenJwtKeyMissing_Throws()
+    {
+        // Arrange — covers the missing-key guard in token generation
+        var db = CreateDbContext();
+        var config = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                { "Jwt:Issuer", "VirtualBar" },
+                { "Jwt:Audience", "VirtualBarClient" }
+            })
+            .Build();
+
+        var authService = CreateAuthService(db, config);
+        var request = new RegisterRequest
+        {
+            Email = "nokey@example.com",
+            Password = "ValidPass123",
+            DisplayName = "No Key User"
+        };
+
+        // Act & Assert
+        await Assert.ThrowsAsync<InvalidOperationException>(
+            () => authService.RegisterAsync(request, CancellationToken.None));
     }
 
     #endregion
@@ -781,6 +1392,42 @@ public sealed class AuthServiceTests
         // Act & Assert
         await Assert.ThrowsAsync<OperationCanceledException>(
             () => authService.ResetPasswordAsync(request, cts.Token));
+    }
+
+    [Fact]
+    public async Task ConfirmEmailAsync_WithCancellationToken_ThrowsOperationCanceledException()
+    {
+        // Arrange
+        var db = CreateDbContext();
+        var config = CreateTestConfiguration();
+        var authService = CreateAuthService(db, config);
+
+        using var cts = new CancellationTokenSource();
+        cts.Cancel();
+
+        var request = new ConfirmEmailRequest { Email = "test@example.com", Token = "token" };
+
+        // Act & Assert
+        await Assert.ThrowsAsync<OperationCanceledException>(
+            () => authService.ConfirmEmailAsync(request, cts.Token));
+    }
+
+    [Fact]
+    public async Task ResendConfirmationAsync_WithCancellationToken_ThrowsOperationCanceledException()
+    {
+        // Arrange
+        var db = CreateDbContext();
+        var config = CreateTestConfiguration();
+        var authService = CreateAuthService(db, config);
+
+        using var cts = new CancellationTokenSource();
+        cts.Cancel();
+
+        var request = new ResendConfirmationRequest { Email = "test@example.com" };
+
+        // Act & Assert
+        await Assert.ThrowsAsync<OperationCanceledException>(
+            () => authService.ResendConfirmationAsync(request, cts.Token));
     }
 
     #endregion

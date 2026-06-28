@@ -1,0 +1,258 @@
+2026-06-22 14:44:00.717 [INF] → GET /api/notifications | IP ::1
+2026-06-22 14:44:01.347 [INF] ← GET /api/notifications 200 | 638ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-22 14:44:02.419 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-22 14:44:02.899 [INF] ← GET /api/feed 200 | 480ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-22 14:44:45.546 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-22 14:44:45.546 [INF] → GET /api/notifications | IP ::1
+2026-06-22 14:44:45.647 [INF] ← GET /api/feed 200 | 101ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-22 14:44:45.652 [INF] ← GET /api/notifications 200 | 105ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-22 14:44:49.524 [INF] → GET /api/bottles?userId=8bce4454-3ef5-449c-0257-08dece31259c | IP ::1
+2026-06-22 14:44:49.599 [WRN] Compiling a query which loads related collections for more than one collection navigation, either via 'Include' or through projection, but no 'QuerySplittingBehavior' has been configured. By default, Entity Framework will use 'QuerySplittingBehavior.SingleQuery', which can potentially result in slow query performance. See https://go.microsoft.com/fwlink/?linkid=2134277 for more information. To identify the query that's triggering this warning call 'ConfigureWarnings(w => w.Throw(RelationalEventId.MultipleCollectionIncludeWarning))'.
+2026-06-22 14:44:49.918 [INF] ← GET /api/bottles 200 | 393ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-22 14:44:49.959 [INF] → GET /uploads/bottles/c4155032-bb2a-4d89-9314-d4448d202f59.jpg | IP ::1
+2026-06-22 14:44:49.993 [INF] ← GET /uploads/bottles/c4155032-bb2a-4d89-9314-d4448d202f59.jpg 304 | 34ms | user:anonymous
+2026-06-22 14:45:27.823 [INF] → GET /api/bottles?userId=8bce4454-3ef5-449c-0257-08dece31259c | IP ::1
+2026-06-22 14:45:27.901 [INF] → GET /api/notifications | IP ::1
+2026-06-22 14:45:27.968 [INF] ← GET /api/notifications 200 | 66ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-22 14:45:27.969 [INF] ← GET /api/bottles 200 | 145ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-22 14:46:29.841 [INF] → GET /api/bottles?userId=8bce4454-3ef5-449c-0257-08dece31259c | IP ::1
+2026-06-22 14:46:29.908 [INF] → GET /api/notifications | IP ::1
+2026-06-22 14:46:30.006 [INF] ← GET /api/notifications 200 | 97ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-22 14:46:30.018 [INF] ← GET /api/bottles 200 | 177ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-22 14:47:00.027 [INF] → GET /api/notifications | IP ::1
+2026-06-22 14:47:00.084 [INF] ← GET /api/notifications 200 | 57ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-22 14:47:30.191 [INF] → GET /api/notifications | IP ::1
+2026-06-22 14:47:30.207 [INF] ← GET /api/notifications 200 | 16ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-22 14:47:33.848 [INF] → GET /api/bottles?userId=8bce4454-3ef5-449c-0257-08dece31259c | IP ::1
+2026-06-22 14:47:33.886 [INF] ← GET /api/bottles 200 | 38ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-22 14:47:48.407 [INF] → POST /api/bottles | IP ::1
+2026-06-22 14:47:48.721 [INF] ← POST /api/bottles 201 | 314ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-22 14:47:48.736 [INF] → POST /api/bottles/752dfc78-e3bc-42d8-9143-efdca35d2ed1/images | IP ::1
+2026-06-22 14:47:48.887 [INF] ← POST /api/bottles/752dfc78-e3bc-42d8-9143-efdca35d2ed1/images 200 | 150ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-22 14:47:48.905 [INF] → GET /api/bottles?userId=8bce4454-3ef5-449c-0257-08dece31259c | IP ::1
+2026-06-22 14:47:48.912 [INF] ← GET /api/bottles 200 | 6ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-22 14:47:48.935 [INF] → GET /uploads/bottles/ce82cbf1-cba9-40d4-867b-21689f6f5929.jpg | IP ::1
+2026-06-22 14:47:48.961 [INF] ← GET /uploads/bottles/ce82cbf1-cba9-40d4-867b-21689f6f5929.jpg 200 | 25ms | user:anonymous
+2026-06-22 14:47:51.358 [INF] → GET /api/bottles/752dfc78-e3bc-42d8-9143-efdca35d2ed1/comments | IP ::1
+2026-06-22 14:47:51.412 [INF] ← GET /api/bottles/752dfc78-e3bc-42d8-9143-efdca35d2ed1/comments 200 | 53ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-22 14:47:59.373 [INF] → POST /api/auth/logout | IP ::1
+2026-06-22 14:47:59.385 [WRN] ← POST /api/auth/logout 401 | 12ms | user:anonymous
+2026-06-22 14:48:04.522 [INF] → POST /api/auth/login | IP ::1
+2026-06-22 14:48:04.777 [INF] ← POST /api/auth/login 200 | 254ms | user:anonymous
+2026-06-22 14:48:04.820 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-22 14:48:04.820 [INF] → GET /api/notifications | IP ::1
+2026-06-22 14:48:04.829 [INF] ← GET /api/notifications 200 | 8ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-22 14:48:05.074 [INF] ← GET /api/feed 200 | 254ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-22 14:48:05.099 [INF] → GET /uploads/bottles/ce82cbf1-cba9-40d4-867b-21689f6f5929.jpg | IP ::1
+2026-06-22 14:48:05.105 [INF] ← GET /uploads/bottles/ce82cbf1-cba9-40d4-867b-21689f6f5929.jpg 304 | 5ms | user:anonymous
+2026-06-22 14:48:25.863 [INF] → GET /api/users/8bce4454-3ef5-449c-0257-08dece31259c | IP ::1
+2026-06-22 14:48:25.864 [INF] → GET /api/bottles?userId=8bce4454-3ef5-449c-0257-08dece31259c | IP ::1
+2026-06-22 14:48:25.886 [INF] ← GET /api/bottles 200 | 22ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-22 14:48:25.939 [INF] ← GET /api/users/8bce4454-3ef5-449c-0257-08dece31259c 200 | 75ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-22 14:48:27.860 [INF] → DELETE /api/users/8bce4454-3ef5-449c-0257-08dece31259c/follow | IP ::1
+2026-06-22 14:48:28.039 [INF] ← DELETE /api/users/8bce4454-3ef5-449c-0257-08dece31259c/follow 200 | 178ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-22 14:48:28.056 [INF] → GET /api/users/8bce4454-3ef5-449c-0257-08dece31259c | IP ::1
+2026-06-22 14:48:28.090 [INF] ← GET /api/users/8bce4454-3ef5-449c-0257-08dece31259c 200 | 34ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-22 14:48:29.103 [INF] → POST /api/users/8bce4454-3ef5-449c-0257-08dece31259c/follow | IP ::1
+2026-06-22 14:48:29.237 [INF] ← POST /api/users/8bce4454-3ef5-449c-0257-08dece31259c/follow 200 | 133ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-22 14:48:29.250 [INF] → GET /api/users/8bce4454-3ef5-449c-0257-08dece31259c | IP ::1
+2026-06-22 14:48:29.281 [INF] ← GET /api/users/8bce4454-3ef5-449c-0257-08dece31259c 200 | 30ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-22 14:48:33.802 [INF] → POST /api/auth/logout | IP ::1
+2026-06-22 14:48:33.807 [WRN] ← POST /api/auth/logout 401 | 4ms | user:anonymous
+2026-06-22 14:48:38.423 [INF] → POST /api/auth/login | IP ::1
+2026-06-22 14:48:38.617 [INF] ← POST /api/auth/login 200 | 193ms | user:anonymous
+2026-06-22 14:48:38.654 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-22 14:48:38.654 [INF] → GET /api/notifications | IP ::1
+2026-06-22 14:48:38.685 [INF] ← GET /api/feed 200 | 30ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-22 14:48:38.703 [INF] ← GET /api/notifications 200 | 48ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-22 14:48:46.801 [INF] → GET /api/bottles?userId=8bce4454-3ef5-449c-0257-08dece31259c | IP ::1
+2026-06-22 14:48:46.832 [INF] ← GET /api/bottles 200 | 31ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-22 14:48:46.856 [INF] → GET /uploads/bottles/ce82cbf1-cba9-40d4-867b-21689f6f5929.jpg | IP ::1
+2026-06-22 14:48:46.859 [INF] ← GET /uploads/bottles/ce82cbf1-cba9-40d4-867b-21689f6f5929.jpg 304 | 2ms | user:anonymous
+2026-06-22 14:48:48.271 [INF] → GET /api/bottles/752dfc78-e3bc-42d8-9143-efdca35d2ed1/comments | IP ::1
+2026-06-22 14:48:48.297 [INF] ← GET /api/bottles/752dfc78-e3bc-42d8-9143-efdca35d2ed1/comments 200 | 25ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-22 14:48:52.085 [INF] → POST /api/bottles/752dfc78-e3bc-42d8-9143-efdca35d2ed1/list-for-sale | IP ::1
+2026-06-22 14:48:52.135 [INF] ← POST /api/bottles/752dfc78-e3bc-42d8-9143-efdca35d2ed1/list-for-sale 200 | 49ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-22 14:48:52.146 [INF] → GET /api/bottles?userId=8bce4454-3ef5-449c-0257-08dece31259c | IP ::1
+2026-06-22 14:48:52.153 [INF] ← GET /api/bottles 200 | 6ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-22 14:49:02.405 [INF] → GET /api/bottles/marketplace?sort=newest | IP ::1
+2026-06-22 14:49:02.444 [WRN] Compiling a query which loads related collections for more than one collection navigation, either via 'Include' or through projection, but no 'QuerySplittingBehavior' has been configured. By default, Entity Framework will use 'QuerySplittingBehavior.SingleQuery', which can potentially result in slow query performance. See https://go.microsoft.com/fwlink/?linkid=2134277 for more information. To identify the query that's triggering this warning call 'ConfigureWarnings(w => w.Throw(RelationalEventId.MultipleCollectionIncludeWarning))'.
+2026-06-22 14:49:02.545 [INF] ← GET /api/bottles/marketplace 200 | 140ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-22 14:49:07.148 [INF] → POST /api/notifications/044ccc3e-3995-44d7-a6f8-9dfefd6b7f00/read | IP ::1
+2026-06-22 14:49:07.163 [INF] → GET /api/users/f755f1be-cd7b-4d85-f377-08decf9e98b5 | IP ::1
+2026-06-22 14:49:07.163 [INF] → GET /api/bottles?userId=f755f1be-cd7b-4d85-f377-08decf9e98b5 | IP ::1
+2026-06-22 14:49:07.266 [INF] ← GET /api/bottles 200 | 102ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-22 14:49:07.266 [INF] ← GET /api/users/f755f1be-cd7b-4d85-f377-08decf9e98b5 200 | 103ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-22 14:49:07.288 [INF] ← POST /api/notifications/044ccc3e-3995-44d7-a6f8-9dfefd6b7f00/read 200 | 140ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-22 14:49:07.312 [INF] → GET /api/notifications | IP ::1
+2026-06-22 14:49:07.317 [INF] ← GET /api/notifications 200 | 5ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-22 14:49:10.907 [INF] → POST /api/auth/logout | IP ::1
+2026-06-22 14:49:10.914 [WRN] ← POST /api/auth/logout 401 | 6ms | user:anonymous
+2026-06-22 14:49:16.115 [INF] → POST /api/auth/login | IP ::1
+2026-06-22 14:49:16.276 [INF] ← POST /api/auth/login 200 | 161ms | user:anonymous
+2026-06-22 14:49:16.314 [INF] → GET /api/notifications | IP ::1
+2026-06-22 14:49:16.315 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-22 14:49:16.320 [INF] ← GET /api/notifications 200 | 6ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-22 14:49:16.419 [INF] ← GET /api/feed 200 | 104ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-22 14:49:16.436 [INF] → GET /uploads/bottles/ce82cbf1-cba9-40d4-867b-21689f6f5929.jpg | IP ::1
+2026-06-22 14:49:16.438 [INF] ← GET /uploads/bottles/ce82cbf1-cba9-40d4-867b-21689f6f5929.jpg 304 | 2ms | user:anonymous
+2026-06-22 14:51:11.446 [INF] → GET /api/notifications | IP ::1
+2026-06-22 14:51:11.447 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-22 14:51:11.528 [INF] ← GET /api/notifications 200 | 81ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-22 14:51:11.651 [INF] ← GET /api/feed 200 | 204ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-22 14:51:41.547 [INF] → GET /api/notifications | IP ::1
+2026-06-22 14:51:41.553 [INF] ← GET /api/notifications 200 | 5ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-22 14:51:47.508 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-22 14:51:47.662 [INF] ← GET /api/feed 200 | 153ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-22 14:53:57.283 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-22 14:53:57.283 [INF] → GET /api/notifications | IP ::1
+2026-06-22 14:53:57.371 [INF] ← GET /api/notifications 200 | 88ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-22 14:53:57.536 [INF] ← GET /api/feed 200 | 253ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-22 14:53:57.581 [INF] → GET /uploads/bottles/ce82cbf1-cba9-40d4-867b-21689f6f5929.jpg | IP ::1
+2026-06-22 14:53:57.586 [INF] ← GET /uploads/bottles/ce82cbf1-cba9-40d4-867b-21689f6f5929.jpg 304 | 4ms | user:anonymous
+2026-06-22 14:53:59.126 [INF] → GET /api/notifications | IP ::1
+2026-06-22 14:53:59.126 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-22 14:53:59.151 [INF] ← GET /api/notifications 200 | 24ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-22 14:53:59.246 [INF] ← GET /api/feed 200 | 119ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-22 14:54:07.110 [INF] → GET /api/notifications | IP ::1
+2026-06-22 14:54:07.110 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-22 14:54:07.146 [INF] ← GET /api/notifications 200 | 36ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-22 14:54:07.269 [INF] ← GET /api/feed 200 | 158ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-22 15:00:00.595 [INF] → POST /api/auth/login | IP ::1
+2026-06-22 15:00:01.207 [INF] ← POST /api/auth/login 200 | 619ms | user:anonymous
+2026-06-22 15:00:01.255 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-22 15:00:01.255 [INF] → GET /api/notifications | IP ::1
+2026-06-22 15:00:01.561 [INF] ← GET /api/notifications 200 | 306ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-22 15:00:01.757 [INF] ← GET /api/feed 200 | 501ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-22 15:00:06.562 [INF] → GET /api/bottles?userId=8bce4454-3ef5-449c-0257-08dece31259c | IP ::1
+2026-06-22 15:00:06.638 [WRN] Compiling a query which loads related collections for more than one collection navigation, either via 'Include' or through projection, but no 'QuerySplittingBehavior' has been configured. By default, Entity Framework will use 'QuerySplittingBehavior.SingleQuery', which can potentially result in slow query performance. See https://go.microsoft.com/fwlink/?linkid=2134277 for more information. To identify the query that's triggering this warning call 'ConfigureWarnings(w => w.Throw(RelationalEventId.MultipleCollectionIncludeWarning))'.
+2026-06-22 15:00:06.904 [INF] ← GET /api/bottles 200 | 342ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-22 15:00:08.706 [INF] → GET /api/bottles/752dfc78-e3bc-42d8-9143-efdca35d2ed1/comments | IP ::1
+2026-06-22 15:00:08.776 [INF] ← GET /api/bottles/752dfc78-e3bc-42d8-9143-efdca35d2ed1/comments 200 | 69ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-22 15:00:10.665 [INF] → POST /api/bottles/752dfc78-e3bc-42d8-9143-efdca35d2ed1/unlist | IP ::1
+2026-06-22 15:00:10.847 [INF] ← POST /api/bottles/752dfc78-e3bc-42d8-9143-efdca35d2ed1/unlist 200 | 182ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-22 15:00:10.861 [INF] → GET /api/bottles?userId=8bce4454-3ef5-449c-0257-08dece31259c | IP ::1
+2026-06-22 15:00:10.874 [INF] ← GET /api/bottles 200 | 12ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-22 15:02:50.436 [INF] → GET /api/bottles?userId=8bce4454-3ef5-449c-0257-08dece31259c | IP ::1
+2026-06-22 15:02:50.436 [INF] → GET /api/notifications | IP ::1
+2026-06-22 15:02:50.563 [INF] ← GET /api/bottles 200 | 127ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-22 15:02:50.578 [INF] ← GET /api/notifications 200 | 142ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-22 15:02:50.596 [INF] → GET /uploads/bottles/ce82cbf1-cba9-40d4-867b-21689f6f5929.jpg | IP ::1
+2026-06-22 15:02:50.618 [INF] ← GET /uploads/bottles/ce82cbf1-cba9-40d4-867b-21689f6f5929.jpg 304 | 21ms | user:anonymous
+2026-06-22 15:03:03.159 [INF] → GET /api/notifications | IP ::1
+2026-06-22 15:03:03.159 [INF] → GET /api/bottles?userId=8bce4454-3ef5-449c-0257-08dece31259c | IP ::1
+2026-06-22 15:03:03.184 [INF] ← GET /api/notifications 200 | 24ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-22 15:03:03.221 [INF] ← GET /api/bottles 200 | 61ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-22 15:03:45.980 [INF] → GET /api/bottles?userId=8bce4454-3ef5-449c-0257-08dece31259c | IP ::1
+2026-06-22 15:03:46.014 [INF] ← GET /api/bottles 200 | 33ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-22 16:24:12.322 [INF] → GET /api/notifications | IP ::1
+2026-06-22 16:24:12.322 [INF] → GET /api/bottles?userId=8bce4454-3ef5-449c-0257-08dece31259c | IP ::1
+2026-06-22 16:24:13.080 [WRN] Compiling a query which loads related collections for more than one collection navigation, either via 'Include' or through projection, but no 'QuerySplittingBehavior' has been configured. By default, Entity Framework will use 'QuerySplittingBehavior.SingleQuery', which can potentially result in slow query performance. See https://go.microsoft.com/fwlink/?linkid=2134277 for more information. To identify the query that's triggering this warning call 'ConfigureWarnings(w => w.Throw(RelationalEventId.MultipleCollectionIncludeWarning))'.
+2026-06-22 16:24:13.138 [INF] ← GET /api/notifications 200 | 827ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-22 16:24:13.522 [INF] ← GET /api/bottles 200 | 1212ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-22 16:24:14.433 [INF] → GET /api/notifications | IP ::1
+2026-06-22 16:24:14.433 [INF] → GET /api/bottles?userId=8bce4454-3ef5-449c-0257-08dece31259c | IP ::1
+2026-06-22 16:24:14.550 [INF] ← GET /api/bottles 200 | 117ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-22 16:24:14.599 [INF] → GET /uploads/bottles/ce82cbf1-cba9-40d4-867b-21689f6f5929.jpg | IP ::1
+2026-06-22 16:24:14.601 [INF] ← GET /api/notifications 200 | 168ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-22 16:24:14.630 [INF] ← GET /uploads/bottles/ce82cbf1-cba9-40d4-867b-21689f6f5929.jpg 304 | 30ms | user:anonymous
+2026-06-22 16:24:16.913 [INF] → GET /api/bottles/752dfc78-e3bc-42d8-9143-efdca35d2ed1/comments | IP ::1
+2026-06-22 16:24:17.031 [INF] ← GET /api/bottles/752dfc78-e3bc-42d8-9143-efdca35d2ed1/comments 200 | 118ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-22 16:24:22.376 [INF] → GET /api/bottles/4b0115d1-8079-4b84-9538-bf5a46d4b907/comments | IP ::1
+2026-06-22 16:24:22.397 [INF] ← GET /api/bottles/4b0115d1-8079-4b84-9538-bf5a46d4b907/comments 200 | 19ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-22 16:24:24.416 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-22 16:24:24.622 [INF] ← GET /api/feed 200 | 205ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-22 16:25:04.696 [INF] → GET /api/notifications | IP ::1
+2026-06-22 16:25:04.739 [INF] → GET /api/bottles?userId=8bce4454-3ef5-449c-0257-08dece31259c | IP ::1
+2026-06-22 16:25:04.831 [INF] → GET /api/bottles/752dfc78-e3bc-42d8-9143-efdca35d2ed1/comments | IP ::1
+2026-06-22 16:25:04.912 [INF] ← GET /api/notifications 200 | 215ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-22 16:25:04.913 [INF] ← GET /api/bottles 200 | 173ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-22 16:25:04.915 [INF] ← GET /api/bottles/752dfc78-e3bc-42d8-9143-efdca35d2ed1/comments 200 | 125ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-22 16:25:40.361 [INF] → GET /api/bottles?userId=8bce4454-3ef5-449c-0257-08dece31259c | IP ::1
+2026-06-22 16:25:40.362 [INF] → GET /api/notifications | IP ::1
+2026-06-22 16:25:40.386 [INF] ← GET /api/notifications 200 | 24ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-22 16:25:40.455 [INF] ← GET /api/bottles 200 | 93ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-22 16:26:34.764 [INF] → GET /api/notifications | IP ::1
+2026-06-22 16:26:34.763 [INF] → GET /api/bottles?userId=8bce4454-3ef5-449c-0257-08dece31259c | IP ::1
+2026-06-22 16:26:34.831 [INF] ← GET /api/notifications 200 | 67ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-22 16:26:34.846 [INF] ← GET /api/bottles 200 | 82ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-22 16:26:35.863 [INF] → GET /api/notifications | IP ::1
+2026-06-22 16:26:35.864 [INF] → GET /api/bottles?userId=8bce4454-3ef5-449c-0257-08dece31259c | IP ::1
+2026-06-22 16:26:35.871 [INF] ← GET /api/notifications 200 | 7ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-22 16:26:35.872 [INF] ← GET /api/bottles 200 | 8ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-22 16:26:37.173 [INF] → GET /api/bottles/752dfc78-e3bc-42d8-9143-efdca35d2ed1/comments | IP ::1
+2026-06-22 16:26:37.194 [INF] ← GET /api/bottles/752dfc78-e3bc-42d8-9143-efdca35d2ed1/comments 200 | 20ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-22 16:26:44.892 [INF] → DELETE /api/bottles/752dfc78-e3bc-42d8-9143-efdca35d2ed1 | IP ::1
+2026-06-22 16:26:45.170 [INF] ← DELETE /api/bottles/752dfc78-e3bc-42d8-9143-efdca35d2ed1 200 | 277ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-22 16:26:45.194 [INF] → GET /api/bottles?userId=8bce4454-3ef5-449c-0257-08dece31259c | IP ::1
+2026-06-22 16:26:45.202 [INF] ← GET /api/bottles 200 | 7ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-22 16:26:45.208 [INF] → GET /api/bottles?userId=8bce4454-3ef5-449c-0257-08dece31259c | IP ::1
+2026-06-22 16:26:45.217 [INF] ← GET /api/bottles 200 | 9ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-22 16:27:05.891 [INF] → GET /api/notifications | IP ::1
+2026-06-22 16:27:05.938 [INF] ← GET /api/notifications 200 | 47ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-22 16:27:15.550 [INF] → POST /api/bottles | IP ::1
+2026-06-22 16:27:15.893 [INF] ← POST /api/bottles 201 | 343ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-22 16:27:15.910 [INF] → POST /api/bottles/5050fe05-760d-4578-8c9b-2bf14cacd7be/images | IP ::1
+2026-06-22 16:27:16.180 [INF] ← POST /api/bottles/5050fe05-760d-4578-8c9b-2bf14cacd7be/images 200 | 270ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-22 16:27:16.199 [INF] → GET /api/bottles?userId=8bce4454-3ef5-449c-0257-08dece31259c | IP ::1
+2026-06-22 16:27:16.255 [INF] ← GET /api/bottles 200 | 56ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-22 16:27:16.279 [INF] → GET /uploads/bottles/b990565a-b3c0-46e4-b7c8-638464a34df1.jpg | IP ::1
+2026-06-22 16:27:16.329 [INF] ← GET /uploads/bottles/b990565a-b3c0-46e4-b7c8-638464a34df1.jpg 200 | 49ms | user:anonymous
+2026-06-22 16:27:20.980 [INF] → GET /api/bottles/5050fe05-760d-4578-8c9b-2bf14cacd7be/comments | IP ::1
+2026-06-22 16:27:21.026 [INF] ← GET /api/bottles/5050fe05-760d-4578-8c9b-2bf14cacd7be/comments 200 | 46ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-22 16:27:24.731 [INF] → POST /api/bottles/5050fe05-760d-4578-8c9b-2bf14cacd7be/list-for-sale | IP ::1
+2026-06-22 16:27:24.795 [INF] ← POST /api/bottles/5050fe05-760d-4578-8c9b-2bf14cacd7be/list-for-sale 200 | 63ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-22 16:27:24.809 [INF] → GET /api/bottles?userId=8bce4454-3ef5-449c-0257-08dece31259c | IP ::1
+2026-06-22 16:27:24.836 [INF] ← GET /api/bottles 200 | 26ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-22 16:27:27.709 [INF] → POST /api/auth/logout | IP ::1
+2026-06-22 16:27:27.720 [WRN] ← POST /api/auth/logout 401 | 11ms | user:anonymous
+2026-06-22 16:27:32.769 [INF] → POST /api/auth/login | IP ::1
+2026-06-22 16:27:33.048 [INF] ← POST /api/auth/login 200 | 279ms | user:anonymous
+2026-06-22 16:27:33.084 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-22 16:27:33.084 [INF] → GET /api/notifications | IP ::1
+2026-06-22 16:27:33.113 [INF] ← GET /api/notifications 200 | 28ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-22 16:27:33.332 [INF] ← GET /api/feed 200 | 247ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-22 16:27:33.350 [INF] → GET /uploads/bottles/b990565a-b3c0-46e4-b7c8-638464a34df1.jpg | IP ::1
+2026-06-22 16:27:33.353 [INF] ← GET /uploads/bottles/b990565a-b3c0-46e4-b7c8-638464a34df1.jpg 304 | 3ms | user:anonymous
+2026-06-22 16:27:53.571 [INF] → POST /api/notifications/02f82052-4316-4267-b8ca-4f9a4d8a8804/read | IP ::1
+2026-06-22 16:27:53.596 [INF] → GET /api/users/8bce4454-3ef5-449c-0257-08dece31259c | IP ::1
+2026-06-22 16:27:53.602 [INF] → GET /api/bottles?userId=8bce4454-3ef5-449c-0257-08dece31259c | IP ::1
+2026-06-22 16:27:53.668 [INF] ← GET /api/bottles 200 | 65ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-22 16:27:53.765 [INF] ← POST /api/notifications/02f82052-4316-4267-b8ca-4f9a4d8a8804/read 200 | 193ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-22 16:27:53.769 [INF] ← GET /api/users/8bce4454-3ef5-449c-0257-08dece31259c 200 | 172ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-22 16:27:53.776 [INF] → GET /api/notifications | IP ::1
+2026-06-22 16:27:53.787 [INF] ← GET /api/notifications 200 | 10ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-22 16:27:57.949 [INF] → POST /api/notifications/0758d9b0-1ec4-4dee-9a51-032e0c5865eb/read | IP ::1
+2026-06-22 16:27:57.969 [INF] ← POST /api/notifications/0758d9b0-1ec4-4dee-9a51-032e0c5865eb/read 200 | 20ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-22 16:27:57.986 [INF] → GET /api/notifications | IP ::1
+2026-06-22 16:27:57.994 [INF] ← GET /api/notifications 200 | 7ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-22 16:28:01.206 [INF] → GET /api/bottles/marketplace?sort=newest | IP ::1
+2026-06-22 16:28:01.256 [WRN] Compiling a query which loads related collections for more than one collection navigation, either via 'Include' or through projection, but no 'QuerySplittingBehavior' has been configured. By default, Entity Framework will use 'QuerySplittingBehavior.SingleQuery', which can potentially result in slow query performance. See https://go.microsoft.com/fwlink/?linkid=2134277 for more information. To identify the query that's triggering this warning call 'ConfigureWarnings(w => w.Throw(RelationalEventId.MultipleCollectionIncludeWarning))'.
+2026-06-22 16:28:01.364 [INF] ← GET /api/bottles/marketplace 200 | 157ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-22 16:28:10.707 [INF] → GET /api/users | IP ::1
+2026-06-22 16:28:10.757 [INF] ← GET /api/users 200 | 50ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-22 16:28:15.750 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-22 16:28:15.763 [INF] ← GET /api/feed 200 | 13ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-22 20:54:52.639 [INF] → GET /api/notifications | IP ::1
+2026-06-22 20:54:52.639 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-22 20:54:53.036 [INF] → GET /api/notifications | IP ::1
+2026-06-22 20:54:53.036 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-22 20:55:42.236 [INF] → GET /api/wishlist | IP ::1
+2026-06-22 20:55:42.354 [INF] ← GET /api/notifications 200 | 49728ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-22 20:55:42.354 [INF] ← GET /api/feed 200 | 49728ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-22 20:55:42.611 [INF] ← GET /api/wishlist 200 | 414ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-22 20:55:42.633 [INF] ← GET /api/notifications 200 | 49596ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-22 20:55:43.026 [INF] ← GET /api/feed 200 | 49989ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-22 20:57:20.585 [INF] → GET /api/notifications | IP ::1
+2026-06-22 20:57:20.585 [INF] → GET /api/wishlist | IP ::1
+2026-06-22 20:57:20.649 [INF] ← GET /api/wishlist 200 | 64ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-22 20:57:20.659 [INF] ← GET /api/notifications 200 | 112ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-22 20:57:22.966 [INF] → GET /api/bottles/marketplace?sort=newest | IP ::1
+2026-06-22 20:57:23.048 [WRN] Compiling a query which loads related collections for more than one collection navigation, either via 'Include' or through projection, but no 'QuerySplittingBehavior' has been configured. By default, Entity Framework will use 'QuerySplittingBehavior.SingleQuery', which can potentially result in slow query performance. See https://go.microsoft.com/fwlink/?linkid=2134277 for more information. To identify the query that's triggering this warning call 'ConfigureWarnings(w => w.Throw(RelationalEventId.MultipleCollectionIncludeWarning))'.
+2026-06-22 20:57:23.275 [INF] ← GET /api/bottles/marketplace 200 | 308ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-22 20:57:23.305 [INF] → GET /uploads/bottles/b990565a-b3c0-46e4-b7c8-638464a34df1.jpg | IP ::1
+2026-06-22 20:57:23.335 [INF] ← GET /uploads/bottles/b990565a-b3c0-46e4-b7c8-638464a34df1.jpg 304 | 30ms | user:anonymous
+2026-06-22 20:58:55.808 [INF] → GET /api/bottles/marketplace?sort=newest | IP ::1
+2026-06-22 20:58:55.796 [INF] → GET /api/notifications | IP ::1
+2026-06-22 20:58:55.879 [INF] ← GET /api/notifications 200 | 82ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-22 20:58:55.890 [INF] ← GET /api/bottles/marketplace 200 | 89ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5

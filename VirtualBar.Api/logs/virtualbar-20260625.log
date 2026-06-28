@@ -1,0 +1,844 @@
+2026-06-25 12:21:59.789 [INF] → GET /api/notifications | IP ::1
+2026-06-25 12:21:59.789 [INF] → GET /api/bottles/marketplace?sort=newest | IP ::1
+2026-06-25 12:22:00.403 [ERR] An error occurred using the connection to database 'VirtualBarDb' on server 'localhost\SQLEXPRESS'.
+2026-06-25 12:22:00.403 [ERR] An error occurred using the connection to database 'VirtualBarDb' on server 'localhost\SQLEXPRESS'.
+2026-06-25 12:22:40.699 [INF] → GET /api/notifications | IP ::1
+2026-06-25 12:22:40.699 [INF] → GET /api/bottles/marketplace?sort=newest | IP ::1
+2026-06-25 12:22:41.452 [WRN] Compiling a query which loads related collections for more than one collection navigation, either via 'Include' or through projection, but no 'QuerySplittingBehavior' has been configured. By default, Entity Framework will use 'QuerySplittingBehavior.SingleQuery', which can potentially result in slow query performance. See https://go.microsoft.com/fwlink/?linkid=2134277 for more information. To identify the query that's triggering this warning call 'ConfigureWarnings(w => w.Throw(RelationalEventId.MultipleCollectionIncludeWarning))'.
+2026-06-25 12:22:41.530 [INF] ← GET /api/notifications 200 | 839ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 12:22:41.858 [INF] ← GET /api/bottles/marketplace 200 | 1176ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 12:22:41.893 [INF] → GET /uploads/bottles/c4155032-bb2a-4d89-9314-d4448d202f59.jpg | IP ::1
+2026-06-25 12:22:41.893 [INF] → GET /uploads/bottles/b990565a-b3c0-46e4-b7c8-638464a34df1.jpg | IP ::1
+2026-06-25 12:22:41.926 [INF] ← GET /uploads/bottles/c4155032-bb2a-4d89-9314-d4448d202f59.jpg 304 | 32ms | user:anonymous
+2026-06-25 12:22:41.926 [INF] ← GET /uploads/bottles/b990565a-b3c0-46e4-b7c8-638464a34df1.jpg 304 | 32ms | user:anonymous
+2026-06-25 12:22:42.338 [INF] → GET /api/notifications | IP ::1
+2026-06-25 12:22:42.338 [INF] → GET /api/bottles/marketplace?sort=newest | IP ::1
+2026-06-25 12:22:42.425 [INF] ← GET /api/bottles/marketplace 200 | 87ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 12:22:42.438 [INF] ← GET /api/notifications 200 | 100ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 12:22:44.356 [INF] → GET /api/wishlist/all | IP ::1
+2026-06-25 12:22:44.407 [INF] ← GET /api/wishlist/all 200 | 51ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 12:23:04.000 [INF] → GET /api/bottles/marketplace?sort=newest | IP ::1
+2026-06-25 12:23:04.000 [INF] → GET /api/notifications | IP ::1
+2026-06-25 12:23:04.080 [INF] ← GET /api/bottles/marketplace 200 | 79ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 12:23:04.080 [INF] ← GET /api/notifications 200 | 79ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 12:23:05.160 [INF] → GET /api/wishlist/all | IP ::1
+2026-06-25 12:23:05.167 [INF] ← GET /api/wishlist/all 200 | 7ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 12:23:37.311 [INF] → GET /api/notifications | IP ::1
+2026-06-25 12:23:37.311 [INF] → GET /api/bottles/marketplace?sort=newest | IP ::1
+2026-06-25 12:23:37.440 [INF] ← GET /api/notifications 200 | 131ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 12:23:37.456 [INF] ← GET /api/bottles/marketplace 200 | 146ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 12:24:43.686 [INF] → GET /api/notifications | IP ::1
+2026-06-25 12:24:43.708 [INF] → GET /api/bottles/marketplace?sort=newest | IP ::1
+2026-06-25 12:24:43.771 [INF] ← GET /api/notifications 200 | 85ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 12:24:43.800 [INF] ← GET /api/bottles/marketplace 200 | 99ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 12:25:38.237 [INF] → GET /api/notifications | IP ::1
+2026-06-25 12:25:38.273 [INF] → GET /api/bottles/marketplace?sort=newest | IP ::1
+2026-06-25 12:25:38.319 [INF] ← GET /api/notifications 200 | 84ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 12:25:38.381 [INF] ← GET /api/bottles/marketplace 200 | 108ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 12:25:39.085 [INF] → GET /api/notifications | IP ::1
+2026-06-25 12:25:39.085 [INF] → GET /api/bottles/marketplace?sort=newest | IP ::1
+2026-06-25 12:25:39.096 [INF] ← GET /api/notifications 200 | 10ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 12:25:39.099 [INF] ← GET /api/bottles/marketplace 200 | 13ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 12:26:09.141 [INF] → GET /api/notifications | IP ::1
+2026-06-25 12:26:09.157 [INF] ← GET /api/notifications 200 | 40ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 12:26:47.478 [INF] → GET /api/notifications | IP ::1
+2026-06-25 12:26:47.543 [INF] → GET /api/bottles/marketplace?sort=newest | IP ::1
+2026-06-25 12:26:47.567 [INF] ← GET /api/notifications 200 | 89ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 12:26:47.580 [INF] ← GET /api/bottles/marketplace 200 | 37ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 12:26:48.646 [INF] → GET /api/wishlist/all | IP ::1
+2026-06-25 12:26:48.665 [INF] ← GET /api/wishlist/all 200 | 19ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 12:27:17.598 [INF] → GET /api/notifications | IP ::1
+2026-06-25 12:27:17.611 [INF] ← GET /api/notifications 200 | 13ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 12:27:27.271 [INF] → POST /api/wishlist | IP ::1
+2026-06-25 12:27:27.605 [INF] ← POST /api/wishlist 200 | 334ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 12:27:27.630 [INF] → GET /api/wishlist/all | IP ::1
+2026-06-25 12:27:27.673 [INF] ← GET /api/wishlist/all 200 | 42ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 12:27:47.637 [INF] → GET /api/notifications | IP ::1
+2026-06-25 12:27:47.655 [INF] ← GET /api/notifications 200 | 17ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 12:57:22.032 [INF] → GET /api/notifications | IP ::1
+2026-06-25 12:57:22.032 [INF] → GET /api/wishlist/all | IP ::1
+2026-06-25 12:57:22.778 [INF] ← GET /api/wishlist/all 200 | 755ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 12:57:22.778 [INF] ← GET /api/notifications 200 | 755ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 12:58:11.321 [INF] → GET /api/notifications | IP ::1
+2026-06-25 12:58:11.321 [INF] → GET /api/wishlist/all | IP ::1
+2026-06-25 12:58:11.487 [INF] ← GET /api/wishlist/all 200 | 165ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 12:58:11.490 [INF] ← GET /api/notifications 200 | 168ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 12:58:55.918 [INF] → GET /api/notifications | IP ::1
+2026-06-25 12:58:55.918 [INF] → GET /api/wishlist/all | IP ::1
+2026-06-25 12:58:55.954 [INF] ← GET /api/wishlist/all 200 | 35ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 12:58:56.004 [INF] ← GET /api/notifications 200 | 85ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 12:59:19.316 [INF] → GET /api/notifications | IP ::1
+2026-06-25 12:59:19.318 [INF] → GET /api/bottles/marketplace?sort=newest | IP ::1
+2026-06-25 12:59:19.367 [INF] ← GET /api/notifications 200 | 80ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 12:59:19.581 [WRN] Compiling a query which loads related collections for more than one collection navigation, either via 'Include' or through projection, but no 'QuerySplittingBehavior' has been configured. By default, Entity Framework will use 'QuerySplittingBehavior.SingleQuery', which can potentially result in slow query performance. See https://go.microsoft.com/fwlink/?linkid=2134277 for more information. To identify the query that's triggering this warning call 'ConfigureWarnings(w => w.Throw(RelationalEventId.MultipleCollectionIncludeWarning))'.
+2026-06-25 12:59:20.572 [INF] → GET /api/bottles/marketplace?sort=newest | IP ::1
+2026-06-25 13:02:31.595 [INF] → GET /api/bottles/marketplace?sort=newest | IP ::1
+2026-06-25 13:02:31.595 [INF] → GET /api/notifications | IP ::1
+2026-06-25 13:02:32.331 [WRN] Compiling a query which loads related collections for more than one collection navigation, either via 'Include' or through projection, but no 'QuerySplittingBehavior' has been configured. By default, Entity Framework will use 'QuerySplittingBehavior.SingleQuery', which can potentially result in slow query performance. See https://go.microsoft.com/fwlink/?linkid=2134277 for more information. To identify the query that's triggering this warning call 'ConfigureWarnings(w => w.Throw(RelationalEventId.MultipleCollectionIncludeWarning))'.
+2026-06-25 13:02:32.364 [INF] ← GET /api/notifications 200 | 781ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 13:02:32.702 [INF] ← GET /api/bottles/marketplace 200 | 1119ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 13:02:39.341 [INF] → GET /api/wishlist/all | IP ::1
+2026-06-25 13:02:39.484 [INF] ← GET /api/wishlist/all 200 | 143ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 13:03:02.399 [INF] → GET /api/notifications | IP ::1
+2026-06-25 13:03:02.430 [INF] ← GET /api/notifications 200 | 30ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 13:03:03.275 [INF] → GET /api/bottles/marketplace?sort=newest | IP ::1
+2026-06-25 13:03:03.282 [INF] → GET /api/notifications | IP ::1
+2026-06-25 13:03:03.374 [INF] ← GET /api/notifications 200 | 92ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 13:03:03.437 [INF] ← GET /api/bottles/marketplace 200 | 161ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 13:03:05.041 [INF] → GET /api/wishlist/all | IP ::1
+2026-06-25 13:03:05.054 [INF] ← GET /api/wishlist/all 200 | 13ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 13:03:14.334 [INF] → POST /api/auth/logout | IP ::1
+2026-06-25 13:03:14.351 [WRN] ← POST /api/auth/logout 401 | 16ms | user:anonymous
+2026-06-25 13:03:20.917 [INF] → POST /api/auth/login | IP ::1
+2026-06-25 13:03:21.239 [INF] ← POST /api/auth/login 200 | 321ms | user:anonymous
+2026-06-25 13:03:21.280 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-25 13:03:21.280 [INF] → GET /api/notifications | IP ::1
+2026-06-25 13:03:21.298 [INF] ← GET /api/notifications 200 | 18ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-25 13:03:21.518 [INF] ← GET /api/feed 200 | 238ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-25 13:03:23.922 [INF] → GET /api/bottles/marketplace?sort=newest | IP ::1
+2026-06-25 13:03:23.936 [INF] ← GET /api/bottles/marketplace 200 | 13ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-25 13:03:27.005 [INF] → GET /api/wishlist/all | IP ::1
+2026-06-25 13:03:27.019 [INF] ← GET /api/wishlist/all 200 | 14ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-25 13:03:53.946 [INF] → GET /api/notifications | IP ::1
+2026-06-25 13:03:53.973 [INF] ← GET /api/notifications 200 | 27ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-25 13:09:13.065 [INF] → POST /api/auth/login | IP ::1
+2026-06-25 13:09:13.801 [INF] ← POST /api/auth/login 200 | 745ms | user:anonymous
+2026-06-25 13:09:13.854 [INF] → GET /api/notifications | IP ::1
+2026-06-25 13:09:13.854 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-25 13:09:14.266 [INF] ← GET /api/notifications 200 | 412ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 13:09:14.867 [INF] ← GET /api/feed 200 | 1013ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 13:09:18.400 [INF] → GET /api/bottles/marketplace?sort=newest | IP ::1
+2026-06-25 13:09:18.494 [WRN] Compiling a query which loads related collections for more than one collection navigation, either via 'Include' or through projection, but no 'QuerySplittingBehavior' has been configured. By default, Entity Framework will use 'QuerySplittingBehavior.SingleQuery', which can potentially result in slow query performance. See https://go.microsoft.com/fwlink/?linkid=2134277 for more information. To identify the query that's triggering this warning call 'ConfigureWarnings(w => w.Throw(RelationalEventId.MultipleCollectionIncludeWarning))'.
+2026-06-25 13:09:18.797 [INF] ← GET /api/bottles/marketplace 200 | 397ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 13:09:20.395 [INF] → GET /api/bottles/5050fe05-760d-4578-8c9b-2bf14cacd7be/comments | IP ::1
+2026-06-25 13:09:20.476 [INF] ← GET /api/bottles/5050fe05-760d-4578-8c9b-2bf14cacd7be/comments 200 | 80ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 13:09:36.875 [INF] → GET /api/wishlist/all | IP ::1
+2026-06-25 13:09:36.935 [INF] ← GET /api/wishlist/all 200 | 59ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 13:09:48.410 [INF] → GET /api/notifications | IP ::1
+2026-06-25 13:09:48.432 [INF] ← GET /api/notifications 200 | 21ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 13:10:27.963 [INF] → GET /api/notifications | IP ::1
+2026-06-25 13:10:27.964 [INF] → GET /api/wishlist/all | IP ::1
+2026-06-25 13:10:28.027 [INF] ← GET /api/wishlist/all 200 | 62ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 13:10:28.080 [INF] ← GET /api/notifications 200 | 116ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 13:10:58.578 [INF] → GET /api/notifications | IP ::1
+2026-06-25 13:10:58.579 [INF] → GET /api/wishlist/all | IP ::1
+2026-06-25 13:10:58.643 [INF] ← GET /api/notifications 200 | 93ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 13:10:58.655 [INF] ← GET /api/wishlist/all 200 | 76ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 13:11:28.732 [INF] → GET /api/notifications | IP ::1
+2026-06-25 13:11:28.748 [INF] ← GET /api/notifications 200 | 19ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 13:11:58.766 [INF] → GET /api/notifications | IP ::1
+2026-06-25 13:11:58.797 [INF] ← GET /api/notifications 200 | 30ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 13:12:08.586 [INF] → GET /api/notifications | IP ::1
+2026-06-25 13:12:08.613 [INF] → GET /api/bottles/marketplace?sort=newest | IP ::1
+2026-06-25 13:12:08.629 [INF] ← GET /api/notifications 200 | 46ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 13:12:08.654 [INF] ← GET /api/bottles/marketplace 200 | 41ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 13:12:09.731 [INF] → GET /api/notifications | IP ::1
+2026-06-25 13:12:09.731 [INF] → GET /api/bottles/marketplace?sort=newest | IP ::1
+2026-06-25 13:12:09.739 [INF] ← GET /api/notifications 200 | 8ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 13:12:09.746 [INF] ← GET /api/bottles/marketplace 200 | 14ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 13:12:39.767 [INF] → GET /api/notifications | IP ::1
+2026-06-25 13:12:39.789 [INF] ← GET /api/notifications 200 | 21ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 13:12:53.385 [INF] → GET /api/bottles/marketplace?sort=newest | IP ::1
+2026-06-25 13:12:53.466 [INF] ← GET /api/bottles/marketplace 200 | 81ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 13:13:09.803 [INF] → GET /api/notifications | IP ::1
+2026-06-25 13:13:09.809 [INF] ← GET /api/notifications 200 | 6ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 13:13:39.851 [INF] → GET /api/notifications | IP ::1
+2026-06-25 13:13:39.901 [INF] ← GET /api/notifications 200 | 50ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 13:14:09.923 [INF] → GET /api/notifications | IP ::1
+2026-06-25 13:14:09.950 [INF] ← GET /api/notifications 200 | 29ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 13:14:40.004 [INF] → GET /api/notifications | IP ::1
+2026-06-25 13:14:40.016 [INF] ← GET /api/notifications 200 | 13ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 13:15:10.037 [INF] → GET /api/notifications | IP ::1
+2026-06-25 13:15:10.064 [INF] ← GET /api/notifications 200 | 27ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 13:15:40.099 [INF] → GET /api/notifications | IP ::1
+2026-06-25 13:15:40.151 [INF] ← GET /api/notifications 200 | 16ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 13:16:10.179 [INF] → GET /api/notifications | IP ::1
+2026-06-25 13:16:10.215 [INF] ← GET /api/notifications 200 | 36ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 13:16:40.291 [INF] → GET /api/notifications | IP ::1
+2026-06-25 13:16:40.308 [INF] ← GET /api/notifications 200 | 16ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 13:17:10.349 [INF] → GET /api/notifications | IP ::1
+2026-06-25 13:17:10.382 [INF] ← GET /api/notifications 200 | 32ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 13:17:16.396 [INF] → GET /api/bottles/marketplace?sort=newest | IP ::1
+2026-06-25 13:17:16.429 [INF] ← GET /api/bottles/marketplace 200 | 32ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 13:17:40.425 [INF] → GET /api/notifications | IP ::1
+2026-06-25 13:17:40.451 [INF] ← GET /api/notifications 200 | 26ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 13:18:10.508 [INF] → GET /api/notifications | IP ::1
+2026-06-25 13:18:10.534 [INF] ← GET /api/notifications 200 | 26ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 13:18:40.609 [INF] → GET /api/notifications | IP ::1
+2026-06-25 13:18:40.645 [INF] ← GET /api/notifications 200 | 35ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 13:19:10.682 [INF] → GET /api/notifications | IP ::1
+2026-06-25 13:19:10.707 [INF] ← GET /api/notifications 200 | 24ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 13:19:40.746 [INF] → GET /api/notifications | IP ::1
+2026-06-25 13:19:40.771 [INF] ← GET /api/notifications 200 | 24ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 13:20:10.814 [INF] → GET /api/notifications | IP ::1
+2026-06-25 13:20:10.836 [INF] ← GET /api/notifications 200 | 21ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 13:20:24.104 [INF] → GET /api/bottles/marketplace?sort=newest | IP ::1
+2026-06-25 13:20:24.113 [INF] → GET /api/notifications | IP ::1
+2026-06-25 13:20:24.156 [INF] ← GET /api/bottles/marketplace 200 | 52ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 13:20:24.158 [INF] ← GET /api/notifications 200 | 45ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 13:20:25.204 [INF] → GET /api/notifications | IP ::1
+2026-06-25 13:20:25.261 [INF] → GET /api/bottles/marketplace?sort=newest | IP ::1
+2026-06-25 13:20:25.279 [INF] ← GET /api/notifications 200 | 74ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 13:20:25.279 [INF] ← GET /api/bottles/marketplace 200 | 18ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 13:20:55.298 [INF] → GET /api/notifications | IP ::1
+2026-06-25 13:20:55.308 [INF] ← GET /api/notifications 200 | 9ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 13:21:25.338 [INF] → GET /api/notifications | IP ::1
+2026-06-25 13:21:25.366 [INF] ← GET /api/notifications 200 | 27ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 13:21:48.859 [INF] → GET /api/bottles/marketplace?sort=newest | IP ::1
+2026-06-25 13:21:48.859 [INF] → GET /api/notifications | IP ::1
+2026-06-25 13:21:48.898 [INF] ← GET /api/notifications 200 | 39ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 13:21:48.977 [INF] ← GET /api/bottles/marketplace 200 | 118ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 13:21:50.224 [INF] → GET /api/wishlist/all | IP ::1
+2026-06-25 13:21:50.241 [INF] ← GET /api/wishlist/all 200 | 17ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 13:22:18.924 [INF] → GET /api/notifications | IP ::1
+2026-06-25 13:22:18.944 [INF] ← GET /api/notifications 200 | 19ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 13:22:26.211 [INF] → POST /api/auth/logout | IP ::1
+2026-06-25 13:22:26.224 [WRN] ← POST /api/auth/logout 401 | 12ms | user:anonymous
+2026-06-25 13:22:31.378 [INF] → POST /api/auth/login | IP ::1
+2026-06-25 13:22:31.577 [INF] ← POST /api/auth/login 200 | 199ms | user:anonymous
+2026-06-25 13:22:31.624 [INF] → GET /api/notifications | IP ::1
+2026-06-25 13:22:31.624 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-25 13:22:31.650 [INF] ← GET /api/notifications 200 | 26ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-25 13:22:31.724 [INF] ← GET /api/feed 200 | 100ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-25 13:22:34.483 [INF] → GET /api/bottles/marketplace?sort=newest | IP ::1
+2026-06-25 13:22:34.517 [INF] ← GET /api/bottles/marketplace 200 | 33ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-25 13:22:38.648 [INF] → GET /api/wishlist/all | IP ::1
+2026-06-25 13:22:38.664 [INF] ← GET /api/wishlist/all 200 | 15ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-25 15:07:25.843 [INF] → GET /api/notifications | IP ::1
+2026-06-25 15:07:25.843 [INF] → GET /api/bottles/marketplace?sort=newest | IP ::1
+2026-06-25 15:07:26.434 [WRN] Compiling a query which loads related collections for more than one collection navigation, either via 'Include' or through projection, but no 'QuerySplittingBehavior' has been configured. By default, Entity Framework will use 'QuerySplittingBehavior.SingleQuery', which can potentially result in slow query performance. See https://go.microsoft.com/fwlink/?linkid=2134277 for more information. To identify the query that's triggering this warning call 'ConfigureWarnings(w => w.Throw(RelationalEventId.MultipleCollectionIncludeWarning))'.
+2026-06-25 15:07:26.482 [INF] ← GET /api/notifications 200 | 649ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-25 15:07:26.720 [INF] ← GET /api/bottles/marketplace 200 | 887ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-25 15:10:06.006 [INF] → GET /api/notifications | IP ::1
+2026-06-25 15:10:06.006 [INF] → GET /api/bottles/marketplace?sort=newest | IP ::1
+2026-06-25 15:10:06.205 [INF] ← GET /api/bottles/marketplace 200 | 198ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-25 15:10:06.216 [INF] ← GET /api/notifications 200 | 210ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-25 15:10:46.087 [INF] → GET /api/bottles/marketplace?sort=newest | IP ::1
+2026-06-25 15:10:46.088 [INF] → GET /api/notifications | IP ::1
+2026-06-25 15:10:46.122 [INF] ← GET /api/notifications 200 | 34ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-25 15:10:46.138 [INF] ← GET /api/bottles/marketplace 200 | 81ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-25 15:10:49.560 [INF] → GET /api/wishlist/all | IP ::1
+2026-06-25 15:10:49.639 [INF] ← GET /api/wishlist/all 200 | 79ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-25 15:10:52.022 [INF] → GET /api/distilleries | IP ::1
+2026-06-25 15:10:52.148 [INF] ← GET /api/distilleries 200 | 126ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-25 15:10:57.919 [INF] → GET /api/distilleries?category=Whisky | IP ::1
+2026-06-25 15:10:58.021 [INF] ← GET /api/distilleries 200 | 101ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-25 15:11:16.143 [INF] → GET /api/notifications | IP ::1
+2026-06-25 15:11:16.150 [INF] ← GET /api/notifications 200 | 7ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-25 15:11:28.782 [INF] → GET /api/users | IP ::1
+2026-06-25 15:11:28.836 [INF] ← GET /api/users 200 | 53ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-25 15:11:30.424 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-25 15:11:30.569 [INF] ← GET /api/feed 200 | 144ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-25 15:11:33.928 [INF] → GET /api/bottles?userId=8bce4454-3ef5-449c-0257-08dece31259c | IP ::1
+2026-06-25 15:11:33.962 [WRN] Compiling a query which loads related collections for more than one collection navigation, either via 'Include' or through projection, but no 'QuerySplittingBehavior' has been configured. By default, Entity Framework will use 'QuerySplittingBehavior.SingleQuery', which can potentially result in slow query performance. See https://go.microsoft.com/fwlink/?linkid=2134277 for more information. To identify the query that's triggering this warning call 'ConfigureWarnings(w => w.Throw(RelationalEventId.MultipleCollectionIncludeWarning))'.
+2026-06-25 15:11:34.048 [INF] ← GET /api/bottles 200 | 120ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-25 15:11:47.414 [INF] → GET /api/distilleries?category=Vodka | IP ::1
+2026-06-25 15:11:47.447 [INF] ← GET /api/distilleries 200 | 32ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-25 15:12:03.936 [INF] → GET /api/notifications | IP ::1
+2026-06-25 15:12:03.952 [INF] ← GET /api/notifications 200 | 16ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-25 15:31:00.679 [INF] → GET /api/bottles?userId=8bce4454-3ef5-449c-0257-08dece31259c | IP ::1
+2026-06-25 15:31:00.679 [INF] → GET /api/notifications | IP ::1
+2026-06-25 15:31:00.679 [INF] → GET /api/distilleries?category=Vodka | IP ::1
+2026-06-25 15:31:01.402 [WRN] Compiling a query which loads related collections for more than one collection navigation, either via 'Include' or through projection, but no 'QuerySplittingBehavior' has been configured. By default, Entity Framework will use 'QuerySplittingBehavior.SingleQuery', which can potentially result in slow query performance. See https://go.microsoft.com/fwlink/?linkid=2134277 for more information. To identify the query that's triggering this warning call 'ConfigureWarnings(w => w.Throw(RelationalEventId.MultipleCollectionIncludeWarning))'.
+2026-06-25 15:31:01.477 [INF] ← GET /api/notifications 200 | 808ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-25 15:31:01.616 [INF] ← GET /api/distilleries 200 | 948ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-25 15:31:01.779 [INF] ← GET /api/bottles 200 | 1110ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-25 15:31:08.314 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-25 15:31:08.596 [INF] ← GET /api/feed 200 | 282ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-25 15:31:17.477 [INF] → POST /api/auth/logout | IP ::1
+2026-06-25 15:31:17.494 [WRN] ← POST /api/auth/logout 401 | 16ms | user:anonymous
+2026-06-25 15:31:25.449 [INF] → POST /api/auth/login | IP ::1
+2026-06-25 15:31:25.753 [INF] ← POST /api/auth/login 200 | 304ms | user:anonymous
+2026-06-25 15:31:25.802 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-25 15:31:25.802 [INF] → GET /api/notifications | IP ::1
+2026-06-25 15:31:25.837 [INF] ← GET /api/notifications 200 | 35ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 15:31:26.123 [INF] ← GET /api/feed 200 | 320ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 15:32:35.057 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-25 15:32:35.059 [INF] → GET /api/notifications | IP ::1
+2026-06-25 15:32:35.156 [INF] ← GET /api/notifications 200 | 97ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 15:32:35.248 [INF] ← GET /api/feed 200 | 190ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 16:28:45.651 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-25 16:28:45.651 [INF] → GET /api/notifications | IP ::1
+2026-06-25 16:28:46.463 [INF] ← GET /api/notifications 200 | 865ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 16:28:46.978 [INF] ← GET /api/feed 200 | 1382ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 16:28:48.352 [INF] → GET /api/notifications | IP ::1
+2026-06-25 16:28:48.352 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-25 16:28:48.611 [INF] ← GET /api/notifications 200 | 259ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 16:28:48.614 [INF] ← GET /api/feed 200 | 261ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 16:28:58.992 [INF] → GET /api/bottles?userId=8bce4454-3ef5-449c-0257-08dece31259c | IP ::1
+2026-06-25 16:28:58.993 [INF] → GET /api/users/8bce4454-3ef5-449c-0257-08dece31259c | IP ::1
+2026-06-25 16:28:59.084 [INF] ← GET /api/users/8bce4454-3ef5-449c-0257-08dece31259c 200 | 90ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 16:28:59.084 [WRN] Compiling a query which loads related collections for more than one collection navigation, either via 'Include' or through projection, but no 'QuerySplittingBehavior' has been configured. By default, Entity Framework will use 'QuerySplittingBehavior.SingleQuery', which can potentially result in slow query performance. See https://go.microsoft.com/fwlink/?linkid=2134277 for more information. To identify the query that's triggering this warning call 'ConfigureWarnings(w => w.Throw(RelationalEventId.MultipleCollectionIncludeWarning))'.
+2026-06-25 16:28:59.399 [INF] ← GET /api/bottles 200 | 407ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 16:29:02.868 [INF] → GET /api/bottles/5050fe05-760d-4578-8c9b-2bf14cacd7be/comments | IP ::1
+2026-06-25 16:29:02.948 [INF] ← GET /api/bottles/5050fe05-760d-4578-8c9b-2bf14cacd7be/comments 200 | 80ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 16:29:18.711 [INF] → GET /api/notifications | IP ::1
+2026-06-25 16:29:18.723 [INF] ← GET /api/notifications 200 | 12ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 16:29:20.759 [INF] → GET /api/bottles/4b0115d1-8079-4b84-9538-bf5a46d4b907/comments | IP ::1
+2026-06-25 16:29:20.769 [INF] ← GET /api/bottles/4b0115d1-8079-4b84-9538-bf5a46d4b907/comments 200 | 10ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 16:29:25.606 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-25 16:29:25.631 [INF] ← GET /api/feed 200 | 25ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 16:29:26.480 [INF] → GET /api/bottles/marketplace?sort=newest | IP ::1
+2026-06-25 16:29:26.542 [WRN] Compiling a query which loads related collections for more than one collection navigation, either via 'Include' or through projection, but no 'QuerySplittingBehavior' has been configured. By default, Entity Framework will use 'QuerySplittingBehavior.SingleQuery', which can potentially result in slow query performance. See https://go.microsoft.com/fwlink/?linkid=2134277 for more information. To identify the query that's triggering this warning call 'ConfigureWarnings(w => w.Throw(RelationalEventId.MultipleCollectionIncludeWarning))'.
+2026-06-25 16:29:26.649 [INF] ← GET /api/bottles/marketplace 200 | 169ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 16:29:35.841 [INF] → GET /api/bottles?userId=8bce4454-3ef5-449c-0257-08dece31259c | IP ::1
+2026-06-25 16:29:35.841 [INF] → GET /api/users/8bce4454-3ef5-449c-0257-08dece31259c | IP ::1
+2026-06-25 16:29:35.910 [INF] ← GET /api/users/8bce4454-3ef5-449c-0257-08dece31259c 200 | 68ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 16:29:35.920 [INF] ← GET /api/bottles 200 | 78ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 16:29:46.729 [INF] → GET /api/bottles?userId=f755f1be-cd7b-4d85-f377-08decf9e98b5 | IP ::1
+2026-06-25 16:29:46.740 [INF] ← GET /api/bottles 200 | 10ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 16:29:52.513 [INF] → GET /api/notifications | IP ::1
+2026-06-25 16:29:52.532 [INF] ← GET /api/notifications 200 | 19ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 16:29:53.917 [INF] → GET /api/wishlist/all | IP ::1
+2026-06-25 16:29:53.977 [INF] ← GET /api/wishlist/all 200 | 60ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 16:29:58.708 [INF] → POST /api/auth/logout | IP ::1
+2026-06-25 16:29:58.718 [WRN] ← POST /api/auth/logout 401 | 10ms | user:anonymous
+2026-06-25 16:30:06.557 [INF] → POST /api/auth/login | IP ::1
+2026-06-25 16:30:06.849 [INF] ← POST /api/auth/login 200 | 291ms | user:anonymous
+2026-06-25 16:30:06.893 [INF] → GET /api/notifications | IP ::1
+2026-06-25 16:30:06.893 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-25 16:30:06.906 [INF] ← GET /api/notifications 200 | 13ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-25 16:30:06.920 [INF] ← GET /api/feed 200 | 26ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-25 16:30:15.283 [INF] → GET /api/bottles/marketplace?sort=newest | IP ::1
+2026-06-25 16:30:15.318 [INF] ← GET /api/bottles/marketplace 200 | 34ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-25 16:30:21.827 [INF] → GET /api/bottles?userId=8bce4454-3ef5-449c-0257-08dece31259c | IP ::1
+2026-06-25 16:30:21.836 [INF] ← GET /api/bottles 200 | 9ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-25 16:30:23.062 [INF] → GET /api/bottles/4b0115d1-8079-4b84-9538-bf5a46d4b907/comments | IP ::1
+2026-06-25 16:30:23.088 [INF] ← GET /api/bottles/4b0115d1-8079-4b84-9538-bf5a46d4b907/comments 200 | 25ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-25 16:30:27.884 [INF] → GET /api/bottles/5050fe05-760d-4578-8c9b-2bf14cacd7be/comments | IP ::1
+2026-06-25 16:30:27.895 [INF] ← GET /api/bottles/5050fe05-760d-4578-8c9b-2bf14cacd7be/comments 200 | 10ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-25 16:30:33.105 [INF] → POST /api/bottles/4b0115d1-8079-4b84-9538-bf5a46d4b907/unlist | IP ::1
+2026-06-25 16:30:33.369 [INF] ← POST /api/bottles/4b0115d1-8079-4b84-9538-bf5a46d4b907/unlist 200 | 264ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-25 16:30:33.387 [INF] → GET /api/bottles?userId=8bce4454-3ef5-449c-0257-08dece31259c | IP ::1
+2026-06-25 16:30:33.399 [INF] ← GET /api/bottles 200 | 11ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-25 16:30:37.524 [INF] → POST /api/auth/logout | IP ::1
+2026-06-25 16:30:37.529 [WRN] ← POST /api/auth/logout 401 | 5ms | user:anonymous
+2026-06-25 16:30:44.868 [INF] → POST /api/auth/login | IP ::1
+2026-06-25 16:30:45.035 [INF] ← POST /api/auth/login 200 | 167ms | user:anonymous
+2026-06-25 16:30:45.071 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-25 16:30:45.072 [INF] → GET /api/notifications | IP ::1
+2026-06-25 16:30:45.105 [INF] ← GET /api/notifications 200 | 33ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 16:30:45.195 [INF] ← GET /api/feed 200 | 123ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 16:30:54.564 [INF] → GET /api/users/8bce4454-3ef5-449c-0257-08dece31259c | IP ::1
+2026-06-25 16:30:54.564 [INF] → GET /api/bottles?userId=8bce4454-3ef5-449c-0257-08dece31259c | IP ::1
+2026-06-25 16:30:54.616 [INF] ← GET /api/users/8bce4454-3ef5-449c-0257-08dece31259c 200 | 51ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 16:30:54.617 [INF] ← GET /api/bottles 200 | 52ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 16:30:56.131 [INF] → GET /api/bottles/4b0115d1-8079-4b84-9538-bf5a46d4b907/comments | IP ::1
+2026-06-25 16:30:56.152 [INF] ← GET /api/bottles/4b0115d1-8079-4b84-9538-bf5a46d4b907/comments 200 | 21ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 16:31:10.792 [INF] → POST /api/offers | IP ::1
+2026-06-25 16:31:11.189 [INF] ← POST /api/offers 200 | 396ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 16:31:24.569 [INF] → GET /api/notifications | IP ::1
+2026-06-25 16:31:24.574 [INF] ← GET /api/notifications 200 | 5ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 16:31:25.788 [INF] → GET /api/bottles/marketplace?sort=newest | IP ::1
+2026-06-25 16:31:25.830 [INF] ← GET /api/bottles/marketplace 200 | 41ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 16:31:27.433 [INF] → GET /api/wishlist/all | IP ::1
+2026-06-25 16:31:27.453 [INF] ← GET /api/wishlist/all 200 | 20ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 16:31:31.095 [INF] → POST /api/auth/logout | IP ::1
+2026-06-25 16:31:31.100 [WRN] ← POST /api/auth/logout 401 | 4ms | user:anonymous
+2026-06-25 16:31:37.996 [INF] → POST /api/auth/login | IP ::1
+2026-06-25 16:31:38.162 [INF] ← POST /api/auth/login 200 | 166ms | user:anonymous
+2026-06-25 16:31:38.196 [INF] → GET /api/notifications | IP ::1
+2026-06-25 16:31:38.197 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-25 16:31:38.218 [INF] ← GET /api/notifications 200 | 21ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-25 16:31:38.229 [INF] ← GET /api/feed 200 | 32ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-25 16:31:42.579 [INF] → POST /api/notifications/65d52d29-f27b-49a0-acf7-a11402af3976/read | IP ::1
+2026-06-25 16:31:42.604 [INF] → GET /api/offers/received | IP ::1
+2026-06-25 16:31:42.675 [INF] ← POST /api/notifications/65d52d29-f27b-49a0-acf7-a11402af3976/read 200 | 96ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-25 16:31:42.690 [INF] → GET /api/notifications | IP ::1
+2026-06-25 16:31:42.698 [INF] ← GET /api/offers/received 200 | 94ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-25 16:31:42.706 [INF] ← GET /api/notifications 200 | 16ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-25 16:32:03.384 [INF] → GET /api/bottles/marketplace?sort=newest | IP ::1
+2026-06-25 16:32:03.421 [INF] ← GET /api/bottles/marketplace 200 | 36ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-25 16:32:04.399 [INF] → GET /api/wishlist/all | IP ::1
+2026-06-25 16:32:04.416 [INF] ← GET /api/wishlist/all 200 | 17ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-25 16:43:14.248 [INF] → POST /api/auth/login | IP ::1
+2026-06-25 16:43:14.955 [INF] ← POST /api/auth/login 200 | 717ms | user:anonymous
+2026-06-25 16:43:15.018 [INF] → GET /api/notifications | IP ::1
+2026-06-25 16:43:15.018 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-25 16:43:15.402 [INF] ← GET /api/notifications 200 | 384ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-25 16:43:15.673 [INF] ← GET /api/feed 200 | 655ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-25 16:43:17.648 [INF] → GET /api/bottles/marketplace?sort=newest | IP ::1
+2026-06-25 16:43:17.760 [WRN] Compiling a query which loads related collections for more than one collection navigation, either via 'Include' or through projection, but no 'QuerySplittingBehavior' has been configured. By default, Entity Framework will use 'QuerySplittingBehavior.SingleQuery', which can potentially result in slow query performance. See https://go.microsoft.com/fwlink/?linkid=2134277 for more information. To identify the query that's triggering this warning call 'ConfigureWarnings(w => w.Throw(RelationalEventId.MultipleCollectionIncludeWarning))'.
+2026-06-25 16:43:18.154 [INF] ← GET /api/bottles/marketplace 200 | 506ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-25 16:43:18.901 [INF] → GET /api/wishlist/all | IP ::1
+2026-06-25 16:43:18.994 [INF] ← GET /api/wishlist/all 200 | 93ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-25 16:43:37.776 [INF] → POST /api/messages | IP ::1
+2026-06-25 16:43:38.248 [INF] ← POST /api/messages 201 | 471ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-25 16:43:38.297 [INF] → GET /api/messages | IP ::1
+2026-06-25 16:43:38.517 [INF] ← GET /api/messages 200 | 219ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-25 16:43:41.921 [INF] → GET /api/messages/f755f1be-cd7b-4d85-f377-08decf9e98b5 | IP ::1
+2026-06-25 16:43:41.968 [INF] ← GET /api/messages/f755f1be-cd7b-4d85-f377-08decf9e98b5 200 | 47ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-25 16:44:12.549 [INF] → GET /api/messages | IP ::1
+2026-06-25 16:44:12.549 [INF] → GET /api/notifications | IP ::1
+2026-06-25 16:44:12.570 [INF] → GET /api/messages/f755f1be-cd7b-4d85-f377-08decf9e98b5 | IP ::1
+2026-06-25 16:44:12.700 [INF] ← GET /api/messages 200 | 151ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-25 16:44:12.701 [INF] ← GET /api/notifications 200 | 151ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-25 16:44:12.709 [INF] ← GET /api/messages/f755f1be-cd7b-4d85-f377-08decf9e98b5 200 | 139ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-25 16:44:14.369 [INF] → POST /api/auth/logout | IP ::1
+2026-06-25 16:44:14.386 [WRN] ← POST /api/auth/logout 401 | 16ms | user:anonymous
+2026-06-25 16:44:19.422 [INF] → POST /api/auth/login | IP ::1
+2026-06-25 16:44:19.583 [INF] ← POST /api/auth/login 200 | 161ms | user:anonymous
+2026-06-25 16:44:19.641 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-25 16:44:19.641 [INF] → GET /api/notifications | IP ::1
+2026-06-25 16:44:19.653 [INF] ← GET /api/notifications 200 | 11ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 16:44:19.809 [INF] ← GET /api/feed 200 | 168ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 16:44:23.281 [INF] → POST /api/notifications/5816f19f-970f-41dc-a7f1-70b4b7ba87cd/read | IP ::1
+2026-06-25 16:44:23.312 [INF] → GET /api/messages | IP ::1
+2026-06-25 16:44:23.333 [INF] → GET /api/messages/8bce4454-3ef5-449c-0257-08dece31259c | IP ::1
+2026-06-25 16:44:23.341 [INF] ← GET /api/messages 200 | 29ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 16:44:23.348 [INF] ← GET /api/messages/8bce4454-3ef5-449c-0257-08dece31259c 200 | 14ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 16:44:23.383 [INF] → POST /api/messages/4859f3f5-dff0-4efb-b924-e1db690f2caa/read | IP ::1
+2026-06-25 16:44:23.397 [INF] ← POST /api/notifications/5816f19f-970f-41dc-a7f1-70b4b7ba87cd/read 200 | 115ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 16:44:23.412 [INF] → GET /api/notifications | IP ::1
+2026-06-25 16:44:23.424 [INF] ← GET /api/notifications 200 | 11ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 16:44:23.431 [INF] ← POST /api/messages/4859f3f5-dff0-4efb-b924-e1db690f2caa/read 200 | 47ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 16:44:23.446 [INF] → GET /api/messages | IP ::1
+2026-06-25 16:44:23.458 [INF] ← GET /api/messages 200 | 11ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 16:44:53.523 [INF] → GET /api/notifications | IP ::1
+2026-06-25 16:44:53.573 [INF] ← GET /api/notifications 200 | 79ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 16:49:05.837 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-25 16:49:05.839 [INF] → GET /api/notifications | IP ::1
+2026-06-25 16:49:05.950 [INF] ← GET /api/notifications 200 | 112ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 16:49:06.060 [INF] ← GET /api/feed 200 | 230ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 16:49:14.796 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-25 16:49:14.796 [INF] → GET /api/notifications | IP ::1
+2026-06-25 16:49:14.796 [INF] → GET /api/messages | IP ::1
+2026-06-25 16:49:14.811 [INF] ← GET /api/notifications 200 | 15ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 16:49:14.818 [INF] ← GET /api/feed 200 | 21ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 16:49:14.839 [INF] ← GET /api/messages 200 | 42ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 16:49:51.783 [INF] → GET /api/notifications | IP ::1
+2026-06-25 16:49:51.811 [INF] ← GET /api/notifications 200 | 27ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 16:51:28.541 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-25 16:51:28.541 [INF] → GET /api/messages | IP ::1
+2026-06-25 16:51:28.605 [INF] → GET /api/notifications | IP ::1
+2026-06-25 16:51:28.729 [INF] ← GET /api/notifications 200 | 155ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 16:51:28.766 [INF] ← GET /api/messages 200 | 224ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 16:51:28.855 [INF] ← GET /api/feed 200 | 314ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 16:51:31.898 [INF] → GET /api/messages/8bce4454-3ef5-449c-0257-08dece31259c | IP ::1
+2026-06-25 16:51:31.918 [INF] ← GET /api/messages/8bce4454-3ef5-449c-0257-08dece31259c 200 | 20ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 16:51:58.752 [INF] → GET /api/notifications | IP ::1
+2026-06-25 16:51:58.783 [INF] → GET /api/messages | IP ::1
+2026-06-25 16:51:58.854 [INF] ← GET /api/notifications 200 | 102ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 16:51:58.886 [INF] ← GET /api/messages 200 | 102ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 16:52:11.820 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-25 16:52:11.962 [INF] ← GET /api/feed 200 | 141ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 16:52:13.424 [INF] → GET /api/bottles/marketplace?sort=newest | IP ::1
+2026-06-25 16:52:13.468 [INF] ← GET /api/bottles/marketplace 200 | 43ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 16:52:14.294 [INF] → GET /api/wishlist/all | IP ::1
+2026-06-25 16:52:14.316 [INF] ← GET /api/wishlist/all 200 | 21ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 16:52:28.899 [INF] → GET /api/messages | IP ::1
+2026-06-25 16:52:28.909 [INF] ← GET /api/messages 200 | 9ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 16:52:56.037 [INF] → GET /api/notifications | IP ::1
+2026-06-25 16:52:56.053 [INF] ← GET /api/notifications 200 | 16ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 16:52:58.930 [INF] → GET /api/messages | IP ::1
+2026-06-25 16:52:58.970 [INF] ← GET /api/messages 200 | 40ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 16:53:26.075 [INF] → GET /api/notifications | IP ::1
+2026-06-25 16:53:26.093 [INF] ← GET /api/notifications 200 | 17ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 16:53:28.994 [INF] → GET /api/messages | IP ::1
+2026-06-25 16:53:29.004 [INF] ← GET /api/messages 200 | 9ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 16:53:56.116 [INF] → GET /api/notifications | IP ::1
+2026-06-25 16:53:56.133 [INF] ← GET /api/notifications 200 | 16ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 16:53:59.031 [INF] → GET /api/messages | IP ::1
+2026-06-25 16:53:59.062 [INF] ← GET /api/messages 200 | 31ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 16:54:26.168 [INF] → GET /api/notifications | IP ::1
+2026-06-25 16:54:26.188 [INF] ← GET /api/notifications 200 | 19ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 16:54:29.087 [INF] → GET /api/messages | IP ::1
+2026-06-25 16:54:29.095 [INF] ← GET /api/messages 200 | 8ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 16:54:56.208 [INF] → GET /api/notifications | IP ::1
+2026-06-25 16:54:56.235 [INF] ← GET /api/notifications 200 | 27ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 16:54:59.118 [INF] → GET /api/messages | IP ::1
+2026-06-25 16:54:59.150 [INF] ← GET /api/messages 200 | 32ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 16:55:26.272 [INF] → GET /api/notifications | IP ::1
+2026-06-25 16:55:26.297 [INF] ← GET /api/notifications 200 | 27ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 16:55:29.170 [INF] → GET /api/messages | IP ::1
+2026-06-25 16:55:29.177 [INF] ← GET /api/messages 200 | 7ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 16:55:56.326 [INF] → GET /api/notifications | IP ::1
+2026-06-25 16:55:56.351 [INF] ← GET /api/notifications 200 | 26ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 16:55:59.200 [INF] → GET /api/messages | IP ::1
+2026-06-25 16:55:59.252 [INF] ← GET /api/messages 200 | 52ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 16:56:26.374 [INF] → GET /api/notifications | IP ::1
+2026-06-25 16:56:26.398 [INF] ← GET /api/notifications 200 | 23ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 16:56:29.279 [INF] → GET /api/messages | IP ::1
+2026-06-25 16:56:29.288 [INF] ← GET /api/messages 200 | 9ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 16:56:56.417 [INF] → GET /api/notifications | IP ::1
+2026-06-25 16:56:56.434 [INF] ← GET /api/notifications 200 | 17ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 16:56:59.310 [INF] → GET /api/messages | IP ::1
+2026-06-25 16:56:59.317 [INF] ← GET /api/messages 200 | 6ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 16:57:26.461 [INF] → GET /api/notifications | IP ::1
+2026-06-25 16:57:26.514 [INF] ← GET /api/notifications 200 | 52ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 16:57:29.335 [INF] → GET /api/messages | IP ::1
+2026-06-25 16:57:29.364 [INF] ← GET /api/messages 200 | 29ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 16:57:56.539 [INF] → GET /api/notifications | IP ::1
+2026-06-25 16:57:56.547 [INF] ← GET /api/notifications 200 | 7ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 16:57:59.394 [INF] → GET /api/messages | IP ::1
+2026-06-25 16:57:59.402 [INF] ← GET /api/messages 200 | 8ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 16:58:26.576 [INF] → GET /api/notifications | IP ::1
+2026-06-25 16:58:26.603 [INF] ← GET /api/notifications 200 | 30ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 16:58:29.418 [INF] → GET /api/messages | IP ::1
+2026-06-25 16:58:29.448 [INF] ← GET /api/messages 200 | 30ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 16:58:56.637 [INF] → GET /api/notifications | IP ::1
+2026-06-25 16:58:56.656 [INF] ← GET /api/notifications 200 | 19ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 16:58:59.471 [INF] → GET /api/messages | IP ::1
+2026-06-25 16:58:59.478 [INF] ← GET /api/messages 200 | 7ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 16:59:26.730 [INF] → GET /api/notifications | IP ::1
+2026-06-25 16:59:26.748 [INF] ← GET /api/notifications 200 | 17ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 16:59:29.505 [INF] → GET /api/messages | IP ::1
+2026-06-25 16:59:29.532 [INF] ← GET /api/messages 200 | 27ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 16:59:56.776 [INF] → GET /api/notifications | IP ::1
+2026-06-25 16:59:56.793 [INF] ← GET /api/notifications 200 | 17ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 16:59:59.550 [INF] → GET /api/messages | IP ::1
+2026-06-25 16:59:59.558 [INF] ← GET /api/messages 200 | 7ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:00:26.833 [INF] → GET /api/notifications | IP ::1
+2026-06-25 17:00:26.865 [INF] ← GET /api/notifications 200 | 31ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:00:29.577 [INF] → GET /api/messages | IP ::1
+2026-06-25 17:00:29.611 [INF] ← GET /api/messages 200 | 33ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:00:56.890 [INF] → GET /api/notifications | IP ::1
+2026-06-25 17:00:56.910 [INF] ← GET /api/notifications 200 | 20ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:00:59.629 [INF] → GET /api/messages | IP ::1
+2026-06-25 17:00:59.634 [INF] ← GET /api/messages 200 | 5ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:01:26.941 [INF] → GET /api/notifications | IP ::1
+2026-06-25 17:01:26.970 [INF] ← GET /api/notifications 200 | 28ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:01:29.653 [INF] → GET /api/messages | IP ::1
+2026-06-25 17:01:29.686 [INF] ← GET /api/messages 200 | 32ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:01:56.985 [INF] → GET /api/notifications | IP ::1
+2026-06-25 17:01:57.010 [INF] ← GET /api/notifications 200 | 24ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:01:59.701 [INF] → GET /api/messages | IP ::1
+2026-06-25 17:01:59.729 [INF] ← GET /api/messages 200 | 27ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:02:27.033 [INF] → GET /api/notifications | IP ::1
+2026-06-25 17:02:27.051 [INF] ← GET /api/notifications 200 | 18ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:02:29.747 [INF] → GET /api/messages | IP ::1
+2026-06-25 17:02:29.755 [INF] ← GET /api/messages 200 | 8ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:02:57.075 [INF] → GET /api/notifications | IP ::1
+2026-06-25 17:02:57.094 [INF] ← GET /api/notifications 200 | 18ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:02:59.776 [INF] → GET /api/messages | IP ::1
+2026-06-25 17:02:59.809 [INF] ← GET /api/messages 200 | 32ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:03:27.115 [INF] → GET /api/notifications | IP ::1
+2026-06-25 17:03:27.169 [INF] ← GET /api/notifications 200 | 53ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:03:29.824 [INF] → GET /api/messages | IP ::1
+2026-06-25 17:03:29.845 [INF] ← GET /api/messages 200 | 21ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:04:53.251 [INF] → GET /api/notifications | IP ::1
+2026-06-25 17:04:53.251 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-25 17:04:53.290 [INF] → GET /api/messages | IP ::1
+2026-06-25 17:04:53.359 [INF] ← GET /api/notifications 200 | 108ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:04:53.438 [INF] ← GET /api/messages 200 | 148ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:04:53.533 [INF] ← GET /api/feed 200 | 282ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:05:23.437 [INF] → GET /api/notifications | IP ::1
+2026-06-25 17:05:23.448 [INF] ← GET /api/notifications 200 | 9ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:05:23.458 [INF] → GET /api/messages | IP ::1
+2026-06-25 17:05:23.484 [INF] ← GET /api/messages 200 | 26ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:05:53.478 [INF] → GET /api/notifications | IP ::1
+2026-06-25 17:05:53.554 [INF] → GET /api/messages | IP ::1
+2026-06-25 17:05:53.562 [INF] ← GET /api/notifications 200 | 83ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:05:53.603 [INF] ← GET /api/messages 200 | 49ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:06:23.587 [INF] → GET /api/notifications | IP ::1
+2026-06-25 17:06:23.611 [INF] ← GET /api/notifications 200 | 23ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:06:23.631 [INF] → GET /api/messages | IP ::1
+2026-06-25 17:06:23.662 [INF] ← GET /api/messages 200 | 30ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:06:53.645 [INF] → GET /api/notifications | IP ::1
+2026-06-25 17:06:53.665 [INF] ← GET /api/notifications 200 | 20ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:06:53.679 [INF] → GET /api/messages | IP ::1
+2026-06-25 17:06:53.696 [INF] ← GET /api/messages 200 | 17ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:07:23.687 [INF] → GET /api/notifications | IP ::1
+2026-06-25 17:07:23.718 [INF] ← GET /api/notifications 200 | 31ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:07:23.722 [INF] → GET /api/messages | IP ::1
+2026-06-25 17:07:23.779 [INF] ← GET /api/messages 200 | 57ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:07:53.747 [INF] → GET /api/notifications | IP ::1
+2026-06-25 17:07:53.768 [INF] ← GET /api/notifications 200 | 20ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:07:53.808 [INF] → GET /api/messages | IP ::1
+2026-06-25 17:07:53.820 [INF] ← GET /api/messages 200 | 12ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:08:23.785 [INF] → GET /api/notifications | IP ::1
+2026-06-25 17:08:23.822 [INF] ← GET /api/notifications 200 | 36ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:08:23.849 [INF] → GET /api/messages | IP ::1
+2026-06-25 17:08:23.890 [INF] ← GET /api/messages 200 | 41ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:08:53.867 [INF] → GET /api/notifications | IP ::1
+2026-06-25 17:08:53.891 [INF] ← GET /api/notifications 200 | 23ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:08:53.911 [INF] → GET /api/messages | IP ::1
+2026-06-25 17:08:53.921 [INF] ← GET /api/messages 200 | 10ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:09:23.930 [INF] → GET /api/notifications | IP ::1
+2026-06-25 17:09:23.947 [INF] → GET /api/messages | IP ::1
+2026-06-25 17:09:23.978 [INF] ← GET /api/notifications 200 | 47ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:09:24.002 [INF] ← GET /api/messages 200 | 54ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:09:53.990 [INF] → GET /api/notifications | IP ::1
+2026-06-25 17:09:54.000 [INF] ← GET /api/notifications 200 | 10ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:09:54.020 [INF] → GET /api/messages | IP ::1
+2026-06-25 17:09:54.028 [INF] ← GET /api/messages 200 | 8ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:10:24.018 [INF] → GET /api/notifications | IP ::1
+2026-06-25 17:10:24.050 [INF] ← GET /api/notifications 200 | 35ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:10:24.058 [INF] → GET /api/messages | IP ::1
+2026-06-25 17:10:24.089 [INF] ← GET /api/messages 200 | 30ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:10:54.072 [INF] → GET /api/notifications | IP ::1
+2026-06-25 17:10:54.092 [INF] ← GET /api/notifications 200 | 19ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:10:54.104 [INF] → GET /api/messages | IP ::1
+2026-06-25 17:10:54.118 [INF] ← GET /api/messages 200 | 14ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:11:24.111 [INF] → GET /api/notifications | IP ::1
+2026-06-25 17:11:24.159 [INF] → GET /api/messages | IP ::1
+2026-06-25 17:11:24.247 [INF] ← GET /api/notifications 200 | 136ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:11:24.271 [INF] ← GET /api/messages 200 | 112ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:11:54.265 [INF] → GET /api/notifications | IP ::1
+2026-06-25 17:11:54.275 [INF] ← GET /api/notifications 200 | 9ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:11:54.292 [INF] → GET /api/messages | IP ::1
+2026-06-25 17:11:54.301 [INF] ← GET /api/messages 200 | 8ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:12:24.300 [INF] → GET /api/notifications | IP ::1
+2026-06-25 17:12:24.318 [INF] → GET /api/messages | IP ::1
+2026-06-25 17:12:24.347 [INF] ← GET /api/notifications 200 | 47ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:12:24.367 [INF] ← GET /api/messages 200 | 48ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:12:54.371 [INF] → GET /api/notifications | IP ::1
+2026-06-25 17:12:54.399 [INF] → GET /api/messages | IP ::1
+2026-06-25 17:12:54.406 [INF] ← GET /api/notifications 200 | 34ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:12:54.436 [INF] ← GET /api/messages 200 | 36ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:13:24.434 [INF] → GET /api/notifications | IP ::1
+2026-06-25 17:13:24.441 [INF] ← GET /api/notifications 200 | 6ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:13:24.448 [INF] → GET /api/messages | IP ::1
+2026-06-25 17:13:24.463 [INF] ← GET /api/messages 200 | 15ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:13:54.468 [INF] → GET /api/notifications | IP ::1
+2026-06-25 17:13:54.473 [INF] → GET /api/messages | IP ::1
+2026-06-25 17:13:54.495 [INF] ← GET /api/notifications 200 | 26ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:13:54.504 [INF] ← GET /api/messages 200 | 30ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:14:24.514 [INF] → GET /api/notifications | IP ::1
+2026-06-25 17:14:24.529 [INF] → GET /api/messages | IP ::1
+2026-06-25 17:14:24.564 [INF] ← GET /api/notifications 200 | 50ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:14:24.567 [INF] ← GET /api/messages 200 | 38ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:14:54.577 [INF] → GET /api/notifications | IP ::1
+2026-06-25 17:14:54.606 [INF] ← GET /api/notifications 200 | 29ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:14:54.620 [INF] → GET /api/messages | IP ::1
+2026-06-25 17:14:54.650 [INF] ← GET /api/messages 200 | 30ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:15:24.633 [INF] → GET /api/notifications | IP ::1
+2026-06-25 17:15:24.641 [INF] ← GET /api/notifications 200 | 8ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:15:24.678 [INF] → GET /api/messages | IP ::1
+2026-06-25 17:15:24.685 [INF] ← GET /api/messages 200 | 6ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:15:54.656 [INF] → GET /api/notifications | IP ::1
+2026-06-25 17:15:54.688 [INF] ← GET /api/notifications 200 | 32ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:15:54.702 [INF] → GET /api/messages | IP ::1
+2026-06-25 17:15:54.736 [INF] ← GET /api/messages 200 | 33ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:16:24.718 [INF] → GET /api/notifications | IP ::1
+2026-06-25 17:16:24.724 [INF] ← GET /api/notifications 200 | 5ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:16:24.765 [INF] → GET /api/messages | IP ::1
+2026-06-25 17:16:24.786 [INF] ← GET /api/messages 200 | 20ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:16:54.750 [INF] → GET /api/notifications | IP ::1
+2026-06-25 17:16:54.781 [INF] ← GET /api/notifications 200 | 30ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:16:54.807 [INF] → GET /api/messages | IP ::1
+2026-06-25 17:16:54.837 [INF] ← GET /api/messages 200 | 29ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:17:24.805 [INF] → GET /api/notifications | IP ::1
+2026-06-25 17:17:24.825 [INF] ← GET /api/notifications 200 | 20ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:17:24.866 [INF] → GET /api/messages | IP ::1
+2026-06-25 17:17:24.873 [INF] ← GET /api/messages 200 | 6ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:17:54.853 [INF] → GET /api/notifications | IP ::1
+2026-06-25 17:17:54.885 [INF] ← GET /api/notifications 200 | 31ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:17:54.893 [INF] → GET /api/messages | IP ::1
+2026-06-25 17:17:54.930 [INF] ← GET /api/messages 200 | 36ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:18:24.906 [INF] → GET /api/notifications | IP ::1
+2026-06-25 17:18:24.939 [INF] ← GET /api/notifications 200 | 33ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:18:24.945 [INF] → GET /api/messages | IP ::1
+2026-06-25 17:18:24.979 [INF] ← GET /api/messages 200 | 33ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:18:54.956 [INF] → GET /api/notifications | IP ::1
+2026-06-25 17:18:54.975 [INF] ← GET /api/notifications 200 | 18ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:18:55.003 [INF] → GET /api/messages | IP ::1
+2026-06-25 17:18:55.009 [INF] ← GET /api/messages 200 | 6ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:19:24.994 [INF] → GET /api/notifications | IP ::1
+2026-06-25 17:19:25.031 [INF] → GET /api/messages | IP ::1
+2026-06-25 17:19:25.063 [INF] ← GET /api/notifications 200 | 68ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:19:25.133 [INF] ← GET /api/messages 200 | 102ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:19:55.113 [INF] → GET /api/notifications | IP ::1
+2026-06-25 17:19:55.132 [INF] ← GET /api/notifications 200 | 19ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:19:55.156 [INF] → GET /api/messages | IP ::1
+2026-06-25 17:19:55.165 [INF] ← GET /api/messages 200 | 9ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:20:25.157 [INF] → GET /api/notifications | IP ::1
+2026-06-25 17:20:25.193 [INF] → GET /api/messages | IP ::1
+2026-06-25 17:20:25.225 [INF] ← GET /api/notifications 200 | 68ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:20:25.243 [INF] ← GET /api/messages 200 | 49ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:20:55.249 [INF] → GET /api/notifications | IP ::1
+2026-06-25 17:20:55.255 [INF] ← GET /api/notifications 200 | 6ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:20:55.266 [INF] → GET /api/messages | IP ::1
+2026-06-25 17:20:55.288 [INF] ← GET /api/messages 200 | 21ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:21:25.291 [INF] → GET /api/notifications | IP ::1
+2026-06-25 17:21:25.309 [INF] → GET /api/messages | IP ::1
+2026-06-25 17:21:25.323 [INF] ← GET /api/notifications 200 | 38ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:21:25.344 [INF] ← GET /api/messages 200 | 35ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:21:55.350 [INF] → GET /api/notifications | IP ::1
+2026-06-25 17:21:55.365 [INF] → GET /api/messages | IP ::1
+2026-06-25 17:21:55.379 [INF] ← GET /api/notifications 200 | 29ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:21:55.381 [INF] ← GET /api/messages 200 | 16ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:22:25.403 [INF] → GET /api/notifications | IP ::1
+2026-06-25 17:22:25.409 [INF] → GET /api/messages | IP ::1
+2026-06-25 17:22:25.431 [INF] ← GET /api/notifications 200 | 27ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:22:25.455 [INF] ← GET /api/messages 200 | 45ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:22:55.452 [INF] → GET /api/notifications | IP ::1
+2026-06-25 17:22:55.457 [INF] ← GET /api/notifications 200 | 5ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:22:55.465 [INF] → GET /api/messages | IP ::1
+2026-06-25 17:22:55.484 [INF] ← GET /api/messages 200 | 19ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:23:25.474 [INF] → GET /api/notifications | IP ::1
+2026-06-25 17:23:25.503 [INF] ← GET /api/notifications 200 | 28ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:23:25.507 [INF] → GET /api/messages | IP ::1
+2026-06-25 17:23:25.552 [INF] ← GET /api/messages 200 | 44ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:23:55.532 [INF] → GET /api/notifications | IP ::1
+2026-06-25 17:23:55.570 [INF] ← GET /api/notifications 200 | 37ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:23:55.578 [INF] → GET /api/messages | IP ::1
+2026-06-25 17:23:55.611 [INF] ← GET /api/messages 200 | 32ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:24:25.589 [INF] → GET /api/notifications | IP ::1
+2026-06-25 17:24:25.611 [INF] ← GET /api/notifications 200 | 21ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:24:25.634 [INF] → GET /api/messages | IP ::1
+2026-06-25 17:24:25.640 [INF] ← GET /api/messages 200 | 6ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:24:55.642 [INF] → GET /api/notifications | IP ::1
+2026-06-25 17:24:55.658 [INF] → GET /api/messages | IP ::1
+2026-06-25 17:24:55.685 [INF] ← GET /api/notifications 200 | 43ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:24:55.703 [INF] ← GET /api/messages 200 | 44ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:25:25.713 [INF] → GET /api/notifications | IP ::1
+2026-06-25 17:25:25.729 [INF] ← GET /api/notifications 200 | 15ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:25:25.741 [INF] → GET /api/messages | IP ::1
+2026-06-25 17:25:25.766 [INF] ← GET /api/messages 200 | 24ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:25:55.751 [INF] → GET /api/notifications | IP ::1
+2026-06-25 17:25:55.776 [INF] ← GET /api/notifications 200 | 25ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:25:55.793 [INF] → GET /api/messages | IP ::1
+2026-06-25 17:25:55.828 [INF] ← GET /api/messages 200 | 35ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:26:25.806 [INF] → GET /api/notifications | IP ::1
+2026-06-25 17:26:25.824 [INF] ← GET /api/notifications 200 | 18ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:26:25.853 [INF] → GET /api/messages | IP ::1
+2026-06-25 17:26:25.860 [INF] ← GET /api/messages 200 | 7ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:26:55.855 [INF] → GET /api/notifications | IP ::1
+2026-06-25 17:26:55.873 [INF] ← GET /api/notifications 200 | 18ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:26:55.894 [INF] → GET /api/messages | IP ::1
+2026-06-25 17:26:55.925 [INF] ← GET /api/messages 200 | 30ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:27:25.897 [INF] → GET /api/notifications | IP ::1
+2026-06-25 17:27:25.946 [INF] → GET /api/messages | IP ::1
+2026-06-25 17:27:25.947 [INF] ← GET /api/notifications 200 | 49ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:27:25.953 [INF] ← GET /api/messages 200 | 7ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:27:55.977 [INF] → GET /api/notifications | IP ::1
+2026-06-25 17:27:55.978 [INF] → GET /api/messages | IP ::1
+2026-06-25 17:27:56.008 [INF] ← GET /api/notifications 200 | 30ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:27:56.026 [INF] ← GET /api/messages 200 | 48ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:28:26.031 [INF] → GET /api/notifications | IP ::1
+2026-06-25 17:28:26.045 [INF] → GET /api/messages | IP ::1
+2026-06-25 17:28:26.092 [INF] ← GET /api/notifications 200 | 61ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:28:26.099 [INF] ← GET /api/messages 200 | 54ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:28:56.113 [INF] → GET /api/messages | IP ::1
+2026-06-25 17:28:56.114 [INF] → GET /api/notifications | IP ::1
+2026-06-25 17:28:56.143 [INF] ← GET /api/notifications 200 | 29ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:28:56.162 [INF] ← GET /api/messages 200 | 48ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:29:26.166 [INF] → GET /api/notifications | IP ::1
+2026-06-25 17:29:26.239 [INF] → GET /api/messages | IP ::1
+2026-06-25 17:29:26.240 [INF] ← GET /api/notifications 200 | 74ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:29:26.269 [INF] ← GET /api/messages 200 | 29ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:29:56.260 [INF] → GET /api/notifications | IP ::1
+2026-06-25 17:29:56.278 [INF] ← GET /api/notifications 200 | 18ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:29:56.286 [INF] → GET /api/messages | IP ::1
+2026-06-25 17:29:56.295 [INF] ← GET /api/messages 200 | 9ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:30:26.293 [INF] → GET /api/notifications | IP ::1
+2026-06-25 17:30:26.311 [INF] → GET /api/messages | IP ::1
+2026-06-25 17:30:26.329 [INF] ← GET /api/notifications 200 | 35ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:30:26.358 [INF] ← GET /api/messages 200 | 47ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:30:56.358 [INF] → GET /api/notifications | IP ::1
+2026-06-25 17:30:56.376 [INF] ← GET /api/notifications 200 | 18ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:30:56.381 [INF] → GET /api/messages | IP ::1
+2026-06-25 17:30:56.403 [INF] ← GET /api/messages 200 | 21ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:31:26.404 [INF] → GET /api/notifications | IP ::1
+2026-06-25 17:31:26.420 [INF] → GET /api/messages | IP ::1
+2026-06-25 17:31:26.451 [INF] ← GET /api/notifications 200 | 46ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:31:26.470 [INF] ← GET /api/messages 200 | 50ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:31:56.467 [INF] → GET /api/notifications | IP ::1
+2026-06-25 17:31:56.485 [INF] ← GET /api/notifications 200 | 17ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:31:56.494 [INF] → GET /api/messages | IP ::1
+2026-06-25 17:31:56.500 [INF] ← GET /api/messages 200 | 6ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:32:26.505 [INF] → GET /api/notifications | IP ::1
+2026-06-25 17:32:26.533 [INF] → GET /api/messages | IP ::1
+2026-06-25 17:32:26.536 [INF] ← GET /api/notifications 200 | 31ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:32:26.564 [INF] ← GET /api/messages 200 | 30ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:32:56.569 [INF] → GET /api/notifications | IP ::1
+2026-06-25 17:32:56.592 [INF] → GET /api/messages | IP ::1
+2026-06-25 17:32:56.604 [INF] ← GET /api/notifications 200 | 35ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:32:56.606 [INF] ← GET /api/messages 200 | 14ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:33:26.633 [INF] → GET /api/notifications | IP ::1
+2026-06-25 17:33:26.634 [INF] → GET /api/messages | IP ::1
+2026-06-25 17:33:26.663 [INF] ← GET /api/notifications 200 | 30ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:33:26.679 [INF] ← GET /api/messages 200 | 45ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:33:56.684 [INF] → GET /api/notifications | IP ::1
+2026-06-25 17:33:56.706 [INF] → GET /api/messages | IP ::1
+2026-06-25 17:33:56.731 [INF] ← GET /api/notifications 200 | 47ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:33:56.737 [INF] ← GET /api/messages 200 | 30ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:34:26.760 [INF] → GET /api/notifications | IP ::1
+2026-06-25 17:34:26.762 [INF] → GET /api/messages | IP ::1
+2026-06-25 17:34:26.801 [INF] ← GET /api/notifications 200 | 41ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:34:26.827 [INF] ← GET /api/messages 200 | 65ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:34:56.822 [INF] → GET /api/notifications | IP ::1
+2026-06-25 17:34:56.846 [INF] ← GET /api/notifications 200 | 24ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:34:56.856 [INF] → GET /api/messages | IP ::1
+2026-06-25 17:34:56.902 [INF] ← GET /api/messages 200 | 46ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:35:26.875 [INF] → GET /api/notifications | IP ::1
+2026-06-25 17:35:26.884 [INF] ← GET /api/notifications 200 | 8ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:35:26.918 [INF] → GET /api/messages | IP ::1
+2026-06-25 17:35:26.923 [INF] ← GET /api/messages 200 | 5ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:35:56.919 [INF] → GET /api/notifications | IP ::1
+2026-06-25 17:35:56.947 [INF] → GET /api/messages | IP ::1
+2026-06-25 17:35:56.955 [INF] ← GET /api/notifications 200 | 36ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:35:56.983 [INF] ← GET /api/messages 200 | 36ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:36:26.973 [INF] → GET /api/notifications | IP ::1
+2026-06-25 17:36:26.989 [INF] ← GET /api/notifications 200 | 16ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:36:26.995 [INF] → GET /api/messages | IP ::1
+2026-06-25 17:36:27.003 [INF] ← GET /api/messages 200 | 8ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:36:57.021 [INF] → GET /api/messages | IP ::1
+2026-06-25 17:36:57.021 [INF] → GET /api/notifications | IP ::1
+2026-06-25 17:36:57.068 [INF] ← GET /api/notifications 200 | 46ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:36:57.077 [INF] ← GET /api/messages 200 | 55ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:37:27.087 [INF] → GET /api/notifications | IP ::1
+2026-06-25 17:37:27.104 [INF] → GET /api/messages | IP ::1
+2026-06-25 17:37:27.123 [INF] ← GET /api/notifications 200 | 35ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:37:27.125 [INF] ← GET /api/messages 200 | 21ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:37:57.150 [INF] → GET /api/notifications | IP ::1
+2026-06-25 17:37:57.167 [INF] → GET /api/messages | IP ::1
+2026-06-25 17:37:57.171 [INF] ← GET /api/notifications 200 | 21ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:37:57.206 [INF] ← GET /api/messages 200 | 39ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:38:27.218 [INF] → GET /api/notifications | IP ::1
+2026-06-25 17:38:27.219 [INF] → GET /api/messages | IP ::1
+2026-06-25 17:38:27.242 [INF] ← GET /api/notifications 200 | 23ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:38:27.247 [INF] ← GET /api/messages 200 | 27ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:38:57.275 [INF] → GET /api/messages | IP ::1
+2026-06-25 17:38:57.275 [INF] → GET /api/notifications | IP ::1
+2026-06-25 17:38:57.319 [INF] ← GET /api/notifications 200 | 44ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:38:57.338 [INF] ← GET /api/messages 200 | 63ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:39:27.344 [INF] → GET /api/notifications | IP ::1
+2026-06-25 17:39:27.355 [INF] → GET /api/messages | IP ::1
+2026-06-25 17:39:27.416 [INF] ← GET /api/notifications 200 | 72ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:39:27.420 [INF] ← GET /api/messages 200 | 64ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:39:57.465 [INF] → GET /api/notifications | IP ::1
+2026-06-25 17:39:57.466 [INF] → GET /api/messages | IP ::1
+2026-06-25 17:39:57.495 [INF] ← GET /api/notifications 200 | 29ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:39:57.515 [INF] ← GET /api/messages 200 | 49ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:40:27.515 [INF] → GET /api/notifications | IP ::1
+2026-06-25 17:40:27.567 [INF] → GET /api/messages | IP ::1
+2026-06-25 17:40:27.576 [INF] ← GET /api/notifications 200 | 61ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:40:27.604 [INF] ← GET /api/messages 200 | 37ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:40:57.599 [INF] → GET /api/notifications | IP ::1
+2026-06-25 17:40:57.616 [INF] ← GET /api/notifications 200 | 16ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:40:57.628 [INF] → GET /api/messages | IP ::1
+2026-06-25 17:40:57.645 [INF] ← GET /api/messages 200 | 16ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:41:27.649 [INF] → GET /api/notifications | IP ::1
+2026-06-25 17:41:27.666 [INF] → GET /api/messages | IP ::1
+2026-06-25 17:41:27.693 [INF] ← GET /api/notifications 200 | 43ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:41:27.718 [INF] ← GET /api/messages 200 | 51ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:41:57.713 [INF] → GET /api/notifications | IP ::1
+2026-06-25 17:41:57.719 [INF] ← GET /api/notifications 200 | 5ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:41:57.731 [INF] → GET /api/messages | IP ::1
+2026-06-25 17:41:57.739 [INF] ← GET /api/messages 200 | 7ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:42:27.737 [INF] → GET /api/notifications | IP ::1
+2026-06-25 17:42:27.761 [INF] → GET /api/messages | IP ::1
+2026-06-25 17:42:27.777 [INF] ← GET /api/notifications 200 | 39ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:42:27.805 [INF] ← GET /api/messages 200 | 44ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:42:57.797 [INF] → GET /api/notifications | IP ::1
+2026-06-25 17:42:57.819 [INF] ← GET /api/notifications 200 | 22ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:42:57.828 [INF] → GET /api/messages | IP ::1
+2026-06-25 17:42:57.842 [INF] ← GET /api/messages 200 | 14ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:43:27.889 [INF] → GET /api/notifications | IP ::1
+2026-06-25 17:43:27.895 [INF] → GET /api/messages | IP ::1
+2026-06-25 17:43:27.924 [INF] ← GET /api/notifications 200 | 35ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:43:27.946 [INF] ← GET /api/messages 200 | 50ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:43:57.938 [INF] → GET /api/notifications | IP ::1
+2026-06-25 17:43:57.945 [INF] ← GET /api/notifications 200 | 7ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:43:57.961 [INF] → GET /api/messages | IP ::1
+2026-06-25 17:43:57.970 [INF] ← GET /api/messages 200 | 9ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:44:27.988 [INF] → GET /api/messages | IP ::1
+2026-06-25 17:44:27.988 [INF] → GET /api/notifications | IP ::1
+2026-06-25 17:44:28.025 [INF] ← GET /api/notifications 200 | 37ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:44:28.035 [INF] ← GET /api/messages 200 | 47ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:44:58.054 [INF] → GET /api/notifications | IP ::1
+2026-06-25 17:44:58.054 [INF] → GET /api/messages | IP ::1
+2026-06-25 17:44:58.121 [INF] ← GET /api/notifications 200 | 67ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-25 17:44:58.123 [INF] ← GET /api/messages 200 | 68ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5

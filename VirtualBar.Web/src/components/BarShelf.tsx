@@ -162,7 +162,6 @@ export function BottleCard({ bottle, index, onSelect }: { bottle: Bottle; index:
       </div>
 
       <div style={{
-        fontFamily: 'Cormorant Garamond, serif',
         fontSize: 13,
         color: '#C9A84C',
         maxWidth: 84,
@@ -212,7 +211,6 @@ export function EmptySlot({ onClick }: { onClick: () => void }) {
       {hover && (
         <span
           style={{
-            fontFamily: 'Cormorant Garamond, serif',
             fontSize: 10,
             color: 'rgba(201,168,76,0.5)',
             letterSpacing: '0.05em',
@@ -330,7 +328,6 @@ export function VirtualBarScene({ bottles, onAdd, onSelect }: { bottles: Bottle[
           left: 0,
           right: 0,
           textAlign: 'center',
-          fontFamily: 'Cinzel, serif',
           fontSize: 11,
           letterSpacing: '0.4em',
           color: 'rgba(201,168,76,0.25)',
@@ -365,7 +362,6 @@ export function VirtualBarScene({ bottles, onAdd, onSelect }: { bottles: Bottle[
       >
         <span
           style={{
-            fontFamily: 'Cinzel, serif',
             fontSize: 9,
             color: 'rgba(201,168,76,0.7)',
             letterSpacing: '0.3em',

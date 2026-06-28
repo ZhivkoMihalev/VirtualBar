@@ -1,131 +1,131 @@
-import { useState } from 'react'
+import { useMemo } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useMutation } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { z } from 'zod'
 import type { AxiosError } from 'axios'
 import { useAuth } from '../contexts/AuthContext'
-import LanguageSwitcher from '../components/LanguageSwitcher'
+import AuthLayout from '../components/AuthLayout'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
+import { EMAIL_REGEX, type TFn } from '@/lib/validation'
+
+const makeSchema = (t: TFn) =>
+  z.object({
+    email: z
+      .string()
+      .min(1, t('login.errorRequired'))
+      .regex(EMAIL_REGEX, t('login.errorInvalidEmail')),
+    password: z
+      .string()
+      .min(1, t('login.errorRequired'))
+      .min(8, t('login.errorPasswordLength')),
+  })
+
+type LoginValues = z.infer<ReturnType<typeof makeSchema>>
 
 export default function LoginPage() {
   const navigate = useNavigate()
   const { t } = useTranslation()
   const { login } = useAuth()
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [error, setError] = useState('')
+  const schema = useMemo(() => makeSchema(t), [t])
+  const form = useForm<LoginValues>({
+    resolver: zodResolver(schema),
+    defaultValues: { email: '', password: '' },
+  })
 
   const loginMutation = useMutation({
-    mutationFn: async () => {
-      await login(email, password)
-    },
-    onSuccess: () => {
-      navigate('/dashboard')
-    },
+    mutationFn: (values: LoginValues) => login(values.email, values.password),
+    onSuccess: () => navigate('/dashboard'),
     onError: (err: unknown) => {
       const axiosErr = err as AxiosError<{ message?: string }>
-      const message = axiosErr.response?.data?.message || t('login.errorFailed')
-      setError(message)
+      form.setError('root', {
+        message: axiosErr.response?.data?.message || t('login.errorFailed'),
+      })
     },
   })
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    setError('')
-
-    // Client-side validation
-    if (!email || !password) {
-      setError(t('login.errorRequired'))
-      return
-    }
-
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      setError(t('login.errorInvalidEmail'))
-      return
-    }
-
-    if (password.length < 8) {
-      setError(t('login.errorPasswordLength'))
-      return
-    }
-
-    loginMutation.mutate()
-  }
+  const onSubmit = (values: LoginValues) => loginMutation.mutate(values)
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-stone-900 px-4">
-      <div className="w-full max-w-md">
-        <div className="flex justify-end mb-4">
-          <LanguageSwitcher />
-        </div>
-        <div className="bg-stone-800 rounded-lg shadow-xl p-8 border border-amber-500/20">
-          <h1 className="text-3xl font-bold text-amber-500 text-center mb-2">VirtualBar</h1>
-          <p className="text-stone-400 text-center mb-8">{t('login.subtitle')}</p>
-
-          {error && (
-            <div className="mb-6 p-4 bg-red-900/20 border border-red-700 rounded text-red-200 text-sm">
-              {error}
-            </div>
+    <AuthLayout
+      title="VirtualBar"
+      subtitle={t('login.subtitle')}
+      footer={
+        <>
+          {t('login.noAccount')}{' '}
+          <Link to="/register" className="font-medium text-primary hover:underline">
+            {t('login.registerLink')}
+          </Link>
+        </>
+      }
+    >
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4" noValidate>
+          {form.formState.errors.root && (
+            <p className="rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+              {form.formState.errors.root.message}
+            </p>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label htmlFor="email" className="block text-stone-300 text-sm font-medium mb-2">
-                {t('login.emailLabel')}
-              </label>
-              <input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder={t('login.emailPlaceholder')}
-                required
-                disabled={loginMutation.isPending}
-                className="w-full px-4 py-2 bg-stone-700 border border-stone-600 rounded text-stone-100 placeholder-stone-500 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 disabled:opacity-50 disabled:cursor-not-allowed"
-              />
-            </div>
+          <FormField
+            control={form.control}
+            name="email"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>{t('login.emailLabel')}</FormLabel>
+                <FormControl>
+                  <Input
+                    type="email"
+                    autoComplete="email"
+                    className="h-9"
+                    placeholder={t('login.emailPlaceholder')}
+                    disabled={loginMutation.isPending}
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-            <div>
-              <label htmlFor="password" className="block text-stone-300 text-sm font-medium mb-2">
-                {t('login.passwordLabel')}
-              </label>
-              <input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder={t('login.passwordPlaceholder')}
-                required
-                minLength={8}
-                disabled={loginMutation.isPending}
-                className="w-full px-4 py-2 bg-stone-700 border border-stone-600 rounded text-stone-100 placeholder-stone-500 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 disabled:opacity-50 disabled:cursor-not-allowed"
-              />
-              <div className="text-right mt-2">
-                <Link
-                  to="/forgot-password"
-                  className="text-amber-500 hover:text-amber-400 text-sm font-medium"
-                >
-                  {t('login.forgotPassword')}
-                </Link>
-              </div>
-            </div>
+          <FormField
+            control={form.control}
+            name="password"
+            render={({ field }) => (
+              <FormItem>
+                <div className="flex items-center justify-between">
+                  <FormLabel>{t('login.passwordLabel')}</FormLabel>
+                  <Link
+                    to="/forgot-password"
+                    className="text-xs font-medium text-primary hover:underline"
+                  >
+                    {t('login.forgotPassword')}
+                  </Link>
+                </div>
+                <FormControl>
+                  <Input
+                    type="password"
+                    autoComplete="current-password"
+                    className="h-9"
+                    placeholder={t('login.passwordPlaceholder')}
+                    disabled={loginMutation.isPending}
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-            <button
-              type="submit"
-              disabled={loginMutation.isPending}
-              className="w-full py-2 mt-6 bg-amber-600 hover:bg-amber-500 text-white font-semibold rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {loginMutation.isPending ? t('login.submittingBtn') : t('login.submitBtn')}
-            </button>
-          </form>
-
-          <p className="text-center text-stone-400 mt-6 text-sm">
-            {t('login.noAccount')}{' '}
-            <Link to="/register" className="text-amber-500 hover:text-amber-400 font-medium">
-              {t('login.registerLink')}
-            </Link>
-          </p>
-        </div>
-      </div>
-    </div>
+          <Button type="submit" size="lg" className="h-10 w-full" disabled={loginMutation.isPending}>
+            {loginMutation.isPending ? t('login.submittingBtn') : t('login.submitBtn')}
+          </Button>
+        </form>
+      </Form>
+    </AuthLayout>
   )
 }

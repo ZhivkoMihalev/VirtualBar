@@ -1,42 +1,19 @@
-import { useState } from 'react'
-import type { CSSProperties } from 'react'
+import { useRef, useState } from 'react'
+import type { FormEvent } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
+import { toast } from 'sonner'
+import { ImagePlus } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import NavBar from '../components/NavBar'
 import Avatar from '../components/Avatar'
 import { updateProfile, uploadAvatar } from '../api/usersApi'
 import type { UpdatedProfile } from '../types'
-
-const inputStyle: CSSProperties = {
-  background: '#0A0502',
-  border: '1px solid rgba(201,168,76,0.2)',
-  color: '#F0DDB4',
-  fontFamily: 'Cormorant Garamond, serif',
-  fontSize: 16,
-  padding: '10px 14px',
-  borderRadius: 4,
-  outline: 'none',
-  width: '100%',
-}
-
-const labelStyle: CSSProperties = {
-  fontFamily: 'Cinzel, serif',
-  fontSize: 11,
-  letterSpacing: '0.2em',
-  color: '#B09868',
-  textTransform: 'uppercase',
-  marginBottom: 6,
-  display: 'block',
-}
-
-function focusOn(e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) {
-  e.currentTarget.style.border = '1px solid rgba(201,168,76,0.5)'
-}
-
-function focusOff(e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) {
-  e.currentTarget.style.border = '1px solid rgba(201,168,76,0.2)'
-}
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
+import { Label } from '@/components/ui/label'
+import { Separator } from '@/components/ui/separator'
 
 export default function ProfilePage() {
   const { t } = useTranslation()
@@ -48,7 +25,7 @@ export default function ProfilePage() {
   const [country, setCountry] = useState(user?.country ?? '')
   const [city, setCity] = useState(user?.city ?? '')
   const [avatarUrl, setAvatarUrl] = useState(user?.avatarUrl)
-  const [saved, setSaved] = useState(false)
+  const fileRef = useRef<HTMLInputElement>(null)
 
   const avatarMutation = useMutation({
     mutationFn: (file: File) => uploadAvatar(file),
@@ -56,6 +33,7 @@ export default function ProfilePage() {
       setAvatarUrl(data.avatarUrl)
       updateUser({ avatarUrl: data.avatarUrl })
     },
+    onError: () => toast.error(t('profile.avatarError')),
   })
 
   const saveMutation = useMutation({
@@ -77,164 +55,92 @@ export default function ProfilePage() {
       if (user?.id) {
         queryClient.invalidateQueries({ queryKey: ['profile', user.id] })
       }
-      setSaved(true)
+      toast.success(t('profile.successMessage'))
     },
+    onError: () => toast.error(t('profile.errorMessage')),
   })
 
   const handleAvatarChange = (file: File | null) => {
     if (!file) return
-    setSaved(false)
     avatarMutation.mutate(file)
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e: FormEvent) => {
     e.preventDefault()
     if (!displayName.trim()) return
-    setSaved(false)
     saveMutation.mutate()
   }
 
   return (
-    <div style={{ minHeight: '100vh', color: '#F0DDB4' }}>
+    <div className="min-h-screen text-foreground">
       <NavBar />
 
-      <main style={{ maxWidth: 560, margin: '0 auto', padding: '48px 24px' }}>
-        <div
-          style={{
-            fontFamily: 'Cinzel, serif',
-            fontSize: 13,
-            letterSpacing: '0.4em',
-            color: '#B09868',
-            marginBottom: 8,
-          }}
-        >
-          {t('profile.editTitle')}
-        </div>
-        <h1
-          style={{
-            fontFamily: 'Playfair Display, serif',
-            fontSize: 32,
-            color: '#E8C870',
-            margin: 0,
-            lineHeight: 1.1,
-          }}
-        >
+      <main className="mx-auto max-w-[560px] px-6 py-12">
+        <h1 className="font-heading text-2xl font-semibold text-primary sm:text-3xl">
           {t('profile.editTitle')}
         </h1>
 
-        <div style={{ borderTop: '1px solid rgba(201,168,76,0.15)', margin: '32px 0' }} />
+        <Separator className="my-8" />
 
-        <label style={labelStyle}>{t('profile.avatar')}</label>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 8 }}>
-          <Avatar displayName={displayName} avatarUrl={avatarUrl ?? undefined} size={80} />
-
-          <button
-            type="button"
-            onClick={() => document.getElementById('avatar-input')?.click()}
-            disabled={avatarMutation.isPending}
-            style={{
-              fontFamily: 'Cinzel, serif',
-              fontSize: 10,
-              letterSpacing: '0.2em',
-              color: '#C9A84C',
-              background: 'transparent',
-              border: '1px solid rgba(201,168,76,0.3)',
-              padding: '8px 16px',
-              borderRadius: 2,
-              cursor: avatarMutation.isPending ? 'not-allowed' : 'pointer',
-              opacity: avatarMutation.isPending ? 0.6 : 1,
-            }}
-          >
-            {t('profile.uploadAvatar')}
-          </button>
-
-          <input
-            id="avatar-input"
-            type="file"
-            accept="image/*"
-            style={{ display: 'none' }}
-            onChange={(e) => handleAvatarChange(e.target.files?.[0] ?? null)}
-          />
+        <div className="mb-6 space-y-2">
+          <Label>{t('profile.avatar')}</Label>
+          <div className="flex items-center gap-4">
+            <Avatar displayName={displayName} avatarUrl={avatarUrl ?? undefined} size={80} />
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => fileRef.current?.click()}
+              disabled={avatarMutation.isPending}
+            >
+              <ImagePlus className="size-3.5" />
+              {t('profile.uploadAvatar')}
+            </Button>
+            <input
+              ref={fileRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={e => handleAvatarChange(e.target.files?.[0] ?? null)}
+            />
+          </div>
         </div>
 
-        {avatarMutation.isError && (
-          <div style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: 14, color: '#D42020', marginBottom: 12 }}>
-            {t('profile.avatarError')}
+        <form onSubmit={handleSubmit} className="space-y-5">
+          <div className="space-y-2">
+            <Label htmlFor="displayName">{t('profile.displayName')}</Label>
+            <Input
+              id="displayName"
+              value={displayName}
+              onChange={e => setDisplayName(e.target.value)}
+              required
+              className="h-9"
+            />
           </div>
-        )}
 
-        <form onSubmit={handleSubmit} style={{ marginTop: 16 }}>
-          <label style={labelStyle}>{t('profile.displayName')}</label>
-          <input
-            value={displayName}
-            onChange={(e) => { setDisplayName(e.target.value); setSaved(false) }}
-            onFocus={focusOn}
-            onBlur={focusOff}
-            required
-            style={{ ...inputStyle, marginBottom: 18 }}
-          />
+          <div className="space-y-2">
+            <Label htmlFor="bio">{t('profile.bio')}</Label>
+            <Textarea id="bio" value={bio} onChange={e => setBio(e.target.value)} rows={4} />
+          </div>
 
-          <label style={labelStyle}>{t('profile.bio')}</label>
-          <textarea
-            value={bio}
-            onChange={(e) => { setBio(e.target.value); setSaved(false) }}
-            onFocus={focusOn}
-            onBlur={focusOff}
-            rows={4}
-            style={{ ...inputStyle, marginBottom: 18, resize: 'vertical' }}
-          />
+          <div className="space-y-2">
+            <Label htmlFor="country">{t('profile.country')}</Label>
+            <Input id="country" value={country} onChange={e => setCountry(e.target.value)} className="h-9" />
+          </div>
 
-          <label style={labelStyle}>{t('profile.country')}</label>
-          <input
-            value={country}
-            onChange={(e) => { setCountry(e.target.value); setSaved(false) }}
-            onFocus={focusOn}
-            onBlur={focusOff}
-            style={{ ...inputStyle, marginBottom: 18 }}
-          />
+          <div className="space-y-2">
+            <Label htmlFor="city">{t('profile.city')}</Label>
+            <Input id="city" value={city} onChange={e => setCity(e.target.value)} className="h-9" />
+          </div>
 
-          <label style={labelStyle}>{t('profile.city')}</label>
-          <input
-            value={city}
-            onChange={(e) => { setCity(e.target.value); setSaved(false) }}
-            onFocus={focusOn}
-            onBlur={focusOff}
-            style={{ ...inputStyle, marginBottom: 24 }}
-          />
-
-          {saved && !saveMutation.isError && (
-            <div style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: 14, color: '#4A9A6A', marginBottom: 16 }}>
-              {t('profile.successMessage')}
-            </div>
-          )}
-
-          {saveMutation.isError && (
-            <div style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: 14, color: '#D42020', marginBottom: 16 }}>
-              {t('profile.errorMessage')}
-            </div>
-          )}
-
-          <button
+          <Button
             type="submit"
+            size="lg"
+            className="h-10 w-full"
             disabled={saveMutation.isPending || !displayName.trim()}
-            style={{
-              width: '100%',
-              fontFamily: 'Cinzel, serif',
-              fontSize: 14,
-              letterSpacing: '0.2em',
-              textTransform: 'uppercase',
-              color: '#07030A',
-              background: 'linear-gradient(135deg, #C9A84C, #E8C870)',
-              border: 'none',
-              padding: '14px',
-              borderRadius: 2,
-              cursor: saveMutation.isPending || !displayName.trim() ? 'not-allowed' : 'pointer',
-              opacity: saveMutation.isPending || !displayName.trim() ? 0.6 : 1,
-              boxShadow: '0 4px 20px rgba(201,168,76,0.3)',
-            }}
           >
             {saveMutation.isPending ? t('profile.saving') : t('profile.save')}
-          </button>
+          </Button>
         </form>
       </main>
     </div>

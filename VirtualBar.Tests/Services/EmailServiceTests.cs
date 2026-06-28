@@ -33,4 +33,20 @@ public class EmailServiceTests
 
         Assert.Equal("VirtualBar — Нулиране на парола", subject);
     }
+
+    [Fact]
+    public void GetConfirmationSubject_WhenLangIsEn_ReturnsEnglishSubject()
+    {
+        var subject = EmailService.GetConfirmationSubject("en");
+
+        Assert.Equal("VirtualBar — Confirm your email", subject);
+    }
+
+    [Fact]
+    public void GetConfirmationSubject_WhenLangIsBg_ReturnsBulgarianSubject()
+    {
+        var subject = EmailService.GetConfirmationSubject("bg");
+
+        Assert.Equal("VirtualBar — Потвърди имейла си", subject);
+    }
 }

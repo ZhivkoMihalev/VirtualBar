@@ -1,97 +1,97 @@
-import { useState } from 'react'
+import { useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { useMutation } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { z } from 'zod'
 import { forgotPassword } from '../api/authApi'
-import LanguageSwitcher from '../components/LanguageSwitcher'
+import AuthLayout from '../components/AuthLayout'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
+import { EMAIL_REGEX, type TFn } from '@/lib/validation'
+
+const makeSchema = (t: TFn) =>
+  z.object({
+    email: z
+      .string()
+      .min(1, t('forgotPassword.errorInvalidEmail'))
+      .regex(EMAIL_REGEX, t('forgotPassword.errorInvalidEmail')),
+  })
+
+type ForgotValues = z.infer<ReturnType<typeof makeSchema>>
 
 export default function ForgotPasswordPage() {
   const { t, i18n } = useTranslation()
-  const [email, setEmail] = useState('')
-  const [error, setError] = useState('')
+  const schema = useMemo(() => makeSchema(t), [t])
+  const form = useForm<ForgotValues>({
+    resolver: zodResolver(schema),
+    defaultValues: { email: '' },
+  })
 
   const forgotMutation = useMutation({
-    mutationFn: async () => {
-      await forgotPassword(email, i18n.language.startsWith('en') ? 'en' : 'bg')
-    },
+    mutationFn: (values: ForgotValues) =>
+      forgotPassword(values.email, i18n.language.startsWith('en') ? 'en' : 'bg'),
     onError: () => {
-      setError(t('forgotPassword.errorFailed'))
+      form.setError('root', { message: t('forgotPassword.errorFailed') })
     },
   })
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    setError('')
-
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      setError(t('forgotPassword.errorInvalidEmail'))
-      return
-    }
-
-    forgotMutation.mutate()
-  }
+  const onSubmit = (values: ForgotValues) => forgotMutation.mutate(values)
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-stone-900 px-4">
-      <div className="w-full max-w-md">
-        <div className="flex justify-end mb-4">
-          <LanguageSwitcher />
+    <AuthLayout
+      title={t('forgotPassword.title')}
+      subtitle={t('forgotPassword.subtitle')}
+      footer={
+        <Link to="/login" className="font-medium text-primary hover:underline">
+          {t('forgotPassword.backToLogin')}
+        </Link>
+      }
+    >
+      {forgotMutation.isSuccess ? (
+        <div className="rounded-md border border-success/40 bg-success/10 px-3 py-2 text-sm text-success">
+          {t('forgotPassword.successMessage')}
         </div>
-        <div className="bg-stone-800 rounded-lg shadow-xl p-8 border border-amber-500/20">
-          <h1 className="text-3xl font-bold text-amber-500 text-center mb-2">
-            {t('forgotPassword.title')}
-          </h1>
-          <p className="text-stone-400 text-center mb-8">{t('forgotPassword.subtitle')}</p>
+      ) : (
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4" noValidate>
+            {form.formState.errors.root && (
+              <p className="rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+                {form.formState.errors.root.message}
+              </p>
+            )}
 
-          {forgotMutation.isSuccess ? (
-            <div className="mb-6 p-4 bg-green-900/20 border border-green-700 rounded text-green-200 text-sm">
-              {t('forgotPassword.successMessage')}
-            </div>
-          ) : (
-            <>
-              {error && (
-                <div className="mb-6 p-4 bg-red-900/20 border border-red-700 rounded text-red-200 text-sm">
-                  {error}
-                </div>
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{t('forgotPassword.emailLabel')}</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="email"
+                      autoComplete="email"
+                      className="h-9"
+                      placeholder={t('forgotPassword.emailPlaceholder')}
+                      disabled={forgotMutation.isPending}
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
               )}
+            />
 
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div>
-                  <label htmlFor="email" className="block text-stone-300 text-sm font-medium mb-2">
-                    {t('forgotPassword.emailLabel')}
-                  </label>
-                  <input
-                    id="email"
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder={t('forgotPassword.emailPlaceholder')}
-                    required
-                    disabled={forgotMutation.isPending}
-                    className="w-full px-4 py-2 bg-stone-700 border border-stone-600 rounded text-stone-100 placeholder-stone-500 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 disabled:opacity-50 disabled:cursor-not-allowed"
-                  />
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={forgotMutation.isPending}
-                  className="w-full py-2 mt-6 bg-amber-600 hover:bg-amber-500 text-white font-semibold rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {forgotMutation.isPending
-                    ? t('forgotPassword.submittingBtn')
-                    : t('forgotPassword.submitBtn')}
-                </button>
-              </form>
-            </>
-          )}
-
-          <p className="text-center mt-6 text-sm">
-            <Link to="/login" className="text-amber-500 hover:text-amber-400 font-medium">
-              {t('forgotPassword.backToLogin')}
-            </Link>
-          </p>
-        </div>
-      </div>
-    </div>
+            <Button type="submit" size="lg" className="h-10 w-full" disabled={forgotMutation.isPending}>
+              {forgotMutation.isPending
+                ? t('forgotPassword.submittingBtn')
+                : t('forgotPassword.submitBtn')}
+            </Button>
+          </form>
+        </Form>
+      )}
+    </AuthLayout>
   )
 }

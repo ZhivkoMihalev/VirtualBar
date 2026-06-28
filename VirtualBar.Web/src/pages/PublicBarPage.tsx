@@ -1,8 +1,10 @@
 import { useState } from 'react'
-import { Link, useParams, useNavigate } from 'react-router-dom'
+import { Link, useParams } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
+import { MessageCircle, Loader2 } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
+import { useChat } from '../contexts/ChatContext'
 import { getBottlesByUser } from '../api/bottlesApi'
 import { getUserProfile, followUser, unfollowUser } from '../api/usersApi'
 import type { Bottle, UserProfile } from '../types'
@@ -10,11 +12,13 @@ import { VirtualBarScene } from '../components/BarShelf'
 import BottleDetailPanel from '../components/BottleDetailPanel'
 import Avatar from '../components/Avatar'
 import NavBar from '../components/NavBar'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent } from '@/components/ui/card'
+import { Skeleton } from '@/components/ui/skeleton'
 
 function FollowButton({ profile, userId }: { profile: UserProfile; userId: string }) {
   const { t } = useTranslation()
   const queryClient = useQueryClient()
-  const [hover, setHover] = useState(false)
 
   const mutation = useMutation({
     mutationFn: () => (profile.isFollowedByMe ? unfollowUser(userId) : followUser(userId)),
@@ -26,37 +30,30 @@ function FollowButton({ profile, userId }: { profile: UserProfile; userId: strin
   const following = profile.isFollowedByMe
 
   return (
-    <button
+    <Button
+      variant={following ? 'outline' : 'default'}
       onClick={() => mutation.mutate()}
       disabled={mutation.isPending}
-      onMouseEnter={() => setHover(true)}
-      onMouseLeave={() => setHover(false)}
-      style={{
-        fontFamily: 'Cinzel, serif',
-        fontSize: 11,
-        letterSpacing: '0.2em',
-        textTransform: 'uppercase',
-        padding: '10px 24px',
-        borderRadius: 2,
-        cursor: mutation.isPending ? 'wait' : 'pointer',
-        opacity: mutation.isPending ? 0.6 : 1,
-        transition: 'all 0.2s ease',
-        color: following ? '#C9A84C' : '#07030A',
-        background: following ? 'transparent' : 'linear-gradient(135deg, #C9A84C, #E8C870)',
-        border: following ? '1px solid rgba(201,168,76,0.4)' : 'none',
-        boxShadow: following ? 'none' : '0 4px 20px rgba(201,168,76,0.3)',
-      }}
+      className="group/follow w-full min-w-28"
     >
-      {following ? (hover ? t('publicBar.unfollow') : t('publicBar.following')) : t('publicBar.follow')}
-    </button>
+      {mutation.isPending && <Loader2 className="size-3.5 animate-spin" />}
+      {following ? (
+        <>
+          <span className="group-hover/follow:hidden">{t('publicBar.following')}</span>
+          <span className="hidden group-hover/follow:inline">{t('publicBar.unfollow')}</span>
+        </>
+      ) : (
+        t('publicBar.follow')
+      )}
+    </Button>
   )
 }
 
 export default function PublicBarPage() {
   const { t } = useTranslation()
   const { userId } = useParams<{ userId: string }>()
-  const navigate = useNavigate()
   const { user } = useAuth()
+  const { openChat } = useChat()
   const [selectedBottle, setSelectedBottle] = useState<Bottle | null>(null)
 
   const {
@@ -84,108 +81,89 @@ export default function PublicBarPage() {
   const canFollow = !!user && !!profile && user.id !== profile.id
 
   return (
-    <div style={{ minHeight: '100vh', color: '#F0DDB4' }}>
+    <div className="min-h-screen text-foreground">
       <NavBar />
 
-      <main style={{ maxWidth: 1200, margin: '0 auto', padding: '40px 40px' }}>
+      <main className="mx-auto max-w-6xl px-6 py-10">
         {isLoading && (
-          <div
-            style={{
-              textAlign: 'center',
-              padding: '120px 0',
-              fontFamily: 'Cinzel, serif',
-              fontSize: 13,
-              letterSpacing: '0.4em',
-              color: '#C9A84C',
-              animation: 'shimmer 1.6s ease-in-out infinite',
-            }}
-          >
-            {t('publicBar.loading')}
+          <div className="space-y-6">
+            <Card>
+              <CardContent className="flex items-start gap-6">
+                <Skeleton className="size-[72px] rounded-full" />
+                <div className="flex-1 space-y-3">
+                  <Skeleton className="h-7 w-48" />
+                  <Skeleton className="h-4 w-32" />
+                  <Skeleton className="h-4 w-64" />
+                </div>
+              </CardContent>
+            </Card>
+            <Skeleton className="h-[480px] w-full rounded-lg" />
           </div>
         )}
 
         {isError && !isLoading && (
-          <div style={{ textAlign: 'center', padding: '100px 0', fontFamily: 'Cormorant Garamond, serif', fontSize: 20, fontStyle: 'italic', color: '#C04040' }}>
+          <div className="mx-auto max-w-md rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-center text-sm text-destructive">
             {t('publicBar.error')}
           </div>
         )}
 
         {!isLoading && !isError && profile && (
           <>
-            <div style={{ marginBottom: 24 }}>
-              <Link to="/browse" style={{ fontFamily: 'Cinzel, serif', fontSize: 11, letterSpacing: '0.15em', color: '#B09868', textDecoration: 'none' }}>
+            <div className="mb-6">
+              <Link
+                to="/browse"
+                className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+              >
                 {t('publicBar.backToBrowse')}
               </Link>
             </div>
 
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'flex-start',
-                gap: 24,
-                marginBottom: 36,
-                padding: '24px 28px',
-                background: 'rgba(201,168,76,0.04)',
-                border: '1px solid rgba(201,168,76,0.1)',
-                borderRadius: 6,
-              }}
-            >
-              <Avatar displayName={profile.displayName} avatarUrl={profile.avatarUrl} size={72} />
+            <Card className="mb-9">
+              <CardContent className="flex flex-col items-start gap-6 sm:flex-row">
+                <Avatar displayName={profile.displayName} avatarUrl={profile.avatarUrl} size={72} />
 
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <h1 style={{ fontFamily: 'Playfair Display, serif', fontSize: 32, fontWeight: 700, color: '#E8C870', margin: 0, lineHeight: 1.15 }}>
-                  {profile.displayName}
-                </h1>
+                <div className="min-w-0 flex-1">
+                  <h1 className="font-heading text-2xl font-bold text-primary sm:text-3xl">
+                    {profile.displayName}
+                  </h1>
 
-                {(profile.country || profile.city) && (
-                  <div style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: 16, fontStyle: 'italic', color: '#C9A84C', marginTop: 4 }}>
-                    {[profile.city, profile.country].filter(Boolean).join(', ')}
+                  {(profile.country || profile.city) && (
+                    <div className="mt-1 text-base italic text-muted-foreground">
+                      {[profile.city, profile.country].filter(Boolean).join(', ')}
+                    </div>
+                  )}
+
+                  {profile.bio && (
+                    <p className="mt-2.5 max-w-xl text-base italic leading-relaxed text-muted-foreground">
+                      {profile.bio}
+                    </p>
+                  )}
+
+                  <div className="mt-3.5 text-sm text-primary">
+                    {t('publicBar.stats', {
+                      bottles: t('publicBar.bottles', { count: profile.bottleCount }),
+                      followers: t('publicBar.followers', { count: profile.followerCount }),
+                      following: t('publicBar.following', { count: profile.followingCount }),
+                    })}
+                  </div>
+                </div>
+
+                {canFollow && (
+                  <div className="flex w-full shrink-0 flex-col gap-2.5 sm:w-auto sm:min-w-32">
+                    <FollowButton profile={profile} userId={profile.id} />
+                    <Button variant="outline" className="w-full" onClick={() => openChat(profile.id)}>
+                      <MessageCircle className="size-3.5" />
+                      {t('messages.sendMessage')}
+                    </Button>
                   </div>
                 )}
-
-                {profile.bio && (
-                  <p style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: 17, fontStyle: 'italic', color: '#B09868', lineHeight: 1.5, margin: '10px 0 0', maxWidth: 560 }}>
-                    {profile.bio}
-                  </p>
-                )}
-
-                <div style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: 15, color: '#C9A84C', marginTop: 14, letterSpacing: '0.02em' }}>
-                  {t('publicBar.stats', {
-                    bottles: t('publicBar.bottles', { count: profile.bottleCount }),
-                    followers: t('publicBar.followers', { count: profile.followerCount }),
-                    following: t('publicBar.following', { count: profile.followingCount }),
-                  })}
-                </div>
-              </div>
-
-              {canFollow && (
-                <div style={{ flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 10 }}>
-                  <FollowButton profile={profile} userId={profile.id} />
-                  <button
-                    onClick={() => navigate(`/messages?with=${profile.id}`)}
-                    style={{
-                      fontFamily: 'Cinzel, serif',
-                      fontSize: 11,
-                      letterSpacing: '0.2em',
-                      textTransform: 'uppercase',
-                      padding: '10px 24px',
-                      borderRadius: 2,
-                      cursor: 'pointer',
-                      color: '#C9A84C',
-                      background: 'transparent',
-                      border: '1px solid rgba(201,168,76,0.4)',
-                    }}
-                  >
-                    {t('messages.sendMessage')}
-                  </button>
-                </div>
-              )}
-            </div>
+              </CardContent>
+            </Card>
 
             {bottles.length > 0 ? (
               <VirtualBarScene bottles={bottles} onSelect={setSelectedBottle} />
             ) : (
-              <div style={{ textAlign: 'center', padding: '80px 0', fontFamily: 'Cormorant Garamond, serif', fontSize: 20, fontStyle: 'italic', color: '#B09868' }}>
+              <div className="py-20 text-center text-xl italic text-muted-foreground">
                 {t('publicBar.empty')}
               </div>
             )}

@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using VirtualBar.Application.Interfaces;
 using VirtualBar.Domain.Entities;
 using VirtualBar.Application.Options;
@@ -26,7 +27,9 @@ public static class DependencyInjection
         services.AddScoped<IAuthService>(sp => new AuthValidationDecorator(
             sp.GetRequiredService<AuthService>(),
             sp.GetRequiredService<UserManager<AppUser>>(),
-            sp.GetRequiredService<SignInManager<AppUser>>()));
+            sp.GetRequiredService<SignInManager<AppUser>>(),
+            sp.GetRequiredService<ICurrentUser>(),
+            sp.GetRequiredService<ILogger<AuthValidationDecorator>>()));
 
         services.AddScoped<BottleService>();
         services.AddScoped<IBottleService>(sp => new BottleValidationDecorator(

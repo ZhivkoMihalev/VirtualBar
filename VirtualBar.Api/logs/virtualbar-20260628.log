@@ -1,0 +1,107 @@
+2026-06-28 21:13:30.742 [INF] → GET / | IP ::1
+2026-06-28 21:13:30.806 [WRN] ← GET / 404 | 64ms | user:anonymous
+2026-06-28 21:13:31.544 [INF] → GET /swagger/index.html | IP ::1
+2026-06-28 21:13:31.567 [WRN] ← GET /swagger/index.html 404 | 23ms | user:anonymous
+2026-06-28 21:32:21.951 [INF] → GET /api/bottles/marketplace?sort=newest | IP ::1
+2026-06-28 21:32:22.228 [INF] ← GET /api/bottles/marketplace 200 | 277ms | user:anonymous
+2026-06-28 21:32:25.106 [INF] → GET /api/bottles/marketplace?sort=newest | IP ::1
+2026-06-28 21:32:25.114 [INF] ← GET /api/bottles/marketplace 200 | 8ms | user:anonymous
+2026-06-28 21:32:25.142 [INF] → GET /uploads/bottles/b990565a-b3c0-46e4-b7c8-638464a34df1.jpg | IP ::1
+2026-06-28 21:32:25.179 [INF] ← GET /uploads/bottles/b990565a-b3c0-46e4-b7c8-638464a34df1.jpg 304 | 37ms | user:anonymous
+2026-06-28 21:32:26.512 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-28 21:32:26.551 [INF] ← GET /api/feed 200 | 39ms | user:anonymous
+2026-06-28 21:32:40.026 [INF] → POST /api/auth/login | IP ::1
+2026-06-28 21:32:40.279 [INF] ← POST /api/auth/login 200 | 252ms | user:anonymous
+2026-06-28 21:32:40.349 [INF] → GET /api/messages | IP ::1
+2026-06-28 21:32:40.351 [INF] → GET /api/notifications | IP ::1
+2026-06-28 21:32:40.357 [WRN] ← GET /api/notifications 401 | 5ms | user:anonymous
+2026-06-28 21:32:40.357 [WRN] ← GET /api/messages 401 | 7ms | user:anonymous
+2026-06-28 21:32:49.653 [INF] → POST /api/auth/login | IP ::1
+2026-06-28 21:32:49.819 [INF] ← POST /api/auth/login 200 | 165ms | user:anonymous
+2026-06-28 21:32:49.884 [INF] → GET /api/messages | IP ::1
+2026-06-28 21:32:49.888 [WRN] ← GET /api/messages 401 | 4ms | user:anonymous
+2026-06-28 21:36:00.494 [INF] → POST /api/auth/login | IP ::1
+2026-06-28 21:36:07.273 [WRN] ← POST /api/auth/login 400 | 6778ms | user:anonymous
+2026-06-28 21:42:34.243 [INF] → POST /api/auth/login | IP ::1
+2026-06-28 21:42:34.420 [INF] ← POST /api/auth/login 200 | 177ms | user:anonymous
+2026-06-28 21:42:57.416 [INF] → POST /api/auth/login | IP ::1
+2026-06-28 21:42:57.573 [INF] ← POST /api/auth/login 200 | 156ms | user:anonymous
+2026-06-28 21:42:57.619 [INF] → GET /api/notifications | IP ::1
+2026-06-28 21:42:57.621 [WRN] ← GET /api/notifications 401 | 2ms | user:anonymous
+2026-06-28 21:42:57.643 [INF] → GET /api/messages | IP ::1
+2026-06-28 21:42:57.645 [WRN] ← GET /api/messages 401 | 2ms | user:anonymous
+2026-06-28 21:42:57.651 [INF] → GET /api/offers/received | IP ::1
+2026-06-28 21:42:57.652 [WRN] ← GET /api/offers/received 401 | 1ms | user:anonymous
+2026-06-28 21:44:33.347 [INF] → POST /api/auth/login | IP ::1
+2026-06-28 21:44:33.500 [INF] ← POST /api/auth/login 200 | 153ms | user:anonymous
+2026-06-28 21:47:19.940 [INF] → GET /openapi/v1.json | IP ::1
+2026-06-28 21:47:20.411 [INF] ← GET /openapi/v1.json 200 | 486ms | user:anonymous
+2026-06-28 21:47:36.949 [INF] → POST /api/auth/login | IP ::1
+2026-06-28 21:47:37.303 [INF] ← POST /api/auth/login 200 | 353ms | user:anonymous
+2026-06-28 21:47:37.392 [INF] → GET /api/notifications | IP ::1
+2026-06-28 21:47:37.742 [INF] ← GET /api/notifications 200 | 349ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-28 21:47:37.782 [INF] → GET /api/messages | IP ::1
+2026-06-28 21:47:37.998 [INF] ← GET /api/messages 200 | 216ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-28 21:47:38.029 [INF] → GET /api/offers/received | IP ::1
+2026-06-28 21:47:38.281 [INF] ← GET /api/offers/received 200 | 252ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-28 21:49:22.004 [INF] → GET /api/messages | IP ::1
+2026-06-28 21:49:22.004 [INF] → GET /api/notifications | IP ::1
+2026-06-28 21:49:22.005 [INF] → GET /api/bottles/marketplace?sort=newest | IP ::1
+2026-06-28 21:49:22.009 [WRN] ← GET /api/notifications 401 | 4ms | user:anonymous
+2026-06-28 21:49:22.009 [WRN] ← GET /api/messages 401 | 4ms | user:anonymous
+2026-06-28 21:49:22.105 [WRN] Compiling a query which loads related collections for more than one collection navigation, either via 'Include' or through projection, but no 'QuerySplittingBehavior' has been configured. By default, Entity Framework will use 'QuerySplittingBehavior.SingleQuery', which can potentially result in slow query performance. See https://go.microsoft.com/fwlink/?linkid=2134277 for more information. To identify the query that's triggering this warning call 'ConfigureWarnings(w => w.Throw(RelationalEventId.MultipleCollectionIncludeWarning))'.
+2026-06-28 21:49:22.178 [ERR] An error occurred using the connection to database 'VirtualBarDb' on server 'localhost\SQLEXPRESS'.
+2026-06-28 21:49:22.187 [INF] ← GET /api/bottles/marketplace 200 | 181ms | user:anonymous
+2026-06-28 21:49:41.413 [INF] → POST /api/auth/login | IP ::1
+2026-06-28 21:49:41.573 [INF] ← POST /api/auth/login 200 | 159ms | user:anonymous
+2026-06-28 21:49:41.615 [INF] → GET /api/messages | IP ::1
+2026-06-28 21:49:41.652 [INF] ← GET /api/messages 200 | 36ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-28 21:49:41.793 [INF] → GET /api/notifications | IP ::1
+2026-06-28 21:49:41.794 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-28 21:49:41.810 [INF] ← GET /api/notifications 200 | 16ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-28 21:49:41.961 [INF] ← GET /api/feed 200 | 166ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-28 21:49:54.356 [INF] → GET /api/bottles?userId=8bce4454-3ef5-449c-0257-08dece31259c | IP ::1
+2026-06-28 21:49:54.383 [WRN] Compiling a query which loads related collections for more than one collection navigation, either via 'Include' or through projection, but no 'QuerySplittingBehavior' has been configured. By default, Entity Framework will use 'QuerySplittingBehavior.SingleQuery', which can potentially result in slow query performance. See https://go.microsoft.com/fwlink/?linkid=2134277 for more information. To identify the query that's triggering this warning call 'ConfigureWarnings(w => w.Throw(RelationalEventId.MultipleCollectionIncludeWarning))'.
+2026-06-28 21:49:54.518 [INF] ← GET /api/bottles 200 | 162ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-28 21:49:54.623 [INF] → GET /uploads/bottles/b990565a-b3c0-46e4-b7c8-638464a34df1.jpg | IP ::1
+2026-06-28 21:49:54.623 [INF] → GET /uploads/bottles/c4155032-bb2a-4d89-9314-d4448d202f59.jpg | IP ::1
+2026-06-28 21:49:54.635 [INF] ← GET /uploads/bottles/b990565a-b3c0-46e4-b7c8-638464a34df1.jpg 304 | 11ms | user:anonymous
+2026-06-28 21:49:54.635 [INF] ← GET /uploads/bottles/c4155032-bb2a-4d89-9314-d4448d202f59.jpg 304 | 11ms | user:anonymous
+2026-06-28 21:50:02.561 [INF] → GET /api/offers/received | IP ::1
+2026-06-28 21:50:02.583 [INF] ← GET /api/offers/received 200 | 22ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-28 21:50:11.673 [INF] → GET /api/messages | IP ::1
+2026-06-28 21:50:11.686 [INF] ← GET /api/messages 200 | 12ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-28 21:50:12.201 [INF] → GET /api/offers/sent | IP ::1
+2026-06-28 21:50:12.255 [INF] ← GET /api/offers/sent 200 | 53ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-28 21:50:13.706 [INF] → GET /api/notifications | IP ::1
+2026-06-28 21:50:13.707 [INF] → GET /api/users | IP ::1
+2026-06-28 21:50:13.713 [INF] ← GET /api/notifications 200 | 6ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-28 21:50:13.762 [INF] ← GET /api/users 200 | 55ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-28 21:50:29.324 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-28 21:50:29.331 [INF] ← GET /api/feed 200 | 7ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-28 21:50:41.699 [INF] → GET /api/messages | IP ::1
+2026-06-28 21:50:41.748 [INF] ← GET /api/messages 200 | 48ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-28 21:50:42.371 [INF] → GET /api/offers/received | IP ::1
+2026-06-28 21:50:42.397 [INF] ← GET /api/offers/received 200 | 26ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-28 21:50:50.810 [INF] → GET /api/notifications | IP ::1
+2026-06-28 21:50:50.833 [INF] ← GET /api/notifications 200 | 22ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-28 21:51:02.456 [INF] → POST /api/auth/logout | IP ::1
+2026-06-28 21:51:02.456 [WRN] ← POST /api/auth/logout 401 | 0ms | user:anonymous
+2026-06-28 21:51:09.449 [INF] → POST /api/auth/login | IP ::1
+2026-06-28 21:51:09.625 [INF] ← POST /api/auth/login 200 | 175ms | user:anonymous
+2026-06-28 21:51:09.667 [INF] → GET /api/messages | IP ::1
+2026-06-28 21:51:09.672 [INF] ← GET /api/messages 200 | 5ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-28 21:51:09.829 [INF] → GET /api/notifications | IP ::1
+2026-06-28 21:51:09.829 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-28 21:51:09.833 [INF] ← GET /api/notifications 200 | 4ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-28 21:51:09.971 [INF] ← GET /api/feed 200 | 141ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-28 21:51:20.646 [INF] → GET /api/offers/received | IP ::1
+2026-06-28 21:51:20.650 [INF] ← GET /api/offers/received 200 | 4ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-28 21:51:22.441 [INF] → GET /api/offers/sent | IP ::1
+2026-06-28 21:51:22.464 [INF] ← GET /api/offers/sent 200 | 22ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-28 21:51:24.801 [INF] → GET /api/bottles?userId=f755f1be-cd7b-4d85-f377-08decf9e98b5 | IP ::1
+2026-06-28 21:51:24.829 [INF] ← GET /api/bottles 200 | 27ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-28 21:51:29.727 [INF] → GET /api/bottles/marketplace?sort=newest | IP ::1
+2026-06-28 21:51:29.769 [INF] ← GET /api/bottles/marketplace 200 | 41ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-28 21:51:35.334 [INF] → GET /api/users | IP ::1
+2026-06-28 21:51:35.351 [INF] ← GET /api/users 200 | 17ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5

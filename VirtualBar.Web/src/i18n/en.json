@@ -112,6 +112,7 @@
     "category": "Category",
     "name": "Name *",
     "namePlaceholder": "e.g. Glenfiddich 18",
+    "nameRequired": "Name is required.",
     "distillery": "Distillery",
     "distilleryPlaceholder": "Search distillery...",
     "age": "Age",
@@ -183,6 +184,7 @@
   "bottle": {
     "limited": "◆ Limited",
     "forSale": "● For Sale",
+    "close": "Close",
     "age": "Age",
     "abv": "ABV",
     "volume": "Volume",
@@ -228,14 +230,14 @@
   "messages": {
     "title": "MESSAGES",
     "noConversations": "No conversations yet.",
-    "selectConversation": "Select a conversation from the list on the left.",
     "inputPlaceholder": "Write a message…",
     "send": "SEND",
     "you": "You",
     "sending": "Sending…",
     "sendMessage": "MESSAGE",
     "loading": "LOADING…",
-    "error": "Could not load messages."
+    "error": "Could not load messages.",
+    "close": "Close"
   },
   "profile": {
     "editTitle": "EDIT PROFILE",
@@ -280,6 +282,7 @@
     "postContentLabel": "CONTENT",
     "postCoverLabel": "COVER IMAGE URL",
     "uploadCover": "UPLOAD COVER",
+    "removeCover": "Remove cover",
     "postCoverUrlPlaceholder": "or enter URL…",
     "coverUploadError": "Upload failed. Please try again.",
     "postValidationRequired": "Bulgarian title is required.",
@@ -356,6 +359,8 @@
     "uploadError": "Upload failed. Please try again.",
     "imageTabUrl": "IMAGE URL",
     "imageTabUpload": "UPLOAD IMAGE",
+    "toggleImageSource": "Toggle image source",
+    "removeImage": "Remove image",
     "publishSearch": "POST A SEARCH",
     "publishSearchTitle": "Post a Search",
     "close": "Close",
@@ -369,7 +374,8 @@
   },
   "distillerySelect": {
     "placeholder": "Search distillery...",
-    "noOptions": "No distilleries found"
+    "noOptions": "No distilleries found",
+    "clear": "Clear"
   },
   "offers": {
     "title": "Offers",
@@ -397,6 +403,7 @@
     "on": "for {{bottle}}",
     "loading": "LOADING…",
     "errorCreate": "Failed to send offer. Please try again.",
+    "priceInvalid": "Enter a valid price.",
     "errorRespond": "Operation failed. Please try again."
   }
 }

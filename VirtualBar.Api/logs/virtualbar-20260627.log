@@ -1,0 +1,1096 @@
+2026-06-27 16:26:35.083 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-27 16:26:35.083 [INF] → GET /api/notifications | IP ::1
+2026-06-27 16:26:35.083 [INF] → GET /api/messages | IP ::1
+2026-06-27 16:26:35.739 [INF] ← GET /api/notifications 200 | 663ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-27 16:26:35.759 [INF] ← GET /api/messages 200 | 683ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-27 16:26:36.002 [INF] ← GET /api/feed 200 | 926ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-27 16:26:36.047 [INF] → GET /uploads/bottles/b990565a-b3c0-46e4-b7c8-638464a34df1.jpg | IP ::1
+2026-06-27 16:26:36.047 [INF] → GET /uploads/bottles/c4155032-bb2a-4d89-9314-d4448d202f59.jpg | IP ::1
+2026-06-27 16:26:36.073 [INF] ← GET /uploads/bottles/b990565a-b3c0-46e4-b7c8-638464a34df1.jpg 304 | 26ms | user:anonymous
+2026-06-27 16:26:36.073 [INF] ← GET /uploads/bottles/c4155032-bb2a-4d89-9314-d4448d202f59.jpg 304 | 26ms | user:anonymous
+2026-06-27 16:27:05.783 [INF] → GET /api/messages | IP ::1
+2026-06-27 16:27:05.783 [INF] → GET /api/notifications | IP ::1
+2026-06-27 16:27:05.910 [INF] ← GET /api/notifications 200 | 126ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-27 16:27:05.924 [INF] ← GET /api/messages 200 | 140ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-27 16:27:12.077 [INF] → GET /api/users | IP ::1
+2026-06-27 16:27:12.134 [INF] ← GET /api/users 200 | 57ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-27 16:27:21.365 [INF] → GET /api/bottles/marketplace?sort=newest | IP ::1
+2026-06-27 16:27:21.489 [WRN] Compiling a query which loads related collections for more than one collection navigation, either via 'Include' or through projection, but no 'QuerySplittingBehavior' has been configured. By default, Entity Framework will use 'QuerySplittingBehavior.SingleQuery', which can potentially result in slow query performance. See https://go.microsoft.com/fwlink/?linkid=2134277 for more information. To identify the query that's triggering this warning call 'ConfigureWarnings(w => w.Throw(RelationalEventId.MultipleCollectionIncludeWarning))'.
+2026-06-27 16:27:21.751 [INF] ← GET /api/bottles/marketplace 200 | 386ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-27 16:27:25.848 [INF] → GET /api/bottles?userId=f755f1be-cd7b-4d85-f377-08decf9e98b5 | IP ::1
+2026-06-27 16:27:25.874 [WRN] Compiling a query which loads related collections for more than one collection navigation, either via 'Include' or through projection, but no 'QuerySplittingBehavior' has been configured. By default, Entity Framework will use 'QuerySplittingBehavior.SingleQuery', which can potentially result in slow query performance. See https://go.microsoft.com/fwlink/?linkid=2134277 for more information. To identify the query that's triggering this warning call 'ConfigureWarnings(w => w.Throw(RelationalEventId.MultipleCollectionIncludeWarning))'.
+2026-06-27 16:27:25.957 [INF] ← GET /api/bottles 200 | 108ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-27 16:27:28.811 [INF] → GET /api/offers/received | IP ::1
+2026-06-27 16:27:28.889 [INF] ← GET /api/offers/received 200 | 78ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-27 16:27:35.944 [INF] → GET /api/messages | IP ::1
+2026-06-27 16:27:35.962 [INF] ← GET /api/messages 200 | 18ms | user:f755f1be-cd7b-4d85-f377-08decf9e98b5
+2026-06-27 16:27:38.070 [INF] → POST /api/auth/logout | IP ::1
+2026-06-27 16:27:38.081 [WRN] ← POST /api/auth/logout 401 | 10ms | user:anonymous
+2026-06-27 16:27:51.241 [INF] → POST /api/auth/login | IP ::1
+2026-06-27 16:27:51.505 [WRN] ← POST /api/auth/login 400 | 264ms | user:anonymous
+2026-06-27 16:27:53.931 [INF] → GET /api/bottles/marketplace?sort=newest | IP ::1
+2026-06-27 16:27:53.966 [INF] ← GET /api/bottles/marketplace 200 | 34ms | user:anonymous
+2026-06-27 16:27:55.416 [INF] → GET /api/users | IP ::1
+2026-06-27 16:27:55.440 [INF] ← GET /api/users 200 | 23ms | user:anonymous
+2026-06-27 16:28:34.727 [INF] → GET /api/bottles/marketplace?sort=newest | IP ::1
+2026-06-27 16:28:34.758 [INF] ← GET /api/bottles/marketplace 200 | 30ms | user:anonymous
+2026-06-27 16:28:47.715 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-27 16:28:47.741 [INF] ← GET /api/feed 200 | 26ms | user:anonymous
+2026-06-27 16:29:02.358 [INF] → GET /api/users | IP ::1
+2026-06-27 16:29:02.385 [INF] ← GET /api/users 200 | 26ms | user:anonymous
+2026-06-27 16:38:38.481 [INF] → GET /scalar/v1 | IP ::1
+2026-06-27 16:38:38.824 [INF] ← GET /scalar/v1 200 | 342ms | user:anonymous
+2026-06-27 16:38:38.848 [INF] → GET /scalar/scalar.aspnetcore.js | IP ::1
+2026-06-27 16:38:38.848 [INF] → GET /scalar/scalar.js | IP ::1
+2026-06-27 16:38:38.892 [INF] ← GET /scalar/scalar.aspnetcore.js 200 | 44ms | user:anonymous
+2026-06-27 16:38:38.939 [INF] ← GET /scalar/scalar.js 200 | 90ms | user:anonymous
+2026-06-27 16:38:39.527 [INF] → GET /openapi/v1.json | IP ::1
+2026-06-27 16:38:39.809 [INF] → GET /scalar/favicon.svg | IP ::1
+2026-06-27 16:38:39.813 [INF] ← GET /scalar/favicon.svg 200 | 3ms | user:anonymous
+2026-06-27 16:38:39.827 [INF] ← GET /openapi/v1.json 200 | 300ms | user:anonymous
+2026-06-27 16:59:40.476 [INF] → GET /scalar/v1 | IP ::1
+2026-06-27 16:59:40.808 [INF] ← GET /scalar/v1 200 | 347ms | user:anonymous
+2026-06-27 16:59:40.835 [INF] → GET /scalar/scalar.js | IP ::1
+2026-06-27 16:59:40.836 [INF] → GET /scalar/scalar.aspnetcore.js | IP ::1
+2026-06-27 16:59:40.847 [INF] ← GET /scalar/scalar.aspnetcore.js 200 | 11ms | user:anonymous
+2026-06-27 16:59:40.861 [INF] ← GET /scalar/scalar.js 200 | 26ms | user:anonymous
+2026-06-27 16:59:41.649 [INF] → GET /openapi/v1.json | IP ::1
+2026-06-27 16:59:41.968 [INF] ← GET /openapi/v1.json 200 | 318ms | user:anonymous
+2026-06-27 16:59:42.865 [INF] → GET /scalar/favicon.svg | IP ::1
+2026-06-27 16:59:42.866 [INF] ← GET /scalar/favicon.svg 200 | 1ms | user:anonymous
+2026-06-27 17:00:08.543 [INF] → POST /api/auth/login | IP ::1
+2026-06-27 17:00:08.878 [INF] ← POST /api/auth/login 200 | 335ms | user:anonymous
+2026-06-27 17:00:08.907 [INF] → GET /api/messages | IP ::1
+2026-06-27 17:00:08.951 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-27 17:00:08.951 [INF] → GET /api/notifications | IP ::1
+2026-06-27 17:00:09.134 [INF] ← GET /api/notifications 200 | 183ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-27 17:00:09.216 [INF] ← GET /api/messages 200 | 309ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-27 17:00:09.289 [INF] ← GET /api/feed 200 | 337ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-27 17:00:39.152 [INF] → GET /api/notifications | IP ::1
+2026-06-27 17:00:39.170 [INF] ← GET /api/notifications 200 | 17ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-27 17:00:39.228 [INF] → GET /api/messages | IP ::1
+2026-06-27 17:00:39.238 [INF] ← GET /api/messages 200 | 10ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-27 17:01:09.183 [INF] → GET /api/notifications | IP ::1
+2026-06-27 17:01:09.199 [INF] ← GET /api/notifications 200 | 15ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-27 17:01:09.261 [INF] → GET /api/messages | IP ::1
+2026-06-27 17:01:09.293 [INF] ← GET /api/messages 200 | 32ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-27 17:01:39.214 [INF] → GET /api/notifications | IP ::1
+2026-06-27 17:01:39.219 [INF] ← GET /api/notifications 200 | 5ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-27 17:01:39.307 [INF] → GET /api/messages | IP ::1
+2026-06-27 17:01:39.313 [INF] ← GET /api/messages 200 | 5ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-27 17:02:46.473 [INF] → GET /api/messages | IP ::1
+2026-06-27 17:02:46.473 [INF] → GET /api/notifications | IP ::1
+2026-06-27 17:02:46.880 [INF] ← GET /api/notifications 200 | 423ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-27 17:02:46.887 [INF] ← GET /api/messages 200 | 430ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-27 17:03:08.794 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-27 17:03:09.027 [ERR] An error occurred using the connection to database 'VirtualBarDb' on server 'localhost\SQLEXPRESS'.
+2026-06-27 17:03:09.035 [INF] ← GET /api/feed 200 | 240ms | user:anonymous
+2026-06-27 17:03:09.149 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-27 17:03:09.260 [INF] ← GET /api/feed 200 | 111ms | user:anonymous
+2026-06-27 17:03:11.424 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-27 17:03:11.439 [INF] ← GET /api/feed 200 | 14ms | user:anonymous
+2026-06-27 17:03:16.907 [INF] → GET /api/messages | IP ::1
+2026-06-27 17:03:16.907 [INF] → GET /api/notifications | IP ::1
+2026-06-27 17:03:16.955 [INF] ← GET /api/messages 200 | 47ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-27 17:03:16.959 [INF] ← GET /api/notifications 200 | 52ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-27 17:03:46.748 [INF] → POST /api/auth/login | IP ::1
+2026-06-27 17:03:46.967 [INF] → GET /api/messages | IP ::1
+2026-06-27 17:03:46.970 [INF] → GET /api/notifications | IP ::1
+2026-06-27 17:03:46.976 [INF] ← GET /api/messages 200 | 8ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-27 17:03:46.976 [INF] ← GET /api/notifications 200 | 6ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-27 17:03:46.982 [INF] ← POST /api/auth/login 200 | 233ms | user:anonymous
+2026-06-27 17:03:47.030 [INF] → GET /api/messages | IP ::1
+2026-06-27 17:03:47.037 [INF] ← GET /api/messages 200 | 6ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-27 17:03:47.044 [INF] → GET /api/notifications | IP ::1
+2026-06-27 17:03:47.047 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-27 17:03:47.050 [INF] ← GET /api/notifications 200 | 5ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-27 17:03:47.068 [INF] ← GET /api/feed 200 | 21ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-27 17:04:11.569 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-27 17:04:11.569 [INF] → GET /api/bottles/marketplace?sort=newest | IP ::1
+2026-06-27 17:04:11.616 [INF] ← GET /api/feed 200 | 47ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-27 17:04:11.665 [WRN] Compiling a query which loads related collections for more than one collection navigation, either via 'Include' or through projection, but no 'QuerySplittingBehavior' has been configured. By default, Entity Framework will use 'QuerySplittingBehavior.SingleQuery', which can potentially result in slow query performance. See https://go.microsoft.com/fwlink/?linkid=2134277 for more information. To identify the query that's triggering this warning call 'ConfigureWarnings(w => w.Throw(RelationalEventId.MultipleCollectionIncludeWarning))'.
+2026-06-27 17:04:11.807 [ERR] An error occurred using the connection to database 'VirtualBarDb' on server 'localhost\SQLEXPRESS'.
+2026-06-27 17:04:11.810 [INF] ← GET /api/bottles/marketplace 200 | 241ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-27 17:04:12.290 [INF] → GET /api/notifications | IP ::1
+2026-06-27 17:04:12.310 [INF] → GET /api/bottles/marketplace?sort=newest | IP ::1
+2026-06-27 17:04:12.321 [INF] ← GET /api/notifications 200 | 31ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-27 17:04:12.341 [INF] → GET /api/messages | IP ::1
+2026-06-27 17:04:12.380 [INF] ← GET /api/messages 200 | 38ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-27 17:04:12.540 [INF] ← GET /api/bottles/marketplace 200 | 230ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-27 17:04:20.116 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-27 17:04:20.134 [INF] ← GET /api/feed 200 | 17ms | user:anonymous
+2026-06-27 17:04:48.481 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-27 17:04:48.481 [INF] → GET /api/messages | IP ::1
+2026-06-27 17:04:48.489 [INF] → GET /api/notifications | IP ::1
+2026-06-27 17:04:48.494 [INF] ← GET /api/feed 200 | 12ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-27 17:04:48.513 [INF] ← GET /api/messages 200 | 31ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-27 17:04:48.535 [INF] ← GET /api/notifications 200 | 45ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-27 17:04:48.835 [INF] → GET /api/notifications | IP ::1
+2026-06-27 17:04:48.835 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-27 17:04:48.835 [INF] → GET /api/messages | IP ::1
+2026-06-27 17:04:48.841 [INF] ← GET /api/notifications 200 | 5ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-27 17:04:48.843 [INF] ← GET /api/feed 200 | 8ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-27 17:04:48.845 [INF] ← GET /api/messages 200 | 10ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-27 17:05:02.584 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-27 17:05:02.593 [INF] ← GET /api/feed 200 | 8ms | user:anonymous
+2026-06-27 17:05:05.570 [INF] → GET /api/notifications | IP ::1
+2026-06-27 17:05:05.570 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-27 17:05:05.571 [INF] → GET /api/messages | IP ::1
+2026-06-27 17:05:05.579 [INF] ← GET /api/notifications 200 | 8ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-27 17:05:05.581 [INF] ← GET /api/feed 200 | 10ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-27 17:05:05.585 [INF] ← GET /api/messages 200 | 14ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-27 17:06:02.554 [INF] → GET /scalar/v1 | IP ::1
+2026-06-27 17:06:02.757 [INF] ← GET /scalar/v1 200 | 202ms | user:anonymous
+2026-06-27 17:06:02.782 [INF] → GET /scalar/scalar.js | IP ::1
+2026-06-27 17:06:02.785 [INF] → GET /scalar/scalar.aspnetcore.js | IP ::1
+2026-06-27 17:06:02.795 [INF] ← GET /scalar/scalar.aspnetcore.js 200 | 9ms | user:anonymous
+2026-06-27 17:06:02.809 [INF] ← GET /scalar/scalar.js 200 | 27ms | user:anonymous
+2026-06-27 17:06:03.719 [INF] → GET /openapi/v1.json | IP ::1
+2026-06-27 17:06:03.992 [INF] ← GET /openapi/v1.json 200 | 273ms | user:anonymous
+2026-06-27 17:08:33.870 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-27 17:08:33.912 [INF] ← GET /api/feed 200 | 41ms | user:anonymous
+2026-06-27 17:08:34.585 [INF] → GET /api/messages | IP ::1
+2026-06-27 17:08:34.586 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-27 17:08:34.588 [INF] → GET /api/notifications | IP ::1
+2026-06-27 17:08:34.689 [ERR] Unhandled exception for GET /api/messages
+Microsoft.Data.SqlClient.SqlException (0x80131904): A severe error occurred on the current command.  The results, if any, should be discarded.
+Operation cancelled by user.
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+   at Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync[TSource](IQueryable`1 source, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync[TSource](IQueryable`1 source, CancellationToken cancellationToken)
+   at VirtualBar.Infrastructure.Services.MessageService.GetInboxAsync(CancellationToken cancellationToken) in C:\Users\jivko\source\repos\VirtualBar\VirtualBar.Infrastructure\Services\MessageService.cs:line 19
+   at VirtualBar.Api.Controllers.MessagesController.GetInbox(CancellationToken cancellationToken) in C:\Users\jivko\source\repos\VirtualBar\VirtualBar.Api\Controllers\MessagesController.cs:line 20
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ActionMethodExecutor.TaskOfIActionResultExecutor.Execute(ActionContext actionContext, IActionResultTypeMapper mapper, ObjectMethodExecutor executor, Object controller, Object[] arguments)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeActionMethodAsync>g__Awaited|12_0(ControllerActionInvoker invoker, ValueTask`1 actionResultValueTask)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeNextActionFilterAsync>g__Awaited|10_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Rethrow(ActionExecutedContextSealed context)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Next(State& next, Scope& scope, Object& state, Boolean& isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeInnerFilterAsync>g__Awaited|13_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeFilterPipelineAsync>g__Awaited|20_0(ResourceInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+   at Microsoft.AspNetCore.Authorization.AuthorizationMiddleware.Invoke(HttpContext context)
+   at Microsoft.AspNetCore.Authentication.AuthenticationMiddleware.Invoke(HttpContext context)
+   at VirtualBar.Api.Middleware.GlobalExceptionMiddleware.InvokeAsync(HttpContext context) in C:\Users\jivko\source\repos\VirtualBar\VirtualBar.Api\Middleware\GlobalExceptionMiddleware.cs:line 12
+ClientConnectionId:127bd8b3-9e37-4054-a971-0fb5ccb79f13
+2026-06-27 17:08:34.689 [ERR] Unhandled exception for GET /api/notifications
+Microsoft.Data.SqlClient.SqlException (0x80131904): A severe error occurred on the current command.  The results, if any, should be discarded.
+Operation cancelled by user.
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+   at Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync[TSource](IQueryable`1 source, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync[TSource](IQueryable`1 source, CancellationToken cancellationToken)
+   at VirtualBar.Infrastructure.Services.NotificationService.GetNotificationsAsync(CancellationToken cancellationToken) in C:\Users\jivko\source\repos\VirtualBar\VirtualBar.Infrastructure\Services\NotificationService.cs:line 18
+   at VirtualBar.Infrastructure.Decorators.NotificationValidationDecorator.GetNotificationsAsync(CancellationToken cancellationToken) in C:\Users\jivko\source\repos\VirtualBar\VirtualBar.Infrastructure\Decorators\NotificationValidationDecorator.cs:line 17
+   at VirtualBar.Api.Controllers.NotificationsController.GetNotifications(CancellationToken cancellationToken) in C:\Users\jivko\source\repos\VirtualBar\VirtualBar.Api\Controllers\NotificationsController.cs:line 19
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ActionMethodExecutor.TaskOfIActionResultExecutor.Execute(ActionContext actionContext, IActionResultTypeMapper mapper, ObjectMethodExecutor executor, Object controller, Object[] arguments)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeActionMethodAsync>g__Awaited|12_0(ControllerActionInvoker invoker, ValueTask`1 actionResultValueTask)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeNextActionFilterAsync>g__Awaited|10_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Rethrow(ActionExecutedContextSealed context)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Next(State& next, Scope& scope, Object& state, Boolean& isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeInnerFilterAsync>g__Awaited|13_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeFilterPipelineAsync>g__Awaited|20_0(ResourceInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+   at Microsoft.AspNetCore.Authorization.AuthorizationMiddleware.Invoke(HttpContext context)
+   at Microsoft.AspNetCore.Authentication.AuthenticationMiddleware.Invoke(HttpContext context)
+   at VirtualBar.Api.Middleware.GlobalExceptionMiddleware.InvokeAsync(HttpContext context) in C:\Users\jivko\source\repos\VirtualBar\VirtualBar.Api\Middleware\GlobalExceptionMiddleware.cs:line 12
+ClientConnectionId:23d35946-582f-4200-aee0-4afc1b200715
+2026-06-27 17:08:34.689 [ERR] Unhandled exception for GET /api/feed
+Microsoft.Data.SqlClient.SqlException (0x80131904): A severe error occurred on the current command.  The results, if any, should be discarded.
+Operation cancelled by user.
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+   at Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync[TSource](IQueryable`1 source, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync[TSource](IQueryable`1 source, CancellationToken cancellationToken)
+   at VirtualBar.Infrastructure.Services.FeedService.GetFeedAsync(Int32 skip, Int32 take, String lang, CancellationToken cancellationToken) in C:\Users\jivko\source\repos\VirtualBar\VirtualBar.Infrastructure\Services\FeedService.cs:line 14
+   at VirtualBar.Infrastructure.Decorators.FeedValidationDecorator.GetFeedAsync(Int32 skip, Int32 take, String lang, CancellationToken cancellationToken) in C:\Users\jivko\source\repos\VirtualBar\VirtualBar.Infrastructure\Decorators\FeedValidationDecorator.cs:line 18
+   at VirtualBar.Api.Controllers.FeedController.GetFeed(Int32 skip, Int32 take, String lang, CancellationToken cancellationToken) in C:\Users\jivko\source\repos\VirtualBar\VirtualBar.Api\Controllers\FeedController.cs:line 27
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ActionMethodExecutor.TaskOfIActionResultExecutor.Execute(ActionContext actionContext, IActionResultTypeMapper mapper, ObjectMethodExecutor executor, Object controller, Object[] arguments)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeActionMethodAsync>g__Awaited|12_0(ControllerActionInvoker invoker, ValueTask`1 actionResultValueTask)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeNextActionFilterAsync>g__Awaited|10_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Rethrow(ActionExecutedContextSealed context)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Next(State& next, Scope& scope, Object& state, Boolean& isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeInnerFilterAsync>g__Awaited|13_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeFilterPipelineAsync>g__Awaited|20_0(ResourceInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+   at Microsoft.AspNetCore.Authorization.AuthorizationMiddleware.Invoke(HttpContext context)
+   at Microsoft.AspNetCore.Authentication.AuthenticationMiddleware.Invoke(HttpContext context)
+   at VirtualBar.Api.Middleware.GlobalExceptionMiddleware.InvokeAsync(HttpContext context) in C:\Users\jivko\source\repos\VirtualBar\VirtualBar.Api\Middleware\GlobalExceptionMiddleware.cs:line 12
+ClientConnectionId:91f21ca5-d35e-45f8-95c1-70fef3b27934
+2026-06-27 17:08:34.756 [ERR] ← GET /api/messages 500 | 171ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-27 17:08:34.757 [ERR] ← GET /api/notifications 500 | 169ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-27 17:08:34.766 [ERR] ← GET /api/feed 500 | 180ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-27 17:08:34.840 [INF] → GET /api/notifications | IP ::1
+2026-06-27 17:08:34.840 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-27 17:08:34.840 [INF] → GET /api/messages | IP ::1
+2026-06-27 17:08:34.867 [INF] ← GET /api/feed 200 | 26ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-27 17:08:34.867 [INF] ← GET /api/notifications 200 | 26ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-27 17:08:34.869 [INF] ← GET /api/messages 200 | 28ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-27 17:08:43.643 [INF] → GET /api/users | IP ::1
+2026-06-27 17:08:43.705 [INF] ← GET /api/users 200 | 61ms | user:anonymous
+2026-06-27 17:09:02.675 [INF] → GET /api/users/56aa920d-a3ab-412e-42da-08dece268891 | IP ::1
+2026-06-27 17:09:02.675 [INF] → GET /api/bottles?userId=56aa920d-a3ab-412e-42da-08dece268891 | IP ::1
+2026-06-27 17:09:02.704 [WRN] Compiling a query which loads related collections for more than one collection navigation, either via 'Include' or through projection, but no 'QuerySplittingBehavior' has been configured. By default, Entity Framework will use 'QuerySplittingBehavior.SingleQuery', which can potentially result in slow query performance. See https://go.microsoft.com/fwlink/?linkid=2134277 for more information. To identify the query that's triggering this warning call 'ConfigureWarnings(w => w.Throw(RelationalEventId.MultipleCollectionIncludeWarning))'.
+2026-06-27 17:09:02.741 [INF] ← GET /api/users/56aa920d-a3ab-412e-42da-08dece268891 200 | 65ms | user:anonymous
+2026-06-27 17:09:02.785 [INF] ← GET /api/bottles 200 | 109ms | user:anonymous
+2026-06-27 17:09:04.921 [INF] → GET /api/notifications | IP ::1
+2026-06-27 17:09:04.926 [INF] → GET /api/messages | IP ::1
+2026-06-27 17:09:04.951 [INF] ← GET /api/notifications 200 | 29ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-27 17:09:04.965 [INF] ← GET /api/messages 200 | 38ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-27 17:09:55.035 [INF] → GET /api/messages | IP ::1
+2026-06-27 17:09:55.040 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-27 17:09:55.041 [INF] → GET /api/notifications | IP ::1
+2026-06-27 17:09:55.073 [INF] ← GET /api/notifications 200 | 32ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-27 17:09:55.082 [INF] ← GET /api/feed 200 | 41ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-27 17:09:55.093 [INF] ← GET /api/messages 200 | 57ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-27 17:09:55.367 [INF] → GET /api/notifications | IP ::1
+2026-06-27 17:09:55.368 [INF] → GET /api/messages | IP ::1
+2026-06-27 17:09:55.368 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-27 17:09:55.374 [INF] ← GET /api/notifications 200 | 6ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-27 17:09:55.376 [INF] ← GET /api/messages 200 | 7ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-27 17:09:55.381 [INF] ← GET /api/feed 200 | 12ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-27 17:09:56.569 [INF] → GET /api/notifications | IP ::1
+2026-06-27 17:09:56.570 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-27 17:09:56.570 [INF] → GET /api/messages | IP ::1
+2026-06-27 17:09:56.577 [INF] ← GET /api/notifications 200 | 7ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-27 17:09:56.580 [INF] ← GET /api/feed 200 | 10ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-27 17:09:56.583 [INF] ← GET /api/messages 200 | 13ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-27 17:11:36.782 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-27 17:11:36.782 [INF] → GET /api/messages | IP ::1
+2026-06-27 17:11:36.783 [INF] → GET /api/notifications | IP ::1
+2026-06-27 17:11:36.798 [INF] ← GET /api/notifications 200 | 15ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-27 17:11:36.815 [INF] ← GET /api/feed 200 | 32ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-27 17:11:36.821 [ERR] Unhandled exception for GET /api/messages
+Microsoft.Data.SqlClient.SqlException (0x80131904): A severe error occurred on the current command.  The results, if any, should be discarded.
+Operation cancelled by user.
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+   at Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync[TSource](IQueryable`1 source, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync[TSource](IQueryable`1 source, CancellationToken cancellationToken)
+   at VirtualBar.Infrastructure.Services.MessageService.GetInboxAsync(CancellationToken cancellationToken) in C:\Users\jivko\source\repos\VirtualBar\VirtualBar.Infrastructure\Services\MessageService.cs:line 37
+   at VirtualBar.Api.Controllers.MessagesController.GetInbox(CancellationToken cancellationToken) in C:\Users\jivko\source\repos\VirtualBar\VirtualBar.Api\Controllers\MessagesController.cs:line 20
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ActionMethodExecutor.TaskOfIActionResultExecutor.Execute(ActionContext actionContext, IActionResultTypeMapper mapper, ObjectMethodExecutor executor, Object controller, Object[] arguments)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeActionMethodAsync>g__Awaited|12_0(ControllerActionInvoker invoker, ValueTask`1 actionResultValueTask)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeNextActionFilterAsync>g__Awaited|10_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Rethrow(ActionExecutedContextSealed context)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Next(State& next, Scope& scope, Object& state, Boolean& isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeInnerFilterAsync>g__Awaited|13_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeFilterPipelineAsync>g__Awaited|20_0(ResourceInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+   at Microsoft.AspNetCore.Authorization.AuthorizationMiddleware.Invoke(HttpContext context)
+   at Microsoft.AspNetCore.Authentication.AuthenticationMiddleware.Invoke(HttpContext context)
+   at VirtualBar.Api.Middleware.GlobalExceptionMiddleware.InvokeAsync(HttpContext context) in C:\Users\jivko\source\repos\VirtualBar\VirtualBar.Api\Middleware\GlobalExceptionMiddleware.cs:line 12
+ClientConnectionId:23d35946-582f-4200-aee0-4afc1b200715
+2026-06-27 17:11:36.831 [ERR] ← GET /api/messages 500 | 48ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-27 17:11:37.060 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-27 17:11:37.060 [INF] → GET /api/notifications | IP ::1
+2026-06-27 17:11:37.060 [INF] → GET /api/messages | IP ::1
+2026-06-27 17:11:37.067 [INF] ← GET /api/feed 200 | 6ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-27 17:11:37.068 [INF] ← GET /api/notifications 200 | 7ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-27 17:11:37.076 [INF] ← GET /api/messages 200 | 15ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-27 17:11:46.155 [INF] → GET /api/notifications | IP ::1
+2026-06-27 17:11:46.155 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-27 17:11:46.155 [INF] → GET /api/messages | IP ::1
+2026-06-27 17:11:46.162 [INF] ← GET /api/notifications 200 | 7ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-27 17:11:46.163 [INF] ← GET /api/feed 200 | 7ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-27 17:11:46.166 [INF] ← GET /api/messages 200 | 10ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-27 17:14:16.364 [INF] → GET /api/messages | IP ::1
+2026-06-27 17:14:16.364 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-27 17:14:16.365 [INF] → GET /api/notifications | IP ::1
+2026-06-27 17:14:16.401 [INF] ← GET /api/notifications 200 | 36ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-27 17:14:16.403 [INF] ← GET /api/feed 200 | 39ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-27 17:14:16.404 [INF] ← GET /api/messages 200 | 40ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-27 17:14:16.772 [INF] → GET /api/notifications | IP ::1
+2026-06-27 17:14:16.772 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-27 17:14:16.772 [INF] → GET /api/messages | IP ::1
+2026-06-27 17:14:16.777 [INF] ← GET /api/notifications 200 | 4ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-27 17:14:16.778 [INF] ← GET /api/feed 200 | 6ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-27 17:14:16.780 [INF] ← GET /api/messages 200 | 8ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-27 17:24:42.402 [INF] → GET /api/messages | IP ::1
+2026-06-27 17:24:42.403 [INF] → GET /api/bottles/marketplace?sort=newest | IP ::1
+2026-06-27 17:24:42.430 [INF] → GET /api/notifications | IP ::1
+2026-06-27 17:24:42.467 [INF] ← GET /api/messages 200 | 64ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-27 17:24:42.498 [INF] ← GET /api/notifications 200 | 67ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-27 17:24:42.506 [INF] ← GET /api/bottles/marketplace 200 | 102ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-27 17:24:57.978 [INF] → GET /api/users | IP ::1
+2026-06-27 17:24:57.999 [INF] ← GET /api/users 200 | 21ms | user:anonymous
+2026-06-27 17:38:46.699 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-27 17:38:46.723 [INF] ← GET /api/feed 200 | 24ms | user:anonymous
+2026-06-27 17:39:05.516 [INF] → GET /api/users | IP ::1
+2026-06-27 17:39:05.538 [INF] ← GET /api/users 200 | 22ms | user:anonymous
+2026-06-27 17:39:14.217 [INF] → GET /api/bottles?userId=bba60c8a-c39b-43c9-42e0-08dece268891 | IP ::1
+2026-06-27 17:39:14.217 [INF] → GET /api/users/bba60c8a-c39b-43c9-42e0-08dece268891 | IP ::1
+2026-06-27 17:39:14.245 [INF] ← GET /api/bottles 200 | 28ms | user:anonymous
+2026-06-27 17:39:14.262 [INF] ← GET /api/users/bba60c8a-c39b-43c9-42e0-08dece268891 200 | 44ms | user:anonymous
+2026-06-27 17:39:18.080 [INF] → GET /api/bottles/marketplace?sort=newest | IP ::1
+2026-06-27 17:39:18.112 [INF] ← GET /api/bottles/marketplace 200 | 31ms | user:anonymous
+2026-06-27 17:39:18.132 [INF] → GET /uploads/bottles/b990565a-b3c0-46e4-b7c8-638464a34df1.jpg | IP ::1
+2026-06-27 17:39:18.142 [INF] ← GET /uploads/bottles/b990565a-b3c0-46e4-b7c8-638464a34df1.jpg 200 | 9ms | user:anonymous
+2026-06-27 17:39:19.768 [INF] → GET /api/bottles/marketplace?category=Rum&sort=newest | IP ::1
+2026-06-27 17:39:19.786 [WRN] Compiling a query which loads related collections for more than one collection navigation, either via 'Include' or through projection, but no 'QuerySplittingBehavior' has been configured. By default, Entity Framework will use 'QuerySplittingBehavior.SingleQuery', which can potentially result in slow query performance. See https://go.microsoft.com/fwlink/?linkid=2134277 for more information. To identify the query that's triggering this warning call 'ConfigureWarnings(w => w.Throw(RelationalEventId.MultipleCollectionIncludeWarning))'.
+2026-06-27 17:39:19.886 [INF] ← GET /api/bottles/marketplace 200 | 118ms | user:anonymous
+2026-06-27 17:39:20.372 [INF] → GET /api/bottles/marketplace?category=Cognac&sort=newest | IP ::1
+2026-06-27 17:39:20.408 [INF] ← GET /api/bottles/marketplace 200 | 36ms | user:anonymous
+2026-06-27 17:39:20.984 [INF] → GET /api/bottles/marketplace?category=Vodka&sort=newest | IP ::1
+2026-06-27 17:39:21.013 [INF] ← GET /api/bottles/marketplace 200 | 28ms | user:anonymous
+2026-06-27 17:39:23.399 [INF] → GET /api/bottles/marketplace?category=Vodka&sort=price_asc | IP ::1
+2026-06-27 17:39:23.416 [WRN] Compiling a query which loads related collections for more than one collection navigation, either via 'Include' or through projection, but no 'QuerySplittingBehavior' has been configured. By default, Entity Framework will use 'QuerySplittingBehavior.SingleQuery', which can potentially result in slow query performance. See https://go.microsoft.com/fwlink/?linkid=2134277 for more information. To identify the query that's triggering this warning call 'ConfigureWarnings(w => w.Throw(RelationalEventId.MultipleCollectionIncludeWarning))'.
+2026-06-27 17:39:23.495 [INF] ← GET /api/bottles/marketplace 200 | 96ms | user:anonymous
+2026-06-27 17:44:39.772 [INF] → GET /api/users | IP ::1
+2026-06-27 17:44:39.799 [INF] ← GET /api/users 200 | 27ms | user:anonymous
+2026-06-27 17:49:51.643 [INF] → GET /api/users | IP ::1
+2026-06-27 17:49:51.673 [INF] → GET /api/bottles/marketplace?category=Vodka&sort=price_asc | IP ::1
+2026-06-27 17:49:51.681 [INF] ← GET /api/users 200 | 37ms | user:anonymous
+2026-06-27 17:49:51.708 [INF] ← GET /api/bottles/marketplace 200 | 34ms | user:anonymous
+2026-06-27 17:49:55.249 [INF] → GET /api/messages | IP ::1
+2026-06-27 17:49:55.277 [INF] ← GET /api/messages 200 | 28ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-27 17:49:55.294 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-27 17:49:55.294 [INF] → GET /api/notifications | IP ::1
+2026-06-27 17:49:55.318 [INF] ← GET /api/feed 200 | 23ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-27 17:49:55.318 [INF] ← GET /api/notifications 200 | 23ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-27 17:57:08.787 [INF] → GET /api/bottles/marketplace?sort=newest | IP ::1
+2026-06-27 17:57:08.804 [INF] → GET /api/notifications | IP ::1
+2026-06-27 17:57:08.805 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-27 17:57:08.806 [INF] → GET /api/messages | IP ::1
+2026-06-27 17:57:08.825 [INF] ← GET /api/notifications 200 | 20ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-27 17:57:08.827 [INF] ← GET /api/bottles/marketplace 200 | 40ms | user:anonymous
+2026-06-27 17:57:08.862 [INF] ← GET /api/feed 200 | 57ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-27 17:57:08.870 [INF] ← GET /api/messages 200 | 64ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-27 17:57:09.119 [INF] → GET /api/notifications | IP ::1
+2026-06-27 17:57:09.120 [INF] → GET /api/bottles/marketplace?sort=newest | IP ::1
+2026-06-27 17:57:09.121 [INF] → GET /api/messages | IP ::1
+2026-06-27 17:57:09.126 [INF] ← GET /api/bottles/marketplace 200 | 5ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-27 17:57:09.126 [INF] ← GET /api/notifications 200 | 6ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-27 17:57:09.128 [INF] ← GET /api/messages 200 | 7ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-27 17:57:12.488 [INF] → GET /api/bottles/marketplace?sort=newest | IP ::1
+2026-06-27 17:57:12.495 [INF] ← GET /api/bottles/marketplace 200 | 6ms | user:anonymous
+2026-06-27 17:57:12.498 [INF] → GET /api/notifications | IP ::1
+2026-06-27 17:57:12.500 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-27 17:57:12.502 [INF] → GET /api/messages | IP ::1
+2026-06-27 17:57:12.505 [INF] ← GET /api/notifications 200 | 6ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-27 17:57:12.506 [INF] ← GET /api/feed 200 | 5ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-27 17:57:12.509 [INF] ← GET /api/messages 200 | 6ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-27 17:57:12.736 [INF] → GET /api/notifications | IP ::1
+2026-06-27 17:57:12.738 [INF] → GET /api/bottles/marketplace?sort=newest | IP ::1
+2026-06-27 17:57:12.738 [INF] → GET /api/messages | IP ::1
+2026-06-27 17:57:12.742 [INF] ← GET /api/notifications 200 | 6ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-27 17:57:12.744 [INF] ← GET /api/bottles/marketplace 200 | 6ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-27 17:57:12.746 [INF] ← GET /api/messages 200 | 8ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-27 17:57:44.792 [INF] → GET /api/messages | IP ::1
+2026-06-27 17:57:44.793 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-27 17:57:44.794 [INF] → GET /api/notifications | IP ::1
+2026-06-27 17:57:44.804 [INF] ← GET /api/messages 200 | 11ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-27 17:57:44.804 [INF] ← GET /api/notifications 200 | 10ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-27 17:57:44.808 [INF] ← GET /api/feed 200 | 15ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-27 17:58:11.650 [INF] → GET /api/bottles/marketplace?sort=newest | IP ::1
+2026-06-27 17:58:11.681 [INF] → GET /api/notifications | IP ::1
+2026-06-27 17:58:11.681 [INF] → GET /api/messages | IP ::1
+2026-06-27 17:58:11.681 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-27 17:58:11.688 [INF] ← GET /api/bottles/marketplace 200 | 38ms | user:anonymous
+2026-06-27 17:58:11.712 [INF] ← GET /api/notifications 200 | 31ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-27 17:58:11.713 [INF] ← GET /api/feed 200 | 32ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-27 17:58:11.723 [INF] ← GET /api/messages 200 | 41ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-27 17:58:12.051 [INF] → GET /api/notifications | IP ::1
+2026-06-27 17:58:12.052 [INF] → GET /api/bottles/marketplace?sort=newest | IP ::1
+2026-06-27 17:58:12.053 [INF] → GET /api/messages | IP ::1
+2026-06-27 17:58:12.057 [INF] ← GET /api/notifications 200 | 6ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-27 17:58:12.058 [INF] ← GET /api/bottles/marketplace 200 | 5ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-27 17:58:12.061 [INF] ← GET /api/messages 200 | 8ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-27 17:59:16.330 [INF] → GET /api/bottles/marketplace?sort=newest | IP ::1
+2026-06-27 17:59:16.364 [INF] ← GET /api/bottles/marketplace 200 | 33ms | user:anonymous
+2026-06-27 17:59:33.838 [INF] → GET /api/notifications | IP ::1
+2026-06-27 17:59:33.838 [INF] → GET /api/messages | IP ::1
+2026-06-27 17:59:33.838 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-27 17:59:33.858 [INF] ← GET /api/notifications 200 | 20ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-27 17:59:33.883 [INF] ← GET /api/feed 200 | 45ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-27 17:59:33.891 [INF] ← GET /api/messages 200 | 53ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-27 18:00:20.720 [INF] → GET /api/notifications | IP ::1
+2026-06-27 18:00:20.724 [INF] → GET /api/bottles/marketplace?sort=newest | IP ::1
+2026-06-27 18:00:20.725 [INF] → GET /api/messages | IP ::1
+2026-06-27 18:00:20.725 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-27 18:00:20.771 [INF] ← GET /api/notifications 200 | 51ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-27 18:00:20.771 [INF] ← GET /api/feed 200 | 46ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-27 18:00:20.773 [INF] ← GET /api/bottles/marketplace 200 | 48ms | user:anonymous
+2026-06-27 18:00:20.776 [INF] ← GET /api/messages 200 | 51ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-27 18:00:21.140 [INF] → GET /api/notifications | IP ::1
+2026-06-27 18:00:21.143 [INF] → GET /api/bottles/marketplace?sort=newest | IP ::1
+2026-06-27 18:00:21.144 [INF] → GET /api/messages | IP ::1
+2026-06-27 18:00:21.147 [INF] ← GET /api/notifications 200 | 6ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-27 18:00:21.148 [INF] ← GET /api/bottles/marketplace 200 | 4ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-27 18:00:21.152 [INF] ← GET /api/messages 200 | 8ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-27 18:01:00.788 [INF] → GET /api/bottles/marketplace?sort=newest | IP ::1
+2026-06-27 18:01:00.796 [INF] ← GET /api/bottles/marketplace 200 | 8ms | user:anonymous
+2026-06-27 18:01:00.809 [INF] → GET /api/notifications | IP ::1
+2026-06-27 18:01:00.809 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-27 18:01:00.812 [INF] → GET /api/messages | IP ::1
+2026-06-27 18:01:00.815 [INF] ← GET /api/notifications 200 | 5ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-27 18:01:00.816 [INF] ← GET /api/feed 200 | 7ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-27 18:01:00.817 [INF] ← GET /api/messages 200 | 5ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-27 18:01:01.191 [INF] → GET /api/notifications | IP ::1
+2026-06-27 18:01:01.196 [INF] → GET /api/bottles/marketplace?sort=newest | IP ::1
+2026-06-27 18:01:01.197 [INF] → GET /api/messages | IP ::1
+2026-06-27 18:01:01.201 [INF] ← GET /api/notifications 200 | 9ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-27 18:01:01.213 [INF] ← GET /api/bottles/marketplace 200 | 16ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-27 18:01:01.220 [INF] ← GET /api/messages 200 | 22ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-27 18:01:02.593 [INF] → GET /api/notifications | IP ::1
+2026-06-27 18:01:02.594 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-27 18:01:02.594 [INF] → GET /api/messages | IP ::1
+2026-06-27 18:01:02.600 [INF] ← GET /api/notifications 200 | 6ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-27 18:01:02.605 [INF] ← GET /api/feed 200 | 11ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-27 18:01:02.606 [INF] ← GET /api/messages 200 | 11ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-27 18:01:02.621 [INF] → GET /api/bottles/marketplace?sort=newest | IP ::1
+2026-06-27 18:01:02.627 [INF] ← GET /api/bottles/marketplace 200 | 5ms | user:anonymous
+2026-06-27 18:01:03.010 [INF] → GET /api/notifications | IP ::1
+2026-06-27 18:01:03.011 [INF] → GET /api/bottles/marketplace?sort=newest | IP ::1
+2026-06-27 18:01:03.011 [INF] → GET /api/messages | IP ::1
+2026-06-27 18:01:03.016 [INF] ← GET /api/notifications 200 | 5ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-27 18:01:03.016 [INF] ← GET /api/bottles/marketplace 200 | 5ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-27 18:01:03.020 [INF] ← GET /api/messages 200 | 9ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-27 18:02:52.706 [INF] → GET /api/notifications | IP ::1
+2026-06-27 18:02:52.706 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-27 18:02:52.706 [INF] → GET /api/messages | IP ::1
+2026-06-27 18:02:52.733 [INF] → GET /api/bottles/marketplace?sort=newest | IP ::1
+2026-06-27 18:02:52.752 [INF] ← GET /api/notifications 200 | 46ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-27 18:02:52.757 [INF] ← GET /api/feed 200 | 51ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-27 18:02:52.772 [INF] ← GET /api/messages 200 | 66ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-27 18:02:52.776 [INF] ← GET /api/bottles/marketplace 200 | 43ms | user:anonymous
+2026-06-27 18:02:53.101 [INF] → GET /api/notifications | IP ::1
+2026-06-27 18:02:53.103 [INF] → GET /api/messages | IP ::1
+2026-06-27 18:02:53.103 [INF] → GET /api/bottles/marketplace?sort=newest | IP ::1
+2026-06-27 18:02:53.107 [INF] ← GET /api/notifications 200 | 5ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-27 18:02:53.108 [INF] ← GET /api/messages 200 | 5ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-27 18:02:53.110 [INF] ← GET /api/bottles/marketplace 200 | 7ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-27 18:07:08.934 [INF] → GET /api/bottles/marketplace?sort=newest | IP ::1
+2026-06-27 18:07:08.965 [INF] → GET /api/notifications | IP ::1
+2026-06-27 18:07:08.965 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-27 18:07:08.965 [INF] → GET /api/messages | IP ::1
+2026-06-27 18:07:08.974 [INF] ← GET /api/bottles/marketplace 200 | 40ms | user:anonymous
+2026-06-27 18:07:08.988 [INF] ← GET /api/notifications 200 | 23ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-27 18:07:08.996 [INF] ← GET /api/feed 200 | 31ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-27 18:07:09.038 [INF] ← GET /api/messages 200 | 72ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-27 18:07:09.296 [INF] → GET /api/notifications | IP ::1
+2026-06-27 18:07:09.298 [INF] → GET /api/bottles/marketplace?sort=newest | IP ::1
+2026-06-27 18:07:09.298 [INF] → GET /api/messages | IP ::1
+2026-06-27 18:07:09.301 [INF] ← GET /api/notifications 200 | 4ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-27 18:07:09.305 [INF] ← GET /api/bottles/marketplace 200 | 7ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-27 18:07:09.307 [INF] ← GET /api/messages 200 | 9ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-27 18:07:36.501 [INF] → GET /api/bottles/marketplace?sort=newest | IP ::1
+2026-06-27 18:07:36.509 [INF] ← GET /api/bottles/marketplace 200 | 8ms | user:anonymous
+2026-06-27 18:07:36.635 [INF] → GET /api/notifications | IP ::1
+2026-06-27 18:07:36.641 [INF] → GET /api/messages | IP ::1
+2026-06-27 18:07:36.642 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-27 18:07:36.653 [INF] ← GET /api/notifications 200 | 18ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-27 18:07:36.655 [INF] ← GET /api/messages 200 | 13ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-27 18:07:36.658 [INF] ← GET /api/feed 200 | 16ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-27 18:07:37.028 [INF] → GET /api/notifications | IP ::1
+2026-06-27 18:07:37.028 [INF] → GET /api/bottles/marketplace?sort=newest | IP ::1
+2026-06-27 18:07:37.029 [INF] → GET /api/messages | IP ::1
+2026-06-27 18:07:37.036 [INF] ← GET /api/bottles/marketplace 200 | 7ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-27 18:07:37.039 [INF] ← GET /api/notifications 200 | 10ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-27 18:07:37.043 [INF] ← GET /api/messages 200 | 14ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-27 18:11:36.772 [INF] → GET /api/notifications | IP ::1
+2026-06-27 18:11:36.773 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-27 18:11:36.774 [INF] → GET /api/messages | IP ::1
+2026-06-27 18:11:36.796 [INF] ← GET /api/notifications 200 | 23ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-27 18:11:36.830 [INF] ← GET /api/feed 200 | 56ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-27 18:11:36.835 [INF] ← GET /api/messages 200 | 61ms | user:8bce4454-3ef5-449c-0257-08dece31259c
+2026-06-27 18:11:39.003 [INF] → POST /api/auth/logout | IP ::1
+2026-06-27 18:11:39.010 [WRN] ← POST /api/auth/logout 401 | 6ms | user:anonymous
+2026-06-27 21:07:13.358 [INF] → GET /api/notifications | IP ::1
+2026-06-27 21:07:13.358 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-27 21:07:13.358 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:07:13.412 [WRN] ← GET /api/notifications 401 | 54ms | user:anonymous
+2026-06-27 21:07:13.412 [WRN] ← GET /api/messages 401 | 54ms | user:anonymous
+2026-06-27 21:07:13.446 [INF] ← GET /api/feed 200 | 88ms | user:anonymous
+2026-06-27 21:07:13.884 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:07:13.886 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:07:14.147 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:07:14.149 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:07:14.466 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:07:14.468 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:07:14.712 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:07:14.714 [WRN] ← GET /api/messages 401 | 2ms | user:anonymous
+2026-06-27 21:07:14.970 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:07:14.972 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:07:15.219 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:07:15.221 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:07:15.487 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:07:15.488 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:07:15.771 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:07:15.773 [WRN] ← GET /api/messages 401 | 2ms | user:anonymous
+2026-06-27 21:07:16.044 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:07:16.046 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:07:16.293 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:07:16.296 [WRN] ← GET /api/messages 401 | 2ms | user:anonymous
+2026-06-27 21:07:16.574 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:07:16.575 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:07:16.850 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:07:16.852 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:07:17.133 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:07:17.135 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:07:17.405 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:07:17.407 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:07:17.683 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:07:17.685 [WRN] ← GET /api/messages 401 | 2ms | user:anonymous
+2026-06-27 21:07:17.950 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:07:17.952 [WRN] ← GET /api/messages 401 | 2ms | user:anonymous
+2026-06-27 21:07:18.195 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:07:18.197 [WRN] ← GET /api/messages 401 | 2ms | user:anonymous
+2026-06-27 21:07:18.500 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:07:18.502 [WRN] ← GET /api/messages 401 | 2ms | user:anonymous
+2026-06-27 21:07:18.744 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:07:18.745 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:07:18.984 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:07:18.985 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:07:19.301 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:07:19.303 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:07:19.567 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:07:19.569 [WRN] ← GET /api/messages 401 | 2ms | user:anonymous
+2026-06-27 21:07:19.821 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:07:19.822 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:07:20.110 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:07:20.111 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:07:20.396 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:07:20.400 [WRN] ← GET /api/messages 401 | 3ms | user:anonymous
+2026-06-27 21:07:20.636 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:07:20.638 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:07:20.950 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:07:20.953 [WRN] ← GET /api/messages 401 | 3ms | user:anonymous
+2026-06-27 21:07:21.226 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:07:21.229 [WRN] ← GET /api/messages 401 | 2ms | user:anonymous
+2026-06-27 21:07:21.497 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:07:21.501 [WRN] ← GET /api/messages 401 | 4ms | user:anonymous
+2026-06-27 21:07:21.790 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:07:21.791 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:07:22.037 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:07:22.038 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:07:22.309 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:07:22.310 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:07:22.608 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:07:22.610 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:07:22.845 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:07:22.847 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:07:23.096 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:07:23.097 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:07:23.368 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:07:23.370 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:07:23.611 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:07:23.613 [WRN] ← GET /api/messages 401 | 2ms | user:anonymous
+2026-06-27 21:07:23.855 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:07:23.857 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:07:24.166 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:07:24.168 [WRN] ← GET /api/messages 401 | 2ms | user:anonymous
+2026-06-27 21:07:24.413 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:07:24.415 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:07:24.645 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:07:24.647 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:07:24.917 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:07:24.919 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:07:25.158 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:07:25.160 [WRN] ← GET /api/messages 401 | 2ms | user:anonymous
+2026-06-27 21:07:25.433 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:07:25.436 [WRN] ← GET /api/messages 401 | 2ms | user:anonymous
+2026-06-27 21:07:25.697 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:07:25.698 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:07:25.959 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:07:25.960 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:07:26.207 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:07:26.209 [WRN] ← GET /api/messages 401 | 2ms | user:anonymous
+2026-06-27 21:07:26.510 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:07:26.512 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:07:26.796 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:07:26.798 [WRN] ← GET /api/messages 401 | 2ms | user:anonymous
+2026-06-27 21:07:27.040 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:07:27.041 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:07:27.337 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:07:27.339 [WRN] ← GET /api/messages 401 | 2ms | user:anonymous
+2026-06-27 21:07:27.606 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:07:27.607 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:07:27.847 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:07:27.849 [WRN] ← GET /api/messages 401 | 2ms | user:anonymous
+2026-06-27 21:07:28.151 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:07:28.153 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:07:28.435 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:07:28.437 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:07:28.701 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:07:28.704 [WRN] ← GET /api/messages 401 | 2ms | user:anonymous
+2026-06-27 21:07:28.966 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:07:28.967 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:07:29.206 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:07:29.207 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:07:29.463 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:07:29.465 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:07:29.739 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:07:29.740 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:07:29.980 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:07:29.982 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:07:30.216 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:07:30.218 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:07:30.532 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:07:30.533 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:07:30.784 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:07:30.788 [WRN] ← GET /api/messages 401 | 4ms | user:anonymous
+2026-06-27 21:07:31.034 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:07:31.036 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:07:31.311 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:07:31.313 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:07:31.557 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:07:31.559 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:07:31.800 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:07:31.802 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:07:32.073 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:07:32.075 [WRN] ← GET /api/messages 401 | 2ms | user:anonymous
+2026-06-27 21:07:32.322 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:07:32.324 [WRN] ← GET /api/messages 401 | 2ms | user:anonymous
+2026-06-27 21:07:32.599 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:07:32.601 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:07:32.875 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:07:32.877 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:07:33.127 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:07:33.129 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:07:33.370 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:07:33.372 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:07:33.647 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:07:33.649 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:07:33.882 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:07:33.884 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:07:34.117 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:07:34.119 [WRN] ← GET /api/messages 401 | 2ms | user:anonymous
+2026-06-27 21:07:34.388 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:07:34.389 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:07:34.641 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:07:34.643 [WRN] ← GET /api/messages 401 | 2ms | user:anonymous
+2026-06-27 21:07:34.878 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:07:34.880 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:07:35.152 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:07:35.154 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:07:35.436 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:07:35.438 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:07:35.679 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:07:35.680 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:07:35.950 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:07:35.951 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:07:36.204 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:07:36.206 [WRN] ← GET /api/messages 401 | 2ms | user:anonymous
+2026-06-27 21:07:36.454 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:07:36.456 [WRN] ← GET /api/messages 401 | 2ms | user:anonymous
+2026-06-27 21:07:36.751 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:07:36.753 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:07:37.054 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:07:37.056 [WRN] ← GET /api/messages 401 | 2ms | user:anonymous
+2026-06-27 21:07:37.297 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:07:37.299 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:07:37.577 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:07:37.579 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:07:37.851 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:07:37.853 [WRN] ← GET /api/messages 401 | 2ms | user:anonymous
+2026-06-27 21:07:38.096 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:07:38.098 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:07:38.402 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:07:38.404 [WRN] ← GET /api/messages 401 | 2ms | user:anonymous
+2026-06-27 21:07:38.644 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:07:38.646 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:07:38.878 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:07:38.880 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:07:39.164 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:07:39.166 [WRN] ← GET /api/messages 401 | 2ms | user:anonymous
+2026-06-27 21:07:39.449 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:07:39.451 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:07:39.716 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:07:39.718 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:07:39.983 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:07:39.985 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:07:40.234 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:07:40.236 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:07:40.502 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:07:40.504 [WRN] ← GET /api/messages 401 | 2ms | user:anonymous
+2026-06-27 21:07:40.809 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:07:40.811 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:07:41.080 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:07:41.082 [WRN] ← GET /api/messages 401 | 2ms | user:anonymous
+2026-06-27 21:07:41.355 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:07:41.357 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:07:41.653 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:07:41.655 [WRN] ← GET /api/messages 401 | 2ms | user:anonymous
+2026-06-27 21:07:41.921 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:07:41.922 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:07:42.186 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:07:42.188 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:07:42.452 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:07:42.455 [WRN] ← GET /api/messages 401 | 2ms | user:anonymous
+2026-06-27 21:07:42.693 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:07:42.694 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:07:42.933 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:07:42.935 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:07:43.214 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:07:43.217 [WRN] ← GET /api/messages 401 | 2ms | user:anonymous
+2026-06-27 21:07:43.478 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:07:43.481 [WRN] ← GET /api/messages 401 | 2ms | user:anonymous
+2026-06-27 21:07:43.731 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:07:43.732 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:07:44.035 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:07:44.037 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:07:44.585 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:07:44.587 [WRN] ← GET /api/messages 401 | 2ms | user:anonymous
+2026-06-27 21:08:37.068 [INF] → GET /api/notifications | IP ::1
+2026-06-27 21:08:37.069 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-27 21:08:37.069 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:08:37.070 [WRN] ← GET /api/notifications 401 | 2ms | user:anonymous
+2026-06-27 21:08:37.073 [WRN] ← GET /api/messages 401 | 3ms | user:anonymous
+2026-06-27 21:08:37.088 [INF] ← GET /api/feed 200 | 18ms | user:anonymous
+2026-06-27 21:08:37.772 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:08:37.774 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:08:38.023 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:08:38.025 [WRN] ← GET /api/messages 401 | 2ms | user:anonymous
+2026-06-27 21:08:38.263 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:08:38.265 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:08:38.675 [INF] → GET /api/notifications | IP ::1
+2026-06-27 21:08:38.675 [INF] → GET /api/users | IP ::1
+2026-06-27 21:08:38.675 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:08:38.677 [WRN] ← GET /api/notifications 401 | 1ms | user:anonymous
+2026-06-27 21:08:38.680 [WRN] ← GET /api/messages 401 | 4ms | user:anonymous
+2026-06-27 21:08:38.700 [INF] ← GET /api/users 200 | 25ms | user:anonymous
+2026-06-27 21:08:39.182 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:08:39.186 [WRN] ← GET /api/messages 401 | 3ms | user:anonymous
+2026-06-27 21:08:39.470 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:08:39.471 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:08:39.762 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:08:39.766 [WRN] ← GET /api/messages 401 | 4ms | user:anonymous
+2026-06-27 21:08:40.017 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:08:40.019 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:08:40.416 [INF] → GET /api/notifications | IP ::1
+2026-06-27 21:08:40.416 [INF] → GET /api/bottles/marketplace?sort=newest | IP ::1
+2026-06-27 21:08:40.416 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:08:40.418 [WRN] ← GET /api/notifications 401 | 2ms | user:anonymous
+2026-06-27 21:08:40.421 [WRN] ← GET /api/messages 401 | 4ms | user:anonymous
+2026-06-27 21:08:40.453 [INF] ← GET /api/bottles/marketplace 200 | 36ms | user:anonymous
+2026-06-27 21:08:40.755 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:08:40.757 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:08:41.024 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:08:41.026 [WRN] ← GET /api/messages 401 | 2ms | user:anonymous
+2026-06-27 21:08:41.262 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:08:41.264 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:08:41.489 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:08:41.492 [WRN] ← GET /api/messages 401 | 2ms | user:anonymous
+2026-06-27 21:08:41.750 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:08:41.753 [WRN] ← GET /api/messages 401 | 2ms | user:anonymous
+2026-06-27 21:08:42.184 [INF] → GET /api/notifications | IP ::1
+2026-06-27 21:08:42.184 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:08:42.184 [INF] → GET /api/offers/received | IP ::1
+2026-06-27 21:08:42.186 [WRN] ← GET /api/notifications 401 | 2ms | user:anonymous
+2026-06-27 21:08:42.188 [WRN] ← GET /api/messages 401 | 3ms | user:anonymous
+2026-06-27 21:08:42.189 [WRN] ← GET /api/offers/received 401 | 4ms | user:anonymous
+2026-06-27 21:08:42.441 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:08:42.442 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:08:42.746 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:08:42.748 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:08:42.975 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:08:42.976 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:08:43.209 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:08:43.210 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:08:43.479 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:08:43.481 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:09:30.481 [INF] → GET /openapi/v1.json | IP ::1
+2026-06-27 21:09:30.521 [INF] ← GET /openapi/v1.json 200 | 40ms | user:anonymous
+2026-06-27 21:10:32.547 [INF] → POST /api/auth/register | IP ::1
+2026-06-27 21:10:33.021 [INF] ← POST /api/auth/register 200 | 473ms | user:anonymous
+2026-06-27 21:10:34.366 [INF] → GET /api/notifications | IP ::1
+2026-06-27 21:10:34.366 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-27 21:10:34.366 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:10:34.369 [WRN] ← GET /api/notifications 401 | 3ms | user:anonymous
+2026-06-27 21:10:34.371 [WRN] ← GET /api/messages 401 | 4ms | user:anonymous
+2026-06-27 21:10:34.384 [INF] ← GET /api/feed 200 | 17ms | user:anonymous
+2026-06-27 21:10:34.877 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:10:34.879 [WRN] ← GET /api/messages 401 | 2ms | user:anonymous
+2026-06-27 21:10:35.161 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:10:35.163 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:10:35.418 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:10:35.421 [WRN] ← GET /api/messages 401 | 2ms | user:anonymous
+2026-06-27 21:10:35.654 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:10:35.656 [WRN] ← GET /api/messages 401 | 2ms | user:anonymous
+2026-06-27 21:10:35.931 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:10:35.935 [WRN] ← GET /api/messages 401 | 3ms | user:anonymous
+2026-06-27 21:10:36.188 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:10:36.190 [WRN] ← GET /api/messages 401 | 2ms | user:anonymous
+2026-06-27 21:10:36.435 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:10:36.437 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:10:36.672 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:10:36.674 [WRN] ← GET /api/messages 401 | 2ms | user:anonymous
+2026-06-27 21:10:36.969 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:10:36.970 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:10:37.269 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:10:37.273 [WRN] ← GET /api/messages 401 | 3ms | user:anonymous
+2026-06-27 21:10:37.518 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:10:37.519 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:10:37.746 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:10:37.749 [WRN] ← GET /api/messages 401 | 2ms | user:anonymous
+2026-06-27 21:10:38.039 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:10:38.041 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:10:38.314 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:10:38.315 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:10:38.553 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:10:38.555 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:10:38.827 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:10:38.828 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:10:39.069 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:10:39.070 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:10:39.309 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:10:39.310 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:10:39.578 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:10:39.580 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:10:39.803 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:10:39.805 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:10:40.051 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:10:40.053 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:10:40.321 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:10:40.323 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:10:40.564 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:10:40.565 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:10:40.791 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:10:40.793 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:10:41.074 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:10:41.076 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:10:41.308 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:10:41.310 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:10:41.570 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:10:41.572 [WRN] ← GET /api/messages 401 | 2ms | user:anonymous
+2026-06-27 21:10:41.846 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:10:41.847 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:10:42.109 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:10:42.110 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:10:42.407 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:10:42.409 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:10:42.670 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:10:42.672 [WRN] ← GET /api/messages 401 | 2ms | user:anonymous
+2026-06-27 21:10:42.926 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:10:42.928 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:10:43.179 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:10:43.181 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:10:43.488 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:10:43.490 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:10:43.755 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:10:43.757 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:10:44.038 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:10:44.040 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:10:44.346 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:10:44.348 [WRN] ← GET /api/messages 401 | 2ms | user:anonymous
+2026-06-27 21:10:44.595 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:10:44.598 [WRN] ← GET /api/messages 401 | 2ms | user:anonymous
+2026-06-27 21:10:44.858 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:10:44.861 [WRN] ← GET /api/messages 401 | 3ms | user:anonymous
+2026-06-27 21:10:45.164 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:10:45.166 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:10:45.423 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:10:45.424 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:10:45.699 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:10:45.701 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:10:45.988 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:10:45.990 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:10:46.248 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:10:46.250 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:10:46.505 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:10:46.507 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:10:46.781 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:10:46.783 [WRN] ← GET /api/messages 401 | 2ms | user:anonymous
+2026-06-27 21:10:47.025 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:10:47.028 [WRN] ← GET /api/messages 401 | 3ms | user:anonymous
+2026-06-27 21:10:47.286 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:10:47.288 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:10:47.611 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:10:47.614 [WRN] ← GET /api/messages 401 | 2ms | user:anonymous
+2026-06-27 21:10:47.908 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:10:47.910 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:10:48.169 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:10:48.171 [WRN] ← GET /api/messages 401 | 2ms | user:anonymous
+2026-06-27 21:10:48.466 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:10:48.467 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:10:48.747 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:10:48.749 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:10:48.998 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:10:49.000 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:10:49.312 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:10:49.314 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:12:22.451 [INF] → POST /api/auth/register | IP ::1
+2026-06-27 21:12:22.642 [INF] ← POST /api/auth/register 200 | 191ms | user:anonymous
+2026-06-27 21:12:23.868 [INF] → GET /api/notifications | IP ::1
+2026-06-27 21:12:23.869 [INF] → GET /api/bottles?userId=81216be9-0734-404a-2be8-08ded4776115 | IP ::1
+2026-06-27 21:12:23.869 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:12:23.870 [WRN] ← GET /api/notifications 401 | 1ms | user:anonymous
+2026-06-27 21:12:23.874 [WRN] ← GET /api/messages 401 | 5ms | user:anonymous
+2026-06-27 21:12:23.903 [INF] ← GET /api/bottles 200 | 34ms | user:anonymous
+2026-06-27 21:12:24.351 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:12:24.353 [WRN] ← GET /api/messages 401 | 2ms | user:anonymous
+2026-06-27 21:12:24.607 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:12:24.610 [WRN] ← GET /api/messages 401 | 2ms | user:anonymous
+2026-06-27 21:12:24.868 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:12:24.870 [WRN] ← GET /api/messages 401 | 2ms | user:anonymous
+2026-06-27 21:12:25.125 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:12:25.131 [WRN] ← GET /api/messages 401 | 6ms | user:anonymous
+2026-06-27 21:12:25.437 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:12:25.440 [WRN] ← GET /api/messages 401 | 2ms | user:anonymous
+2026-06-27 21:12:25.723 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:12:25.725 [WRN] ← GET /api/messages 401 | 2ms | user:anonymous
+2026-06-27 21:12:25.991 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:12:25.993 [WRN] ← GET /api/messages 401 | 2ms | user:anonymous
+2026-06-27 21:12:26.230 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:12:26.232 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:12:26.469 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:12:26.473 [WRN] ← GET /api/messages 401 | 4ms | user:anonymous
+2026-06-27 21:12:26.733 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:12:26.735 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:12:26.998 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:12:27.000 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:12:27.236 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:12:27.238 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:12:27.517 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:12:27.519 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:12:27.779 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:12:27.781 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:12:28.015 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:12:28.017 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:12:28.274 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:12:28.276 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:12:28.503 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:12:28.505 [WRN] ← GET /api/messages 401 | 2ms | user:anonymous
+2026-06-27 21:12:28.773 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:12:28.775 [WRN] ← GET /api/messages 401 | 2ms | user:anonymous
+2026-06-27 21:12:29.032 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:12:29.034 [WRN] ← GET /api/messages 401 | 2ms | user:anonymous
+2026-06-27 21:12:29.291 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:12:29.293 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:12:29.572 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:12:29.574 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:12:29.852 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:12:29.854 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:12:30.099 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:12:30.101 [WRN] ← GET /api/messages 401 | 2ms | user:anonymous
+2026-06-27 21:12:30.337 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:12:30.338 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:12:30.635 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:12:30.636 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:12:30.894 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:12:30.895 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:12:31.171 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:12:31.173 [WRN] ← GET /api/messages 401 | 2ms | user:anonymous
+2026-06-27 21:12:31.428 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:12:31.430 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:12:31.667 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:12:31.670 [WRN] ← GET /api/messages 401 | 2ms | user:anonymous
+2026-06-27 21:12:31.922 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:12:31.925 [WRN] ← GET /api/messages 401 | 2ms | user:anonymous
+2026-06-27 21:12:32.210 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:12:32.212 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:12:32.457 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:12:32.459 [WRN] ← GET /api/messages 401 | 2ms | user:anonymous
+2026-06-27 21:12:32.720 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:12:32.724 [WRN] ← GET /api/messages 401 | 3ms | user:anonymous
+2026-06-27 21:12:33.029 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:12:33.031 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:12:33.274 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:12:33.276 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:12:33.499 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:12:33.501 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:12:33.759 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:12:33.760 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:12:33.997 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:12:33.999 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:12:34.230 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:12:34.232 [WRN] ← GET /api/messages 401 | 2ms | user:anonymous
+2026-06-27 21:12:34.522 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:12:34.524 [WRN] ← GET /api/messages 401 | 2ms | user:anonymous
+2026-06-27 21:12:34.782 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:12:34.785 [WRN] ← GET /api/messages 401 | 2ms | user:anonymous
+2026-06-27 21:12:35.014 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:12:35.016 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:12:35.277 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:12:35.279 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:12:35.554 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:12:35.557 [WRN] ← GET /api/messages 401 | 2ms | user:anonymous
+2026-06-27 21:12:35.794 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:12:35.796 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:12:36.077 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:12:36.079 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:12:36.317 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:12:36.319 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:12:36.563 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:12:36.565 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:12:36.875 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:12:36.877 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:12:37.117 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:12:37.119 [WRN] ← GET /api/messages 401 | 2ms | user:anonymous
+2026-06-27 21:12:37.384 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:12:37.386 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:12:37.673 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:12:37.675 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:12:37.916 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:12:37.918 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:12:38.156 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:12:38.158 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:12:38.451 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:12:38.453 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:12:38.726 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:12:38.728 [WRN] ← GET /api/messages 401 | 1ms | user:anonymous
+2026-06-27 21:13:01.494 [INF] → POST /api/auth/register | IP ::1
+2026-06-27 21:13:01.652 [INF] ← POST /api/auth/register 200 | 158ms | user:anonymous
+2026-06-27 21:13:01.726 [INF] → GET /api/notifications | IP ::1
+2026-06-27 21:13:01.728 [WRN] ← GET /api/notifications 401 | 2ms | user:anonymous
+2026-06-27 21:13:01.764 [INF] → GET /api/messages | IP ::1
+2026-06-27 21:13:01.766 [WRN] ← GET /api/messages 401 | 2ms | user:anonymous
+2026-06-27 21:19:00.319 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-27 21:19:00.345 [INF] ← GET /api/feed 200 | 26ms | user:anonymous
+2026-06-27 21:22:04.031 [INF] → GET /api/feed?lang=bg | IP ::1
+2026-06-27 21:22:04.056 [INF] ← GET /api/feed 200 | 24ms | user:anonymous
+2026-06-27 21:22:04.101 [INF] → GET /api/feed?lang=bg | IP ::1
+2026-06-27 21:22:04.107 [INF] ← GET /api/feed 200 | 6ms | user:anonymous
+2026-06-27 21:22:04.136 [INF] → GET /api/news?lang=bg | IP ::1
+2026-06-27 21:22:04.207 [INF] ← GET /api/news 200 | 70ms | user:anonymous
+2026-06-27 21:22:04.260 [INF] → GET /api/news?lang=bg | IP ::1
+2026-06-27 21:22:04.267 [INF] ← GET /api/news 200 | 6ms | user:anonymous
+2026-06-27 21:25:26.835 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-27 21:25:26.861 [INF] ← GET /api/feed 200 | 25ms | user:anonymous
+2026-06-27 21:25:31.890 [INF] → GET /api/feed?skip=0&take=50&lang=en | IP ::1
+2026-06-27 21:25:31.910 [INF] ← GET /api/feed 200 | 19ms | user:anonymous
+2026-06-27 21:25:34.760 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-27 21:25:34.778 [INF] ← GET /api/feed 200 | 17ms | user:anonymous
+2026-06-27 21:25:38.262 [INF] → GET /api/feed?skip=0&take=50&lang=bg | IP ::1
+2026-06-27 21:25:38.267 [INF] ← GET /api/feed 200 | 4ms | user:anonymous

@@ -1,39 +1,43 @@
+import { lazy, Suspense } from 'react'
+import type { ReactNode } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
 import { ChatProvider } from './contexts/ChatContext'
-import HomePage from './pages/HomePage'
-import LoginPage from './pages/LoginPage'
-import RegisterPage from './pages/RegisterPage'
-import ForgotPasswordPage from './pages/ForgotPasswordPage'
-import ResetPasswordPage from './pages/ResetPasswordPage'
-import DashboardPage from './pages/DashboardPage'
-import BrowsePage from './pages/BrowsePage'
-import PublicBarPage from './pages/PublicBarPage'
-import MarketplacePage from './pages/MarketplacePage'
-import OffersPage from './pages/OffersPage'
-import ProfilePage from './pages/ProfilePage'
 import Footer from './components/Footer'
 import ChatWidget from './components/ChatWidget'
+import { Toaster } from '@/components/ui/sonner'
+import { TooltipProvider } from '@/components/ui/tooltip'
+
+const HomePage = lazy(() => import('./pages/HomePage'))
+const LoginPage = lazy(() => import('./pages/LoginPage'))
+const RegisterPage = lazy(() => import('./pages/RegisterPage'))
+const ForgotPasswordPage = lazy(() => import('./pages/ForgotPasswordPage'))
+const ResetPasswordPage = lazy(() => import('./pages/ResetPasswordPage'))
+const DashboardPage = lazy(() => import('./pages/DashboardPage'))
+const BrowsePage = lazy(() => import('./pages/BrowsePage'))
+const PublicBarPage = lazy(() => import('./pages/PublicBarPage'))
+const MarketplacePage = lazy(() => import('./pages/MarketplacePage'))
+const OffersPage = lazy(() => import('./pages/OffersPage'))
+const ProfilePage = lazy(() => import('./pages/ProfilePage'))
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { staleTime: 30_000 } },
 })
 
-function ProtectedRoute({ children }: { children: React.ReactNode }) {
+function RouteFallback() {
+  return (
+    <div className="flex min-h-screen items-center justify-center">
+      <div className="text-muted-foreground">Loading...</div>
+    </div>
+  )
+}
+
+function ProtectedRoute({ children }: { children: ReactNode }) {
   const { isAuthenticated, isLoading } = useAuth()
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-stone-900">
-        <div className="text-stone-300">Loading...</div>
-      </div>
-    )
-  }
-
-  if (!isAuthenticated) {
-    return <Navigate to="/login" replace />
-  }
+  if (isLoading) return <RouteFallback />
+  if (!isAuthenticated) return <Navigate to="/login" replace />
 
   return children
 }
@@ -41,13 +45,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 function AppRoutes() {
   const { isAuthenticated, isLoading } = useAuth()
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-stone-900">
-        <div className="text-stone-300">Loading...</div>
-      </div>
-    )
-  }
+  if (isLoading) return <RouteFallback />
 
   return (
     <Routes>
@@ -95,33 +93,38 @@ function App() {
       <AuthProvider>
         <BrowserRouter>
           <ChatProvider>
-          <img
-            src="/bg-room.png"
-            alt=""
-            aria-hidden="true"
-            style={{
-              position: 'fixed',
-              top: 0, left: 0,
-              width: '100%', height: '100%',
-              objectFit: 'cover',
-              objectPosition: 'center center',
-              zIndex: -2,
-              pointerEvents: 'none',
-            }}
-          />
-          <div style={{
-            position: 'fixed',
-            top: 0, left: 0,
-            width: '100%', height: '100%',
-            background: 'rgba(4, 2, 1, 0.38)',
-            zIndex: -1,
-            pointerEvents: 'none',
-          }} />
-          <div style={{ minHeight: '100vh' }}>
-            <AppRoutes />
-          </div>
-          <ChatWidget />
-          <Footer />
+            <TooltipProvider>
+              <img
+                src="/bg-room.png"
+                alt=""
+                aria-hidden="true"
+                style={{
+                  position: 'fixed',
+                  top: 0, left: 0,
+                  width: '100%', height: '100%',
+                  objectFit: 'cover',
+                  objectPosition: 'center center',
+                  zIndex: -2,
+                  pointerEvents: 'none',
+                }}
+              />
+              <div style={{
+                position: 'fixed',
+                top: 0, left: 0,
+                width: '100%', height: '100%',
+                background: 'rgba(4, 2, 1, 0.38)',
+                zIndex: -1,
+                pointerEvents: 'none',
+              }} />
+              <div className="min-h-screen">
+                <Suspense fallback={<RouteFallback />}>
+                  <AppRoutes />
+                </Suspense>
+              </div>
+              <ChatWidget />
+              <Footer />
+              <Toaster />
+            </TooltipProvider>
           </ChatProvider>
         </BrowserRouter>
       </AuthProvider>

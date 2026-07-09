@@ -855,31 +855,20 @@ public sealed class AuthServiceTests
     }
 
     [Fact]
-    public async Task LoginAsync_InnerService_WhenUserExists_OkWithToken()
+    public async Task LoginAsync_InnerService_ThrowsNotSupported()
     {
-        // Arrange — exercises the inner service's token-issuing path directly
+        // The inner service must never be the login entry point — a direct call must fail loudly rather
+        // than issue a token without a password check (auth-bypass guard). Login goes through the decorator.
         var db = CreateDbContext();
         var config = CreateTestConfiguration();
-
-        await SeedUser(db, "inner@example.com", "Inner User", "ValidPass123");
-
         var userManager = CreateUserManager(db);
         var emailOptions = Options.Create(new EmailSettings());
         var inner = new AuthService(userManager, config, CreateEmailServiceMock().Object, emailOptions);
 
-        var request = new LoginRequest
-        {
-            Email = "inner@example.com",
-            Password = "ValidPass123"
-        };
+        var request = new LoginRequest { Email = "inner@example.com", Password = "ValidPass123" };
 
-        // Act
-        var result = await inner.LoginAsync(request, CancellationToken.None);
-
-        // Assert
-        Assert.True(result.Success);
-        Assert.NotNull(result.Data);
-        Assert.NotEmpty(result.Data.Token);
+        await Assert.ThrowsAsync<NotSupportedException>(
+            () => inner.LoginAsync(request, CancellationToken.None));
     }
 
     #endregion

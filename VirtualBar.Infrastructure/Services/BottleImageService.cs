@@ -6,6 +6,7 @@ using VirtualBar.Application.Interfaces;
 using Microsoft.AspNetCore.Http;
 using VirtualBar.Domain.Entities;
 using VirtualBar.Infrastructure.Persistence;
+using VirtualBar.Infrastructure.Storage;
 
 namespace VirtualBar.Infrastructure.Services;
 
@@ -15,7 +16,9 @@ public sealed class BottleImageService(
 {
     public async Task<Result<BottleImageDto>> AddImageAsync(Guid bottleId, IFormFile file, CancellationToken cancellationToken)
     {
-        var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
+        // Extension is derived from the server-validated content type (never the client file name) to
+        // prevent persisting an executable/markup extension under wwwroot (stored XSS). Validated in the decorator.
+        ImageUploadTypes.TryGetExtension(file.ContentType, out var ext);
         var fileName = $"{Guid.NewGuid()}{ext}";
 
         var uploadsDir = Path.Combine(

@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Moq;
+using VirtualBar.Application.Common;
 using VirtualBar.Application.DTOs.Bottles;
 using VirtualBar.Application.Interfaces;
 using VirtualBar.Domain.Entities;
@@ -203,6 +204,32 @@ public sealed class BottleServiceTests
         Assert.Equal(bottle.Id, result.Data.Id);
         Assert.Equal("Ardbeg 10", result.Data.Name);
         Assert.Equal("Collector", result.Data.UserDisplayName);
+    }
+
+    [Fact]
+    public async Task GetBottleByIdAsync_ExcludesSoftDeletedImagesAndComments()
+    {
+        var db = CreateDbContext();
+        var user = SeedUser(db, "Collector");
+        var bottle = SeedBottle(db, user.Id, "Ardbeg 10");
+
+        db.BottleImages.AddRange(
+            new BottleImage { BottleId = bottle.Id, Url = "/uploads/bottles/live.jpg", IsPrimary = true, SortOrder = 0 },
+            new BottleImage { BottleId = bottle.Id, Url = "/uploads/bottles/deleted.jpg", IsPrimary = false, SortOrder = 1, IsDeleted = true, DeletedAt = DateTime.UtcNow });
+        db.BottleComments.AddRange(
+            new BottleComment { BottleId = bottle.Id, UserId = user.Id, Content = "live" },
+            new BottleComment { BottleId = bottle.Id, UserId = user.Id, Content = "gone", IsDeleted = true, DeletedAt = DateTime.UtcNow });
+        db.SaveChanges();
+        db.ChangeTracker.Clear(); // mirror a fresh per-request context so the filtered Include isn't bypassed by fixup
+
+        var service = CreateBottleService(db, user.Id);
+
+        var result = await service.GetBottleByIdAsync(bottle.Id, CancellationToken.None);
+
+        Assert.True(result.Success);
+        var image = Assert.Single(result.Data!.Images);
+        Assert.Equal("/uploads/bottles/live.jpg", image.Url);
+        Assert.Equal(1, result.Data.CommentsCount);
     }
 
     [Fact]
@@ -496,6 +523,29 @@ public sealed class BottleServiceTests
         Assert.True(dbBottle!.IsForSale);
         Assert.Equal(250m, dbBottle.AskingPrice);
         Assert.Equal("EUR", dbBottle.Currency);
+    }
+
+    [Fact]
+    public async Task ListForSaleAsync_WhenAlreadyForSale_ReturnsConflict()
+    {
+        var db = CreateDbContext();
+        var user = SeedUser(db);
+        var bottle = SeedBottle(db, user.Id, isForSale: true, askingPrice: 100m, currency: "USD");
+        var notificationMock = new Mock<INotificationService>();
+        var service = CreateBottleService(db, user.Id, notificationMock.Object);
+        var request = new ListForSaleRequest { AskingPrice = 250m, Currency = "EUR" };
+
+        var result = await service.ListForSaleAsync(bottle.Id, request, CancellationToken.None);
+
+        Assert.False(result.Success);
+        Assert.Equal(ErrorCode.Conflict, result.ErrorCode);
+        Assert.Equal("Bottle is already listed for sale.", result.Error);
+
+        // No re-stamp and, crucially, no fan-out re-notification.
+        var dbBottle = await db.Bottles.FindAsync(bottle.Id);
+        Assert.Equal(100m, dbBottle!.AskingPrice);
+        notificationMock.Verify(n => n.CreateBulkAsync(
+            It.IsAny<IEnumerable<Guid>>(), It.IsAny<NotificationType>(), It.IsAny<Guid?>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]

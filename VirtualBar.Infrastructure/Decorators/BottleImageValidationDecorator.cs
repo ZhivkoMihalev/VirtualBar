@@ -5,6 +5,7 @@ using VirtualBar.Application.DTOs.Bottles;
 using VirtualBar.Application.Interfaces;
 using VirtualBar.Infrastructure.Persistence;
 using VirtualBar.Infrastructure.Services;
+using VirtualBar.Infrastructure.Storage;
 
 namespace VirtualBar.Infrastructure.Decorators;
 
@@ -13,11 +14,6 @@ public sealed class BottleImageValidationDecorator(
     AppDbContext db,
     ICurrentUser currentUser) : IBottleImageService
 {
-    private static readonly string[] AllowedContentTypes =
-    {
-        "image/jpeg", "image/png", "image/webp", "image/gif"
-    };
-
     public async Task<Result<BottleImageDto>> AddImageAsync(Guid bottleId, IFormFile file, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
@@ -25,8 +21,8 @@ public sealed class BottleImageValidationDecorator(
         if (file is null || file.Length == 0)
             return Result<BottleImageDto>.Fail("No file provided.");
 
-        if (!AllowedContentTypes.Contains(file.ContentType))
-            return Result<BottleImageDto>.Fail("Only JPEG, PNG, WebP, and GIF images are allowed.");
+        if (!ImageUploadTypes.IsAllowed(file.ContentType))
+            return Result<BottleImageDto>.Fail($"Only {ImageUploadTypes.AllowedFormatsLabel} images are allowed.");
 
         if (file.Length > 10 * 1024 * 1024)
             return Result<BottleImageDto>.Fail("Image must be under 10 MB.");

@@ -68,10 +68,18 @@ public sealed class StubPriceEstimationService : IPriceEstimationService
 
     public Result<CollectionValueDto> CollectionResult { get; set; } = Result<CollectionValueDto>.Ok(new CollectionValueDto());
 
+    /// <summary>When set, <see cref="GetBottleEstimateAsync"/> throws this for the matching bottle id.</summary>
+    public Guid? ThrowForBottleId { get; set; }
+
+    /// <summary>The exception thrown for <see cref="ThrowForBottleId"/> (defaults to a generic failure).</summary>
+    public Exception BottleException { get; set; } = new InvalidOperationException("Simulated research failure.");
+
     public Task<Result<PriceEstimateDto>> GetBottleEstimateAsync(Guid bottleId, CancellationToken cancellationToken)
     {
         Guard();
         BottleCalls++;
+        if (ThrowForBottleId == bottleId)
+            throw BottleException;
         return Task.FromResult(BottleResult);
     }
 

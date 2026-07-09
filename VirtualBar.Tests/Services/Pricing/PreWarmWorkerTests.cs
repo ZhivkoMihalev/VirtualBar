@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using VirtualBar.Application.Common;
+using VirtualBar.Application.Interfaces;
 using VirtualBar.Application.Options;
 using VirtualBar.Domain.Entities;
 using VirtualBar.Domain.Enums;
@@ -55,6 +56,23 @@ public sealed class PreWarmWorkerTests
         return (worker, handler);
     }
 
+    // Worker over a substitutable orchestrator, to exercise per-bottle failure handling. Budget has ample
+    // headroom (a stub orchestrator never consumes it), so selection drives the loop.
+    private static PreWarmWorker CreateWorkerWith(AppDbContext db, IPriceEstimationService orchestrator, int topN)
+    {
+        var pricing = Options.Create(new PricingOptions
+        {
+            BaseCurrency = "EUR",
+            FxToBase = new Dictionary<string, decimal> { ["EUR"] = 1m },
+            SnapshotTtlDays = 5,
+            PreWarmTopNBottles = topN,
+            RefreshEnabled = true,
+        });
+        var anthropic = Options.Create(new AnthropicOptions { UseProviderStats = true, DailyCallBudget = 100 });
+        var budget = new AnthropicDailyCallBudget(anthropic, TimeProvider.System);
+        return new PreWarmWorker(db, orchestrator, budget, pricing, NullLogger<PreWarmWorker>.Instance);
+    }
+
     private static Bottle SeedBottle(AppDbContext db, string name)
     {
         var bottle = new Bottle
@@ -84,6 +102,38 @@ public sealed class PreWarmWorkerTests
             FetchedAt = fetchedAt,
         });
         db.SaveChanges();
+    }
+
+    [Fact]
+    public async Task PreWarmAsync_WhenOneBottleFails_LogsAndContinuesWithTheRest()
+    {
+        await using var db = CreateDbContext();
+        SeedBottle(db, "Aaa");
+        var failing = SeedBottle(db, "Bbb");
+        SeedBottle(db, "Ccc");
+        var stub = new StubPriceEstimationService { ThrowForBottleId = failing.Id };
+        var worker = CreateWorkerWith(db, stub, topN: 10);
+
+        var researched = await worker.PreWarmAsync(CancellationToken.None);
+
+        Assert.Equal(2, researched);        // one throws mid-batch; the other two still succeed
+        Assert.Equal(3, stub.BottleCalls);  // all three were attempted — the failure didn't abort the run
+    }
+
+    [Fact]
+    public async Task PreWarmAsync_WhenOrchestratorThrowsCancellation_Rethrows()
+    {
+        await using var db = CreateDbContext();
+        var bottle = SeedBottle(db, "Aaa");
+        var stub = new StubPriceEstimationService
+        {
+            ThrowForBottleId = bottle.Id,
+            BottleException = new OperationCanceledException(),
+        };
+        var worker = CreateWorkerWith(db, stub, topN: 10);
+
+        // A non-cancelled token reaches the research call; the cancellation must propagate, not be swallowed.
+        await Assert.ThrowsAsync<OperationCanceledException>(() => worker.PreWarmAsync(CancellationToken.None));
     }
 
     [Fact]

@@ -395,7 +395,7 @@ public sealed class UserProfileServiceTests
         var result = await service.UploadAvatarAsync(CreateFormFile(contentType: "application/pdf"), CancellationToken.None);
 
         Assert.False(result.Success);
-        Assert.Equal("Only image files are allowed.", result.Error);
+        Assert.Equal("Only JPEG, PNG and WebP images are allowed.", result.Error);
     }
 
     [Fact]
@@ -422,6 +422,28 @@ public sealed class UserProfileServiceTests
         Assert.True(result.Success);
         Assert.NotNull(result.Data!.AvatarUrl);
         Assert.StartsWith("/uploads/avatars/", result.Data.AvatarUrl);
+    }
+
+    [Fact]
+    public async Task UploadAvatarAsync_WhenWebRootPathNull_FallsBackToContentRoot()
+    {
+        // If wwwroot is absent at startup, WebRootPath is null; the upload must fall back to
+        // ContentRootPath/wwwroot rather than NRE into a 500.
+        var db = CreateDbContext();
+        var user = SeedUser(db);
+        var mockUser = new Mock<ICurrentUser>();
+        mockUser.Setup(u => u.UserId).Returns(user.Id);
+        mockUser.Setup(u => u.IsAuthenticated).Returns(true);
+        var mockEnv = new Mock<IWebHostEnvironment>();
+        mockEnv.Setup(e => e.WebRootPath).Returns((string)null!);
+        mockEnv.Setup(e => e.ContentRootPath).Returns(Path.GetTempPath());
+        var service = new UserProfileValidationDecorator(
+            new UserProfileService(db, mockUser.Object, mockEnv.Object), db, mockUser.Object);
+
+        var result = await service.UploadAvatarAsync(CreateFormFile(length: 100), CancellationToken.None);
+
+        Assert.True(result.Success);
+        Assert.StartsWith("/uploads/avatars/", result.Data!.AvatarUrl);
     }
 
     [Fact]

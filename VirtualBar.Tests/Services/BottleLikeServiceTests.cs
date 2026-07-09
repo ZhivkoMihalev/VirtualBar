@@ -1,5 +1,7 @@
+using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Moq;
+using VirtualBar.Application.Common;
 using VirtualBar.Application.Interfaces;
 using VirtualBar.Domain.Entities;
 using VirtualBar.Domain.Enums;
@@ -119,6 +121,40 @@ public sealed class BottleLikeServiceTests
         Assert.True(result.Success);
         var like = await db.BottleLikes.FirstOrDefaultAsync(l => l.BottleId == bottle.Id && l.UserId == user.Id);
         Assert.NotNull(like);
+    }
+
+    [Fact]
+    public async Task LikeAsync_WhenLosesLikeRace_ReturnsConflictWithoutNotifying()
+    {
+        // SQLite so the composite (BottleId, UserId) PK is actually enforced. The "winner" like is
+        // persisted via a SEPARATE context on the same connection, so the service's context doesn't track
+        // it (which would fail at Add). The loser's insert then hits the PK constraint at SaveChanges.
+        using var connection = new SqliteConnection("DataSource=:memory:");
+        connection.Open();
+        var options = new DbContextOptionsBuilder<AppDbContext>().UseSqlite(connection).Options;
+        await using var db = new AppDbContext(options);
+        db.Database.EnsureCreated();
+
+        var owner = SeedUser(db, "Owner");
+        var liker = SeedUser(db, "Liker");
+        var bottle = SeedBottle(db, owner.Id);
+        await using (var winnerContext = new AppDbContext(options))
+        {
+            winnerContext.BottleLikes.Add(new BottleLike { BottleId = bottle.Id, UserId = liker.Id, LikedAt = DateTime.UtcNow });
+            await winnerContext.SaveChangesAsync();
+        }
+
+        // Loser slipped past the decorator's pre-check — call the inner service directly.
+        var notificationMock = new Mock<INotificationService>();
+        var inner = new BottleLikeService(db, CreateCurrentUser(liker.Id), notificationMock.Object);
+
+        var result = await inner.LikeAsync(bottle.Id, CancellationToken.None);
+
+        Assert.False(result.Success);
+        Assert.Equal(ErrorCode.Conflict, result.ErrorCode);
+        Assert.Equal("Bottle already liked.", result.Error);
+        notificationMock.Verify(n => n.CreateAsync(
+            It.IsAny<Guid>(), It.IsAny<NotificationType>(), It.IsAny<Guid?>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]

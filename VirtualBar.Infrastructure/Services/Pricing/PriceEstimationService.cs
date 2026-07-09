@@ -199,41 +199,57 @@ public sealed class PriceEstimationService(
 
         if (existing is null)
         {
-            db.PriceSnapshots.Add(new PriceSnapshot
-            {
-                ProductKey = productKey,
-                Barcode = barcode,
-                Category = category,
-                EstimatedPrice = estimate.EstimatedPrice,
-                LowEstimate = estimate.LowEstimate,
-                HighEstimate = estimate.HighEstimate,
-                Currency = estimate.Currency,
-                SampleSize = estimate.SampleSize,
-                Source = estimate.Source,
-                Confidence = estimate.Confidence,
-                SourcesJson = sourcesJson,
-                AsOf = estimate.AsOf,
-                FetchedAt = now,
-            });
+            var snapshot = new PriceSnapshot { ProductKey = productKey };
+            ApplyEstimate(snapshot, barcode, category, estimate, sourcesJson, now);
+            db.PriceSnapshots.Add(snapshot);
         }
         else
         {
-            existing.Barcode = barcode ?? existing.Barcode;
-            existing.Category = category;
-            existing.EstimatedPrice = estimate.EstimatedPrice;
-            existing.LowEstimate = estimate.LowEstimate;
-            existing.HighEstimate = estimate.HighEstimate;
-            existing.Currency = estimate.Currency;
-            existing.SampleSize = estimate.SampleSize;
-            existing.Source = estimate.Source;
-            existing.Confidence = estimate.Confidence;
-            existing.SourcesJson = sourcesJson;
-            existing.AsOf = estimate.AsOf;
-            existing.FetchedAt = now;
+            ApplyEstimate(existing, barcode, category, estimate, sourcesJson, now);
             existing.UpdatedAt = now;
         }
 
-        await db.SaveChangesAsync(cancellationToken);
+        try
+        {
+            await db.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateException)
+        {
+            // Lost the upsert race: a concurrent run persisted a snapshot for the same ProductKey first
+            // (unique index). The research is already paid for — re-apply it onto the winner's row so the
+            // estimate is never dropped. The winner provably exists: the index just rejected our insert.
+            db.ChangeTracker.Clear();
+
+            var winner = await db.PriceSnapshots
+                .FirstAsync(s => s.ProductKey == productKey, cancellationToken);
+
+            ApplyEstimate(winner, barcode, category, estimate, sourcesJson, now);
+            winner.UpdatedAt = now;
+
+            await db.SaveChangesAsync(cancellationToken);
+        }
+    }
+
+    private static void ApplyEstimate(
+        PriceSnapshot snapshot,
+        string? barcode,
+        SpiritCategory category,
+        PriceEstimateDto estimate,
+        string sourcesJson,
+        DateTime now)
+    {
+        snapshot.Barcode = barcode ?? snapshot.Barcode;
+        snapshot.Category = category;
+        snapshot.EstimatedPrice = estimate.EstimatedPrice;
+        snapshot.LowEstimate = estimate.LowEstimate;
+        snapshot.HighEstimate = estimate.HighEstimate;
+        snapshot.Currency = estimate.Currency;
+        snapshot.SampleSize = estimate.SampleSize;
+        snapshot.Source = estimate.Source;
+        snapshot.Confidence = estimate.Confidence;
+        snapshot.SourcesJson = sourcesJson;
+        snapshot.AsOf = estimate.AsOf;
+        snapshot.FetchedAt = now;
     }
 
     private static PriceEstimateDto MapToDto(PriceSnapshot snapshot) => new()

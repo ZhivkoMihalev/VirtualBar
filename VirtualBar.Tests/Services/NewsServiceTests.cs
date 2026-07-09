@@ -635,7 +635,7 @@ public sealed class NewsServiceTests
         var result = await service.UploadCoverAsync(CreateFormFile(contentType: "application/pdf"), Path.GetTempPath(), CancellationToken.None);
 
         Assert.False(result.Success);
-        Assert.Equal("Only JPEG, PNG, WebP and GIF images are allowed.", result.Error);
+        Assert.Equal("Only JPEG, PNG and WebP images are allowed.", result.Error);
     }
 
     [Fact]

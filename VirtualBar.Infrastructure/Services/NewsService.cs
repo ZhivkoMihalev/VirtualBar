@@ -5,6 +5,7 @@ using VirtualBar.Application.DTOs.News;
 using VirtualBar.Application.Interfaces;
 using VirtualBar.Domain.Entities;
 using VirtualBar.Infrastructure.Persistence;
+using VirtualBar.Infrastructure.Storage;
 
 namespace VirtualBar.Infrastructure.Services;
 
@@ -109,7 +110,9 @@ public sealed class NewsService(AppDbContext db, ICurrentUser currentUser) : INe
 
     public async Task<Result<string>> UploadCoverAsync(IFormFile file, string saveDirectory, CancellationToken cancellationToken)
     {
-        var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
+        // Extension is derived from the server-validated content type (never the client file name) to
+        // prevent persisting an executable/markup extension under wwwroot (stored XSS). Validated in the decorator.
+        ImageUploadTypes.TryGetExtension(file.ContentType, out var ext);
         var fileName = $"{Guid.NewGuid()}{ext}";
         var filePath = Path.Combine(saveDirectory, fileName);
 

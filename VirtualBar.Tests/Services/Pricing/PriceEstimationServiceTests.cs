@@ -1,3 +1,4 @@
+using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
@@ -211,6 +212,53 @@ public sealed class PriceEstimationServiceTests
 
         Assert.False(result.Success);
         Assert.Equal(Application.Common.ErrorCode.NotFound, result.ErrorCode);
+    }
+
+    [Fact]
+    public async Task GetBottleEstimateAsync_WhenLosesUpsertRace_UpdatesWinnerRowInsteadOfThrowing()
+    {
+        // SQLite (not InMemory) so the unique ProductKey index is actually enforced. A second context on
+        // the SAME connection inserts the "winner" row from inside the Claude responder — i.e. exactly in
+        // the race window, after the orchestrator's cache-miss read and before its own insert — so the
+        // orchestrator's SaveChanges hits a unique violation and must recover onto the winner's row.
+        using var connection = new SqliteConnection("DataSource=:memory:");
+        connection.Open();
+        var options = new DbContextOptionsBuilder<AppDbContext>().UseSqlite(connection).Options;
+        await using var db = new AppDbContext(options);
+        db.Database.EnsureCreated();
+
+        // SQLite enforces the Bottle → AppUser FK (InMemory doesn't), so seed a real owner.
+        var owner = new AppUser { Id = Guid.NewGuid(), UserName = "owner@example.com", Email = "owner@example.com", DisplayName = "Owner" };
+        db.Users.Add(owner);
+        var bottle = new Bottle
+        {
+            UserId = owner.Id,
+            Name = "Macallan 18",
+            Category = SpiritCategory.Whisky,
+            Age = 18,
+            VolumeMl = 700,
+            Condition = BottleCondition.Sealed,
+        };
+        db.Bottles.Add(bottle);
+        db.SaveChanges();
+
+        var (svc, claude) = CreateOrchestrator(db, internalEnabled: false, claudeResponder: (_, _) =>
+        {
+            using var concurrentRun = new AppDbContext(options);
+            SeedSnapshot(concurrentRun, DateTime.UtcNow.AddDays(-1), price: 999m);
+            return FakeHttpHandler.JsonOk(HappyResponse);
+        });
+
+        var result = await svc.GetBottleEstimateAsync(bottle.Id, CancellationToken.None);
+
+        Assert.True(result.Success);
+        Assert.Equal(150m, result.Data!.EstimatedPrice); // the paid-for research is returned, not dropped
+        Assert.Equal(1, claude.CallCount);
+
+        db.ChangeTracker.Clear();
+        var snapshot = await db.PriceSnapshots.SingleAsync(s => s.ProductKey == BottleKey); // exactly one row
+        Assert.Equal(150m, snapshot.EstimatedPrice); // the winner's row now carries the fresh estimate
+        Assert.Equal(PriceSource.ClaudeResearch, snapshot.Source);
     }
 
     [Fact]

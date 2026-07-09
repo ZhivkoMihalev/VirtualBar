@@ -34,7 +34,17 @@ public sealed class OfferService(
         };
 
         db.Offers.Add(offer);
-        await db.SaveChangesAsync(cancellationToken);
+
+        try
+        {
+            await db.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateException)
+        {
+            // Lost the create race: a concurrent request slipped past the decorator's pre-check and the
+            // filtered unique index (one pending offer per buyer per bottle) rejected this insert.
+            return Result<OfferDto>.Conflict("You already have a pending offer on this bottle.");
+        }
 
         await notificationService.CreateAsync(offer.SellerId, NotificationType.OfferReceived, offer.Id, bottle.Name, cancellationToken);
 
@@ -69,17 +79,21 @@ public sealed class OfferService(
 
     public async Task<Result<OfferDto>> AcceptAsync(Guid offerId, CancellationToken cancellationToken)
     {
-        var offer = await db.Offers
-            .Include(o => o.Bottle)
-            .Include(o => o.Buyer)
-            .Include(o => o.Seller)
-            .FirstOrDefaultAsync(o => o.Id == offerId && !o.IsDeleted, cancellationToken);
+        var respondedAt = DateTime.UtcNow;
 
-        offer!.Status = OfferStatus.Accepted;
-        offer.RespondedAt = DateTime.UtcNow;
-        offer.UpdatedAt = DateTime.UtcNow;
+        // Atomic claim: only a still-pending row transitions, so a concurrent accept/decline/withdraw
+        // race has exactly one winner — the loser sees zero affected rows and fires no notification.
+        var claimed = await db.Offers
+            .Where(o => o.Id == offerId && !o.IsDeleted && o.Status == OfferStatus.Pending)
+            .ExecuteUpdateAsync(setters => setters
+                .SetProperty(o => o.Status, OfferStatus.Accepted)
+                .SetProperty(o => o.RespondedAt, respondedAt)
+                .SetProperty(o => o.UpdatedAt, respondedAt), cancellationToken);
 
-        await db.SaveChangesAsync(cancellationToken);
+        if (claimed == 0)
+            return Result<OfferDto>.Conflict("Only pending offers can be accepted.");
+
+        var offer = await LoadFreshAsync(offerId, cancellationToken);
 
         await notificationService.CreateAsync(offer.BuyerId, NotificationType.OfferAccepted, offer.Id, offer.Bottle.Name, cancellationToken);
 
@@ -88,17 +102,19 @@ public sealed class OfferService(
 
     public async Task<Result<OfferDto>> DeclineAsync(Guid offerId, CancellationToken cancellationToken)
     {
-        var offer = await db.Offers
-            .Include(o => o.Bottle)
-            .Include(o => o.Buyer)
-            .Include(o => o.Seller)
-            .FirstOrDefaultAsync(o => o.Id == offerId && !o.IsDeleted, cancellationToken);
+        var respondedAt = DateTime.UtcNow;
 
-        offer!.Status = OfferStatus.Declined;
-        offer.RespondedAt = DateTime.UtcNow;
-        offer.UpdatedAt = DateTime.UtcNow;
+        var claimed = await db.Offers
+            .Where(o => o.Id == offerId && !o.IsDeleted && o.Status == OfferStatus.Pending)
+            .ExecuteUpdateAsync(setters => setters
+                .SetProperty(o => o.Status, OfferStatus.Declined)
+                .SetProperty(o => o.RespondedAt, respondedAt)
+                .SetProperty(o => o.UpdatedAt, respondedAt), cancellationToken);
 
-        await db.SaveChangesAsync(cancellationToken);
+        if (claimed == 0)
+            return Result<OfferDto>.Conflict("Only pending offers can be declined.");
+
+        var offer = await LoadFreshAsync(offerId, cancellationToken);
 
         await notificationService.CreateAsync(offer.BuyerId, NotificationType.OfferDeclined, offer.Id, offer.Bottle.Name, cancellationToken);
 
@@ -107,19 +123,32 @@ public sealed class OfferService(
 
     public async Task<Result<OfferDto>> WithdrawAsync(Guid offerId, CancellationToken cancellationToken)
     {
-        var offer = await db.Offers
-            .Include(o => o.Bottle)
-            .Include(o => o.Buyer)
-            .Include(o => o.Seller)
-            .FirstOrDefaultAsync(o => o.Id == offerId && !o.IsDeleted, cancellationToken);
+        var claimed = await db.Offers
+            .Where(o => o.Id == offerId && !o.IsDeleted && o.Status == OfferStatus.Pending)
+            .ExecuteUpdateAsync(setters => setters
+                .SetProperty(o => o.Status, OfferStatus.Withdrawn)
+                .SetProperty(o => o.UpdatedAt, DateTime.UtcNow), cancellationToken);
 
-        offer!.Status = OfferStatus.Withdrawn;
-        offer.UpdatedAt = DateTime.UtcNow;
+        if (claimed == 0)
+            return Result<OfferDto>.Conflict("Only pending offers can be withdrawn.");
 
-        await db.SaveChangesAsync(cancellationToken);
+        var offer = await LoadFreshAsync(offerId, cancellationToken);
 
         return Result<OfferDto>.Ok(Map(offer));
     }
+
+    /// <summary>
+    /// Reloads the offer with its navigations AFTER a successful conditional update. AsNoTracking bypasses
+    /// the identity map, because the validation decorator has already tracked this offer (same scoped
+    /// context) with its stale pre-update status. The row provably exists — it was just updated.
+    /// </summary>
+    private Task<Offer> LoadFreshAsync(Guid offerId, CancellationToken cancellationToken) =>
+        db.Offers
+            .AsNoTracking()
+            .Include(o => o.Bottle)
+            .Include(o => o.Buyer)
+            .Include(o => o.Seller)
+            .FirstAsync(o => o.Id == offerId, cancellationToken);
 
     private static OfferDto Map(Offer offer, string bottleName, string buyerName, string sellerName) => new()
     {

@@ -51,11 +51,13 @@ public sealed class AuthService(
         return Result<AuthResponse>.Ok(BuildAuthResponse(user));
     }
 
-    public async Task<Result<AuthResponse>> LoginAsync(LoginRequest request, CancellationToken cancellationToken)
-    {
-        var user = await userManager.FindByEmailAsync(request.Email);
-        return IssueTokenFor(user!);
-    }
+    // Login authenticates in AuthValidationDecorator (password + lockout/confirmation checks) which then
+    // calls IssueTokenFor. The inner service must NEVER be the login entry point — issuing a token here
+    // without verifying the password would be an auth bypass — so a direct call fails loudly.
+    public Task<Result<AuthResponse>> LoginAsync(LoginRequest request, CancellationToken cancellationToken) =>
+        throw new NotSupportedException(
+            "AuthService.LoginAsync must not be called directly. Login goes through AuthValidationDecorator, " +
+            "which verifies credentials and calls IssueTokenFor.");
 
     public Task<Result<bool>> LogoutAsync(CancellationToken cancellationToken) =>
         Task.FromResult(Result<bool>.Ok(true));

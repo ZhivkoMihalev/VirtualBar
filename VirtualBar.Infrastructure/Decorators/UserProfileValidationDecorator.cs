@@ -4,6 +4,7 @@ using VirtualBar.Application.Common;
 using VirtualBar.Application.DTOs.Users;
 using VirtualBar.Application.Interfaces;
 using VirtualBar.Infrastructure.Persistence;
+using VirtualBar.Infrastructure.Storage;
 using VirtualBar.Infrastructure.Services;
 
 namespace VirtualBar.Infrastructure.Decorators;
@@ -68,9 +69,8 @@ public sealed class UserProfileValidationDecorator(
         if (file.Length > 5 * 1024 * 1024)
             return Result<UpdatedProfileDto>.Fail("File size must not exceed 5 MB.");
 
-        var allowedTypes = new[] { "image/jpeg", "image/png", "image/webp", "image/gif" };
-        if (!allowedTypes.Contains(file.ContentType.ToLowerInvariant()))
-            return Result<UpdatedProfileDto>.Fail("Only image files are allowed.");
+        if (!ImageUploadTypes.IsAllowed(file.ContentType))
+            return Result<UpdatedProfileDto>.Fail($"Only {ImageUploadTypes.AllowedFormatsLabel} images are allowed.");
 
         var exists = await db.Users.AnyAsync(u => u.Id == currentUser.UserId, cancellationToken);
         if (!exists)

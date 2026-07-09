@@ -1,3 +1,4 @@
+using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Moq;
 using VirtualBar.Application.DTOs.Offers;
@@ -20,6 +21,20 @@ public sealed class OfferServiceTests
         return new AppDbContext(options);
     }
 
+    // SQLite in-memory is required for the ExecuteUpdateAsync paths (Accept/Decline/Withdraw) and for the
+    // filtered unique index semantics — InMemory neither supports ExecuteUpdate nor honors index filters.
+    private static AppDbContext CreateSqliteDbContext()
+    {
+        var conn = new SqliteConnection("DataSource=:memory:");
+        conn.Open();
+        var options = new DbContextOptionsBuilder<AppDbContext>()
+            .UseSqlite(conn)
+            .Options;
+        var db = new AppDbContext(options);
+        db.Database.EnsureCreated();
+        return db;
+    }
+
     private static ICurrentUser CreateCurrentUser(Guid userId)
     {
         var mock = new Mock<ICurrentUser>();
@@ -27,6 +42,12 @@ public sealed class OfferServiceTests
         mock.Setup(u => u.IsAuthenticated).Returns(true);
         return mock.Object;
     }
+
+    private static OfferService CreateInnerOfferService(
+        AppDbContext db,
+        Guid currentUserId,
+        INotificationService? notificationService = null) =>
+        new(db, CreateCurrentUser(currentUserId), notificationService ?? Mock.Of<INotificationService>());
 
     private static IOfferService CreateOfferService(
         AppDbContext db,
@@ -197,7 +218,8 @@ public sealed class OfferServiceTests
     [Fact]
     public async Task CreateAsync_WhenPreviousOfferNotPending_AllowsNewOffer()
     {
-        var db = CreateDbContext();
+        // SQLite: the filtered unique index must permit a fresh pending offer after a declined one.
+        var db = CreateSqliteDbContext();
         var seller = SeedUser(db, "Seller");
         var buyer = SeedUser(db, "Buyer");
         var bottle = SeedBottle(db, seller.Id);
@@ -208,6 +230,31 @@ public sealed class OfferServiceTests
         var result = await service.CreateAsync(request, CancellationToken.None);
 
         Assert.True(result.Success);
+    }
+
+    [Fact]
+    public async Task CreateAsync_WhenDuplicatePendingSlipsPastValidation_ReturnsConflict()
+    {
+        // Simulates losing the create race: the inner service is called directly (as if a concurrent
+        // request already passed the decorator's pre-check) and the unique index rejects the insert.
+        var db = CreateSqliteDbContext();
+        var seller = SeedUser(db, "Seller");
+        var buyer = SeedUser(db, "Buyer");
+        var bottle = SeedBottle(db, seller.Id);
+        SeedOffer(db, bottle.Id, buyer.Id, seller.Id, OfferStatus.Pending);
+        var notificationMock = new Mock<INotificationService>();
+        var inner = CreateInnerOfferService(db, buyer.Id, notificationMock.Object);
+        var request = new CreateOfferRequest { BottleId = bottle.Id, OfferedPrice = 75m, Currency = "USD" };
+
+        var result = await inner.CreateAsync(request, CancellationToken.None);
+
+        Assert.False(result.Success);
+        Assert.Equal("You already have a pending offer on this bottle.", result.Error);
+
+        db.ChangeTracker.Clear();
+        Assert.Equal(1, await db.Offers.CountAsync());
+        notificationMock.Verify(n => n.CreateAsync(
+            It.IsAny<Guid>(), It.IsAny<NotificationType>(), It.IsAny<Guid?>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -340,10 +387,11 @@ public sealed class OfferServiceTests
         var db = CreateDbContext();
         var seller = SeedUser(db, "Seller");
         var buyer = SeedUser(db, "Buyer");
+        var secondBuyer = SeedUser(db, "Second Buyer");
         var bottle = SeedBottle(db, seller.Id);
         SeedOffer(db, bottle.Id, buyer.Id, seller.Id, offeredPrice: 10m,
             createdAt: new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc));
-        SeedOffer(db, bottle.Id, buyer.Id, seller.Id, status: OfferStatus.Declined, offeredPrice: 20m,
+        SeedOffer(db, bottle.Id, secondBuyer.Id, seller.Id, status: OfferStatus.Declined, offeredPrice: 20m,
             createdAt: new DateTime(2026, 6, 1, 0, 0, 0, DateTimeKind.Utc));
         var service = CreateOfferService(db, seller.Id);
 
@@ -428,9 +476,10 @@ public sealed class OfferServiceTests
         var buyer = SeedUser(db, "Buyer");
         var seller = SeedUser(db, "Seller");
         var bottle = SeedBottle(db, seller.Id);
+        var secondBottle = SeedBottle(db, seller.Id, "Second Bottle");
         SeedOffer(db, bottle.Id, buyer.Id, seller.Id, offeredPrice: 10m,
             createdAt: new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc));
-        SeedOffer(db, bottle.Id, buyer.Id, seller.Id, status: OfferStatus.Declined, offeredPrice: 20m,
+        SeedOffer(db, secondBottle.Id, buyer.Id, seller.Id, status: OfferStatus.Declined, offeredPrice: 20m,
             createdAt: new DateTime(2026, 6, 1, 0, 0, 0, DateTimeKind.Utc));
         var service = CreateOfferService(db, buyer.Id);
 
@@ -505,7 +554,7 @@ public sealed class OfferServiceTests
     [Fact]
     public async Task AcceptAsync_WhenValid_SetsAcceptedAndNotifiesBuyer()
     {
-        var db = CreateDbContext();
+        var db = CreateSqliteDbContext();
         var seller = SeedUser(db, "Seller");
         var buyer = SeedUser(db, "Buyer");
         var bottle = SeedBottle(db, seller.Id, name: "Yamazaki 12");
@@ -519,12 +568,34 @@ public sealed class OfferServiceTests
         Assert.Equal(OfferStatus.Accepted, result.Data!.Status);
         Assert.NotNull(result.Data.RespondedAt);
 
+        db.ChangeTracker.Clear(); // ExecuteUpdate bypasses the tracker — read the row fresh
         var stored = await db.Offers.FindAsync(offer.Id);
         Assert.Equal(OfferStatus.Accepted, stored!.Status);
         Assert.NotNull(stored.RespondedAt);
 
         notificationMock.Verify(n => n.CreateAsync(
             buyer.Id, NotificationType.OfferAccepted, offer.Id, "Yamazaki 12", It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task AcceptAsync_WhenLosesRaceToResolvedOffer_ReturnsConflictWithoutNotification()
+    {
+        // Simulates losing the accept race: the inner service is called directly (as if the decorator's
+        // pending check passed just before a concurrent request resolved the offer).
+        var db = CreateSqliteDbContext();
+        var seller = SeedUser(db, "Seller");
+        var buyer = SeedUser(db, "Buyer");
+        var bottle = SeedBottle(db, seller.Id);
+        var offer = SeedOffer(db, bottle.Id, buyer.Id, seller.Id, OfferStatus.Accepted);
+        var notificationMock = new Mock<INotificationService>();
+        var inner = CreateInnerOfferService(db, seller.Id, notificationMock.Object);
+
+        var result = await inner.AcceptAsync(offer.Id, CancellationToken.None);
+
+        Assert.False(result.Success);
+        Assert.Equal("Only pending offers can be accepted.", result.Error);
+        notificationMock.Verify(n => n.CreateAsync(
+            It.IsAny<Guid>(), It.IsAny<NotificationType>(), It.IsAny<Guid?>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -591,7 +662,7 @@ public sealed class OfferServiceTests
     [Fact]
     public async Task DeclineAsync_WhenValid_SetsDeclinedAndNotifiesBuyer()
     {
-        var db = CreateDbContext();
+        var db = CreateSqliteDbContext();
         var seller = SeedUser(db, "Seller");
         var buyer = SeedUser(db, "Buyer");
         var bottle = SeedBottle(db, seller.Id, name: "Hibiki");
@@ -605,12 +676,32 @@ public sealed class OfferServiceTests
         Assert.Equal(OfferStatus.Declined, result.Data!.Status);
         Assert.NotNull(result.Data.RespondedAt);
 
+        db.ChangeTracker.Clear(); // ExecuteUpdate bypasses the tracker — read the row fresh
         var stored = await db.Offers.FindAsync(offer.Id);
         Assert.Equal(OfferStatus.Declined, stored!.Status);
         Assert.NotNull(stored.RespondedAt);
 
         notificationMock.Verify(n => n.CreateAsync(
             buyer.Id, NotificationType.OfferDeclined, offer.Id, "Hibiki", It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task DeclineAsync_WhenLosesRaceToResolvedOffer_ReturnsConflictWithoutNotification()
+    {
+        var db = CreateSqliteDbContext();
+        var seller = SeedUser(db, "Seller");
+        var buyer = SeedUser(db, "Buyer");
+        var bottle = SeedBottle(db, seller.Id);
+        var offer = SeedOffer(db, bottle.Id, buyer.Id, seller.Id, OfferStatus.Withdrawn);
+        var notificationMock = new Mock<INotificationService>();
+        var inner = CreateInnerOfferService(db, seller.Id, notificationMock.Object);
+
+        var result = await inner.DeclineAsync(offer.Id, CancellationToken.None);
+
+        Assert.False(result.Success);
+        Assert.Equal("Only pending offers can be declined.", result.Error);
+        notificationMock.Verify(n => n.CreateAsync(
+            It.IsAny<Guid>(), It.IsAny<NotificationType>(), It.IsAny<Guid?>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -677,7 +768,7 @@ public sealed class OfferServiceTests
     [Fact]
     public async Task WithdrawAsync_WhenValid_SetsWithdrawn()
     {
-        var db = CreateDbContext();
+        var db = CreateSqliteDbContext();
         var seller = SeedUser(db, "Seller");
         var buyer = SeedUser(db, "Buyer");
         var bottle = SeedBottle(db, seller.Id);
@@ -689,8 +780,30 @@ public sealed class OfferServiceTests
         Assert.True(result.Success);
         Assert.Equal(OfferStatus.Withdrawn, result.Data!.Status);
 
+        db.ChangeTracker.Clear(); // ExecuteUpdate bypasses the tracker — read the row fresh
         var stored = await db.Offers.FindAsync(offer.Id);
         Assert.Equal(OfferStatus.Withdrawn, stored!.Status);
+    }
+
+    [Fact]
+    public async Task WithdrawAsync_WhenLosesRaceToAccept_ReturnsConflict()
+    {
+        // The accept-vs-withdraw race: the seller accepted a heartbeat before the buyer's withdraw.
+        var db = CreateSqliteDbContext();
+        var seller = SeedUser(db, "Seller");
+        var buyer = SeedUser(db, "Buyer");
+        var bottle = SeedBottle(db, seller.Id);
+        var offer = SeedOffer(db, bottle.Id, buyer.Id, seller.Id, OfferStatus.Accepted);
+        var inner = CreateInnerOfferService(db, buyer.Id);
+
+        var result = await inner.WithdrawAsync(offer.Id, CancellationToken.None);
+
+        Assert.False(result.Success);
+        Assert.Equal("Only pending offers can be withdrawn.", result.Error);
+
+        db.ChangeTracker.Clear();
+        var stored = await db.Offers.FindAsync(offer.Id);
+        Assert.Equal(OfferStatus.Accepted, stored!.Status); // the winner's state is preserved
     }
 
     [Fact]

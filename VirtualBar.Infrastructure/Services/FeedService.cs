@@ -59,7 +59,7 @@ public sealed class FeedService(AppDbContext db, ICurrentUser currentUser) : IFe
                         BottleName = b.Name,
                         BottleCategory = b.Category.ToString(),
                         BottlePrimaryImageUrl = b.Images
-                            .Where(i => i.IsPrimary)
+                            .Where(i => i.IsPrimary && !i.IsDeleted)
                             .Select(i => i.Url)
                             .FirstOrDefault(),
                         BottleUserId = b.UserId,
@@ -79,7 +79,7 @@ public sealed class FeedService(AppDbContext db, ICurrentUser currentUser) : IFe
                         BottleName = b.Name,
                         BottleCategory = b.Category.ToString(),
                         BottlePrimaryImageUrl = b.Images
-                            .Where(i => i.IsPrimary)
+                            .Where(i => i.IsPrimary && !i.IsDeleted)
                             .Select(i => i.Url)
                             .FirstOrDefault(),
                         BottleUserId = b.UserId,

@@ -97,6 +97,11 @@ public sealed class BottleValidationDecorator(
         if (bottle.UserId != currentUser.UserId)
             return Result<bool>.Forbidden("Forbidden.");
 
+        // Already-for-sale guard: re-listing would re-stamp ForSaleAt and re-fire the BottleListedForSale
+        // + WishListMatch fan-out, spamming followers/wish-list owners. Unlist first to re-list.
+        if (bottle.IsForSale)
+            return Result<bool>.Conflict("Bottle is already listed for sale.");
+
         return await inner.ListForSaleAsync(bottleId, request, cancellationToken);
     }
 

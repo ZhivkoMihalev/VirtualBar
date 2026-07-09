@@ -21,7 +21,17 @@ public sealed class BottleLikeService(
         };
 
         db.BottleLikes.Add(like);
-        await db.SaveChangesAsync(cancellationToken);
+
+        try
+        {
+            await db.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateException)
+        {
+            // Lost the like race: a concurrent request inserted the same (BottleId, UserId) first (composite
+            // PK). The winner already notified the owner, so this is an idempotent no-op conflict, not a 500.
+            return Result<bool>.Conflict("Bottle already liked.");
+        }
 
         var bottle = await db.Bottles
             .Where(b => b.Id == bottleId && !b.IsDeleted)

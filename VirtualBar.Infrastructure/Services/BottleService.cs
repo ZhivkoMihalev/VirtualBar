@@ -16,9 +16,9 @@ public sealed class BottleService(
     {
         var bottles = await db.Bottles
             .Where(b => b.UserId == userId && !b.IsDeleted)
-            .Include(b => b.Images.OrderBy(i => i.SortOrder))
+            .Include(b => b.Images.Where(i => !i.IsDeleted).OrderBy(i => i.SortOrder))
             .Include(b => b.Likes)
-            .Include(b => b.Comments)
+            .Include(b => b.Comments.Where(c => !c.IsDeleted))
             .Include(b => b.User)
             .Include(b => b.Distillery)
             .OrderByDescending(b => b.CreatedAt)
@@ -31,9 +31,9 @@ public sealed class BottleService(
     public async Task<Result<BottleDto>> GetBottleByIdAsync(Guid bottleId, CancellationToken cancellationToken)
     {
         var bottle = await db.Bottles
-            .Include(b => b.Images.OrderBy(i => i.SortOrder))
+            .Include(b => b.Images.Where(i => !i.IsDeleted).OrderBy(i => i.SortOrder))
             .Include(b => b.Likes)
-            .Include(b => b.Comments)
+            .Include(b => b.Comments.Where(c => !c.IsDeleted))
             .Include(b => b.User)
             .Include(b => b.Distillery)
             .FirstOrDefaultAsync(b => b.Id == bottleId && !b.IsDeleted, cancellationToken);
@@ -98,7 +98,7 @@ public sealed class BottleService(
         await db.SaveChangesAsync(cancellationToken);
 
         var likesCount = await db.BottleLikes.CountAsync(l => l.BottleId == bottleId, cancellationToken);
-        var commentsCount = await db.BottleComments.CountAsync(c => c.BottleId == bottleId, cancellationToken);
+        var commentsCount = await db.BottleComments.CountAsync(c => c.BottleId == bottleId && !c.IsDeleted, cancellationToken);
 
         return Result<BottleDto>.Ok(MapToDto(bottle, likesCount, commentsCount));
     }
@@ -170,9 +170,9 @@ public sealed class BottleService(
     {
         var q = db.Bottles
             .Where(b => !b.IsDeleted && b.IsForSale)
-            .Include(b => b.Images.OrderBy(i => i.SortOrder))
+            .Include(b => b.Images.Where(i => !i.IsDeleted).OrderBy(i => i.SortOrder))
             .Include(b => b.Likes)
-            .Include(b => b.Comments)
+            .Include(b => b.Comments.Where(c => !c.IsDeleted))
             .Include(b => b.User)
             .Include(b => b.Distillery)
             .AsQueryable();

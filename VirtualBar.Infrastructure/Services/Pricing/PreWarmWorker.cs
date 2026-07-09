@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using VirtualBar.Application.Common;
+using VirtualBar.Application.Interfaces;
 using VirtualBar.Application.Options;
 using VirtualBar.Domain.Enums;
 using VirtualBar.Infrastructure.Persistence;
@@ -18,7 +19,7 @@ namespace VirtualBar.Infrastructure.Services.Pricing;
 /// </summary>
 public sealed class PreWarmWorker(
     AppDbContext db,
-    PriceEstimationService orchestrator,
+    IPriceEstimationService orchestrator,
     AnthropicDailyCallBudget callBudget,
     IOptions<PricingOptions> pricingOptions,
     ILogger<PreWarmWorker> logger)
@@ -52,9 +53,22 @@ public sealed class PreWarmWorker(
                 break;
             }
 
-            // The orchestrator researches on a miss/stale snapshot and writes the result to the cache.
-            await orchestrator.GetBottleEstimateAsync(bottleId, cancellationToken);
-            researched++;
+            try
+            {
+                // The orchestrator researches on a miss/stale snapshot and writes the result to the cache.
+                await orchestrator.GetBottleEstimateAsync(bottleId, cancellationToken);
+                researched++;
+            }
+            catch (OperationCanceledException)
+            {
+                throw;
+            }
+            catch (Exception ex)
+            {
+                // One bottle failing (transient DB/HTTP error, a lost upsert race, …) must not abort the
+                // whole run — log it and continue researching the remaining top-N.
+                logger.LogError(ex, "Pre-warm failed to research bottle {BottleId}; continuing with the rest.", bottleId);
+            }
         }
 
         logger.LogInformation("Pre-warm researched {Count} canonical bottle(s).", researched);

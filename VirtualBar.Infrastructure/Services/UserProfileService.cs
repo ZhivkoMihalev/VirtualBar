@@ -5,6 +5,7 @@ using VirtualBar.Application.Common;
 using VirtualBar.Application.DTOs.Users;
 using VirtualBar.Application.Interfaces;
 using VirtualBar.Infrastructure.Persistence;
+using VirtualBar.Infrastructure.Storage;
 
 namespace VirtualBar.Infrastructure.Services;
 
@@ -82,10 +83,13 @@ public sealed class UserProfileService(AppDbContext db, ICurrentUser currentUser
 
     public async Task<Result<UpdatedProfileDto>> UploadAvatarAsync(IFormFile file, CancellationToken cancellationToken)
     {
-        var uploadsDir = Path.Combine(env.WebRootPath, "uploads", "avatars");
+        var webRoot = env.WebRootPath ?? Path.Combine(env.ContentRootPath, "wwwroot");
+        var uploadsDir = Path.Combine(webRoot, "uploads", "avatars");
         Directory.CreateDirectory(uploadsDir);
 
-        var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
+        // Extension is derived from the server-validated content type (never the client file name) to
+        // prevent persisting an executable/markup extension under wwwroot (stored XSS). Validated in the decorator.
+        ImageUploadTypes.TryGetExtension(file.ContentType, out var ext);
         var fileName = $"{Guid.NewGuid()}{ext}";
         var filePath = Path.Combine(uploadsDir, fileName);
 

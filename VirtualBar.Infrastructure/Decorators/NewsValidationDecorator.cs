@@ -4,6 +4,7 @@ using VirtualBar.Application.Common;
 using VirtualBar.Application.DTOs.News;
 using VirtualBar.Application.Interfaces;
 using VirtualBar.Infrastructure.Persistence;
+using VirtualBar.Infrastructure.Storage;
 using VirtualBar.Infrastructure.Services;
 
 namespace VirtualBar.Infrastructure.Decorators;
@@ -130,9 +131,8 @@ public sealed class NewsValidationDecorator(
         if (file.Length > 10 * 1024 * 1024)
             return Result<string>.Fail("File must be under 10 MB.");
 
-        var allowedTypes = new[] { "image/jpeg", "image/png", "image/webp", "image/gif" };
-        if (!allowedTypes.Contains(file.ContentType.ToLowerInvariant()))
-            return Result<string>.Fail("Only JPEG, PNG, WebP and GIF images are allowed.");
+        if (!ImageUploadTypes.IsAllowed(file.ContentType))
+            return Result<string>.Fail($"Only {ImageUploadTypes.AllowedFormatsLabel} images are allowed.");
 
         return await inner.UploadCoverAsync(file, saveDirectory, cancellationToken);
     }

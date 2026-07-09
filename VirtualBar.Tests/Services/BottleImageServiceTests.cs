@@ -136,7 +136,7 @@ public sealed class BottleImageServiceTests
         var result = await service.AddImageAsync(bottle.Id, CreateFormFile(contentType: "application/pdf"), CancellationToken.None);
 
         Assert.False(result.Success);
-        Assert.Equal("Only JPEG, PNG, WebP, and GIF images are allowed.", result.Error);
+        Assert.Equal("Only JPEG, PNG and WebP images are allowed.", result.Error);
     }
 
     [Fact]

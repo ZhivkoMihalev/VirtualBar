@@ -149,6 +149,12 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
             e.Property(o => o.OfferedPrice)
                 .HasColumnType("decimal(18,2)");
 
+            // One PENDING offer per buyer per bottle — DB-enforced. The decorator's pre-check is only a
+            // friendly fast path; this filtered unique index closes the concurrent-create race (Pending = 0).
+            e.HasIndex(o => new { o.BottleId, o.BuyerId })
+                .IsUnique()
+                .HasFilter("[Status] = 0 AND [IsDeleted] = 0");
+
             e.HasOne(o => o.Bottle)
                 .WithMany()
                 .HasForeignKey(o => o.BottleId)

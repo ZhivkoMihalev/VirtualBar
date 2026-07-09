@@ -14,6 +14,7 @@ import {
   linkBottleImage,
   lookupBarcode,
 } from '../api/bottlesApi'
+import { getCollectionValue } from '../api/pricesApi'
 import type { Bottle, SpiritCategory, AddBottlePayload } from '../types'
 import { CATEGORY_COLORS, BottleSvg, VirtualBarScene } from '../components/BarShelf'
 import BottleDetailPanel from '../components/BottleDetailPanel'
@@ -425,7 +426,7 @@ function AddBottlePanel({ onSuccess }: { onSuccess: () => void }) {
 }
 
 export default function DashboardPage() {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const { user } = useAuth()
   const queryClient = useQueryClient()
   const [addOpen, setAddOpen] = useState(false)
@@ -437,6 +438,17 @@ export default function DashboardPage() {
     queryFn: () => getBottlesByUser(user!.id),
     enabled: !!user?.id,
   })
+
+  const { data: collectionValue } = useQuery({
+    queryKey: ['collectionValue', user?.id],
+    queryFn: getCollectionValue,
+    enabled: !!user?.id,
+  })
+
+  const asOfDate = useMemo(
+    () => new Date().toLocaleDateString(i18n.language === 'bg' ? 'bg-BG' : 'en-GB', { dateStyle: 'medium' }),
+    [i18n.language],
+  )
 
   const displayedBottles = useMemo(
     () => (activeCategory ? bottles.filter(b => b.category === activeCategory) : bottles),
@@ -488,6 +500,35 @@ export default function DashboardPage() {
               <StatItem value={bottles.filter(b => b.isForSale).length} label={t('dashboard.forSale')} />
               <Separator orientation="vertical" className="h-10" />
               <StatItem value={bottles.filter(b => b.isLimited).length} label={t('dashboard.limited')} />
+            </CardContent>
+          </Card>
+        )}
+
+        {bottles.length > 0 && collectionValue && (
+          <Card className="mb-8">
+            <CardContent className="flex flex-wrap items-end justify-between gap-4 px-6 py-5">
+              <div>
+                <div className="mb-1 text-xs uppercase tracking-wider text-muted-foreground">
+                  {t('collectionValue.title')}
+                </div>
+                <div className="font-heading text-3xl font-bold text-primary">
+                  {collectionValue.totalValue > 0
+                    ? `${collectionValue.currency} ${collectionValue.totalValue.toLocaleString()}`
+                    : t('collectionValue.empty')}
+                </div>
+                <div className="mt-1 text-xs italic text-muted-foreground">
+                  {t('collectionValue.sealedOnly')} · {t('collectionValue.indicative')}
+                </div>
+              </div>
+              <div className="text-right text-xs text-muted-foreground">
+                <div>
+                  {t('collectionValue.priced', {
+                    priced: collectionValue.pricedCount,
+                    total: collectionValue.totalCount,
+                  })}
+                </div>
+                <div className="mt-1">{t('collectionValue.asOf', { date: asOfDate })}</div>
+              </div>
             </CardContent>
           </Card>
         )}

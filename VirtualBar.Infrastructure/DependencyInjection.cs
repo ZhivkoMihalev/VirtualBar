@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using VirtualBar.Application.Interfaces;
 using VirtualBar.Domain.Entities;
 using VirtualBar.Application.Options;
@@ -10,6 +11,7 @@ using VirtualBar.Infrastructure.Decorators;
 using VirtualBar.Infrastructure.Options;
 using VirtualBar.Infrastructure.Persistence;
 using VirtualBar.Infrastructure.Services;
+using VirtualBar.Infrastructure.Services.Pricing;
 
 namespace VirtualBar.Infrastructure;
 
@@ -115,6 +117,40 @@ public static class DependencyInjection
             sp.GetRequiredService<OfferService>(),
             sp.GetRequiredService<AppDbContext>(),
             sp.GetRequiredService<ICurrentUser>()));
+
+        // --- Collection value (bottle price estimation) ---
+        services.Configure<PricingOptions>(configuration.GetSection(PricingOptions.SectionName));
+        services.Configure<AnthropicOptions>(configuration.GetSection(AnthropicOptions.SectionName));
+        services.Configure<InternalProviderOptions>(configuration.GetSection(InternalProviderOptions.SectionName));
+
+        // Shared daily spend cap for billed Anthropic calls — consumed by the provider and the pre-warm job.
+        services.AddSingleton(TimeProvider.System);
+        services.AddSingleton<AnthropicDailyCallBudget>();
+
+        services.AddHttpClient<ClaudeMarketResearchProvider>((sp, client) =>
+        {
+            var anthropic = sp.GetRequiredService<IOptions<AnthropicOptions>>().Value;
+
+            if (!string.IsNullOrWhiteSpace(anthropic.BaseUrl))
+                client.BaseAddress = new Uri(anthropic.BaseUrl);
+
+            if (!string.IsNullOrWhiteSpace(anthropic.ApiKey))
+                client.DefaultRequestHeaders.Add("x-api-key", anthropic.ApiKey);
+
+            if (!string.IsNullOrWhiteSpace(anthropic.AnthropicVersion))
+                client.DefaultRequestHeaders.Add("anthropic-version", anthropic.AnthropicVersion);
+        });
+
+        services.AddScoped<InternalMarketPriceProvider>();
+
+        services.AddScoped<PriceEstimationService>();
+        services.AddScoped<IPriceEstimationService>(sp => new PriceEstimationValidationDecorator(
+            sp.GetRequiredService<PriceEstimationService>(),
+            sp.GetRequiredService<ICurrentUser>()));
+
+        // Pre-warm: a periodic hosted job researches the top-N most-owned stale bottles within budget.
+        services.AddScoped<PreWarmWorker>();
+        services.AddHostedService<PreWarmRefreshJob>();
 
         return services;
     }

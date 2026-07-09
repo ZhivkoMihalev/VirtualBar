@@ -227,6 +227,26 @@
     "yearsAgo_one": "преди {{count}} година",
     "yearsAgo_other": "преди {{count}} години"
   },
+  "collectionValue": {
+    "title": "Стойност на колекцията",
+    "indicative": "Ориентировъчно",
+    "asOf": "към {{date}}",
+    "priced": "{{priced}} от {{total}} оценени",
+    "sealedOnly": "Само запечатани бутилки",
+    "empty": "—",
+    "estimateLabel": "Ориентировъчна пазарна стойност",
+    "loading": "Зареждане на оценка…",
+    "noEstimate": "Все още няма оценка",
+    "range": "{{currency}} {{low}} – {{high}}",
+    "confidenceLabel": "Достоверност",
+    "confidenceLow": "Ниска",
+    "confidenceMedium": "Средна",
+    "confidenceHigh": "Висока",
+    "sourceLabel": "Източник",
+    "sourceResearched": "проучено",
+    "sourceCommunity": "общност",
+    "sources": "Източници"
+  },
   "messages": {
     "title": "СЪОБЩЕНИЯ",
     "noConversations": "Нямате разговори все още.",

@@ -21,6 +21,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
     public DbSet<Distillery> Distilleries => Set<Distillery>();
     public DbSet<DistilleryCategory> DistilleryCategories => Set<DistilleryCategory>();
     public DbSet<Offer> Offers => Set<Offer>();
+    public DbSet<PriceSnapshot> PriceSnapshots => Set<PriceSnapshot>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -162,6 +163,28 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
                 .WithMany()
                 .HasForeignKey(o => o.SellerId)
                 .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        builder.Entity<PriceSnapshot>(e =>
+        {
+            e.Property(p => p.EstimatedPrice)
+                .HasColumnType("decimal(18,2)");
+
+            e.Property(p => p.LowEstimate)
+                .HasColumnType("decimal(18,2)");
+
+            e.Property(p => p.HighEstimate)
+                .HasColumnType("decimal(18,2)");
+
+            // No explicit column type: a non-length-bounded string already maps to nvarchar(max) on SQL
+            // Server (matching the existing migration) while staying provider-agnostic (TEXT on SQLite).
+
+            e.HasIndex(p => p.ProductKey)
+                .IsUnique();
+
+            e.HasIndex(p => new { p.Category, p.FetchedAt });
+
+            e.HasIndex(p => p.Barcode);
         });
     }
 }

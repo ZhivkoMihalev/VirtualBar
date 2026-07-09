@@ -227,6 +227,26 @@
     "yearsAgo_one": "{{count}} year ago",
     "yearsAgo_other": "{{count}} years ago"
   },
+  "collectionValue": {
+    "title": "Collection value",
+    "indicative": "Indicative",
+    "asOf": "as of {{date}}",
+    "priced": "{{priced}} of {{total}} priced",
+    "sealedOnly": "Sealed bottles only",
+    "empty": "—",
+    "estimateLabel": "Indicative market value",
+    "loading": "Loading estimate…",
+    "noEstimate": "No estimate yet",
+    "range": "{{currency}} {{low}} – {{high}}",
+    "confidenceLabel": "Confidence",
+    "confidenceLow": "Low",
+    "confidenceMedium": "Medium",
+    "confidenceHigh": "High",
+    "sourceLabel": "Source",
+    "sourceResearched": "researched",
+    "sourceCommunity": "community",
+    "sources": "Sources"
+  },
   "messages": {
     "title": "MESSAGES",
     "noConversations": "No conversations yet.",

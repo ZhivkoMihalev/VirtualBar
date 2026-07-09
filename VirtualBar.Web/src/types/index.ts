@@ -233,6 +233,44 @@ export interface NotificationSummary {
   unreadCount: number
 }
 
+export type PriceConfidence = 'Low' | 'Medium' | 'High'
+export type PriceSource = 'ClaudeResearch' | 'Internal'
+
+export interface PriceCitation {
+  url: string
+  title: string
+}
+
+export interface PriceEstimate {
+  estimatedPrice: number
+  lowEstimate: number | null
+  highEstimate: number | null
+  currency: string
+  sampleSize: number
+  source: PriceSource
+  confidence: PriceConfidence
+  asOf: string
+  sources: PriceCitation[]
+}
+
+export interface BottlePriceLine {
+  bottleId: string
+  name: string
+  estimatedPrice: number | null
+  currency: string
+  confidence: PriceConfidence
+  source: PriceSource
+  countedInTotal: boolean
+}
+
+export interface CollectionValue {
+  totalValue: number
+  currency: string
+  pricedCount: number
+  totalCount: number
+  items: BottlePriceLine[]
+}
+
 export type OfferStatus = 'Pending' | 'Accepted' | 'Declined' | 'Withdrawn'
 
 export interface Offer {

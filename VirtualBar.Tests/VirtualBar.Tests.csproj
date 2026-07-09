@@ -22,6 +22,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\VirtualBar.Api\VirtualBar.Api.csproj" />
     <ProjectReference Include="..\VirtualBar.Application\VirtualBar.Application.csproj" />
     <ProjectReference Include="..\VirtualBar.Infrastructure\VirtualBar.Infrastructure.csproj" />
   </ItemGroup>

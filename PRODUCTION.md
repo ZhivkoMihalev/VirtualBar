@@ -160,3 +160,18 @@ ASPNETCORE_ENVIRONMENT=Production
 ```
 
 In Production: OpenAPI/Scalar UI are disabled automatically (see `Program.cs`).
+
+---
+
+## 13. Anthropic — Collection Value price research
+
+The Collection Value feature calls the **Anthropic Messages API** (`web_search` tool) to research indicative bottle prices. Before enabling it in production:
+
+- **API key:** set `Anthropic:ApiKey` via environment variable / user-secrets (it is empty in `appsettings.json` — never commit it).
+  ```json
+  "Anthropic": { "ApiKey": "<your key>", "Model": "claude-sonnet-4-6", "UseProviderStats": true }
+  ```
+- **Enable web search** for the organisation in the Anthropic Console — otherwise the tool call fails soft (no estimate, logged).
+- **Cost guardrails** (all in `appsettings.json`): `Anthropic:DailyCallBudget` caps billed calls per UTC day; `Pricing:SnapshotTtlDays` (5-day cache) + `Pricing:PreWarmTopNBottles` bound total spend. Tune to your budget.
+- **Kill switches:** `Anthropic:UseProviderStats` toggles the Claude provider entirely; `Pricing:RefreshEnabled` toggles the pre-warm background job.
+- **Legal:** estimates are indicative and always display their citations (Anthropic requirement). Get legal sign-off before a public/commercial launch.

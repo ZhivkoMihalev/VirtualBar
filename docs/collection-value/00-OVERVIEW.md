@@ -44,8 +44,10 @@ citation display**. *Not legal advice; keep estimates indicative and always show
 1. **Two signals, source-labelled.** `ClaudeMarketResearchProvider` (`PriceSource.ClaudeResearch`) → indicative
    min–max + confidence + **sources**; `InternalMarketProvider` (`PriceSource.Internal`) → our own data. The
    `Source` is also the UI label ("researched" vs "community") — **no separate signal-type enum**.
-2. **Simple selection.** Prefer **Internal whenever it returns data** (it has ≥ `MinApproxSamples` of our own
-   listings/offers); otherwise use **Claude**; otherwise **None**. No confidence-capping hierarchy.
+2. **Simple selection.** Prefer **Claude research whenever it returns a result** (web-grounded, all categories);
+   fall back to **Internal** (our own listings/offers) only when Claude returns nothing; otherwise **None**. No
+   confidence-capping hierarchy. *(Shipped order: Claude → Internal fallback → None, in
+   `PriceEstimationService.GetBottleEstimateAsync`.)*
 3. **Mandatory citations.** Every displayed estimate shows its sources (Anthropic requirement + honest UX); an
    estimate with no citations is treated as `None`.
 4. **Aggressive caching is mandatory (cost).** Read-through `PriceSnapshot`, **5-day TTL** — each canonical bottle
@@ -98,8 +100,8 @@ Bottle ─(canonical ProductKey | Barcode)─▶ PriceEstimationService  (orches
                                     ▼
            CollectionValue  (sum of latest per-bottle estimates — SEALED bottles only)
 ```
-**Selection:** Internal **if it returns data** → else Claude → else `None`. Each result carries a `Confidence` +
-`Source` for the UI. (No signal-type ordering, no confidence capping.)
+**Selection:** Claude **if it returns a result** → else Internal fallback → else `None`. Each result carries a
+`Confidence` + `Source` for the UI. (No signal-type ordering, no confidence capping.)
 
 ## 5. What already exists (reuse, don't rebuild)
 - **From the stash** (`git checkout stash@{0} -- <path>`): `PriceProviderBase`, `ProductKey`,

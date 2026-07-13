@@ -86,6 +86,27 @@ public sealed class BottleValidationDecorator(
         return await inner.RemoveBottleAsync(bottleId, cancellationToken);
     }
 
+    public async Task<Result<bool>> ReorderBottlesAsync(ReorderBottlesRequest request, CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+
+        if (request.BottleIds is not { Count: > 0 })
+            return Result<bool>.Fail("Bottle IDs are required.");
+
+        if (request.BottleIds.Distinct().Count() != request.BottleIds.Count)
+            return Result<bool>.Fail("Bottle IDs must be unique.");
+
+        var ownedIds = await db.Bottles
+            .Where(b => b.UserId == currentUser.UserId && !b.IsDeleted)
+            .Select(b => b.Id)
+            .ToListAsync(cancellationToken);
+
+        if (request.BottleIds.Except(ownedIds).Any())
+            return Result<bool>.NotFound("Bottle not found.");
+
+        return await inner.ReorderBottlesAsync(request, cancellationToken);
+    }
+
     public async Task<Result<bool>> ListForSaleAsync(Guid bottleId, ListForSaleRequest request, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();

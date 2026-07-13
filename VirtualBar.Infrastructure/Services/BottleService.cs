@@ -21,7 +21,8 @@ public sealed class BottleService(
             .Include(b => b.Comments.Where(c => !c.IsDeleted))
             .Include(b => b.User)
             .Include(b => b.Distillery)
-            .OrderByDescending(b => b.CreatedAt)
+            .OrderBy(b => b.DisplayOrder)
+            .ThenByDescending(b => b.CreatedAt)
             .ToListAsync(cancellationToken);
 
         return Result<List<BottleDto>>.Ok(
@@ -110,6 +111,39 @@ public sealed class BottleService(
 
         bottle!.IsDeleted = true;
         bottle.DeletedAt = DateTime.UtcNow;
+
+        await db.SaveChangesAsync(cancellationToken);
+
+        return Result<bool>.Ok(true);
+    }
+
+    public async Task<Result<bool>> ReorderBottlesAsync(ReorderBottlesRequest request, CancellationToken cancellationToken)
+    {
+        var bottles = await db.Bottles
+            .Where(b => b.UserId == currentUser.UserId && !b.IsDeleted)
+            .ToListAsync(cancellationToken);
+
+        var orderById = new Dictionary<Guid, int>(request.BottleIds.Count);
+        for (var i = 0; i < request.BottleIds.Count; i++)
+            orderById[request.BottleIds[i]] = i;
+
+        // Bottles missing from the request (e.g. added from another tab mid-drag) keep their
+        // relative order after the explicitly listed ones instead of colliding at position 0.
+        var next = request.BottleIds.Count;
+        var unlisted = bottles
+            .Where(b => !orderById.ContainsKey(b.Id))
+            .OrderBy(b => b.DisplayOrder)
+            .ThenByDescending(b => b.CreatedAt);
+
+        foreach (var bottle in unlisted)
+            orderById[bottle.Id] = next++;
+
+        var now = DateTime.UtcNow;
+        foreach (var bottle in bottles)
+        {
+            bottle.DisplayOrder = orderById[bottle.Id];
+            bottle.UpdatedAt = now;
+        }
 
         await db.SaveChangesAsync(cancellationToken);
 

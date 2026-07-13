@@ -44,6 +44,8 @@ public class Bottle : BaseEntity
 
     public DateTime? ForSaleAt { get; set; }
 
+    public int DisplayOrder { get; set; }
+
     public ICollection<BottleImage> Images { get; set; } = [];
 
     public ICollection<BottleLike> Likes { get; set; } = [];

@@ -58,7 +58,9 @@ public sealed class BottleServiceTests
         bool isDeleted = false,
         decimal? askingPrice = null,
         string? currency = null,
-        Guid? distilleryId = null)
+        Guid? distilleryId = null,
+        int displayOrder = 0,
+        DateTime? createdAt = null)
     {
         var bottle = new Bottle
         {
@@ -71,8 +73,11 @@ public sealed class BottleServiceTests
             IsDeleted = isDeleted,
             DeletedAt = isDeleted ? DateTime.UtcNow : null,
             AskingPrice = askingPrice,
-            Currency = currency
+            Currency = currency,
+            DisplayOrder = displayOrder
         };
+        if (createdAt is not null)
+            bottle.CreatedAt = createdAt.Value;
         db.Bottles.Add(bottle);
         db.SaveChanges();
         return bottle;
@@ -145,6 +150,24 @@ public sealed class BottleServiceTests
         Assert.True(result.Success);
         Assert.Single(result.Data!);
         Assert.Equal("A Bottle", result.Data![0].Name);
+    }
+
+    [Fact]
+    public async Task GetBottlesByUserAsync_OrdersByDisplayOrderThenCreatedAtDescending()
+    {
+        var db = CreateDbContext();
+        var user = SeedUser(db);
+        var baseTime = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+        // Same DisplayOrder (0) → newer CreatedAt first; higher DisplayOrder sorts last.
+        SeedBottle(db, user.Id, "OldZero", displayOrder: 0, createdAt: baseTime);
+        SeedBottle(db, user.Id, "NewZero", displayOrder: 0, createdAt: baseTime.AddDays(2));
+        SeedBottle(db, user.Id, "One", displayOrder: 1, createdAt: baseTime.AddDays(1));
+        var service = CreateBottleService(db, user.Id);
+
+        var result = await service.GetBottlesByUserAsync(user.Id, CancellationToken.None);
+
+        Assert.True(result.Success);
+        Assert.Equal(new[] { "NewZero", "OldZero", "One" }, result.Data!.Select(b => b.Name).ToArray());
     }
 
     [Fact]
@@ -473,6 +496,179 @@ public sealed class BottleServiceTests
 
         await Assert.ThrowsAsync<OperationCanceledException>(
             () => service.RemoveBottleAsync(Guid.NewGuid(), cts.Token));
+    }
+
+    #endregion
+
+    #region ReorderBottlesAsync
+
+    [Fact]
+    public async Task ReorderBottlesAsync_WhenBottleIdsEmpty_ReturnsFail()
+    {
+        var db = CreateDbContext();
+        var user = SeedUser(db);
+        var service = CreateBottleService(db, user.Id);
+        var request = new ReorderBottlesRequest { BottleIds = [] };
+
+        var result = await service.ReorderBottlesAsync(request, CancellationToken.None);
+
+        Assert.False(result.Success);
+        Assert.Equal("Bottle IDs are required.", result.Error);
+    }
+
+    [Fact]
+    public async Task ReorderBottlesAsync_WhenBottleIdsNull_ReturnsFail()
+    {
+        var db = CreateDbContext();
+        var user = SeedUser(db);
+        var service = CreateBottleService(db, user.Id);
+        var request = new ReorderBottlesRequest { BottleIds = null! };
+
+        var result = await service.ReorderBottlesAsync(request, CancellationToken.None);
+
+        Assert.False(result.Success);
+        Assert.Equal("Bottle IDs are required.", result.Error);
+    }
+
+    [Fact]
+    public async Task ReorderBottlesAsync_WhenBottleIdsContainDuplicates_ReturnsFail()
+    {
+        var db = CreateDbContext();
+        var user = SeedUser(db);
+        var bottle = SeedBottle(db, user.Id);
+        var service = CreateBottleService(db, user.Id);
+        var request = new ReorderBottlesRequest { BottleIds = [bottle.Id, bottle.Id] };
+
+        var result = await service.ReorderBottlesAsync(request, CancellationToken.None);
+
+        Assert.False(result.Success);
+        Assert.Equal("Bottle IDs must be unique.", result.Error);
+    }
+
+    [Fact]
+    public async Task ReorderBottlesAsync_WhenBottleNotOwnedByUser_ReturnsNotFound()
+    {
+        var db = CreateDbContext();
+        var user = SeedUser(db, "Owner");
+        var other = SeedUser(db, "Other");
+        var ownBottle = SeedBottle(db, user.Id, "Mine");
+        var foreignBottle = SeedBottle(db, other.Id, "Theirs");
+        var service = CreateBottleService(db, user.Id);
+        var request = new ReorderBottlesRequest { BottleIds = [ownBottle.Id, foreignBottle.Id] };
+
+        var result = await service.ReorderBottlesAsync(request, CancellationToken.None);
+
+        Assert.False(result.Success);
+        Assert.Equal("Bottle not found.", result.Error);
+    }
+
+    [Fact]
+    public async Task ReorderBottlesAsync_WhenDeletedBottleInRequest_ReturnsNotFound()
+    {
+        var db = CreateDbContext();
+        var user = SeedUser(db);
+        var deleted = SeedBottle(db, user.Id, "Gone", isDeleted: true);
+        var service = CreateBottleService(db, user.Id);
+        var request = new ReorderBottlesRequest { BottleIds = [deleted.Id] };
+
+        var result = await service.ReorderBottlesAsync(request, CancellationToken.None);
+
+        Assert.False(result.Success);
+        Assert.Equal("Bottle not found.", result.Error);
+    }
+
+    [Fact]
+    public async Task ReorderBottlesAsync_WhenAllBottlesInRequest_AssignsSequentialDisplayOrder()
+    {
+        var db = CreateDbContext();
+        var user = SeedUser(db);
+        var a = SeedBottle(db, user.Id, "A");
+        var b = SeedBottle(db, user.Id, "B");
+        var c = SeedBottle(db, user.Id, "C");
+        // Distinctly old stamp so we can prove UpdatedAt is re-written.
+        foreach (var seeded in new[] { a, b, c })
+            seeded.UpdatedAt = new DateTime(2020, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+        db.SaveChanges();
+        var service = CreateBottleService(db, user.Id);
+        var before = DateTime.UtcNow;
+
+        var result = await service.ReorderBottlesAsync(
+            new ReorderBottlesRequest { BottleIds = [c.Id, a.Id, b.Id] }, CancellationToken.None);
+
+        Assert.True(result.Success);
+        Assert.True(result.Data);
+        var stored = await db.Bottles.ToDictionaryAsync(x => x.Id);
+        Assert.Equal(0, stored[c.Id].DisplayOrder);
+        Assert.Equal(1, stored[a.Id].DisplayOrder);
+        Assert.Equal(2, stored[b.Id].DisplayOrder);
+        Assert.True(stored[a.Id].UpdatedAt >= before);
+        Assert.True(stored[b.Id].UpdatedAt >= before);
+        Assert.True(stored[c.Id].UpdatedAt >= before);
+    }
+
+    [Fact]
+    public async Task ReorderBottlesAsync_WhenSomeBottlesNotInRequest_AppendsThemByDisplayOrderThenNewestFirst()
+    {
+        var db = CreateDbContext();
+        var user = SeedUser(db);
+        var baseTime = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+        var a = SeedBottle(db, user.Id, "A");
+        var b = SeedBottle(db, user.Id, "B");
+        // Two bottles left out of the request. Same DisplayOrder → tie broken by CreatedAt desc.
+        var oldUnlisted = SeedBottle(db, user.Id, "OldUnlisted", displayOrder: 5, createdAt: baseTime);
+        var newUnlisted = SeedBottle(db, user.Id, "NewUnlisted", displayOrder: 5, createdAt: baseTime.AddDays(1));
+        var service = CreateBottleService(db, user.Id);
+
+        var result = await service.ReorderBottlesAsync(
+            new ReorderBottlesRequest { BottleIds = [b.Id, a.Id] }, CancellationToken.None);
+
+        Assert.True(result.Success);
+        var stored = await db.Bottles.ToDictionaryAsync(x => x.Id);
+        Assert.Equal(0, stored[b.Id].DisplayOrder);
+        Assert.Equal(1, stored[a.Id].DisplayOrder);
+        // Unlisted appended after the listed ones: newer CreatedAt wins the DisplayOrder tie.
+        Assert.Equal(2, stored[newUnlisted.Id].DisplayOrder);
+        Assert.Equal(3, stored[oldUnlisted.Id].DisplayOrder);
+    }
+
+    [Fact]
+    public async Task ReorderBottlesAsync_DoesNotTouchOtherUsersOrDeletedBottles()
+    {
+        var db = CreateDbContext();
+        var user = SeedUser(db, "Owner");
+        var other = SeedUser(db, "Other");
+        var mine = SeedBottle(db, user.Id, "Mine");
+        var foreign = SeedBottle(db, other.Id, "Theirs", displayOrder: 99);
+        var deleted = SeedBottle(db, user.Id, "Deleted", isDeleted: true, displayOrder: 88);
+        var untouched = new DateTime(2020, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+        foreign.UpdatedAt = untouched;
+        deleted.UpdatedAt = untouched;
+        db.SaveChanges();
+        var service = CreateBottleService(db, user.Id);
+
+        var result = await service.ReorderBottlesAsync(
+            new ReorderBottlesRequest { BottleIds = [mine.Id] }, CancellationToken.None);
+
+        Assert.True(result.Success);
+        var stored = await db.Bottles.ToDictionaryAsync(x => x.Id);
+        Assert.Equal(0, stored[mine.Id].DisplayOrder);
+        Assert.Equal(99, stored[foreign.Id].DisplayOrder);
+        Assert.Equal(untouched, stored[foreign.Id].UpdatedAt);
+        Assert.Equal(88, stored[deleted.Id].DisplayOrder);
+        Assert.Equal(untouched, stored[deleted.Id].UpdatedAt);
+    }
+
+    [Fact]
+    public async Task ReorderBottlesAsync_WithCancelledToken_Throws()
+    {
+        var db = CreateDbContext();
+        var service = CreateBottleService(db, Guid.NewGuid());
+        using var cts = new CancellationTokenSource();
+        cts.Cancel();
+
+        await Assert.ThrowsAsync<OperationCanceledException>(
+            () => service.ReorderBottlesAsync(
+                new ReorderBottlesRequest { BottleIds = [Guid.NewGuid()] }, cts.Token));
     }
 
     #endregion

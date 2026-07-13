@@ -24,6 +24,10 @@ export async function removeBottle(id: string): Promise<void> {
   await client.delete(`/bottles/${id}`)
 }
 
+export async function reorderBottles(bottleIds: string[]): Promise<void> {
+  await client.put('/bottles/reorder', { bottleIds })
+}
+
 export async function uploadBottleImage(bottleId: string, file: File): Promise<void> {
   const form = new FormData()
   form.append('file', file)

@@ -32,6 +32,10 @@ export default function ProfilePage() {
     onSuccess: (data: UpdatedProfile) => {
       setAvatarUrl(data.avatarUrl)
       updateUser({ avatarUrl: data.avatarUrl })
+      if (user?.id) {
+        queryClient.invalidateQueries({ queryKey: ['profile', user.id] })
+      }
+      queryClient.invalidateQueries({ queryKey: ['users'] })
     },
     onError: () => toast.error(t('profile.avatarError')),
   })
@@ -55,6 +59,7 @@ export default function ProfilePage() {
       if (user?.id) {
         queryClient.invalidateQueries({ queryKey: ['profile', user.id] })
       }
+      queryClient.invalidateQueries({ queryKey: ['users'] })
       toast.success(t('profile.successMessage'))
     },
     onError: () => toast.error(t('profile.errorMessage')),

@@ -13,6 +13,7 @@ import {
   uploadBottleImage,
   linkBottleImage,
   lookupBarcode,
+  reorderBottles,
 } from '../api/bottlesApi'
 import { getCollectionValue } from '../api/pricesApi'
 import type { Bottle, SpiritCategory, AddBottlePayload } from '../types'
@@ -445,6 +446,28 @@ export default function DashboardPage() {
     enabled: !!user?.id,
   })
 
+  const reorderMutation = useMutation({
+    mutationFn: reorderBottles,
+    onMutate: async (orderedIds: string[]) => {
+      await queryClient.cancelQueries({ queryKey: ['bottles', user?.id] })
+      const previous = queryClient.getQueryData<Bottle[]>(['bottles', user?.id])
+      if (previous) {
+        const byId = new Map(previous.map(b => [b.id, b]))
+        queryClient.setQueryData(
+          ['bottles', user?.id],
+          orderedIds.map(id => byId.get(id)).filter((b): b is Bottle => b !== undefined),
+        )
+      }
+      return { previous }
+    },
+    onError: (_error, _ids, context) => {
+      if (context?.previous) queryClient.setQueryData(['bottles', user?.id], context.previous)
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['bottles', user?.id] })
+    },
+  })
+
   const asOfDate = useMemo(
     () => new Date().toLocaleDateString(i18n.language === 'bg' ? 'bg-BG' : 'en-GB', { dateStyle: 'medium' }),
     [i18n.language],
@@ -542,8 +565,8 @@ export default function DashboardPage() {
         {!isLoading && bottles.length > 0 && (
           <VirtualBarScene
             bottles={displayedBottles}
-            onAdd={() => setAddOpen(true)}
             onSelect={setSelectedBottle}
+            onReorder={activeCategory ? undefined : ids => reorderMutation.mutate(ids)}
           />
         )}
 

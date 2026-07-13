@@ -119,6 +119,21 @@ public sealed class BottlesController(IBottleService bottleService) : Controller
             : result.ToActionResult(this);
     }
 
+    /// <summary>Reorders the current collector's bottles to the given identifier sequence.</summary>
+    /// <param name="request">The bottle identifiers in the desired display order.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <response code="200">Bottles reordered.</response>
+    /// <response code="400">Bottle IDs are missing or contain duplicates.</response>
+    /// <response code="404">A bottle does not exist or belongs to another collector.</response>
+    [HttpPut("reorder")]
+    public async Task<IActionResult> ReorderBottles(ReorderBottlesRequest request, CancellationToken cancellationToken)
+    {
+        var result = await bottleService.ReorderBottlesAsync(request, cancellationToken);
+        return result.Success
+            ? Ok()
+            : result.ToActionResult(this);
+    }
+
     /// <summary>Removes a bottle owned by the current collector.</summary>
     /// <param name="id">The bottle identifier.</param>
     /// <param name="cancellationToken">Cancellation token.</param>

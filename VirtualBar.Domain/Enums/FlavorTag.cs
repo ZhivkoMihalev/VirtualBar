@@ -1,0 +1,33 @@
+namespace VirtualBar.Domain.Enums;
+
+public enum FlavorTag
+{
+    Smoky,
+    Peaty,
+    Medicinal,
+    Maritime,
+    Vanilla,
+    Caramel,
+    Toffee,
+    Honey,
+    Chocolate,
+    Coffee,
+    Nutty,
+    Malty,
+    Creamy,
+    Fruity,
+    Citrus,
+    TropicalFruit,
+    DriedFruit,
+    Berry,
+    Floral,
+    Herbal,
+    Grassy,
+    Spicy,
+    Pepper,
+    Cinnamon,
+    Oak,
+    Sherry,
+    Leather,
+    Tobacco,
+}

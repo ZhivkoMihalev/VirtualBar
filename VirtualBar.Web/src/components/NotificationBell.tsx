@@ -37,6 +37,10 @@ function describe(item: NotificationItem, t: (key: string, opts?: Record<string,
       return item.resourceName
         ? t('notifications.bottleCommented', { bottle: item.resourceName })
         : t('notifications.bottleCommentedNoName')
+    case 'BottleReviewed':
+      return item.resourceName
+        ? t('notifications.bottleReviewed', { bottle: item.resourceName })
+        : t('notifications.bottleReviewedNoName')
     case 'NewFollower':
       return t('notifications.newFollower')
     case 'NewMessage':
@@ -72,6 +76,7 @@ function targetPath(item: NotificationItem): string | null {
   switch (item.type) {
     case 'BottleLiked':
     case 'BottleCommented':
+    case 'BottleReviewed':
     case 'NewFollower':
     case 'NewBottleFromFollowing':
     case 'BottleListedForSale':

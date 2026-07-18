@@ -44,6 +44,10 @@ public sealed class BottleDto
 
     public int CommentsCount { get; set; }
 
+    public double? AverageScore { get; set; }
+
+    public int ReviewsCount { get; set; }
+
     public string UserDisplayName { get; set; } = string.Empty;
 
     public DateTime CreatedAt { get; set; }

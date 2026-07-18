@@ -22,6 +22,8 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
     public DbSet<DistilleryCategory> DistilleryCategories => Set<DistilleryCategory>();
     public DbSet<Offer> Offers => Set<Offer>();
     public DbSet<PriceSnapshot> PriceSnapshots => Set<PriceSnapshot>();
+    public DbSet<BottleReview> BottleReviews => Set<BottleReview>();
+    public DbSet<BottleReviewFlavor> BottleReviewFlavors => Set<BottleReviewFlavor>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -191,6 +193,27 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
             e.HasIndex(p => new { p.Category, p.FetchedAt });
 
             e.HasIndex(p => p.Barcode);
+        });
+
+        builder.Entity<BottleReview>(e =>
+        {
+            // One review per (BottleId, UserId) — DB-enforced. The decorator's already-reviewed pre-check is
+            // only a friendly fast path; this filtered unique index closes the concurrent-create race.
+            e.HasIndex(r => new { r.BottleId, r.UserId })
+                .IsUnique()
+                .HasFilter("[IsDeleted] = 0");
+
+            e.HasIndex(r => new { r.BottleId, r.IsDeleted });
+        });
+
+        builder.Entity<BottleReviewFlavor>(e =>
+        {
+            e.HasKey(f => new { f.ReviewId, f.Flavor });
+
+            e.HasOne(f => f.Review)
+                .WithMany(r => r.Flavors)
+                .HasForeignKey(f => f.ReviewId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
     }
 }

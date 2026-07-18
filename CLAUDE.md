@@ -6,7 +6,7 @@ This file provides guidance to Claude Code when working with code in this reposi
 
 ## What is VirtualBar
 
-VirtualBar is a platform for collectors of premium spirits (whisky, rum, cognac, vodka and more). Every user gets a **virtual bar** — a public profile showcasing their collection. Others can browse collections, follow collectors, like and comment on bottles, send direct messages, and buy/sell limited editions through a built-in marketplace. The home page (`/`) is a social news feed showing admin-authored articles and activity from followed users. Users receive **in-app notifications** when someone likes/comments their bottle, follows them, sends a message, or when someone they follow adds a bottle or lists one for sale. Users can add bottles to a **wish list** and get notified when a matching bottle appears for sale. Any user can **make an offer** on any bottle in another collector's bar (regardless of whether it is listed for sale); the seller receives a notification and can accept, decline, or ignore. Direct messaging is handled via a **floating chat widget** (Facebook Messenger style) accessible from every page.
+VirtualBar is a platform for collectors of premium spirits (whisky, rum, cognac, vodka and more). Every user gets a **virtual bar** — a public profile showcasing their collection. Others can browse collections, follow collectors, like and comment on bottles, leave **structured reviews** (0–100 score + tasting notes + flavor tags), send direct messages, and buy/sell limited editions through a built-in marketplace. The home page (`/`) is a social news feed showing admin-authored articles and activity from followed users. Users receive **in-app notifications** when someone likes/comments their bottle, follows them, sends a message, or when someone they follow adds a bottle or lists one for sale. Users can add bottles to a **wish list** and get notified when a matching bottle appears for sale. Any user can **make an offer** on any bottle in another collector's bar (regardless of whether it is listed for sale); the seller receives a notification and can accept, decline, or ignore. Direct messaging is handled via a **floating chat widget** (Facebook Messenger style) accessible from every page.
 
 **User roles:** Collector (all registered users). Platform administrators have `IsAdmin = true` on their `AppUser` record — seeded via `AdminEmail` in `appsettings.Development.json` on startup.
 
@@ -202,10 +202,12 @@ Key DbSets:
 | `WishListItems` | A collector's desired bottle criteria — matched against listings |
 | `Offers` | Purchase offers from one user to another on a specific bottle |
 | `PriceSnapshots` | Read-through cache of indicative per-product price estimates (5-day TTL) — powers Collection Value |
+| `BottleReviews` | One structured review per user per bottle: score 0–100 + tasting notes + flavors |
+| `BottleReviewFlavors` | Junction: review → flavor tag (composite PK; up to 5 per review) |
 
 All entities extend `BaseEntity` which adds `Id (Guid)`, `CreatedAt`, `UpdatedAt`, `IsDeleted`, `DeletedAt`.
 
-`BottleLike`, `UserFollow`, and `DistilleryCategory` are junction tables with composite PKs — no `BaseEntity`.
+`BottleLike`, `UserFollow`, `DistilleryCategory`, and `BottleReviewFlavor` are junction tables with composite PKs — no `BaseEntity`.
 
 ---
 
@@ -246,7 +248,9 @@ Junction relations: `BottleLike` (liked), `UserFollow` (followers/following).
 | `ForSaleAt` | `DateTime?` | When the bottle was listed for sale (set by `ListForSaleAsync`, cleared by `UnlistFromSaleAsync`) |
 | `Barcode` | `string?` | Scanned/known EAN-UPC; sharpens canonical price-estimate matching (Collection Value) |
 
-Relations: one `Bottle` → many `BottleImage`, `BottleLike`, `BottleComment`.
+Relations: one `Bottle` → many `BottleImage`, `BottleLike`, `BottleComment`, `BottleReview`.
+
+`BottleDto` additionally carries `AverageScore` (1 decimal, null when no reviews) + `ReviewsCount` — **computed in queries, never denormalized** (projected the same way `LikesCount`/`CommentsCount` are in `BottleService`).
 
 ---
 
@@ -276,6 +280,38 @@ Composite PK: `(BottleId, UserId)`. No `BaseEntity`.
 | `BottleId` | `Guid` | FK → Bottle |
 | `UserId` | `Guid` | FK → AppUser (author) |
 | `Content` | `string` | |
+
+---
+
+### BottleReview
+| Property | Type | Notes |
+|---|---|---|
+| `BottleId` | `Guid` | FK → Bottle |
+| `UserId` | `Guid` | FK → AppUser (reviewer) |
+| `Score` | `int` | 0–100, required |
+| `Nose` | `string?` | Tasting note, trimmed, ≤ 2000 chars |
+| `Palate` | `string?` | Tasting note, trimmed, ≤ 2000 chars |
+| `Finish` | `string?` | Tasting note, trimmed, ≤ 2000 chars |
+| `Summary` | `string?` | Tasting note, trimmed, ≤ 2000 chars |
+
+Has `ICollection<BottleReviewFlavor> Flavors` (≤ 5, distinct, enum-defined values only).
+
+**Design:** One review per `(BottleId, UserId)` — DB-enforced via a **filtered unique index** (`WHERE [IsDeleted] = 0`), same pattern as the `Offer` pending index: the decorator's already-reviewed pre-check is only a friendly fast path; `BottleReviewService.AddReviewAsync` maps the index violation (`DbUpdateException`) to `Conflict` when a concurrent create loses the race. The owner CAN review their own bottle (tasting journal use case) — no self-notification (decorator skips it). Update replaces flavors wholesale (clear junction rows + add new); the review row soft-deletes via `BaseEntity.IsDeleted`. Reviews attach to the bottle instance (like likes/comments), not to a canonical product. Additional index on `(BottleId, IsDeleted)` for the summary query.
+
+**FlavorTag enum (Domain, append-only, 28 members):** `Smoky, Peaty, Medicinal, Maritime, Vanilla, Caramel, Toffee, Honey, Chocolate, Coffee, Nutty, Malty, Creamy, Fruity, Citrus, TropicalFruit, DriedFruit, Berry, Floral, Herbal, Grassy, Spicy, Pepper, Cinnamon, Oak, Sherry, Leather, Tobacco`. Labels are translated on the frontend only (i18n `flavors` namespace, keys = enum names) — no seeded table, no admin CRUD.
+
+**API endpoints (`/api/bottles/{bottleId}/reviews`):**
+- `GET /api/bottles/{bottleId}/reviews` — `[AllowAnonymous]`; one round-trip `BottleReviewsSummaryDto { AverageScore, ReviewsCount, TopFlavors (top-3), Reviews[], MyReview? }`; `MyReview` is null for anonymous users
+- `POST /api/bottles/{bottleId}/reviews` — create own review (duplicate → `409`)
+- `PUT /api/bottles/{bottleId}/reviews/{reviewId}` — update own review
+- `DELETE /api/bottles/{bottleId}/reviews/{reviewId}` — soft-delete own review
+
+### BottleReviewFlavor
+Composite PK: `(ReviewId, Flavor)`. No `BaseEntity`. Cascade delete from `BottleReview` (hard junction rows, same as `DistilleryCategory`).
+| Property | Type |
+|---|---|
+| `ReviewId` | `Guid` |
+| `Flavor` | `FlavorTag` |
 
 ---
 
@@ -350,6 +386,7 @@ Both FK relations use `DeleteBehavior.Restrict`. Composite index on `(UserId, Is
 | `OfferReceived` | `OfferService.CreateAsync` — sent to the seller |
 | `OfferAccepted` | `OfferService.AcceptAsync` — sent to the buyer |
 | `OfferDeclined` | `OfferService.DeclineAsync` — sent to the buyer |
+| `BottleReviewed` | `BottleReviewService.AddReviewAsync` — sent to the bottle owner (create only, not on update/delete) |
 
 **INotificationService methods:**
 - `CreateAsync(recipientId, type, resourceId, resourceName, ct)` — single recipient; decorator skips if `recipientId == currentUser.UserId` (no self-notifications).
@@ -478,7 +515,7 @@ Full slice-by-slice specs live in `docs/collection-value/`.
 
 **Internationalisation:** `react-i18next` + `i18next-browser-languagedetector`. Bulgarian is the default language (`lng: 'bg'`). English is optional. Language choice is persisted in `localStorage` under key `vbar_lang`. Translation files: `src/i18n/bg.json` and `src/i18n/en.json`. i18next is initialised in `src/i18n/index.ts` and imported as the first line of `src/main.tsx`. Every page and component uses `const { t } = useTranslation()`. The `LanguageSwitcher` component (`src/components/LanguageSwitcher.tsx`) renders a speakeasy-styled dropdown (БГ/EN) placed inside the NavBar of every page.
 
-Current translation namespaces: `nav`, `lang`, `login`, `register`, `dashboard`, `addBottle`, `browse`, `marketplace`, `publicBar`, `bottle`, `messages`, `profile`, `footer`, `hero`, `home`, `barShelf`, `notifications`, `wishList`, `distillerySelect`, `offers`, `collectionValue`.
+Current translation namespaces: `nav`, `lang`, `login`, `register`, `dashboard`, `addBottle`, `browse`, `marketplace`, `publicBar`, `bottle`, `messages`, `profile`, `footer`, `hero`, `home`, `barShelf`, `notifications`, `wishList`, `distillerySelect`, `offers`, `collectionValue`, `reviews`, `flavors` (28 keys = `FlavorTag` enum member names).
 
 **Routing:** `/` is `HomePage.tsx` (public news/social feed). Login and register redirect to `/` after success. `/dashboard` is the user's own virtual bar (protected). `/offers` is the Offers page (protected). There is **no `/messages` route** — messaging is handled entirely by the floating `ChatWidget`.
 
@@ -487,7 +524,7 @@ Current translation namespaces: `nav`, `lang`, `login`, `register`, `dashboard`,
 - `src/components/Avatar.tsx` — props: `displayName`, `avatarUrl?`, `size`. Renders `<img>` when avatarUrl present, initials div otherwise.
 - `src/components/NotificationBell.tsx` — bell icon with gold badge (unread count), dropdown with last 30 notifications, mark-read / mark-all-read. Polls every 30 s via `refetchInterval`. `NewMessage` notifications call `openChat(actorId)` from `ChatContext` instead of navigating.
 - `src/components/Footer.tsx` — mounted once in `App.tsx`; fully opaque `#07030A` background.
-- `src/components/BottleDetailPanel.tsx` — full-screen overlay for bottle details. Shows `SaleSection` + `DeleteSection` for the owner. Shows `MakeOfferSection` for non-owners (any authenticated user, regardless of `IsForSale`). `LikesSection` and `CommentsSection` for all. `onDelete` prop (DashboardPage only) invalidates bottles query and closes panel.
+- `src/components/BottleDetailPanel.tsx` — full-screen overlay for bottle details. Shows `SaleSection` + `DeleteSection` for the owner. Shows `MakeOfferSection` for non-owners (any authenticated user, regardless of `IsForSale`). `EstimateSection` (price estimate) for authenticated users only — the `/api/prices` endpoint is `[Authorize]`, so rendering it anonymously would 401-redirect to `/login`. `LikesSection`, `ReviewsSection` (aggregate header + one-per-user review form + review list; form authenticated-only), and `CommentsSection` (below reviews) for all. `onDelete` prop (DashboardPage only) invalidates bottles query and closes panel. Bottle cards (`BarShelf`, Marketplace) show a gold `★ <avg>` badge when `reviewsCount > 0`.
 - `src/components/ChatWidget.tsx` — floating Facebook Messenger-style chat. `position: fixed; bottom: 0; right: 20px; zIndex: 1000`. Renders only for authenticated users. Layout right-to-left: gold circular toggle button (52px, unread badge) → inbox panel (300×480px) → active conversation window (320×480px). Polls inbox every 30 s. Mark-as-read runs automatically when a thread is viewed.
 - `src/components/DistillerySelect.tsx` — autocomplete dropdown for selecting a distillery. Props: `value`, `onChange`, `category?`. ARIA roles (`combobox`/`listbox`/`option`), keyboard navigation (ArrowUp/Down/Enter/Escape), scroll-into-view. Fetches from `GET /api/distilleries?category=...`, `queryKey: ['distilleries', category ?? 'all']`, staleTime 5 min.
 
@@ -513,7 +550,7 @@ Current translation namespaces: `nav`, `lang`, `login`, `register`, `dashboard`,
 - One test class per service: `<ServiceName>Tests` in `VirtualBar.Tests/Services/`.
 - Method naming: `<MethodName>_When<Condition>_<ExpectedOutcome>`.
 - Each test creates an isolated InMemory DB: `Guid.NewGuid().ToString()` as the DB name.
-- Use **EF Core InMemory** by default. Switch to **SQLite in-memory** only when the method calls `ExecuteUpdateAsync` or `ExecuteDeleteAsync`.
+- Use **EF Core InMemory** by default. Switch to **SQLite in-memory** only when the method calls `ExecuteUpdateAsync` / `ExecuteDeleteAsync`, or when the test must enforce a **unique index** (InMemory doesn't — e.g. the `BottleReview` duplicate-race test).
 - Mock only `ICurrentUser` and `INotificationService` — never mock `AppDbContext`.
 - Services that depend on `INotificationService` receive `Mock.Of<INotificationService>()` in their `CreateXxxService` helper (optional parameter with default).
 - Seed helpers are `private static` methods in the test class: `SeedUser`, `SeedBottle`, `SeedComment`, etc.

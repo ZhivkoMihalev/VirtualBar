@@ -51,6 +51,12 @@ public static class DependencyInjection
             sp.GetRequiredService<AppDbContext>(),
             sp.GetRequiredService<ICurrentUser>()));
 
+        services.AddScoped<BottleReviewService>();
+        services.AddScoped<IBottleReviewService>(sp => new BottleReviewValidationDecorator(
+            sp.GetRequiredService<BottleReviewService>(),
+            sp.GetRequiredService<AppDbContext>(),
+            sp.GetRequiredService<ICurrentUser>()));
+
         services.AddScoped<UserFollowService>();
         services.AddScoped<IUserFollowService>(sp => new UserFollowValidationDecorator(
             sp.GetRequiredService<UserFollowService>(),

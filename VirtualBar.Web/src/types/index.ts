@@ -1,6 +1,12 @@
 export type SpiritCategory = 'Whisky' | 'Rum' | 'Cognac' | 'Vodka' | 'Gin' | 'Tequila' | 'Brandy' | 'Other'
 export type BottleCondition = 'Sealed' | 'Opened' | 'Empty'
 
+export type FlavorTag =
+  | 'Smoky' | 'Peaty' | 'Medicinal' | 'Maritime' | 'Vanilla' | 'Caramel' | 'Toffee'
+  | 'Honey' | 'Chocolate' | 'Coffee' | 'Nutty' | 'Malty' | 'Creamy' | 'Fruity'
+  | 'Citrus' | 'TropicalFruit' | 'DriedFruit' | 'Berry' | 'Floral' | 'Herbal'
+  | 'Grassy' | 'Spicy' | 'Pepper' | 'Cinnamon' | 'Oak' | 'Sherry' | 'Leather' | 'Tobacco'
+
 export interface Distillery {
   id: string
   name: string
@@ -44,6 +50,8 @@ export interface Bottle {
   images: BottleImage[]
   likesCount: number
   commentsCount: number
+  averageScore?: number | null
+  reviewsCount: number
   likedByMe: boolean
   createdAt: string
 }
@@ -63,6 +71,39 @@ export interface BottleComment {
   userAvatarUrl?: string
   content: string
   createdAt: string
+}
+
+export interface BottleReview {
+  id: string
+  bottleId: string
+  userId: string
+  userDisplayName: string
+  userAvatarUrl: string | null
+  score: number
+  nose: string | null
+  palate: string | null
+  finish: string | null
+  summary: string | null
+  flavors: FlavorTag[]
+  createdAt: string
+  updatedAt: string
+}
+
+export interface BottleReviewsSummary {
+  averageScore: number | null
+  reviewsCount: number
+  topFlavors: FlavorTag[]
+  reviews: BottleReview[]
+  myReview: BottleReview | null
+}
+
+export interface ReviewPayload {
+  score: number
+  nose?: string | null
+  palate?: string | null
+  finish?: string | null
+  summary?: string | null
+  flavors?: FlavorTag[] | null
 }
 
 export interface Message {
@@ -215,7 +256,7 @@ export interface PublicWishListItem {
   createdAt: string
 }
 
-export type NotificationType = 'BottleLiked' | 'BottleCommented' | 'NewFollower' | 'NewMessage' | 'NewBottleFromFollowing' | 'BottleListedForSale' | 'WishListMatch' | 'OfferReceived' | 'OfferAccepted' | 'OfferDeclined'
+export type NotificationType = 'BottleLiked' | 'BottleCommented' | 'NewFollower' | 'NewMessage' | 'NewBottleFromFollowing' | 'BottleListedForSale' | 'WishListMatch' | 'OfferReceived' | 'OfferAccepted' | 'OfferDeclined' | 'BottleReviewed'
 
 export interface NotificationItem {
   id: string

@@ -60,14 +60,15 @@ public sealed class BottleServiceTests
         string? currency = null,
         Guid? distilleryId = null,
         int displayOrder = 0,
-        DateTime? createdAt = null)
+        DateTime? createdAt = null,
+        SpiritCategory category = SpiritCategory.Whisky)
     {
         var bottle = new Bottle
         {
             UserId = userId,
             Name = name,
             DistilleryId = distilleryId,
-            Category = SpiritCategory.Whisky,
+            Category = category,
             Condition = BottleCondition.Sealed,
             IsForSale = isForSale,
             IsDeleted = isDeleted,
@@ -89,6 +90,26 @@ public sealed class BottleServiceTests
         db.Distilleries.Add(distillery);
         db.SaveChanges();
         return distillery;
+    }
+
+    private static BottleReview SeedReview(
+        AppDbContext db,
+        Guid bottleId,
+        int score,
+        Guid? userId = null,
+        bool isDeleted = false)
+    {
+        var review = new BottleReview
+        {
+            BottleId = bottleId,
+            UserId = userId ?? Guid.NewGuid(),
+            Score = score,
+            IsDeleted = isDeleted,
+            DeletedAt = isDeleted ? DateTime.UtcNow : null
+        };
+        db.BottleReviews.Add(review);
+        db.SaveChanges();
+        return review;
     }
 
     #region GetBottlesByUserAsync
@@ -1161,6 +1182,216 @@ public sealed class BottleServiceTests
 
         Assert.True(result.Success);
         Assert.Empty(result.Data!);
+    }
+
+    [Fact]
+    public async Task GetMarketplaceAsync_WhenCategoryFilterSet_ReturnsOnlyMatchingCategory()
+    {
+        var db = CreateDbContext();
+        var user = SeedUser(db);
+        SeedBottle(db, user.Id, "Whisky bottle", isForSale: true, category: SpiritCategory.Whisky);
+        SeedBottle(db, user.Id, "Rum bottle", isForSale: true, category: SpiritCategory.Rum);
+        var service = CreateBottleService(db, user.Id);
+
+        var result = await service.GetMarketplaceAsync(new MarketplaceQuery { Category = SpiritCategory.Rum }, CancellationToken.None);
+
+        Assert.True(result.Success);
+        var dto = Assert.Single(result.Data!);
+        Assert.Equal("Rum bottle", dto.Name);
+        Assert.Equal(SpiritCategory.Rum, dto.Category);
+    }
+
+    [Fact]
+    public async Task GetMarketplaceAsync_WhenSortPriceAsc_OrdersByAskingPriceAscendingNullsFirst()
+    {
+        var db = CreateDbContext();
+        var user = SeedUser(db);
+        SeedBottle(db, user.Id, "Mid", isForSale: true, askingPrice: 200m);
+        SeedBottle(db, user.Id, "Low", isForSale: true, askingPrice: 100m);
+        SeedBottle(db, user.Id, "High", isForSale: true, askingPrice: 300m);
+        SeedBottle(db, user.Id, "NoPrice", isForSale: true, askingPrice: null);
+        var service = CreateBottleService(db, user.Id);
+
+        var result = await service.GetMarketplaceAsync(new MarketplaceQuery { Sort = "price_asc" }, CancellationToken.None);
+
+        Assert.True(result.Success);
+        // Ascending by nullable AskingPrice: null is the smallest, so the price-less bottle sorts first.
+        Assert.Equal(new[] { "NoPrice", "Low", "Mid", "High" }, result.Data!.Select(b => b.Name).ToArray());
+    }
+
+    [Fact]
+    public async Task GetMarketplaceAsync_WhenSortPriceDesc_OrdersByAskingPriceDescendingNullsLast()
+    {
+        var db = CreateDbContext();
+        var user = SeedUser(db);
+        SeedBottle(db, user.Id, "Mid", isForSale: true, askingPrice: 200m);
+        SeedBottle(db, user.Id, "Low", isForSale: true, askingPrice: 100m);
+        SeedBottle(db, user.Id, "High", isForSale: true, askingPrice: 300m);
+        SeedBottle(db, user.Id, "NoPrice", isForSale: true, askingPrice: null);
+        var service = CreateBottleService(db, user.Id);
+
+        var result = await service.GetMarketplaceAsync(new MarketplaceQuery { Sort = "price_desc" }, CancellationToken.None);
+
+        Assert.True(result.Success);
+        // Descending by nullable AskingPrice: null sorts last.
+        Assert.Equal(new[] { "High", "Mid", "Low", "NoPrice" }, result.Data!.Select(b => b.Name).ToArray());
+    }
+
+    #endregion
+
+    #region Review aggregates
+
+    [Fact]
+    public async Task GetBottlesByUserAsync_WhenBottleHasReviews_ReturnsRoundedAverageAndCount()
+    {
+        var db = CreateDbContext();
+        var user = SeedUser(db);
+        var bottle = SeedBottle(db, user.Id, "Reviewed");
+        SeedReview(db, bottle.Id, 85);
+        SeedReview(db, bottle.Id, 90);
+        SeedReview(db, bottle.Id, 91);
+        db.ChangeTracker.Clear();
+        var service = CreateBottleService(db, user.Id);
+
+        var result = await service.GetBottlesByUserAsync(user.Id, CancellationToken.None);
+
+        Assert.True(result.Success);
+        var dto = Assert.Single(result.Data!);
+        // 85 + 90 + 91 = 266 / 3 = 88.666… → 88.7
+        Assert.Equal(88.7, dto.AverageScore);
+        Assert.Equal(3, dto.ReviewsCount);
+    }
+
+    [Fact]
+    public async Task GetBottlesByUserAsync_WhenBottleHasNoReviews_ReturnsNullAverageAndZeroCount()
+    {
+        var db = CreateDbContext();
+        var user = SeedUser(db);
+        SeedBottle(db, user.Id, "Unreviewed");
+        var service = CreateBottleService(db, user.Id);
+
+        var result = await service.GetBottlesByUserAsync(user.Id, CancellationToken.None);
+
+        Assert.True(result.Success);
+        var dto = Assert.Single(result.Data!);
+        Assert.Null(dto.AverageScore);
+        Assert.Equal(0, dto.ReviewsCount);
+    }
+
+    [Fact]
+    public async Task GetBottlesByUserAsync_WhenReviewSoftDeleted_ExcludedFromAggregates()
+    {
+        var db = CreateDbContext();
+        var user = SeedUser(db);
+        var bottle = SeedBottle(db, user.Id, "Reviewed");
+        SeedReview(db, bottle.Id, 80);
+        SeedReview(db, bottle.Id, 100, isDeleted: true);
+        db.ChangeTracker.Clear();
+        var service = CreateBottleService(db, user.Id);
+
+        var result = await service.GetBottlesByUserAsync(user.Id, CancellationToken.None);
+
+        Assert.True(result.Success);
+        var dto = Assert.Single(result.Data!);
+        Assert.Equal(80.0, dto.AverageScore);
+        Assert.Equal(1, dto.ReviewsCount);
+    }
+
+    [Fact]
+    public async Task GetBottleByIdAsync_WhenBottleHasReviews_ReturnsRoundedAverageAndCount()
+    {
+        var db = CreateDbContext();
+        var user = SeedUser(db);
+        var bottle = SeedBottle(db, user.Id, "Reviewed");
+        SeedReview(db, bottle.Id, 85);
+        SeedReview(db, bottle.Id, 90);
+        SeedReview(db, bottle.Id, 91);
+        db.ChangeTracker.Clear();
+        var service = CreateBottleService(db, user.Id);
+
+        var result = await service.GetBottleByIdAsync(bottle.Id, CancellationToken.None);
+
+        Assert.True(result.Success);
+        Assert.Equal(88.7, result.Data!.AverageScore);
+        Assert.Equal(3, result.Data.ReviewsCount);
+    }
+
+    [Fact]
+    public async Task GetBottleByIdAsync_WhenBottleHasNoReviews_ReturnsNullAverageAndZeroCount()
+    {
+        var db = CreateDbContext();
+        var user = SeedUser(db);
+        var bottle = SeedBottle(db, user.Id, "Unreviewed");
+        var service = CreateBottleService(db, user.Id);
+
+        var result = await service.GetBottleByIdAsync(bottle.Id, CancellationToken.None);
+
+        Assert.True(result.Success);
+        Assert.Null(result.Data!.AverageScore);
+        Assert.Equal(0, result.Data.ReviewsCount);
+    }
+
+    [Fact]
+    public async Task GetBottleByIdAsync_WhenReviewSoftDeleted_ExcludedFromAggregates()
+    {
+        var db = CreateDbContext();
+        var user = SeedUser(db);
+        var bottle = SeedBottle(db, user.Id, "Reviewed");
+        SeedReview(db, bottle.Id, 80);
+        SeedReview(db, bottle.Id, 100, isDeleted: true);
+        db.ChangeTracker.Clear();
+        var service = CreateBottleService(db, user.Id);
+
+        var result = await service.GetBottleByIdAsync(bottle.Id, CancellationToken.None);
+
+        Assert.True(result.Success);
+        Assert.Equal(80.0, result.Data!.AverageScore);
+        Assert.Equal(1, result.Data.ReviewsCount);
+    }
+
+    [Fact]
+    public async Task UpdateBottleAsync_WhenBottleHasReviews_ReturnsRoundedAverageAndCount()
+    {
+        var db = CreateDbContext();
+        var user = SeedUser(db);
+        var bottle = SeedBottle(db, user.Id, "Old Name");
+        SeedReview(db, bottle.Id, 85);
+        SeedReview(db, bottle.Id, 95);
+        db.ChangeTracker.Clear();
+        var service = CreateBottleService(db, user.Id);
+        var request = new UpdateBottleRequest
+        {
+            Name = "New Name",
+            Category = SpiritCategory.Whisky,
+            Condition = BottleCondition.Sealed
+        };
+
+        var result = await service.UpdateBottleAsync(bottle.Id, request, CancellationToken.None);
+
+        Assert.True(result.Success);
+        // (85 + 95) / 2 = 90 → non-null branch of the averageScore ternary.
+        Assert.Equal(90.0, result.Data!.AverageScore);
+        Assert.Equal(2, result.Data.ReviewsCount);
+    }
+
+    [Fact]
+    public async Task GetMarketplaceAsync_WhenBottleHasReviews_ReturnsAverageAndCount()
+    {
+        var db = CreateDbContext();
+        var user = SeedUser(db);
+        var bottle = SeedBottle(db, user.Id, "For Sale", isForSale: true);
+        SeedReview(db, bottle.Id, 80);
+        SeedReview(db, bottle.Id, 90);
+        db.ChangeTracker.Clear();
+        var service = CreateBottleService(db, user.Id);
+
+        var result = await service.GetMarketplaceAsync(new MarketplaceQuery(), CancellationToken.None);
+
+        Assert.True(result.Success);
+        var dto = Assert.Single(result.Data!);
+        // (80 + 90) / 2 = 85 → non-null branch of the marketplace averageScore ternary.
+        Assert.Equal(85.0, dto.AverageScore);
+        Assert.Equal(2, dto.ReviewsCount);
     }
 
     #endregion

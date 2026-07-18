@@ -164,6 +164,11 @@ function MarketplaceCard({ bottle, onView }: { bottle: Bottle; onView: () => voi
             {t(`addBottle.condition${bottle.condition}`)}
           </Badge>
           {bottle.isLimited && <Gem className="size-3 text-primary" />}
+          {bottle.reviewsCount > 0 && bottle.averageScore != null && (
+            <Badge variant="outline" className="border-primary/40 text-primary">
+              ★ {Math.round(bottle.averageScore)}
+            </Badge>
+          )}
         </div>
 
         <div className="font-heading text-base font-semibold text-foreground">{bottle.name}</div>

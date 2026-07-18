@@ -289,6 +289,24 @@ const hoverFactsStyle: CSSProperties = {
   color: 'rgba(232,200,112,0.6)',
 }
 
+const scoreBadgeStyle: CSSProperties = {
+  position: 'absolute',
+  top: 0,
+  left: '50%',
+  transform: 'translateX(-50%)',
+  zIndex: 6,
+  padding: '1px 7px',
+  fontSize: 10,
+  fontWeight: 600,
+  lineHeight: 1.5,
+  whiteSpace: 'nowrap',
+  color: '#E8C870',
+  background: 'rgba(16,8,4,0.92)',
+  border: '1px solid rgba(201,168,76,0.5)',
+  borderRadius: 999,
+  boxShadow: '0 0 8px rgba(201,168,76,0.25)',
+}
+
 const hoverPhotoStyle: CSSProperties = {
   display: 'block',
   width: '100%',
@@ -395,6 +413,9 @@ export function BottleCard({
       )}
       {bottle.isForSale && (
         <span style={{ position: 'absolute', top: 2, left: 14, width: 7, height: 7, borderRadius: '50%', background: '#4A9A6A', boxShadow: '0 0 6px rgba(74,154,106,0.9)', zIndex: 5 }} />
+      )}
+      {bottle.reviewsCount > 0 && bottle.averageScore != null && (
+        <span style={scoreBadgeStyle}>★ {Math.round(bottle.averageScore)}</span>
       )}
 
       <div style={{

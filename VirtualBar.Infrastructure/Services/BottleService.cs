@@ -19,6 +19,7 @@ public sealed class BottleService(
             .Include(b => b.Images.Where(i => !i.IsDeleted).OrderBy(i => i.SortOrder))
             .Include(b => b.Likes)
             .Include(b => b.Comments.Where(c => !c.IsDeleted))
+            .Include(b => b.Reviews.Where(r => !r.IsDeleted))
             .Include(b => b.User)
             .Include(b => b.Distillery)
             .OrderBy(b => b.DisplayOrder)
@@ -26,7 +27,13 @@ public sealed class BottleService(
             .ToListAsync(cancellationToken);
 
         return Result<List<BottleDto>>.Ok(
-            bottles.Select(b => MapToDto(b, b.Likes.Count, b.Comments.Count, b.User.DisplayName)).ToList());
+            bottles.Select(b => MapToDto(
+                b,
+                b.Likes.Count,
+                b.Comments.Count,
+                b.Reviews.Any() ? Math.Round(b.Reviews.Average(r => (double)r.Score), 1) : (double?)null,
+                b.Reviews.Count,
+                b.User.DisplayName)).ToList());
     }
 
     public async Task<Result<BottleDto>> GetBottleByIdAsync(Guid bottleId, CancellationToken cancellationToken)
@@ -35,6 +42,7 @@ public sealed class BottleService(
             .Include(b => b.Images.Where(i => !i.IsDeleted).OrderBy(i => i.SortOrder))
             .Include(b => b.Likes)
             .Include(b => b.Comments.Where(c => !c.IsDeleted))
+            .Include(b => b.Reviews.Where(r => !r.IsDeleted))
             .Include(b => b.User)
             .Include(b => b.Distillery)
             .FirstOrDefaultAsync(b => b.Id == bottleId && !b.IsDeleted, cancellationToken);
@@ -42,7 +50,13 @@ public sealed class BottleService(
         if (bottle is null)
             return Result<BottleDto>.NotFound("Bottle not found.");
 
-        return Result<BottleDto>.Ok(MapToDto(bottle, bottle.Likes.Count, bottle.Comments.Count, bottle.User.DisplayName));
+        return Result<BottleDto>.Ok(MapToDto(
+            bottle,
+            bottle.Likes.Count,
+            bottle.Comments.Count,
+            bottle.Reviews.Any() ? Math.Round(bottle.Reviews.Average(r => (double)r.Score), 1) : (double?)null,
+            bottle.Reviews.Count,
+            bottle.User.DisplayName));
     }
 
     public async Task<Result<BottleDto>> AddBottleAsync(AddBottleRequest request, CancellationToken cancellationToken)
@@ -100,8 +114,14 @@ public sealed class BottleService(
 
         var likesCount = await db.BottleLikes.CountAsync(l => l.BottleId == bottleId, cancellationToken);
         var commentsCount = await db.BottleComments.CountAsync(c => c.BottleId == bottleId && !c.IsDeleted, cancellationToken);
+        var reviewsCount = await db.BottleReviews.CountAsync(r => r.BottleId == bottleId && !r.IsDeleted, cancellationToken);
+        var averageScore = reviewsCount == 0
+            ? (double?)null
+            : Math.Round(await db.BottleReviews
+                .Where(r => r.BottleId == bottleId && !r.IsDeleted)
+                .AverageAsync(r => (double)r.Score, cancellationToken), 1);
 
-        return Result<BottleDto>.Ok(MapToDto(bottle, likesCount, commentsCount));
+        return Result<BottleDto>.Ok(MapToDto(bottle, likesCount, commentsCount, averageScore, reviewsCount));
     }
 
     public async Task<Result<bool>> RemoveBottleAsync(Guid bottleId, CancellationToken cancellationToken)
@@ -207,6 +227,7 @@ public sealed class BottleService(
             .Include(b => b.Images.Where(i => !i.IsDeleted).OrderBy(i => i.SortOrder))
             .Include(b => b.Likes)
             .Include(b => b.Comments.Where(c => !c.IsDeleted))
+            .Include(b => b.Reviews.Where(r => !r.IsDeleted))
             .Include(b => b.User)
             .Include(b => b.Distillery)
             .AsQueryable();
@@ -230,11 +251,17 @@ public sealed class BottleService(
 
         return Result<List<BottleDto>>.Ok(
             bottles
-            .Select(b => MapToDto(b, b.Likes.Count, b.Comments.Count, b.User.DisplayName))
+            .Select(b => MapToDto(
+                b,
+                b.Likes.Count,
+                b.Comments.Count,
+                b.Reviews.Any() ? Math.Round(b.Reviews.Average(r => (double)r.Score), 1) : (double?)null,
+                b.Reviews.Count,
+                b.User.DisplayName))
             .ToList());
     }
 
-    private static BottleDto MapToDto(Bottle bottle, int likesCount = 0, int commentsCount = 0, string userDisplayName = "") => new()
+    private static BottleDto MapToDto(Bottle bottle, int likesCount = 0, int commentsCount = 0, double? averageScore = null, int reviewsCount = 0, string userDisplayName = "") => new()
     {
         Id = bottle.Id,
         UserId = bottle.UserId,
@@ -257,6 +284,8 @@ public sealed class BottleService(
         Currency = bottle.Currency,
         LikesCount = likesCount,
         CommentsCount = commentsCount,
+        AverageScore = averageScore,
+        ReviewsCount = reviewsCount,
         CreatedAt = bottle.CreatedAt,
         Images = bottle.Images.Select(i => new BottleImageDto
         {

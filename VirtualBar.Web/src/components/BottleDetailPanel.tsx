@@ -6,7 +6,8 @@ import type { TFunction } from 'i18next'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { Heart, X } from 'lucide-react'
+import type { AxiosError } from 'axios'
+import { Heart, X, ChevronDown, ChevronUp } from 'lucide-react'
 import {
   toggleBottleLike,
   getBottleComments,
@@ -18,7 +19,10 @@ import {
 } from '../api/bottlesApi'
 import { createOffer } from '../api/offersApi'
 import { getBottleEstimate } from '../api/pricesApi'
-import type { Bottle, PriceConfidence } from '../types'
+import { getReviews, addReview, updateReview, deleteReview } from '../api/reviewsApi'
+import { useAuth } from '../contexts/AuthContext'
+import type { Bottle, PriceConfidence, BottleReview, BottleReviewsSummary, FlavorTag, ReviewPayload } from '../types'
+import Avatar from './Avatar'
 import { CATEGORY_COLORS, BottleSvg } from './BarShelf'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
@@ -63,6 +67,22 @@ import {
 } from '@/components/ui/form'
 
 const CURRENCIES = ['USD', 'EUR', 'GBP', 'BGN', 'CHF', 'JPY', 'CAD', 'AUD']
+
+const QUICK_SCORES = [70, 80, 85, 90, 95]
+
+const NOTE_FIELDS = ['nose', 'palate', 'finish', 'summary'] as const
+type NoteField = (typeof NOTE_FIELDS)[number]
+
+const FLAVOR_TAGS: FlavorTag[] = [
+  'Smoky', 'Peaty', 'Medicinal', 'Maritime', 'Vanilla', 'Caramel', 'Toffee',
+  'Honey', 'Chocolate', 'Coffee', 'Nutty', 'Malty', 'Creamy', 'Fruity',
+  'Citrus', 'TropicalFruit', 'DriedFruit', 'Berry', 'Floral', 'Herbal',
+  'Grassy', 'Spicy', 'Pepper', 'Cinnamon', 'Oak', 'Sherry', 'Leather', 'Tobacco',
+]
+
+function hasAnyNote(review: BottleReview): boolean {
+  return NOTE_FIELDS.some(field => (review[field] ?? '').trim() !== '')
+}
 
 function formatRelativeTime(iso: string, t: TFunction): string {
   const seconds = Math.floor((Date.now() - new Date(iso).getTime()) / 1000)
@@ -208,6 +228,367 @@ function CommentsSection({ bottle, currentUserId }: { bottle: Bottle; currentUse
           {addMutation.isPending ? t('bottle.posting') : t('bottle.post')}
         </Button>
       </form>
+    </div>
+  )
+}
+
+function ReviewsAggregate({ summary }: { summary: BottleReviewsSummary }) {
+  const { t } = useTranslation()
+  const avg = summary.averageScore
+
+  return (
+    <div className="mb-5 flex flex-wrap items-center gap-x-6 gap-y-3 rounded-md border border-primary/15 bg-primary/[0.04] p-4">
+      <div className="flex flex-col items-center">
+        <div className="flex items-baseline gap-1">
+          {avg != null ? (
+            <>
+              <span className="font-heading text-4xl font-bold text-primary">{avg.toFixed(1)}</span>
+              <span className="text-sm text-muted-foreground">/100</span>
+            </>
+          ) : (
+            <span className="font-heading text-4xl font-bold text-muted-foreground">—</span>
+          )}
+        </div>
+        {avg != null && (
+          <span className="text-[10px] uppercase tracking-wide text-muted-foreground">
+            {t('reviews.average')}
+          </span>
+        )}
+      </div>
+
+      <div className="flex flex-col gap-1.5">
+        <span className="text-sm text-muted-foreground">
+          {summary.reviewsCount > 0
+            ? t('reviews.count', { count: summary.reviewsCount })
+            : t('reviews.invite')}
+        </span>
+        {summary.topFlavors.length > 0 && (
+          <div className="flex flex-wrap gap-1.5">
+            {summary.topFlavors.map(flavor => (
+              <Badge key={flavor} variant="outline" className="border-primary/30 text-primary">
+                {t(`flavors.${flavor}`)}
+              </Badge>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+function ReviewCard({ review }: { review: BottleReview }) {
+  const { t } = useTranslation()
+  const edited = new Date(review.updatedAt).getTime() > new Date(review.createdAt).getTime()
+
+  return (
+    <div className="flex flex-col gap-2.5 rounded-md border border-primary/10 bg-primary/[0.03] p-4">
+      <div className="flex items-start justify-between gap-2">
+        <div className="flex items-center gap-2.5">
+          <Avatar displayName={review.userDisplayName} avatarUrl={review.userAvatarUrl} size={32} />
+          <div className="flex flex-col">
+            <span className="text-sm font-medium text-primary">{review.userDisplayName}</span>
+            <span className="text-xs text-muted-foreground">
+              {formatRelativeTime(review.createdAt, t)}
+              {edited && ` · ${t('reviews.edited')}`}
+            </span>
+          </div>
+        </div>
+        <Badge variant="outline" className="border-primary/40 text-primary">
+          <span className="font-heading text-sm font-semibold">{review.score}</span>
+          <span className="text-muted-foreground">/100</span>
+        </Badge>
+      </div>
+
+      {hasAnyNote(review) && (
+        <div className="flex flex-col gap-1.5">
+          {NOTE_FIELDS.map(field => {
+            const value = review[field]
+            if (!value || !value.trim()) return null
+            return (
+              <div key={field} className="text-sm leading-relaxed">
+                <span className="mr-1.5 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                  {t(`reviews.${field}`)}
+                </span>
+                <span className="text-foreground">{value}</span>
+              </div>
+            )
+          })}
+        </div>
+      )}
+
+      {review.flavors.length > 0 && (
+        <div className="flex flex-wrap gap-1.5">
+          {review.flavors.map(flavor => (
+            <Badge key={flavor} variant="secondary">
+              {t(`flavors.${flavor}`)}
+            </Badge>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function ReviewForm({ bottle, existing }: { bottle: Bottle; existing: BottleReview | null }) {
+  const { t } = useTranslation()
+  const queryClient = useQueryClient()
+
+  const [score, setScore] = useState(existing ? String(existing.score) : '')
+  const [notes, setNotes] = useState<Record<NoteField, string>>({
+    nose: existing?.nose ?? '',
+    palate: existing?.palate ?? '',
+    finish: existing?.finish ?? '',
+    summary: existing?.summary ?? '',
+  })
+  const [flavors, setFlavors] = useState<FlavorTag[]>(existing?.flavors ?? [])
+  const [notesOpen, setNotesOpen] = useState(existing != null && hasAnyNote(existing))
+  const [error, setError] = useState<string | null>(null)
+
+  const invalidate = () => {
+    queryClient.invalidateQueries({ queryKey: ['reviews', bottle.id] })
+    queryClient.invalidateQueries({ queryKey: ['bottles', bottle.userId] })
+    queryClient.invalidateQueries({ queryKey: ['marketplace'] })
+  }
+
+  const buildPayload = (): ReviewPayload => ({
+    score: Number(score),
+    nose: notes.nose.trim() || null,
+    palate: notes.palate.trim() || null,
+    finish: notes.finish.trim() || null,
+    summary: notes.summary.trim() || null,
+    flavors: flavors.length > 0 ? flavors : null,
+  })
+
+  const saveMutation = useMutation({
+    mutationFn: () =>
+      existing
+        ? updateReview(bottle.id, existing.id, buildPayload())
+        : addReview(bottle.id, buildPayload()),
+    onSuccess: () => {
+      setError(null)
+      invalidate()
+    },
+    onError: (err: unknown) => {
+      const status = (err as AxiosError).response?.status
+      if (status === 409) {
+        setError(t('reviews.alreadyReviewed'))
+        queryClient.invalidateQueries({ queryKey: ['reviews', bottle.id] })
+      } else {
+        setError(t('reviews.saveError'))
+      }
+    },
+  })
+
+  const deleteMutation = useMutation({
+    mutationFn: () => (existing ? deleteReview(bottle.id, existing.id) : Promise.resolve()),
+    onSuccess: invalidate,
+    onError: () => setError(t('reviews.saveError')),
+  })
+
+  const scoreNum = Number(score)
+  const scoreValid = score !== '' && Number.isInteger(scoreNum) && scoreNum >= 0 && scoreNum <= 100
+  const atMax = flavors.length >= 5
+
+  const toggleFlavor = (flavor: FlavorTag) => {
+    setFlavors(prev =>
+      prev.includes(flavor) ? prev.filter(f => f !== flavor) : prev.length >= 5 ? prev : [...prev, flavor],
+    )
+  }
+
+  const handleSubmit = (e: FormEvent) => {
+    e.preventDefault()
+    if (!scoreValid || saveMutation.isPending) return
+    saveMutation.mutate()
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="mb-5 rounded-md border border-primary/15 bg-primary/[0.04] p-4">
+      <div className="mb-3 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+        {existing ? t('reviews.edit') : t('reviews.write')}
+      </div>
+
+      <div className="mb-4">
+        <div className="mb-1.5 text-xs uppercase tracking-wide text-muted-foreground">
+          {t('reviews.scoreLabel')}
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <Input
+            type="number"
+            min={0}
+            max={100}
+            step={1}
+            value={score}
+            onChange={e => setScore(e.target.value)}
+            aria-label={t('reviews.scoreLabel')}
+            className="h-9 w-24"
+          />
+          <div className="flex flex-wrap gap-1.5">
+            {QUICK_SCORES.map(quick => (
+              <button
+                key={quick}
+                type="button"
+                aria-pressed={scoreNum === quick}
+                onClick={() => setScore(String(quick))}
+                className={cn(
+                  'rounded-md border px-2.5 py-1 text-xs transition-colors',
+                  scoreNum === quick
+                    ? 'border-primary bg-primary/15 text-primary'
+                    : 'border-border text-muted-foreground hover:border-primary/40',
+                )}
+              >
+                {quick}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div className="mb-4">
+        <button
+          type="button"
+          aria-expanded={notesOpen}
+          onClick={() => setNotesOpen(open => !open)}
+          className="mb-2 flex items-center gap-1.5 text-xs font-medium uppercase tracking-wide text-primary"
+        >
+          {notesOpen ? <ChevronUp className="size-3.5" /> : <ChevronDown className="size-3.5" />}
+          {t('reviews.tastingNoteToggle')}
+        </button>
+        {notesOpen && (
+          <div className="flex flex-col gap-3">
+            {NOTE_FIELDS.map(field => (
+              <div key={field}>
+                <div className="mb-1 text-xs uppercase tracking-wide text-muted-foreground">
+                  {t(`reviews.${field}`)}
+                </div>
+                <Textarea
+                  rows={2}
+                  maxLength={2000}
+                  value={notes[field]}
+                  onChange={e => setNotes(prev => ({ ...prev, [field]: e.target.value }))}
+                />
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <div className="mb-4">
+        <div className="mb-2 flex items-center gap-2 text-xs uppercase tracking-wide text-muted-foreground">
+          <span>{t('reviews.flavorsLabel')}</span>
+          <span className="text-primary/70">{t('reviews.flavorsMax')}</span>
+        </div>
+        <div className="flex flex-wrap gap-1.5">
+          {FLAVOR_TAGS.map(flavor => {
+            const selected = flavors.includes(flavor)
+            return (
+              <button
+                key={flavor}
+                type="button"
+                onClick={() => toggleFlavor(flavor)}
+                disabled={!selected && atMax}
+                aria-pressed={selected}
+                className={cn(
+                  'rounded-full border px-2.5 py-1 text-xs transition-colors',
+                  selected
+                    ? 'border-primary bg-primary/15 text-primary'
+                    : 'border-border text-muted-foreground hover:border-primary/40 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-border',
+                )}
+              >
+                {t(`flavors.${flavor}`)}
+              </button>
+            )
+          })}
+        </div>
+      </div>
+
+      {error && <div className="mb-3 text-sm text-destructive">{error}</div>}
+
+      <div className="flex flex-wrap items-center gap-2">
+        <Button type="submit" size="sm" disabled={!scoreValid || saveMutation.isPending}>
+          {saveMutation.isPending ? '···' : t('reviews.save')}
+        </Button>
+
+        {existing && (
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="border-destructive/40 text-destructive hover:bg-destructive/10"
+              >
+                {t('reviews.delete')}
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>{t('reviews.delete')}</AlertDialogTitle>
+                <AlertDialogDescription>{t('reviews.deleteConfirm')}</AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel disabled={deleteMutation.isPending}>
+                  {t('reviews.cancel')}
+                </AlertDialogCancel>
+                <AlertDialogAction
+                  variant="destructive"
+                  className="bg-destructive text-white hover:bg-destructive/90 dark:bg-destructive dark:hover:bg-destructive/90"
+                  disabled={deleteMutation.isPending}
+                  onClick={e => {
+                    e.preventDefault()
+                    deleteMutation.mutate()
+                  }}
+                >
+                  {t('reviews.delete')}
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        )}
+      </div>
+    </form>
+  )
+}
+
+function ReviewsSection({ bottle }: { bottle: Bottle }) {
+  const { t } = useTranslation()
+  const { isAuthenticated } = useAuth()
+
+  const { data: summary, isLoading, isError } = useQuery({
+    queryKey: ['reviews', bottle.id],
+    queryFn: () => getReviews(bottle.id),
+  })
+
+  const otherReviews = summary
+    ? summary.reviews.filter(review => review.id !== summary.myReview?.id)
+    : []
+
+  return (
+    <div className="mt-6 border-t border-primary/10 pt-6">
+      <div className="mb-3 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+        {t('reviews.title')}
+      </div>
+
+      {isLoading && <div className="text-sm text-muted-foreground">{t('reviews.loading')}</div>}
+
+      {isError && <div className="text-sm text-destructive">{t('reviews.error')}</div>}
+
+      {summary && (
+        <>
+          <ReviewsAggregate summary={summary} />
+
+          {isAuthenticated && (
+            <ReviewForm key={summary.myReview?.id ?? 'new'} bottle={bottle} existing={summary.myReview} />
+          )}
+
+          {otherReviews.length > 0 && (
+            <div className="flex flex-col gap-3">
+              {otherReviews.map(review => (
+                <ReviewCard key={review.id} review={review} />
+              ))}
+            </div>
+          )}
+        </>
+      )}
     </div>
   )
 }
@@ -686,7 +1067,7 @@ export default function BottleDetailPanel({
             </div>
           )}
 
-          <EstimateSection bottleId={bottle.id} />
+          {currentUserId && <EstimateSection bottleId={bottle.id} />}
 
           {bottle.userId === currentUserId ? (
             <>
@@ -737,6 +1118,8 @@ export default function BottleDetailPanel({
           )}
 
           <LikesSection bottle={bottle} userId={userId} />
+
+          <ReviewsSection bottle={bottle} />
 
           <CommentsSection bottle={bottle} currentUserId={currentUserId} />
         </div>

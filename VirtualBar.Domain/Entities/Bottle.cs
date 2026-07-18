@@ -51,4 +51,6 @@ public class Bottle : BaseEntity
     public ICollection<BottleLike> Likes { get; set; } = [];
 
     public ICollection<BottleComment> Comments { get; set; } = [];
+
+    public ICollection<BottleReview> Reviews { get; set; } = [];
 }

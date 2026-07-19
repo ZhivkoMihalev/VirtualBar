@@ -3,6 +3,7 @@ using VirtualBar.Application.Common;
 using VirtualBar.Application.DTOs.Bottles;
 using VirtualBar.Application.Interfaces;
 using VirtualBar.Domain.Entities;
+using VirtualBar.Domain.Enums;
 using VirtualBar.Infrastructure.Persistence;
 
 namespace VirtualBar.Infrastructure.Services;
@@ -10,7 +11,8 @@ namespace VirtualBar.Infrastructure.Services;
 public sealed class BottleService(
     AppDbContext db,
     ICurrentUser currentUser,
-    INotificationService notificationService) : IBottleService
+    INotificationService notificationService,
+    IBadgeService badgeService) : IBottleService
 {
     public async Task<Result<List<BottleDto>>> GetBottlesByUserAsync(Guid userId, CancellationToken cancellationToken)
     {
@@ -87,6 +89,8 @@ public sealed class BottleService(
             .ToListAsync(cancellationToken);
 
         await notificationService.CreateBulkAsync(followerIds, NotificationType.NewBottleFromFollowing, bottle.Id, bottle.Name, cancellationToken);
+
+        await badgeService.EvaluateAsync(currentUser.UserId, BadgeTrigger.BottleAdded, cancellationToken);
 
         return Result<BottleDto>.Ok(MapToDto(bottle));
     }
@@ -200,6 +204,8 @@ public sealed class BottleService(
             .ToListAsync(cancellationToken);
 
         await notificationService.CreateBulkAsync(matchingUserIds, NotificationType.WishListMatch, bottle.Id, bottle.Name, cancellationToken);
+
+        await badgeService.EvaluateAsync(currentUser.UserId, BadgeTrigger.BottleListed, cancellationToken);
 
         return Result<bool>.Ok(true);
     }

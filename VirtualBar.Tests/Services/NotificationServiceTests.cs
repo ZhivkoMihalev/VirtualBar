@@ -364,4 +364,58 @@ public sealed class NotificationServiceTests
     }
 
     #endregion
+
+    #region CreateSystemAsync
+
+    [Fact]
+    public async Task CreateSystemAsync_WhenRecipientIsCurrentUser_CreatesNotification()
+    {
+        // Contrast with CreateAsync: the decorator does NOT self-skip system notifications, so a badge the
+        // current user earns for their own action still produces a row.
+        var db = CreateDbContext();
+        var user = SeedUser(db);
+        var service = CreateService(db, user.Id);
+
+        await service.CreateSystemAsync(user.Id, NotificationType.BadgeEarned, null, "FirstBottle", CancellationToken.None);
+
+        var stored = await db.Notifications.SingleAsync();
+        Assert.Equal(user.Id, stored.UserId);
+        Assert.Equal(NotificationType.BadgeEarned, stored.Type);
+    }
+
+    [Fact]
+    public async Task CreateSystemAsync_WhenValid_SetsActorToRecipientWithRecipientDisplayName()
+    {
+        // Even when a different user drives the action, the system notification's actor is the recipient
+        // themselves, and the display name is looked up from the recipient — not the current user.
+        var db = CreateDbContext();
+        var actor = SeedUser(db, "Actor");
+        var recipient = SeedUser(db, "Recipient");
+        var service = CreateService(db, actor.Id);
+
+        await service.CreateSystemAsync(recipient.Id, NotificationType.BadgeEarned, null, "Collector5", CancellationToken.None);
+
+        var stored = await db.Notifications.SingleAsync();
+        Assert.Equal(recipient.Id, stored.UserId);
+        Assert.Equal(NotificationType.BadgeEarned, stored.Type);
+        Assert.Equal(recipient.Id, stored.ActorId);
+        Assert.Equal("Recipient", stored.ActorDisplayName);
+        Assert.Null(stored.ResourceId);
+        Assert.Equal("Collector5", stored.ResourceName);
+        Assert.False(stored.IsRead);
+    }
+
+    [Fact]
+    public async Task CreateSystemAsync_WhenRecipientMissing_CreatesNoNotification()
+    {
+        var db = CreateDbContext();
+        var actor = SeedUser(db, "Actor");
+        var service = CreateService(db, actor.Id);
+
+        await service.CreateSystemAsync(Guid.NewGuid(), NotificationType.BadgeEarned, null, "FirstBottle", CancellationToken.None);
+
+        Assert.Equal(0, await db.Notifications.CountAsync());
+    }
+
+    #endregion
 }

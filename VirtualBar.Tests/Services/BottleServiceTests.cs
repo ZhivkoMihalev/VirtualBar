@@ -29,10 +29,10 @@ public sealed class BottleServiceTests
         return mock.Object;
     }
 
-    private static IBottleService CreateBottleService(AppDbContext db, Guid currentUserId, INotificationService? notificationService = null)
+    private static IBottleService CreateBottleService(AppDbContext db, Guid currentUserId, INotificationService? notificationService = null, IBadgeService? badgeService = null)
     {
         var currentUser = CreateCurrentUser(currentUserId);
-        var inner = new BottleService(db, currentUser, notificationService ?? Mock.Of<INotificationService>());
+        var inner = new BottleService(db, currentUser, notificationService ?? Mock.Of<INotificationService>(), badgeService ?? Mock.Of<IBadgeService>());
         return new BottleValidationDecorator(inner, db, currentUser);
     }
 
@@ -1392,6 +1392,42 @@ public sealed class BottleServiceTests
         // (80 + 90) / 2 = 85 → non-null branch of the marketplace averageScore ternary.
         Assert.Equal(85.0, dto.AverageScore);
         Assert.Equal(2, dto.ReviewsCount);
+    }
+
+    #endregion
+
+    #region Badge triggers
+
+    [Fact]
+    public async Task AddBottleAsync_WhenValid_EvaluatesBottleAddedBadgeForCurrentUser()
+    {
+        var db = CreateDbContext();
+        var userId = Guid.NewGuid();
+        var badgeMock = new Mock<IBadgeService>();
+        var service = CreateBottleService(db, userId, badgeService: badgeMock.Object);
+
+        var result = await service.AddBottleAsync(
+            new AddBottleRequest { Name = "Glenfiddich 18", Category = SpiritCategory.Whisky, Condition = BottleCondition.Sealed },
+            CancellationToken.None);
+
+        Assert.True(result.Success);
+        badgeMock.Verify(b => b.EvaluateAsync(userId, BadgeTrigger.BottleAdded, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task ListForSaleAsync_WhenValid_EvaluatesBottleListedBadgeForCurrentUser()
+    {
+        var db = CreateDbContext();
+        var user = SeedUser(db);
+        var bottle = SeedBottle(db, user.Id);
+        var badgeMock = new Mock<IBadgeService>();
+        var service = CreateBottleService(db, user.Id, badgeService: badgeMock.Object);
+
+        var result = await service.ListForSaleAsync(
+            bottle.Id, new ListForSaleRequest { AskingPrice = 250m, Currency = "EUR" }, CancellationToken.None);
+
+        Assert.True(result.Success);
+        badgeMock.Verify(b => b.EvaluateAsync(user.Id, BadgeTrigger.BottleListed, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     #endregion

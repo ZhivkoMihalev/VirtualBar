@@ -11,7 +11,8 @@ namespace VirtualBar.Infrastructure.Services;
 public sealed class OfferService(
     AppDbContext db,
     ICurrentUser currentUser,
-    INotificationService notificationService) : IOfferService
+    INotificationService notificationService,
+    IBadgeService badgeService) : IOfferService
 {
     public async Task<Result<OfferDto>> CreateAsync(CreateOfferRequest request, CancellationToken cancellationToken)
     {
@@ -96,6 +97,9 @@ public sealed class OfferService(
         var offer = await LoadFreshAsync(offerId, cancellationToken);
 
         await notificationService.CreateAsync(offer.BuyerId, NotificationType.OfferAccepted, offer.Id, offer.Bottle.Name, cancellationToken);
+
+        await badgeService.EvaluateAsync(offer.SellerId, BadgeTrigger.OfferAccepted, cancellationToken);
+        await badgeService.EvaluateAsync(offer.BuyerId, BadgeTrigger.OfferAccepted, cancellationToken);
 
         return Result<OfferDto>.Ok(Map(offer));
     }

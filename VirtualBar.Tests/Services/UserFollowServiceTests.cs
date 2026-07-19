@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Moq;
 using VirtualBar.Application.Interfaces;
 using VirtualBar.Domain.Entities;
+using VirtualBar.Domain.Enums;
 using VirtualBar.Infrastructure.Decorators;
 using VirtualBar.Infrastructure.Persistence;
 using VirtualBar.Infrastructure.Services;
@@ -26,10 +27,10 @@ public sealed class UserFollowServiceTests
         return mock.Object;
     }
 
-    private static IUserFollowService CreateUserFollowService(AppDbContext db, Guid currentUserId)
+    private static IUserFollowService CreateUserFollowService(AppDbContext db, Guid currentUserId, IBadgeService? badgeService = null)
     {
         var currentUser = CreateCurrentUser(currentUserId);
-        var inner = new UserFollowService(db, currentUser, Mock.Of<INotificationService>());
+        var inner = new UserFollowService(db, currentUser, Mock.Of<INotificationService>(), badgeService ?? Mock.Of<IBadgeService>());
         return new UserFollowValidationDecorator(inner, db, currentUser);
     }
 
@@ -128,6 +129,22 @@ public sealed class UserFollowServiceTests
 
         await Assert.ThrowsAsync<OperationCanceledException>(
             () => service.FollowAsync(Guid.NewGuid(), cts.Token));
+    }
+
+    [Fact]
+    public async Task FollowAsync_WhenValid_EvaluatesFollowerGainedBadgeForFollowedNotFollower()
+    {
+        var db = CreateDbContext();
+        var follower = SeedUser(db, "Follower");
+        var target = SeedUser(db, "Target");
+        var badgeMock = new Mock<IBadgeService>();
+        var service = CreateUserFollowService(db, follower.Id, badgeMock.Object);
+
+        var result = await service.FollowAsync(target.Id, CancellationToken.None);
+
+        Assert.True(result.Success);
+        badgeMock.Verify(b => b.EvaluateAsync(target.Id, BadgeTrigger.FollowerGained, It.IsAny<CancellationToken>()), Times.Once);
+        badgeMock.Verify(b => b.EvaluateAsync(follower.Id, BadgeTrigger.FollowerGained, It.IsAny<CancellationToken>()), Times.Never);
     }
 
     #endregion

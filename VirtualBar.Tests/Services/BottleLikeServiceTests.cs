@@ -29,10 +29,10 @@ public sealed class BottleLikeServiceTests
         return mock.Object;
     }
 
-    private static IBottleLikeService CreateBottleLikeService(AppDbContext db, Guid currentUserId)
+    private static IBottleLikeService CreateBottleLikeService(AppDbContext db, Guid currentUserId, IBadgeService? badgeService = null)
     {
         var currentUser = CreateCurrentUser(currentUserId);
-        var inner = new BottleLikeService(db, currentUser, Mock.Of<INotificationService>());
+        var inner = new BottleLikeService(db, currentUser, Mock.Of<INotificationService>(), badgeService ?? Mock.Of<IBadgeService>());
         return new BottleLikeValidationDecorator(inner, db, currentUser);
     }
 
@@ -146,7 +146,7 @@ public sealed class BottleLikeServiceTests
 
         // Loser slipped past the decorator's pre-check — call the inner service directly.
         var notificationMock = new Mock<INotificationService>();
-        var inner = new BottleLikeService(db, CreateCurrentUser(liker.Id), notificationMock.Object);
+        var inner = new BottleLikeService(db, CreateCurrentUser(liker.Id), notificationMock.Object, Mock.Of<IBadgeService>());
 
         var result = await inner.LikeAsync(bottle.Id, CancellationToken.None);
 
@@ -167,6 +167,23 @@ public sealed class BottleLikeServiceTests
 
         await Assert.ThrowsAsync<OperationCanceledException>(
             () => service.LikeAsync(Guid.NewGuid(), cts.Token));
+    }
+
+    [Fact]
+    public async Task LikeAsync_WhenValid_EvaluatesLikeReceivedBadgeForOwnerNotLiker()
+    {
+        var db = CreateDbContext();
+        var owner = SeedUser(db, "Owner");
+        var liker = SeedUser(db, "Liker");
+        var bottle = SeedBottle(db, owner.Id);
+        var badgeMock = new Mock<IBadgeService>();
+        var service = CreateBottleLikeService(db, liker.Id, badgeMock.Object);
+
+        var result = await service.LikeAsync(bottle.Id, CancellationToken.None);
+
+        Assert.True(result.Success);
+        badgeMock.Verify(b => b.EvaluateAsync(owner.Id, BadgeTrigger.LikeReceived, It.IsAny<CancellationToken>()), Times.Once);
+        badgeMock.Verify(b => b.EvaluateAsync(liker.Id, BadgeTrigger.LikeReceived, It.IsAny<CancellationToken>()), Times.Never);
     }
 
     #endregion

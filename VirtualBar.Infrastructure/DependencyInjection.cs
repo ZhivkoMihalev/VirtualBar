@@ -105,6 +105,11 @@ public static class DependencyInjection
             sp.GetRequiredService<AppDbContext>(),
             sp.GetRequiredService<ICurrentUser>()));
 
+        services.AddScoped<BadgeService>();
+        services.AddScoped<IBadgeService>(sp => new BadgeValidationDecorator(
+            sp.GetRequiredService<BadgeService>(),
+            sp.GetRequiredService<AppDbContext>()));
+
         services.AddScoped<WishListService>(sp => new WishListService(
             sp.GetRequiredService<AppDbContext>(),
             sp.GetRequiredService<ICurrentUser>(),

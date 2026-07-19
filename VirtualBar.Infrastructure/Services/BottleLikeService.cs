@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using VirtualBar.Application.Common;
 using VirtualBar.Application.Interfaces;
 using VirtualBar.Domain.Entities;
+using VirtualBar.Domain.Enums;
 using VirtualBar.Infrastructure.Persistence;
 
 namespace VirtualBar.Infrastructure.Services;
@@ -9,7 +10,8 @@ namespace VirtualBar.Infrastructure.Services;
 public sealed class BottleLikeService(
     AppDbContext db,
     ICurrentUser currentUser,
-    INotificationService notificationService) : IBottleLikeService
+    INotificationService notificationService,
+    IBadgeService badgeService) : IBottleLikeService
 {
     public async Task<Result<bool>> LikeAsync(Guid bottleId, CancellationToken cancellationToken)
     {
@@ -39,6 +41,8 @@ public sealed class BottleLikeService(
             .FirstAsync(cancellationToken);
 
         await notificationService.CreateAsync(bottle.UserId, NotificationType.BottleLiked, bottle.Id, bottle.Name, cancellationToken);
+
+        await badgeService.EvaluateAsync(bottle.UserId, BadgeTrigger.LikeReceived, cancellationToken);
 
         return Result<bool>.Ok(true);
     }

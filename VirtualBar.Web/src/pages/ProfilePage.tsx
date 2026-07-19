@@ -1,19 +1,22 @@
 import { useRef, useState } from 'react'
 import type { FormEvent } from 'react'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { ImagePlus } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import NavBar from '../components/NavBar'
 import Avatar from '../components/Avatar'
+import BadgeChip from '../components/BadgeChip'
 import { updateProfile, uploadAvatar } from '../api/usersApi'
+import { getMyProgress } from '../api/badgesApi'
 import type { UpdatedProfile } from '../types'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
+import { Skeleton } from '@/components/ui/skeleton'
 
 export default function ProfilePage() {
   const { t } = useTranslation()
@@ -26,6 +29,10 @@ export default function ProfilePage() {
   const [city, setCity] = useState(user?.city ?? '')
   const [avatarUrl, setAvatarUrl] = useState(user?.avatarUrl)
   const fileRef = useRef<HTMLInputElement>(null)
+
+  const progressQuery = useQuery({ queryKey: ['badges', 'progress'], queryFn: getMyProgress })
+  const earnedBadges = (progressQuery.data ?? []).filter(p => p.earned)
+  const unearnedBadges = (progressQuery.data ?? []).filter(p => !p.earned)
 
   const avatarMutation = useMutation({
     mutationFn: (file: File) => uploadAvatar(file),
@@ -147,6 +154,62 @@ export default function ProfilePage() {
             {saveMutation.isPending ? t('profile.saving') : t('profile.save')}
           </Button>
         </form>
+
+        {!progressQuery.isError && (
+          <>
+            <Separator className="my-8" />
+
+            <section>
+              <h2 className="font-heading text-2xl font-semibold text-primary sm:text-3xl">
+                {t('badges.title')}
+              </h2>
+
+              {progressQuery.isLoading ? (
+                <div className="mt-6 flex flex-wrap gap-4">
+                  {Array.from({ length: 8 }).map((_, i) => (
+                    <Skeleton key={i} className="size-[72px] rounded-full" />
+                  ))}
+                </div>
+              ) : progressQuery.data ? (
+                <>
+                  {earnedBadges.length > 0 && (
+                    <div className="mt-6 grid grid-cols-[repeat(auto-fill,minmax(84px,1fr))] gap-x-4 gap-y-6">
+                      {earnedBadges.map(p => (
+                        <BadgeChip key={p.badge} badge={p.badge} earned awardedAt={p.awardedAt} size={72} />
+                      ))}
+                    </div>
+                  )}
+
+                  {unearnedBadges.length > 0 && (
+                    <>
+                      <h3 className="mt-9 font-heading text-lg font-medium text-primary/80">
+                        {t('badges.progressTitle')}
+                      </h3>
+                      <div className="mt-4 grid grid-cols-[repeat(auto-fill,minmax(84px,1fr))] gap-x-4 gap-y-6">
+                        {unearnedBadges.map(p => (
+                          <div key={p.badge} className="flex flex-col items-center gap-2">
+                            <BadgeChip badge={p.badge} earned={false} size={72} />
+                            <div className="w-full">
+                              <div className="h-1 overflow-hidden rounded-full bg-primary/20">
+                                <div
+                                  className="h-full rounded-full bg-primary"
+                                  style={{ width: `${(Math.min(p.current, p.threshold) / p.threshold) * 100}%` }}
+                                />
+                              </div>
+                              <div className="mt-1 text-center text-[11px] text-foreground/75">
+                                {Math.min(p.current, p.threshold)}/{p.threshold}
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </>
+                  )}
+                </>
+              ) : null}
+            </section>
+          </>
+        )}
       </main>
     </div>
   )

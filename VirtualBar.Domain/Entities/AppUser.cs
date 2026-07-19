@@ -31,4 +31,6 @@ public class AppUser : IdentityUser<Guid>
     public ICollection<Message> SentMessages { get; set; } = [];
 
     public ICollection<Message> ReceivedMessages { get; set; } = [];
+
+    public ICollection<UserBadge> Badges { get; set; } = [];
 }

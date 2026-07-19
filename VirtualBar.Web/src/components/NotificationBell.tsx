@@ -69,6 +69,14 @@ function describe(item: NotificationItem, t: (key: string, opts?: Record<string,
       return item.resourceName
         ? t('notifications.offerDeclined', { bottle: item.resourceName })
         : t('notifications.offerDeclinedNoName')
+    case 'BadgeEarned': {
+      const name = item.resourceName
+        ? t(`badges.${item.resourceName}.name`, { defaultValue: item.resourceName })
+        : ''
+      return name
+        ? `${t('notifications.badgeEarned')} ${name}`
+        : t('notifications.badgeEarned')
+    }
   }
 }
 
@@ -89,6 +97,8 @@ function targetPath(item: NotificationItem): string | null {
     case 'OfferAccepted':
     case 'OfferDeclined':
       return '/offers'
+    case 'BadgeEarned':
+      return '/profile'
   }
 }
 
@@ -178,7 +188,11 @@ export default function NotificationBell() {
                 )}
               >
                 <div className="text-sm leading-snug text-foreground">
-                  <span className="font-medium text-primary">{item.actorDisplayName}</span>{' '}
+                  {item.type !== 'BadgeEarned' && (
+                    <>
+                      <span className="font-medium text-primary">{item.actorDisplayName}</span>{' '}
+                    </>
+                  )}
                   <span>{describe(item, t)}</span>
                 </div>
                 <div className="mt-1 text-xs text-muted-foreground">

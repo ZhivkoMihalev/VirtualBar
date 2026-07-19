@@ -6,7 +6,7 @@ This file provides guidance to Claude Code when working with code in this reposi
 
 ## What is VirtualBar
 
-VirtualBar is a platform for collectors of premium spirits (whisky, rum, cognac, vodka and more). Every user gets a **virtual bar** — a public profile showcasing their collection. Others can browse collections, follow collectors, like and comment on bottles, leave **structured reviews** (0–100 score + tasting notes + flavor tags), send direct messages, and buy/sell limited editions through a built-in marketplace. The home page (`/`) is a social news feed showing admin-authored articles and activity from followed users. Users receive **in-app notifications** when someone likes/comments their bottle, follows them, sends a message, or when someone they follow adds a bottle or lists one for sale. Users can add bottles to a **wish list** and get notified when a matching bottle appears for sale. Any user can **make an offer** on any bottle in another collector's bar (regardless of whether it is listed for sale); the seller receives a notification and can accept, decline, or ignore. Direct messaging is handled via a **floating chat widget** (Facebook Messenger style) accessible from every page.
+VirtualBar is a platform for collectors of premium spirits (whisky, rum, cognac, vodka and more). Every user gets a **virtual bar** — a public profile showcasing their collection. Others can browse collections, follow collectors, like and comment on bottles, leave **structured reviews** (0–100 score + tasting notes + flavor tags), send direct messages, and buy/sell limited editions through a built-in marketplace. The home page (`/`) is a social news feed showing admin-authored articles and activity from followed users. Users receive **in-app notifications** when someone likes/comments their bottle, follows them, sends a message, or when someone they follow adds a bottle or lists one for sale. Users can add bottles to a **wish list** and get notified when a matching bottle appears for sale. Any user can **make an offer** on any bottle in another collector's bar (regardless of whether it is listed for sale); the seller receives a notification and can accept, decline, or ignore. Collectors earn **permanent achievement badges** for milestones (first bottle, 10 bottles, 5 categories, 50 likes received, first sale…) — shown with progress on the own profile and as an earned-only strip on the public bar. Direct messaging is handled via a **floating chat widget** (Facebook Messenger style) accessible from every page.
 
 **User roles:** Collector (all registered users). Platform administrators have `IsAdmin = true` on their `AppUser` record — seeded via `AdminEmail` in `appsettings.Development.json` on startup.
 
@@ -204,10 +204,11 @@ Key DbSets:
 | `PriceSnapshots` | Read-through cache of indicative per-product price estimates (5-day TTL) — powers Collection Value |
 | `BottleReviews` | One structured review per user per bottle: score 0–100 + tasting notes + flavors |
 | `BottleReviewFlavors` | Junction: review → flavor tag (composite PK; up to 5 per review) |
+| `UserBadges` | Junction: user → earned achievement badge (composite PK; awards are permanent) |
 
 All entities extend `BaseEntity` which adds `Id (Guid)`, `CreatedAt`, `UpdatedAt`, `IsDeleted`, `DeletedAt`.
 
-`BottleLike`, `UserFollow`, `DistilleryCategory`, and `BottleReviewFlavor` are junction tables with composite PKs — no `BaseEntity`.
+`BottleLike`, `UserFollow`, `DistilleryCategory`, `BottleReviewFlavor`, and `UserBadge` are junction tables with composite PKs — no `BaseEntity`.
 
 ---
 
@@ -223,7 +224,7 @@ All entities extend `BaseEntity` which adds `Id (Guid)`, `CreatedAt`, `UpdatedAt
 | `IsAdmin` | `bool` | Platform administrator flag (default `false`) |
 
 Relations: one user → many `Bottle`, `BottleComment`, `Message` (sent/received).
-Junction relations: `BottleLike` (liked), `UserFollow` (followers/following).
+Junction relations: `BottleLike` (liked), `UserFollow` (followers/following), `UserBadge` (earned badges).
 
 ---
 
@@ -387,11 +388,13 @@ Both FK relations use `DeleteBehavior.Restrict`. Composite index on `(UserId, Is
 | `OfferAccepted` | `OfferService.AcceptAsync` — sent to the buyer |
 | `OfferDeclined` | `OfferService.DeclineAsync` — sent to the buyer |
 | `BottleReviewed` | `BottleReviewService.AddReviewAsync` — sent to the bottle owner (create only, not on update/delete) |
+| `BadgeEarned` | `BadgeService.EvaluateAsync` — sent to the badge earner via `CreateSystemAsync` (actor = recipient; `ResourceName` = the `BadgeType` name) |
 
 **INotificationService methods:**
 - `CreateAsync(recipientId, type, resourceId, resourceName, ct)` — single recipient; decorator skips if `recipientId == currentUser.UserId` (no self-notifications).
 - `CreateBulkAsync(recipientIds, type, resourceId, resourceName, ct)` — fan-out; queries actor display name once, `AddRange` + single `SaveChangesAsync`. Decorator filters out self from the list.
-- Both are fire-and-forget calls from trigger services (not controller-exposed). They return `Task` (not `Result<T>`).
+- `CreateSystemAsync(recipientId, type, resourceId, resourceName, ct)` — system notification with **no self-skip**: the recipient MAY equal the current user (own-milestone notifications); inner sets `ActorId = recipientId` + the recipient's **own** display name (missing recipient → silent return). Used only by the badge engine (`BadgeEarned`). Do NOT "fix" the self-skip on the other two — it protects every other type.
+- All three are fire-and-forget calls from trigger services (not controller-exposed). They return `Task` (not `Result<T>`).
 - `GET /api/notifications` — returns last 30 + global unread count.
 - `PATCH /api/notifications/{id}/read` and `POST /api/notifications/read-all`.
 
@@ -476,6 +479,26 @@ Indexes: unique `ProductKey`; `Barcode`; `(Category, FetchedAt)`. `SourcesJson` 
 
 ---
 
+### UserBadge
+Composite PK: `(UserId, Badge)`. No `BaseEntity`. FK → AppUser (`DeleteBehavior.Restrict`); index on `UserId` for profile/public-bar reads.
+| Property | Type |
+|---|---|
+| `UserId` | `Guid` |
+| `Badge` | `BadgeType` |
+| `AwardedAt` | `DateTime` |
+
+**Design (badges / achievements):** The catalog lives in **code**, not the DB (the `FlavorTag` pattern): `BadgeType` enum (**18 members, append-only — never rename/reorder**; stored int values and i18n keys depend on the names) + `BadgeTrigger` (5) + `BadgeCountKind` (8) enums + static `BadgeCatalog` in `VirtualBar.Domain/Common/` (`BadgeDefinition(Type, Trigger, CountKind, Threshold)` records, `All`, `ForTrigger`). Names/descriptions are frontend-translated. Awards are **permanent** — never revoked when counts later drop (unlike/unfollow/delete/unlist).
+
+The 18 badges: `FirstBottle` + `Collector5/10/25/50/100` (bottles ≥ 1/5/10/25/50/100), `Explorer3/5` (distinct categories), `LimitedHunter` (5 limited bottles), `Liked10/50/100` (likes received on own bottles), `FirstFollower`/`Popular10`/`Influencer50` (followers 1/10/50), `FirstListing` (currently listed bottles ≥ 1), `FirstSale`/`FirstPurchase` (accepted offers as seller/buyer).
+
+**Award engine — `IBadgeService.EvaluateAsync(userId, trigger, cancellationToken)`** (`BadgeService` + `BadgeValidationDecorator`): evaluate-on-trigger, uniform `count >= threshold`, no background job — any relevant action awards **everything missed** (lazy catch-up). Returns `Task` (not `Result<T>`), not controller-exposed; the entire body is `try/catch` → `LogError` — a badge bug never breaks the host operation. Called as one awaited line **after** the operation's own `SaveChangesAsync` + notification at **six hook sites**: `AddBottleAsync` (`BottleAdded`), `ListForSaleAsync` (`BottleListed`), `LikeAsync` (`LikeReceived` → the bottle **owner**), `FollowAsync` (`FollowerGained` → the **followed** user), `AcceptAsync` (`OfferAccepted` ×2 — seller and buyer, winning path only). Idempotency: awards go **one at a time** (`Add` → `SaveChangesAsync` → notification); a concurrent duplicate loses on the composite PK → `DbUpdateException` → detach, skip its notification, continue. Earning fires `NotificationType.BadgeEarned` via `CreateSystemAsync` with `ResourceId = null`, `ResourceName = badgeType.ToString()` (the frontend translates the badge name from it).
+
+**API endpoints (`/api/badges`):**
+- `GET /api/badges/user/{userId}` — `[AllowAnonymous]` (public bars are public); earned badges only, newest first; `404` unknown user
+- `GET /api/badges/progress` — `[Authorize]`; all 18 catalog entries with `current`/`threshold`/`earned`/`awardedAt` for the **current** user (own-only — never exposed for other users)
+
+---
+
 ## Collection Value (bottle price estimation)
 
 Shows an **indicative min–max market value per bottle** and a **total collection value** (Sealed bottles only) on the Dashboard. Always indicative — shown with range + confidence + **sources** + "as of" date; `None` renders "—", never a fabricated number.
@@ -515,18 +538,19 @@ Full slice-by-slice specs live in `docs/collection-value/`.
 
 **Internationalisation:** `react-i18next` + `i18next-browser-languagedetector`. Bulgarian is the default language (`lng: 'bg'`). English is optional. Language choice is persisted in `localStorage` under key `vbar_lang`. Translation files: `src/i18n/bg.json` and `src/i18n/en.json`. i18next is initialised in `src/i18n/index.ts` and imported as the first line of `src/main.tsx`. Every page and component uses `const { t } = useTranslation()`. The `LanguageSwitcher` component (`src/components/LanguageSwitcher.tsx`) renders a speakeasy-styled dropdown (БГ/EN) placed inside the NavBar of every page.
 
-Current translation namespaces: `nav`, `lang`, `login`, `register`, `dashboard`, `addBottle`, `browse`, `marketplace`, `publicBar`, `bottle`, `messages`, `profile`, `footer`, `hero`, `home`, `barShelf`, `notifications`, `wishList`, `distillerySelect`, `offers`, `collectionValue`, `reviews`, `flavors` (28 keys = `FlavorTag` enum member names).
+Current translation namespaces: `nav`, `lang`, `login`, `register`, `dashboard`, `addBottle`, `browse`, `marketplace`, `publicBar`, `bottle`, `messages`, `profile`, `footer`, `hero`, `home`, `barShelf`, `notifications`, `wishList`, `distillerySelect`, `offers`, `collectionValue`, `reviews`, `flavors` (28 keys = `FlavorTag` enum member names), `badges` (`title`/`progressTitle`/`earnedOn` + 18 × `<EnumName>.{name,description}`, keys = `BadgeType` enum member names).
 
 **Routing:** `/` is `HomePage.tsx` (public news/social feed). Login and register redirect to `/` after success. `/dashboard` is the user's own virtual bar (protected). `/offers` is the Offers page (protected). There is **no `/messages` route** — messaging is handled entirely by the floating `ChatWidget`.
 
 **Shared components:**
 - `src/components/NavBar.tsx` — imported by every page; contains `<NotificationBell />` and `<LanguageSwitcher />` in the right slot (authenticated only). The "СЪОБЩЕНИЯ" nav item is a button that calls `toggleInbox()` from `ChatContext` — not a route link.
 - `src/components/Avatar.tsx` — props: `displayName`, `avatarUrl?`, `size`. Renders `<img>` when avatarUrl present, initials div otherwise.
-- `src/components/NotificationBell.tsx` — bell icon with gold badge (unread count), dropdown with last 30 notifications, mark-read / mark-all-read. Polls every 30 s via `refetchInterval`. `NewMessage` notifications call `openChat(actorId)` from `ChatContext` instead of navigating.
+- `src/components/NotificationBell.tsx` — bell icon with gold badge (unread count), dropdown with last 30 notifications, mark-read / mark-all-read. Polls every 30 s via `refetchInterval`. `NewMessage` notifications call `openChat(actorId)` from `ChatContext` instead of navigating. `BadgeEarned` notifications render the translated badge name from `resourceName` and navigate to `/profile` (no actor emphasis — actor == recipient).
 - `src/components/Footer.tsx` — mounted once in `App.tsx`; fully opaque `#07030A` background.
 - `src/components/BottleDetailPanel.tsx` — full-screen overlay for bottle details. Shows `SaleSection` + `DeleteSection` for the owner. Shows `MakeOfferSection` for non-owners (any authenticated user, regardless of `IsForSale`). `EstimateSection` (price estimate) for authenticated users only — the `/api/prices` endpoint is `[Authorize]`, so rendering it anonymously would 401-redirect to `/login`. `LikesSection`, `ReviewsSection` (aggregate header + one-per-user review form + review list; form authenticated-only), and `CommentsSection` (below reviews) for all. `onDelete` prop (DashboardPage only) invalidates bottles query and closes panel. Bottle cards (`BarShelf`, Marketplace) show a gold `★ <avg>` badge when `reviewsCount > 0`.
 - `src/components/ChatWidget.tsx` — floating Facebook Messenger-style chat. `position: fixed; bottom: 0; right: 20px; zIndex: 1000`. Renders only for authenticated users. Layout right-to-left: gold circular toggle button (52px, unread badge) → inbox panel (300×480px) → active conversation window (320×480px). Polls inbox every 30 s. Mark-as-read runs automatically when a thread is viewed.
 - `src/components/DistillerySelect.tsx` — autocomplete dropdown for selecting a distillery. Props: `value`, `onChange`, `category?`. ARIA roles (`combobox`/`listbox`/`option`), keyboard navigation (ArrowUp/Down/Enter/Escape), scroll-into-view. Fetches from `GET /api/distilleries?category=...`, `queryKey: ['distilleries', category ?? 'all']`, staleTime 5 min.
+- `src/components/BadgeChip.tsx` — circular gold-bordered achievement medallion: static `badgeType → lucide icon` map (18 entries) + translated name (`badges` namespace); `size` prop; dimmed variant for `earned: false`. Used by `ProfilePage` (achievements section: earned chips first, then unearned with thin gold progress bars + "7/10" labels; `queryKey: ['badges','progress']`) and `PublicBarPage` (earned-only strip under the bar header; `queryKey: ['badges', userId]`; empty/loading/error → renders nothing).
 
 **Contexts:**
 - `src/contexts/AuthContext.tsx` — `user`, `login`, `logout`, `isAuthenticated`, `isLoading`.
@@ -550,9 +574,9 @@ Current translation namespaces: `nav`, `lang`, `login`, `register`, `dashboard`,
 - One test class per service: `<ServiceName>Tests` in `VirtualBar.Tests/Services/`.
 - Method naming: `<MethodName>_When<Condition>_<ExpectedOutcome>`.
 - Each test creates an isolated InMemory DB: `Guid.NewGuid().ToString()` as the DB name.
-- Use **EF Core InMemory** by default. Switch to **SQLite in-memory** only when the method calls `ExecuteUpdateAsync` / `ExecuteDeleteAsync`, or when the test must enforce a **unique index** (InMemory doesn't — e.g. the `BottleReview` duplicate-race test).
-- Mock only `ICurrentUser` and `INotificationService` — never mock `AppDbContext`.
-- Services that depend on `INotificationService` receive `Mock.Of<INotificationService>()` in their `CreateXxxService` helper (optional parameter with default).
+- Use **EF Core InMemory** by default. Switch to **SQLite in-memory** only when the method calls `ExecuteUpdateAsync` / `ExecuteDeleteAsync`, or when the test must surface a **unique-index or duplicate-PK violation as `DbUpdateException`** (InMemory doesn't enforce secondary unique indexes and throws `ArgumentException`, not `DbUpdateException`, for PK duplicates — e.g. the `BottleReview` duplicate-race and `BadgeService` PK-race tests).
+- Mock only `ICurrentUser`, `INotificationService`, and `IBadgeService` (trigger-service tests) — never mock `AppDbContext`.
+- Services that depend on `INotificationService` / `IBadgeService` receive `Mock.Of<INotificationService>()` / `Mock.Of<IBadgeService>()` in their `CreateXxxService` helper (optional parameters with defaults).
 - Seed helpers are `private static` methods in the test class: `SeedUser`, `SeedBottle`, `SeedComment`, etc.
 - Cover every branch: every `if`, every `switch` arm, every `?.`, `??`, `&&`, `||`.
 

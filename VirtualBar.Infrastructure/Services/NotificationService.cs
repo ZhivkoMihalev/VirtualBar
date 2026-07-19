@@ -118,4 +118,28 @@ public sealed class NotificationService(
 
         await db.SaveChangesAsync(cancellationToken);
     }
+
+    public async Task CreateSystemAsync(Guid recipientId, NotificationType type, Guid? resourceId, string? resourceName, CancellationToken cancellationToken)
+    {
+        var actorDisplayName = await db.Users
+            .Where(u => u.Id == recipientId)
+            .Select(u => u.DisplayName)
+            .FirstOrDefaultAsync(cancellationToken);
+
+        if (actorDisplayName is null)
+            return;
+
+        db.Notifications.Add(new Notification
+        {
+            UserId = recipientId,
+            Type = type,
+            ActorId = recipientId,
+            ActorDisplayName = actorDisplayName,
+            ResourceId = resourceId,
+            ResourceName = resourceName,
+            IsRead = false,
+        });
+
+        await db.SaveChangesAsync(cancellationToken);
+    }
 }

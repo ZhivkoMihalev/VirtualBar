@@ -24,6 +24,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
     public DbSet<PriceSnapshot> PriceSnapshots => Set<PriceSnapshot>();
     public DbSet<BottleReview> BottleReviews => Set<BottleReview>();
     public DbSet<BottleReviewFlavor> BottleReviewFlavors => Set<BottleReviewFlavor>();
+    public DbSet<UserBadge> UserBadges => Set<UserBadge>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -214,6 +215,18 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
                 .WithMany(r => r.Flavors)
                 .HasForeignKey(f => f.ReviewId)
                 .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        builder.Entity<UserBadge>(e =>
+        {
+            e.HasKey(b => new { b.UserId, b.Badge });
+
+            e.HasIndex(b => b.UserId);
+
+            e.HasOne(b => b.User)
+                .WithMany(u => u.Badges)
+                .HasForeignKey(b => b.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
         });
     }
 }

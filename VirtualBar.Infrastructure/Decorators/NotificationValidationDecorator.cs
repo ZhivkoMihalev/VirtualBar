@@ -57,4 +57,11 @@ public sealed class NotificationValidationDecorator(
 
         await inner.CreateBulkAsync(filtered, type, resourceId, resourceName, cancellationToken);
     }
+
+    public async Task CreateSystemAsync(Guid recipientId, NotificationType type, Guid? resourceId, string? resourceName, CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+
+        await inner.CreateSystemAsync(recipientId, type, resourceId, resourceName, cancellationToken);
+    }
 }

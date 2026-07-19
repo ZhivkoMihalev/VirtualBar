@@ -46,16 +46,18 @@ public sealed class OfferServiceTests
     private static OfferService CreateInnerOfferService(
         AppDbContext db,
         Guid currentUserId,
-        INotificationService? notificationService = null) =>
-        new(db, CreateCurrentUser(currentUserId), notificationService ?? Mock.Of<INotificationService>());
+        INotificationService? notificationService = null,
+        IBadgeService? badgeService = null) =>
+        new(db, CreateCurrentUser(currentUserId), notificationService ?? Mock.Of<INotificationService>(), badgeService ?? Mock.Of<IBadgeService>());
 
     private static IOfferService CreateOfferService(
         AppDbContext db,
         Guid currentUserId,
-        INotificationService? notificationService = null)
+        INotificationService? notificationService = null,
+        IBadgeService? badgeService = null)
     {
         var currentUser = CreateCurrentUser(currentUserId);
-        var inner = new OfferService(db, currentUser, notificationService ?? Mock.Of<INotificationService>());
+        var inner = new OfferService(db, currentUser, notificationService ?? Mock.Of<INotificationService>(), badgeService ?? Mock.Of<IBadgeService>());
         return new OfferValidationDecorator(inner, db, currentUser);
     }
 
@@ -608,6 +610,45 @@ public sealed class OfferServiceTests
 
         await Assert.ThrowsAsync<OperationCanceledException>(
             () => service.AcceptAsync(Guid.NewGuid(), cts.Token));
+    }
+
+    [Fact]
+    public async Task AcceptAsync_WhenValid_EvaluatesOfferAcceptedBadgeForBothSellerAndBuyer()
+    {
+        var db = CreateSqliteDbContext();
+        var seller = SeedUser(db, "Seller");
+        var buyer = SeedUser(db, "Buyer");
+        var bottle = SeedBottle(db, seller.Id);
+        var offer = SeedOffer(db, bottle.Id, buyer.Id, seller.Id);
+        var badgeMock = new Mock<IBadgeService>();
+        var service = CreateOfferService(db, seller.Id, badgeService: badgeMock.Object);
+
+        var result = await service.AcceptAsync(offer.Id, CancellationToken.None);
+
+        Assert.True(result.Success);
+        badgeMock.Verify(b => b.EvaluateAsync(seller.Id, BadgeTrigger.OfferAccepted, It.IsAny<CancellationToken>()), Times.Once);
+        badgeMock.Verify(b => b.EvaluateAsync(buyer.Id, BadgeTrigger.OfferAccepted, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task AcceptAsync_WhenLosesRaceToResolvedOffer_DoesNotEvaluateBadges()
+    {
+        // Loser slipped past the decorator's pending check — call the inner service directly against an
+        // already-resolved offer. The conditional update claims zero rows, so no badge evaluation fires.
+        var db = CreateSqliteDbContext();
+        var seller = SeedUser(db, "Seller");
+        var buyer = SeedUser(db, "Buyer");
+        var bottle = SeedBottle(db, seller.Id);
+        var offer = SeedOffer(db, bottle.Id, buyer.Id, seller.Id, OfferStatus.Accepted);
+        var badgeMock = new Mock<IBadgeService>();
+        var inner = CreateInnerOfferService(db, seller.Id, badgeService: badgeMock.Object);
+
+        var result = await inner.AcceptAsync(offer.Id, CancellationToken.None);
+
+        Assert.False(result.Success);
+        Assert.Equal("Only pending offers can be accepted.", result.Error);
+        badgeMock.Verify(b => b.EvaluateAsync(
+            It.IsAny<Guid>(), It.IsAny<BadgeTrigger>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     #endregion

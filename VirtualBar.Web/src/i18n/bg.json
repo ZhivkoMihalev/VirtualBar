@@ -349,6 +349,7 @@
     "offerAcceptedNoName": "прие офертата ви",
     "offerDeclined": "отхвърли офертата ви за {{bottle}}",
     "offerDeclinedNoName": "отхвърли офертата ви",
+    "badgeEarned": "Спечелихте значка:",
     "justNow": "сега",
     "minutesAgo": "{{count}}м",
     "hoursAgo": "{{count}}ч",
@@ -483,5 +484,28 @@
     "Sherry": "Шери",
     "Leather": "Кожа",
     "Tobacco": "Тютюн"
+  },
+  "badges": {
+    "title": "Постижения",
+    "progressTitle": "Напредък",
+    "earnedOn": "Спечелена на {{date}}",
+    "FirstBottle": { "name": "Първа бутилка", "description": "Първата бутилка в бара" },
+    "Collector5": { "name": "Ценител", "description": "5 бутилки в бара" },
+    "Collector10": { "name": "Колекционер", "description": "10 бутилки в бара" },
+    "Collector25": { "name": "Куратор", "description": "25 бутилки в бара" },
+    "Collector50": { "name": "Познавач", "description": "50 бутилки в бара" },
+    "Collector100": { "name": "Майстор колекционер", "description": "100 бутилки в бара" },
+    "Explorer3": { "name": "Изследовател", "description": "3 различни категории" },
+    "Explorer5": { "name": "Пътешественик", "description": "5 различни категории" },
+    "LimitedHunter": { "name": "Ловец на съкровища", "description": "5 лимитирани издания" },
+    "Liked10": { "name": "Харесван", "description": "10 получени харесвания" },
+    "Liked50": { "name": "Обожаван", "description": "50 получени харесвания" },
+    "Liked100": { "name": "Звезда", "description": "100 получени харесвания" },
+    "FirstFollower": { "name": "Първи последовател", "description": "Първият ви последовател" },
+    "Popular10": { "name": "Популярен", "description": "10 последователи" },
+    "Influencer50": { "name": "Инфлуенсър", "description": "50 последователи" },
+    "FirstListing": { "name": "Първа обява", "description": "Първа бутилка за продажба" },
+    "FirstSale": { "name": "Първа продажба", "description": "Първа приета продажба" },
+    "FirstPurchase": { "name": "Първа покупка", "description": "Първа приета покупка" }
   }
 }

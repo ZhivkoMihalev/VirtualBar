@@ -256,7 +256,27 @@ export interface PublicWishListItem {
   createdAt: string
 }
 
-export type NotificationType = 'BottleLiked' | 'BottleCommented' | 'NewFollower' | 'NewMessage' | 'NewBottleFromFollowing' | 'BottleListedForSale' | 'WishListMatch' | 'OfferReceived' | 'OfferAccepted' | 'OfferDeclined' | 'BottleReviewed'
+export type BadgeType =
+  | 'FirstBottle' | 'Collector5' | 'Collector10' | 'Collector25' | 'Collector50' | 'Collector100'
+  | 'Explorer3' | 'Explorer5' | 'LimitedHunter'
+  | 'Liked10' | 'Liked50' | 'Liked100'
+  | 'FirstFollower' | 'Popular10' | 'Influencer50'
+  | 'FirstListing' | 'FirstSale' | 'FirstPurchase'
+
+export interface UserBadge {
+  badge: BadgeType
+  awardedAt: string
+}
+
+export interface BadgeProgress {
+  badge: BadgeType
+  threshold: number
+  current: number
+  earned: boolean
+  awardedAt: string | null
+}
+
+export type NotificationType = 'BottleLiked' | 'BottleCommented' | 'NewFollower' | 'NewMessage' | 'NewBottleFromFollowing' | 'BottleListedForSale' | 'WishListMatch' | 'OfferReceived' | 'OfferAccepted' | 'OfferDeclined' | 'BottleReviewed' | 'BadgeEarned'
 
 export interface NotificationItem {
   id: string

@@ -7,10 +7,12 @@ import { useAuth } from '../contexts/AuthContext'
 import { useChat } from '../contexts/ChatContext'
 import { getBottlesByUser } from '../api/bottlesApi'
 import { getUserProfile, followUser, unfollowUser } from '../api/usersApi'
+import { getUserBadges } from '../api/badgesApi'
 import type { Bottle, UserProfile } from '../types'
 import { VirtualBarScene } from '../components/BarShelf'
 import BottleDetailPanel from '../components/BottleDetailPanel'
 import Avatar from '../components/Avatar'
+import BadgeChip from '../components/BadgeChip'
 import NavBar from '../components/NavBar'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -46,6 +48,23 @@ function FollowButton({ profile, userId }: { profile: UserProfile; userId: strin
         t('publicBar.follow')
       )}
     </Button>
+  )
+}
+
+function EarnedBadgesStrip({ userId }: { userId: string }) {
+  const { data: badges } = useQuery({
+    queryKey: ['badges', userId],
+    queryFn: () => getUserBadges(userId),
+  })
+
+  if (!badges || badges.length === 0) return null
+
+  return (
+    <div className="mb-9 flex flex-wrap justify-center gap-5 sm:justify-start">
+      {badges.map(b => (
+        <BadgeChip key={b.badge} badge={b.badge} earned awardedAt={b.awardedAt} size={64} />
+      ))}
+    </div>
   )
 }
 
@@ -159,6 +178,8 @@ export default function PublicBarPage() {
                 )}
               </CardContent>
             </Card>
+
+            {userId && <EarnedBadgesStrip userId={userId} />}
 
             {bottles.length > 0 ? (
               <VirtualBarScene bottles={bottles} onSelect={setSelectedBottle} />

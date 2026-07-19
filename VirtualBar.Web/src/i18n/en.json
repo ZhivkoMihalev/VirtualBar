@@ -349,6 +349,7 @@
     "offerAcceptedNoName": "accepted your offer",
     "offerDeclined": "declined your offer on {{bottle}}",
     "offerDeclinedNoName": "declined your offer",
+    "badgeEarned": "You earned a badge:",
     "justNow": "now",
     "minutesAgo": "{{count}}m",
     "hoursAgo": "{{count}}h",
@@ -483,5 +484,28 @@
     "Sherry": "Sherry",
     "Leather": "Leather",
     "Tobacco": "Tobacco"
+  },
+  "badges": {
+    "title": "Achievements",
+    "progressTitle": "Progress",
+    "earnedOn": "Earned on {{date}}",
+    "FirstBottle": { "name": "First Bottle", "description": "Your first bottle" },
+    "Collector5": { "name": "Enthusiast", "description": "5 bottles in your bar" },
+    "Collector10": { "name": "Collector", "description": "10 bottles in your bar" },
+    "Collector25": { "name": "Curator", "description": "25 bottles in your bar" },
+    "Collector50": { "name": "Connoisseur", "description": "50 bottles in your bar" },
+    "Collector100": { "name": "Master Collector", "description": "100 bottles in your bar" },
+    "Explorer3": { "name": "Explorer", "description": "3 different categories" },
+    "Explorer5": { "name": "Voyager", "description": "5 different categories" },
+    "LimitedHunter": { "name": "Limited Hunter", "description": "5 limited editions" },
+    "Liked10": { "name": "Well Liked", "description": "10 likes received" },
+    "Liked50": { "name": "Admired", "description": "50 likes received" },
+    "Liked100": { "name": "Star", "description": "100 likes received" },
+    "FirstFollower": { "name": "First Follower", "description": "Your first follower" },
+    "Popular10": { "name": "Popular", "description": "10 followers" },
+    "Influencer50": { "name": "Influencer", "description": "50 followers" },
+    "FirstListing": { "name": "First Listing", "description": "Listed your first bottle for sale" },
+    "FirstSale": { "name": "First Sale", "description": "Your first accepted sale" },
+    "FirstPurchase": { "name": "First Purchase", "description": "Your first accepted purchase" }
   }
 }

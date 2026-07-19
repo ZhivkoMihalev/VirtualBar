@@ -3,6 +3,7 @@ using VirtualBar.Application.Common;
 using VirtualBar.Application.DTOs.Users;
 using VirtualBar.Application.Interfaces;
 using VirtualBar.Domain.Entities;
+using VirtualBar.Domain.Enums;
 using VirtualBar.Infrastructure.Persistence;
 
 namespace VirtualBar.Infrastructure.Services;
@@ -10,7 +11,8 @@ namespace VirtualBar.Infrastructure.Services;
 public sealed class UserFollowService(
     AppDbContext db,
     ICurrentUser currentUser,
-    INotificationService notificationService) : IUserFollowService
+    INotificationService notificationService,
+    IBadgeService badgeService) : IUserFollowService
 {
     public async Task<Result<bool>> FollowAsync(Guid targetUserId, CancellationToken cancellationToken)
     {
@@ -25,6 +27,8 @@ public sealed class UserFollowService(
         await db.SaveChangesAsync(cancellationToken);
 
         await notificationService.CreateAsync(targetUserId, NotificationType.NewFollower, null, null, cancellationToken);
+
+        await badgeService.EvaluateAsync(targetUserId, BadgeTrigger.FollowerGained, cancellationToken);
 
         return Result<bool>.Ok(true);
     }

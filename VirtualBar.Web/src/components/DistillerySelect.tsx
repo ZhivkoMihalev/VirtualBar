@@ -39,7 +39,12 @@ export default function DistillerySelect({ value, onChange, placeholder, categor
 
   return (
     <div className="relative w-full" style={style}>
-      <Popover open={open} onOpenChange={setOpen}>
+      {/*
+        modal for the same reason as ProductSelect: inside the add-bottle Sheet, Radix Dialog's
+        react-remove-scroll cancels wheel events outside its locked subtree, and this popover portals
+        to document.body. Without it the list cannot be scrolled with the mouse.
+      */}
+      <Popover open={open} onOpenChange={setOpen} modal>
         <PopoverTrigger asChild>
           <Button
             variant="outline"

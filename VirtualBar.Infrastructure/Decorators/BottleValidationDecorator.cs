@@ -44,6 +44,14 @@ public sealed class BottleValidationDecorator(
                 return Result<BottleDto>.NotFound("Distillery not found.");
         }
 
+        if (request.ProductId is Guid productId)
+        {
+            var productExists = await db.Products
+                .AnyAsync(p => p.Id == productId && !p.IsDeleted, cancellationToken);
+            if (!productExists)
+                return Result<BottleDto>.Fail("Selected product does not exist.");
+        }
+
         return await inner.AddBottleAsync(request, cancellationToken);
     }
 
@@ -67,6 +75,15 @@ public sealed class BottleValidationDecorator(
                 .AnyAsync(d => d.Id == distilleryId && !d.IsDeleted, cancellationToken);
             if (!distilleryExists)
                 return Result<BottleDto>.NotFound("Distillery not found.");
+        }
+
+        // A null ProductId simply unlinks the bottle from the catalog — only a set value is validated.
+        if (request.ProductId is Guid productId)
+        {
+            var productExists = await db.Products
+                .AnyAsync(p => p.Id == productId && !p.IsDeleted, cancellationToken);
+            if (!productExists)
+                return Result<BottleDto>.Fail("Selected product does not exist.");
         }
 
         return await inner.UpdateBottleAsync(bottleId, request, cancellationToken);

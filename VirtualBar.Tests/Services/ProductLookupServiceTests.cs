@@ -1,28 +1,55 @@
 using System.Net;
 using System.Text;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Moq;
 using VirtualBar.Application.Common;
 using VirtualBar.Application.Interfaces;
+using VirtualBar.Domain.Entities;
+using VirtualBar.Domain.Enums;
 using VirtualBar.Infrastructure.Decorators;
 using VirtualBar.Infrastructure.Options;
+using VirtualBar.Infrastructure.Persistence;
 using VirtualBar.Infrastructure.Services;
 
 namespace VirtualBar.Tests.Services;
 
 public sealed class ProductLookupServiceTests
 {
-    private static IProductLookupService CreateService(HttpMessageHandler handler, string? webRootPath = null)
+    private static AppDbContext CreateDbContext()
+    {
+        var options = new DbContextOptionsBuilder<AppDbContext>()
+            .UseInMemoryDatabase(Guid.NewGuid().ToString())
+            .Options;
+        return new AppDbContext(options);
+    }
+
+    private static IProductLookupService CreateService(HttpMessageHandler handler, string? webRootPath = null, AppDbContext? db = null)
     {
         var http = new HttpClient(handler) { BaseAddress = new Uri("https://api.example.com") };
         var mockEnv = new Mock<IWebHostEnvironment>();
         mockEnv.Setup(e => e.WebRootPath).Returns(webRootPath ?? Path.GetTempPath());
         mockEnv.Setup(e => e.ContentRootPath).Returns(Path.GetTempPath());
         var opts = Options.Create(new ProductLookupOptions { LookupUrl = "https://api.example.com/lookup" });
-        var inner = new ProductLookupService(http, mockEnv.Object, opts);
+        var inner = new ProductLookupService(db ?? CreateDbContext(), http, mockEnv.Object, opts);
 
-        return new ProductValidationDecorator(inner);
+        return new ProductValidationDecorator(inner, Mock.Of<ILogger<ProductValidationDecorator>>());
+    }
+
+    // Same wiring as CreateService but with an unset WebRootPath, so the lookup falls back to
+    // ContentRootPath/wwwroot when saving a downloaded image.
+    private static IProductLookupService CreateServiceWithoutWebRoot(HttpMessageHandler handler, string contentRootPath)
+    {
+        var http = new HttpClient(handler) { BaseAddress = new Uri("https://api.example.com") };
+        var mockEnv = new Mock<IWebHostEnvironment>();
+        mockEnv.Setup(e => e.WebRootPath).Returns((string)null!);
+        mockEnv.Setup(e => e.ContentRootPath).Returns(contentRootPath);
+        var opts = Options.Create(new ProductLookupOptions { LookupUrl = "https://api.example.com/lookup" });
+        var inner = new ProductLookupService(CreateDbContext(), http, mockEnv.Object, opts);
+
+        return new ProductValidationDecorator(inner, Mock.Of<ILogger<ProductValidationDecorator>>());
     }
 
     private sealed class FakeHttpHandler : HttpMessageHandler
@@ -45,6 +72,56 @@ public sealed class ProductLookupServiceTests
         => CreateService(new FakeHttpHandler(_ => JsonOk(json)), webRootPath);
 
     private const string ProductImageUrl = "https://img.example.com/whisky.jpg";
+
+    private const string ExternalHitJson =
+        """{"code":"x","items":[{"title":"External Whisky","brand":"External","description":"d","size":"700ml","images":[]}]}""";
+
+    private static Distillery SeedDistillery(AppDbContext db, string name = "Macallan", bool isDeleted = false)
+    {
+        var distillery = new Distillery
+        {
+            Name = name,
+            IsDeleted = isDeleted,
+            DeletedAt = isDeleted ? DateTime.UtcNow : null
+        };
+        db.Distilleries.Add(distillery);
+        db.SaveChanges();
+        return distillery;
+    }
+
+    private static Product SeedProduct(
+        AppDbContext db,
+        string barcode,
+        string name = "Sherry Oak 12",
+        string? brand = null,
+        Guid? distilleryId = null,
+        string? imageUrl = null,
+        int? volumeMl = 700,
+        double? abvPercent = 43.0,
+        bool isDeleted = false,
+        DateTime? createdAt = null)
+    {
+        var product = new Product
+        {
+            Name = name,
+            Brand = brand,
+            DistilleryId = distilleryId,
+            Category = SpiritCategory.Whisky,
+            Barcode = barcode,
+            ImageUrl = imageUrl,
+            VolumeMl = volumeMl,
+            AbvPercent = abvPercent,
+            CanonicalKey = Guid.NewGuid().ToString(),
+            Origin = ProductOrigin.Seeded,
+            IsDeleted = isDeleted,
+            DeletedAt = isDeleted ? DateTime.UtcNow : null
+        };
+        if (createdAt is not null)
+            product.CreatedAt = createdAt.Value;
+        db.Products.Add(product);
+        db.SaveChanges();
+        return product;
+    }
 
     [Fact]
     public async Task LookupByBarcodeAsync_WhenBarcodeEmpty_ReturnsFail()
@@ -124,6 +201,57 @@ public sealed class ProductLookupServiceTests
         Assert.False(result.Success);
         Assert.Equal("Product not found.", result.Error);
         Assert.Equal(ErrorCode.NotFound, result.ErrorCode);
+    }
+
+    [Fact]
+    public async Task LookupByBarcodeAsync_WhenPayloadIsNull_ReturnsNotFound()
+    {
+        var service = ServiceReturning("null");
+
+        var result = await service.LookupByBarcodeAsync("12345", CancellationToken.None);
+
+        Assert.False(result.Success);
+        Assert.Equal("Product not found.", result.Error);
+        Assert.Equal(ErrorCode.NotFound, result.ErrorCode);
+    }
+
+    [Fact]
+    public async Task LookupByBarcodeAsync_WhenItemHasNoTitle_ReturnsEmptyName()
+    {
+        var service = ServiceReturning(
+            """{"code":"x","items":[{"brand":"B","description":"d","size":"700ml","images":[]}]}""");
+
+        var result = await service.LookupByBarcodeAsync("12345", CancellationToken.None);
+
+        Assert.True(result.Success);
+        Assert.Equal(string.Empty, result.Data!.Name);
+    }
+
+    [Fact]
+    public async Task LookupByBarcodeAsync_WhenWebRootPathUnset_SavesUnderContentRoot()
+    {
+        var contentRoot = Path.Combine(Path.GetTempPath(), $"vbar-tests-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(contentRoot);
+        try
+        {
+            var productJson =
+                $$"""{"code":"x","items":[{"title":"Whisky 40%","brand":"B","description":"d","size":"700ml","images":["{{ProductImageUrl}}"]}]}""";
+            var handler = new FakeHttpHandler(req =>
+                req.RequestUri!.Host == "img.example.com"
+                    ? new HttpResponseMessage(HttpStatusCode.OK) { Content = new ByteArrayContent(new byte[] { 7 }) }
+                    : JsonOk(productJson));
+            var service = CreateServiceWithoutWebRoot(handler, contentRoot);
+
+            var result = await service.LookupByBarcodeAsync("12345", CancellationToken.None);
+
+            Assert.True(result.Success);
+            Assert.StartsWith("/uploads/bottles/", result.Data!.ImageUrl);
+            Assert.Single(Directory.GetFiles(Path.Combine(contentRoot, "wwwroot", "uploads", "bottles")));
+        }
+        finally
+        {
+            Directory.Delete(contentRoot, recursive: true);
+        }
     }
 
     [Fact]
@@ -257,4 +385,146 @@ public sealed class ProductLookupServiceTests
         Assert.True(result.Success);
         Assert.Equal(expected, result.Data!.AbvPercent);
     }
+
+    #region Catalog (L0)
+
+    [Fact]
+    public async Task LookupByBarcodeAsync_WhenBarcodeInCatalog_ReturnsCatalogHitWithoutCallingExternalApi()
+    {
+        var db = CreateDbContext();
+        var product = SeedProduct(db, "5010314000011", name: "Sherry Oak 12", brand: "Macallan",
+            imageUrl: "/uploads/products/macallan.webp");
+        var calls = 0;
+        var handler = new FakeHttpHandler(_ =>
+        {
+            calls++;
+            return JsonOk(ExternalHitJson);
+        });
+        var service = CreateService(handler, db: db);
+
+        var result = await service.LookupByBarcodeAsync("5010314000011", CancellationToken.None);
+
+        Assert.True(result.Success);
+        Assert.Equal(product.Id, result.Data!.ProductId);
+        Assert.Equal("Sherry Oak 12", result.Data.Name);
+        Assert.Equal("Macallan", result.Data.Brand);
+        Assert.Equal("/uploads/products/macallan.webp", result.Data.ImageUrl);
+        Assert.Equal(700, result.Data.VolumeMl);
+        Assert.Equal(43.0, result.Data.AbvPercent);
+        Assert.Equal(0, calls);
+    }
+
+    [Fact]
+    public async Task LookupByBarcodeAsync_WhenCatalogProductHasNoBrand_UsesDistilleryName()
+    {
+        var db = CreateDbContext();
+        var distillery = SeedDistillery(db, "Macallan");
+        SeedProduct(db, "5010314000011", brand: null, distilleryId: distillery.Id);
+        var service = CreateService(new FakeHttpHandler(_ => JsonOk(ExternalHitJson)), db: db);
+
+        var result = await service.LookupByBarcodeAsync("5010314000011", CancellationToken.None);
+
+        Assert.True(result.Success);
+        Assert.Equal("Macallan", result.Data!.Brand);
+    }
+
+    [Fact]
+    public async Task LookupByBarcodeAsync_WhenCatalogDistillerySoftDeleted_ReturnsNullBrand()
+    {
+        var db = CreateDbContext();
+        var distillery = SeedDistillery(db, "Macallan", isDeleted: true);
+        SeedProduct(db, "5010314000011", brand: null, distilleryId: distillery.Id);
+        var service = CreateService(new FakeHttpHandler(_ => JsonOk(ExternalHitJson)), db: db);
+
+        var result = await service.LookupByBarcodeAsync("5010314000011", CancellationToken.None);
+
+        Assert.True(result.Success);
+        Assert.Null(result.Data!.Brand);
+    }
+
+    [Fact]
+    public async Task LookupByBarcodeAsync_WhenCatalogProductHasNoBrandAndNoDistillery_ReturnsNullBrand()
+    {
+        var db = CreateDbContext();
+        SeedProduct(db, "5010314000011", brand: null, distilleryId: null);
+        var service = CreateService(new FakeHttpHandler(_ => JsonOk(ExternalHitJson)), db: db);
+
+        var result = await service.LookupByBarcodeAsync("5010314000011", CancellationToken.None);
+
+        Assert.True(result.Success);
+        Assert.Null(result.Data!.Brand);
+    }
+
+    [Fact]
+    public async Task LookupByBarcodeAsync_WhenSeveralCatalogRowsShareBarcode_ReturnsTheOldest()
+    {
+        var db = CreateDbContext();
+        var baseTime = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+        SeedProduct(db, "5010314000011", name: "Newer Row", createdAt: baseTime.AddDays(1));
+        var oldest = SeedProduct(db, "5010314000011", name: "Older Row", createdAt: baseTime);
+        var service = CreateService(new FakeHttpHandler(_ => JsonOk(ExternalHitJson)), db: db);
+
+        var result = await service.LookupByBarcodeAsync("5010314000011", CancellationToken.None);
+
+        Assert.True(result.Success);
+        Assert.Equal(oldest.Id, result.Data!.ProductId);
+        Assert.Equal("Older Row", result.Data.Name);
+    }
+
+    [Fact]
+    public async Task LookupByBarcodeAsync_WhenCatalogProductSoftDeleted_FallsBackToExternalLookup()
+    {
+        var db = CreateDbContext();
+        SeedProduct(db, "5010314000011", name: "Deleted Row", isDeleted: true);
+        var calls = 0;
+        var handler = new FakeHttpHandler(_ =>
+        {
+            calls++;
+            return JsonOk(ExternalHitJson);
+        });
+        var service = CreateService(handler, db: db);
+
+        var result = await service.LookupByBarcodeAsync("5010314000011", CancellationToken.None);
+
+        Assert.True(result.Success);
+        Assert.Null(result.Data!.ProductId);
+        Assert.Equal("External Whisky", result.Data.Name);
+        Assert.Equal(1, calls);
+    }
+
+    [Fact]
+    public async Task LookupByBarcodeAsync_WhenBarcodeNotInCatalog_FallsBackToExternalLookup()
+    {
+        var db = CreateDbContext();
+        SeedProduct(db, "0000000000000", name: "Another Product");
+        var service = CreateService(new FakeHttpHandler(_ => JsonOk(ExternalHitJson)), db: db);
+
+        var result = await service.LookupByBarcodeAsync("5010314000011", CancellationToken.None);
+
+        Assert.True(result.Success);
+        Assert.Null(result.Data!.ProductId);
+        Assert.Equal("External Whisky", result.Data.Name);
+    }
+
+    [Fact]
+    public async Task LookupByBarcodeAsync_WhenBarcodePadded_TrimsBeforeCatalogLookup()
+    {
+        var db = CreateDbContext();
+        var product = SeedProduct(db, "5010314000011");
+        var calls = 0;
+        var handler = new FakeHttpHandler(_ =>
+        {
+            calls++;
+            return JsonOk(ExternalHitJson);
+        });
+        var service = CreateService(handler, db: db);
+
+        var result = await service.LookupByBarcodeAsync("  5010314000011  ", CancellationToken.None);
+
+        Assert.True(result.Success);
+        Assert.Equal(product.Id, result.Data!.ProductId);
+        Assert.Equal(0, calls);
+    }
+
+    #endregion
 }

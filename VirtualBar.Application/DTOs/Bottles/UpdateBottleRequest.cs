@@ -10,6 +10,11 @@ public sealed class UpdateBottleRequest
 
     public Guid? DistilleryId { get; set; }
 
+    /// <summary>
+    /// Catalog product link. Null unlinks the bottle; update never auto-links and never files a request.
+    /// </summary>
+    public Guid? ProductId { get; set; }
+
     public string? Region { get; set; }
 
     public string? Country { get; set; }

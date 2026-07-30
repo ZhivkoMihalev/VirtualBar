@@ -10,6 +10,12 @@ public sealed class AddBottleRequest
 
     public Guid? DistilleryId { get; set; }
 
+    /// <summary>
+    /// Optional catalog product picked from autocomplete. When null the add flow tries an exact
+    /// canonical-key auto-link and otherwise files a pending catalog request.
+    /// </summary>
+    public Guid? ProductId { get; set; }
+
     public string? Region { get; set; }
 
     public string? Country { get; set; }

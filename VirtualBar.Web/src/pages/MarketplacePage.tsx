@@ -179,7 +179,7 @@ function MarketplaceCard({ bottle, onView }: { bottle: Bottle; onView: () => voi
         <div className="mt-1.5 flex flex-wrap gap-3 text-xs text-muted-foreground">
           {bottle.age != null && <span>{bottle.age} yr</span>}
           {bottle.abvPercent != null && <span>{bottle.abvPercent}% ABV</span>}
-          {bottle.volumeMl != null && <span>{bottle.volumeMl} ml</span>}
+          {bottle.volumeMl != null && <span>{t('products.volumeSuffix', { volume: bottle.volumeMl })}</span>}
         </div>
 
         <div className="mt-auto pt-4">

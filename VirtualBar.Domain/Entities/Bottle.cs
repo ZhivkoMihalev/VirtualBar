@@ -16,6 +16,10 @@ public class Bottle : BaseEntity
 
     public Distillery? Distillery { get; set; }
 
+    public Guid? ProductId { get; set; }
+
+    public Product? Product { get; set; }
+
     public string? Region { get; set; }
 
     public string? Country { get; set; }

@@ -7,11 +7,21 @@ obj/
 appsettings.Development.json
 coverage-results/
 
+## Runtime output — never belongs in the repo
+# Serilog files: every line carries a remote IP and an authenticated user id.
+VirtualBar.Api/logs/
+# User-uploaded avatars and bottle photos.
+VirtualBar.Api/wwwroot/uploads/
+
 ## Node / React
 node_modules/
 dist/
 .env
 .env.local
+
+## Playwright generated output
+VirtualBar.Web/test-results/
+VirtualBar.Web/playwright-report/
 
 ## OS
 .DS_Store

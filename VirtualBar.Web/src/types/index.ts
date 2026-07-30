@@ -34,6 +34,7 @@ export interface Bottle {
   name: string
   distilleryId: string | null
   distilleryName: string | null
+  productId?: string | null
   region?: string
   country?: string
   category: SpiritCategory
@@ -203,6 +204,7 @@ export interface UpdatedProfile {
 export interface AddBottlePayload {
   name: string
   distilleryId?: string | null
+  productId?: string | null
   region?: string
   country?: string
   category: SpiritCategory
@@ -222,11 +224,110 @@ export interface MarketplaceFilters {
 }
 
 export interface BarcodeProduct {
+  productId?: string | null
   name: string
   brand?: string
   imageUrl?: string
   volumeMl?: number
   abvPercent?: number
+}
+
+/**
+ * Mirrors ProductDto one-for-one. The API always serialises every field and uses null for "unknown",
+ * so the properties are required-but-nullable rather than optional — optional would let a caller
+ * assemble a half-built object and still satisfy the type.
+ */
+export interface Product {
+  id: string
+  name: string
+  brand: string | null
+  distilleryId: string | null
+  distilleryName: string | null
+  category: SpiritCategory
+  country: string | null
+  region: string | null
+  age: number | null
+  abvPercent: number | null
+  volumeMl: number | null
+  barcode: string | null
+  imageUrl: string | null
+}
+
+/**
+ * What the add-bottle form knows about the catalog entry it is linking to. A catalog pick supplies a
+ * whole {@link Product}; a barcode hit only proves the id and an image, so the rest is genuinely
+ * absent instead of being faked from the form's own inputs.
+ */
+export interface LinkedProduct {
+  id: string
+  name: string
+  category: SpiritCategory
+  imageUrl: string | null
+  country?: string | null
+  region?: string | null
+}
+
+export type ProductRequestStatus = 'Pending' | 'Approved' | 'Rejected'
+
+export interface ProductRequest {
+  id: string
+  name: string
+  brand?: string | null
+  distilleryId?: string | null
+  distilleryName?: string | null
+  category: SpiritCategory
+  age?: number | null
+  abvPercent?: number | null
+  volumeMl?: number | null
+  barcode?: string | null
+  country?: string | null
+  region?: string | null
+  userNote?: string | null
+  status: ProductRequestStatus
+  adminNote?: string | null
+  requesterId: string
+  requesterDisplayName: string
+  resolvedProductId?: string | null
+  sourceBottleId?: string | null
+  createdAt: string
+  respondedAt?: string | null
+}
+
+export interface CreateProductRequestPayload {
+  name: string
+  brand?: string | null
+  distilleryId?: string | null
+  category: SpiritCategory
+  age?: number | null
+  abvPercent?: number | null
+  volumeMl?: number | null
+  barcode?: string | null
+  country?: string | null
+  region?: string | null
+  userNote?: string | null
+  sourceBottleId?: string | null
+}
+
+export interface ApproveProductRequestPayload {
+  existingProductId?: string | null
+  name?: string | null
+  brand?: string | null
+  distilleryId?: string | null
+  category?: SpiritCategory | null
+  age?: number | null
+  abvPercent?: number | null
+  volumeMl?: number | null
+  barcode?: string | null
+  country?: string | null
+  region?: string | null
+  imageUrl?: string | null
+  description?: string | null
+  adminNote?: string | null
+  useSourceBottleImage: boolean
+}
+
+export interface RejectProductRequestPayload {
+  adminNote?: string | null
 }
 
 export interface CreateNewsPostPayload {
@@ -276,7 +377,7 @@ export interface BadgeProgress {
   awardedAt: string | null
 }
 
-export type NotificationType = 'BottleLiked' | 'BottleCommented' | 'NewFollower' | 'NewMessage' | 'NewBottleFromFollowing' | 'BottleListedForSale' | 'WishListMatch' | 'OfferReceived' | 'OfferAccepted' | 'OfferDeclined' | 'BottleReviewed' | 'BadgeEarned'
+export type NotificationType = 'BottleLiked' | 'BottleCommented' | 'NewFollower' | 'NewMessage' | 'NewBottleFromFollowing' | 'BottleListedForSale' | 'WishListMatch' | 'OfferReceived' | 'OfferAccepted' | 'OfferDeclined' | 'BottleReviewed' | 'BadgeEarned' | 'ProductRequestApproved' | 'ProductRequestRejected'
 
 export interface NotificationItem {
   id: string

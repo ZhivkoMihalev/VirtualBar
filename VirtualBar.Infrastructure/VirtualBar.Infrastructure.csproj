@@ -35,4 +35,8 @@
     <EmbeddedResource Include="EmailTemplates\*.html" />
   </ItemGroup>
 
+  <ItemGroup>
+    <EmbeddedResource Include="Persistence\SeedData\products.*.seed.json" />
+  </ItemGroup>
+
 </Project>

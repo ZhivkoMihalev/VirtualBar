@@ -1,6 +1,8 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using VirtualBar.Application.Common;
 using VirtualBar.Application.DTOs.Bottles;
+using VirtualBar.Application.DTOs.ProductRequests;
 using VirtualBar.Application.Interfaces;
 using VirtualBar.Domain.Entities;
 using VirtualBar.Domain.Enums;
@@ -12,7 +14,9 @@ public sealed class BottleService(
     AppDbContext db,
     ICurrentUser currentUser,
     INotificationService notificationService,
-    IBadgeService badgeService) : IBottleService
+    IBadgeService badgeService,
+    IProductRequestService productRequestService,
+    ILogger<BottleService> logger) : IBottleService
 {
     public async Task<Result<List<BottleDto>>> GetBottlesByUserAsync(Guid userId, CancellationToken cancellationToken)
     {
@@ -80,6 +84,33 @@ public sealed class BottleService(
             IsLimited = request.IsLimited
         };
 
+        var catalogMiss = false;
+
+        if (request.ProductId is Guid productId)
+        {
+            bottle.ProductId = productId;
+        }
+        else
+        {
+            var distilleryName = request.DistilleryId is Guid distilleryId
+                ? await db.Distilleries
+                    .Where(d => d.Id == distilleryId && !d.IsDeleted)
+                    .Select(d => d.Name)
+                    .FirstOrDefaultAsync(cancellationToken)
+                : null;
+
+            var canonicalKey = ProductKey.For(distilleryName, request.Name, request.Category, request.Age, null, request.VolumeMl);
+
+            var match = await db.Products
+                .AsNoTracking()
+                .FirstOrDefaultAsync(p => p.CanonicalKey == canonicalKey && !p.IsDeleted, cancellationToken);
+
+            if (match is not null)
+                bottle.ProductId = match.Id;
+            else
+                catalogMiss = true;
+        }
+
         db.Bottles.Add(bottle);
         await db.SaveChangesAsync(cancellationToken);
 
@@ -92,6 +123,29 @@ public sealed class BottleService(
 
         await badgeService.EvaluateAsync(currentUser.UserId, BadgeTrigger.BottleAdded, cancellationToken);
 
+        if (catalogMiss)
+        {
+            try
+            {
+                await productRequestService.CreateAsync(new CreateProductRequestRequest
+                {
+                    Name = request.Name,
+                    DistilleryId = request.DistilleryId,
+                    Category = request.Category,
+                    Age = request.Age,
+                    AbvPercent = request.AbvPercent,
+                    VolumeMl = request.VolumeMl,
+                    Country = request.Country,
+                    Region = request.Region,
+                    SourceBottleId = bottle.Id,
+                }, cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Auto product request failed for bottle {BottleId}", bottle.Id);
+            }
+        }
+
         return Result<BottleDto>.Ok(MapToDto(bottle));
     }
 
@@ -102,6 +156,7 @@ public sealed class BottleService(
 
         bottle!.Name = request.Name;
         bottle.DistilleryId = request.DistilleryId;
+        bottle.ProductId = request.ProductId;
         bottle.Region = request.Region;
         bottle.Country = request.Country;
         bottle.Category = request.Category;
@@ -275,6 +330,7 @@ public sealed class BottleService(
         Name = bottle.Name,
         DistilleryId = bottle.DistilleryId,
         DistilleryName = bottle.Distillery is { IsDeleted: false } ? bottle.Distillery.Name : null,
+        ProductId = bottle.ProductId,
         Region = bottle.Region,
         Country = bottle.Country,
         Category = bottle.Category,

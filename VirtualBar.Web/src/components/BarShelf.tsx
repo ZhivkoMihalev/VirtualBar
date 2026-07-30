@@ -362,7 +362,7 @@ export function BottleCard({
 
   const facts = [
     col.label,
-    bottle.volumeMl ? `${bottle.volumeMl} ml` : null,
+    bottle.volumeMl ? t('products.volumeSuffix', { volume: bottle.volumeMl }) : null,
     t(`addBottle.condition${bottle.condition}`),
   ]
     .filter(Boolean)

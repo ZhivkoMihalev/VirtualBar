@@ -20,6 +20,7 @@ const PublicBarPage = lazy(() => import('./pages/PublicBarPage'))
 const MarketplacePage = lazy(() => import('./pages/MarketplacePage'))
 const OffersPage = lazy(() => import('./pages/OffersPage'))
 const ProfilePage = lazy(() => import('./pages/ProfilePage'))
+const ProductRequestsAdminPage = lazy(() => import('./pages/ProductRequestsAdminPage'))
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { staleTime: 30_000 } },
@@ -38,6 +39,16 @@ function ProtectedRoute({ children }: { children: ReactNode }) {
 
   if (isLoading) return <RouteFallback />
   if (!isAuthenticated) return <Navigate to="/login" replace />
+
+  return children
+}
+
+function AdminRoute({ children }: { children: ReactNode }) {
+  const { user, isAuthenticated, isLoading } = useAuth()
+
+  if (isLoading) return <RouteFallback />
+  if (!isAuthenticated) return <Navigate to="/login" replace />
+  if (!user?.isAdmin) return <Navigate to="/" replace />
 
   return children
 }
@@ -80,6 +91,14 @@ function AppRoutes() {
           <ProtectedRoute>
             <ProfilePage />
           </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/product-requests"
+        element={
+          <AdminRoute>
+            <ProductRequestsAdminPage />
+          </AdminRoute>
         }
       />
       <Route path="*" element={<Navigate to="/" replace />} />

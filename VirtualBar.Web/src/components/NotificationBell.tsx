@@ -77,6 +77,14 @@ function describe(item: NotificationItem, t: (key: string, opts?: Record<string,
         ? `${t('notifications.badgeEarned')} ${name}`
         : t('notifications.badgeEarned')
     }
+    case 'ProductRequestApproved':
+      return item.resourceName
+        ? t('notifications.productRequestApproved', { name: item.resourceName })
+        : t('notifications.productRequestApprovedNoName')
+    case 'ProductRequestRejected':
+      return item.resourceName
+        ? t('notifications.productRequestRejected', { name: item.resourceName })
+        : t('notifications.productRequestRejectedNoName')
   }
 }
 
@@ -98,6 +106,8 @@ function targetPath(item: NotificationItem): string | null {
     case 'OfferDeclined':
       return '/offers'
     case 'BadgeEarned':
+    case 'ProductRequestApproved':
+    case 'ProductRequestRejected':
       return '/profile'
   }
 }

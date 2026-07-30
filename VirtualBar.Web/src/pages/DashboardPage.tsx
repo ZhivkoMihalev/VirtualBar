@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { useForm, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { ImagePlus, Loader2, Check } from 'lucide-react'
+import { ImagePlus, Loader2, Check, X } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import NavBar from '../components/NavBar'
 import {
@@ -16,10 +16,11 @@ import {
   reorderBottles,
 } from '../api/bottlesApi'
 import { getCollectionValue } from '../api/pricesApi'
-import type { Bottle, SpiritCategory, AddBottlePayload } from '../types'
+import type { Bottle, SpiritCategory, AddBottlePayload, Product, LinkedProduct } from '../types'
 import { CATEGORY_COLORS, BottleSvg, VirtualBarScene } from '../components/BarShelf'
 import BottleDetailPanel from '../components/BottleDetailPanel'
 import DistillerySelect from '../components/DistillerySelect'
+import ProductSelect from '../components/ProductSelect'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -60,6 +61,9 @@ const makeSchema = (t: TFn) =>
 
 type Values = z.infer<ReturnType<typeof makeSchema>>
 
+const identityKey = (name: string, category: string, age: string, volume: string) =>
+  JSON.stringify([name.trim(), category, age.trim(), volume.trim()])
+
 function StatItem({ value, label }: { value: number; label: string }) {
   return (
     <div>
@@ -88,22 +92,77 @@ function AddBottlePanel({ onSuccess }: { onSuccess: () => void }) {
     },
   })
 
+  const name = useWatch({ control: form.control, name: 'name' })
   const category = useWatch({ control: form.control, name: 'category' })
   const condition = useWatch({ control: form.control, name: 'condition' })
+  const age = useWatch({ control: form.control, name: 'age' })
+  const volume = useWatch({ control: form.control, name: 'volume' })
 
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [imagePreview, setImagePreview] = useState<string | null>(null)
   const [barcodeImageUrl, setBarcodeImageUrl] = useState<string | null>(null)
+  const [productImageUrl, setProductImageUrl] = useState<string | null>(null)
+  const [linkedProduct, setLinkedProduct] = useState<LinkedProduct | null>(null)
+  const [linkedIdentity, setLinkedIdentity] = useState<string | null>(null)
+  const [linkSource, setLinkSource] = useState<'pick' | 'barcode' | null>(null)
   const [dropHover, setDropHover] = useState(false)
   const [barcode, setBarcode] = useState('')
   const [barcodeLoading, setBarcodeLoading] = useState(false)
   const [barcodeStatus, setBarcodeStatus] = useState<'idle' | 'found' | 'error'>('idle')
 
+  // A picked link survives only while the identity fields still match the picked product —
+  // editing name / category / age / volume drops it (derived, so programmatic edits count too).
+  // A barcode link is an exact match on the code itself: it has no identity snapshot to drift
+  // from (the lookup carries no category/age), so only the chip X, a new pick or a new lookup
+  // clears it.
+  const linkIsStale =
+    linkSource === 'pick' &&
+    linkedIdentity !== null &&
+    identityKey(name, category, age, volume) !== linkedIdentity
+  const activeProduct = linkIsStale ? null : linkedProduct
+  const activeProductImageUrl = activeProduct ? productImageUrl : null
+  const previewUrl =
+    !activeProduct && productImageUrl !== null && imagePreview === productImageUrl
+      ? null
+      : imagePreview
+
+  const clearProductLink = () => {
+    setLinkedProduct(null)
+    setLinkedIdentity(null)
+    setLinkSource(null)
+    setProductImageUrl(null)
+    if (productImageUrl && imagePreview === productImageUrl) setImagePreview(null)
+  }
+
   const handleImageChange = (file: File | null) => {
     if (!file) return
     setImageFile(file)
     setBarcodeImageUrl(null)
+    setProductImageUrl(null)
     setImagePreview(URL.createObjectURL(file))
+  }
+
+  const handleProductPick = (product: Product) => {
+    const pickedAge = product.age != null ? String(product.age) : ''
+    const pickedVolume = product.volumeMl != null ? String(product.volumeMl) : ''
+    const pickImageUrl = product.imageUrl ?? null
+
+    form.setValue('name', product.name)
+    form.setValue('category', product.category)
+    form.setValue('distilleryId', product.distilleryId ?? null)
+    form.setValue('age', pickedAge)
+    form.setValue('abv', product.abvPercent != null ? String(product.abvPercent) : '')
+    form.setValue('volume', pickedVolume)
+
+    setLinkedProduct(product)
+    setLinkedIdentity(identityKey(product.name, product.category, pickedAge, pickedVolume))
+    setLinkSource('pick')
+
+    // Every pick replaces the previous identification wholesale — no image of an earlier
+    // pick or barcode hit may survive. Only the collector's own upload outranks it.
+    setProductImageUrl(pickImageUrl)
+    setBarcodeImageUrl(null)
+    if (!imageFile) setImagePreview(pickImageUrl)
   }
 
   const handleBarcodeSearch = async () => {
@@ -113,14 +172,37 @@ function AddBottlePanel({ onSuccess }: { onSuccess: () => void }) {
     setBarcodeStatus('idle')
     try {
       const product = await lookupBarcode(code)
+      const lookupImageUrl = product.imageUrl ?? null
       if (product.name) form.setValue('name', product.name)
       if (product.volumeMl) form.setValue('volume', String(product.volumeMl))
       if (product.abvPercent) form.setValue('abv', String(product.abvPercent))
-      if (product.imageUrl) {
-        setImagePreview(product.imageUrl)
+
+      // Same rule as a catalog pick: the new lookup owns the image state end to end, so
+      // nothing from an earlier lookup or pick can linger.
+      setBarcodeImageUrl(lookupImageUrl)
+      setProductImageUrl(null)
+      if (lookupImageUrl) {
         setImageFile(null)
-        setBarcodeImageUrl(product.imageUrl)
+        setImagePreview(lookupImageUrl)
+      } else if (!imageFile) {
+        setImagePreview(null)
       }
+
+      const values = form.getValues()
+      // A barcode hit proves the product id, nothing more — the name and category here are the
+      // form's own values, not the catalog's, so this is a LinkedProduct rather than a Product.
+      setLinkedProduct(
+        product.productId
+          ? {
+              id: product.productId,
+              name: values.name,
+              category: values.category,
+              imageUrl: lookupImageUrl,
+            }
+          : null,
+      )
+      setLinkedIdentity(null)
+      setLinkSource(product.productId ? 'barcode' : null)
       setBarcodeStatus('found')
     } catch {
       setBarcodeStatus('error')
@@ -136,6 +218,8 @@ function AddBottlePanel({ onSuccess }: { onSuccess: () => void }) {
         await uploadBottleImage(bottle.id, imageFile)
       } else if (barcodeImageUrl) {
         await linkBottleImage(bottle.id, barcodeImageUrl)
+      } else if (activeProductImageUrl) {
+        await linkBottleImage(bottle.id, activeProductImageUrl)
       }
       return bottle
     },
@@ -147,6 +231,9 @@ function AddBottlePanel({ onSuccess }: { onSuccess: () => void }) {
     const payload: AddBottlePayload = {
       name: v.name.trim(),
       distilleryId: v.distilleryId,
+      productId: activeProduct?.id ?? null,
+      country: activeProduct?.country ?? undefined,
+      region: activeProduct?.region ?? undefined,
       category: v.category,
       condition: v.condition,
       isLimited: v.isLimited,
@@ -176,9 +263,9 @@ function AddBottlePanel({ onSuccess }: { onSuccess: () => void }) {
             dropHover ? 'border-primary/70 bg-primary/5' : 'border-primary/25 bg-primary/[0.02]',
           )}
         >
-          {imagePreview ? (
+          {previewUrl ? (
             <>
-              <img src={imagePreview} alt="preview" className="size-full object-cover" />
+              <img src={previewUrl} alt="preview" className="size-full object-cover" />
               <div className="absolute inset-0 flex items-center justify-center bg-black/45 opacity-0 transition-opacity group-hover:opacity-100">
                 <span className="text-xs font-medium uppercase tracking-wide text-primary">
                   {t('addBottle.changePhoto')}
@@ -209,6 +296,29 @@ function AddBottlePanel({ onSuccess }: { onSuccess: () => void }) {
             <BottleSvg category={category} condition={condition} />
           </div>
         </div>
+      </div>
+
+      <div className="space-y-2">
+        {/* ProductSelect renders its own label — it owns the trigger id that htmlFor needs. */}
+        <ProductSelect onSelect={handleProductPick} category={category} />
+        {activeProduct && (
+          <div className="flex items-center gap-2 rounded-md border border-primary/50 bg-primary/5 px-3 py-2 text-sm text-primary">
+            <span className="min-w-0 flex-1 truncate">
+              <span className="text-xs uppercase tracking-wide opacity-80">
+                {t('products.linkedChip')}
+              </span>{' '}
+              {activeProduct.name}
+            </span>
+            <button
+              type="button"
+              aria-label={t('products.unlink')}
+              onClick={clearProductLink}
+              className="shrink-0 rounded-sm text-primary/70 transition-colors hover:text-primary"
+            >
+              <X className="size-3.5" />
+            </button>
+          </div>
+        )}
       </div>
 
       <div className="space-y-2">
@@ -618,6 +728,8 @@ export default function DashboardPage() {
           <AddBottlePanel
             onSuccess={() => {
               queryClient.invalidateQueries({ queryKey: ['bottles', user?.id] })
+              // An unmatched bottle files a catalog request server-side — refresh "My requests".
+              queryClient.invalidateQueries({ queryKey: ['productRequests', 'mine'] })
               setAddOpen(false)
             }}
           />

@@ -2,15 +2,18 @@ using System.Globalization;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using VirtualBar.Application.Common;
 using VirtualBar.Application.DTOs.Products;
 using VirtualBar.Application.Interfaces;
 using VirtualBar.Infrastructure.Options;
+using VirtualBar.Infrastructure.Persistence;
 
 namespace VirtualBar.Infrastructure.Services;
 
 public sealed class ProductLookupService(
+    AppDbContext db,
     HttpClient http,
     IWebHostEnvironment env,
     IOptions<ProductLookupOptions> options) : IProductLookupService
@@ -19,6 +22,25 @@ public sealed class ProductLookupService(
 
     public async Task<Result<BarcodeProductDto>> LookupByBarcodeAsync(string barcode, CancellationToken cancellationToken)
     {
+        var product = await db.Products
+            .AsNoTracking()
+            .Where(p => !p.IsDeleted && p.Barcode == barcode)
+            .OrderBy(p => p.CreatedAt)
+            .ThenBy(p => p.Id)
+            .Select(p => new BarcodeProductDto
+            {
+                ProductId = p.Id,
+                Name = p.Name,
+                Brand = p.Brand ?? (p.Distillery != null && !p.Distillery.IsDeleted ? p.Distillery.Name : null),
+                ImageUrl = p.ImageUrl,
+                VolumeMl = p.VolumeMl,
+                AbvPercent = p.AbvPercent,
+            })
+            .FirstOrDefaultAsync(cancellationToken);
+
+        if (product is not null)
+            return Result<BarcodeProductDto>.Ok(product);
+
         var url = $"{options.Value.LookupUrl}?upc={Uri.EscapeDataString(barcode)}";
         var response = await http.GetAsync(url, cancellationToken);
 

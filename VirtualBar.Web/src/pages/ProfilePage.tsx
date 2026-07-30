@@ -3,20 +3,148 @@ import type { FormEvent } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
-import { ImagePlus } from 'lucide-react'
+import { ImagePlus, X } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import NavBar from '../components/NavBar'
 import Avatar from '../components/Avatar'
 import BadgeChip from '../components/BadgeChip'
 import { updateProfile, uploadAvatar } from '../api/usersApi'
 import { getMyProgress } from '../api/badgesApi'
-import type { UpdatedProfile } from '../types'
+import { getMyProductRequests, withdrawProductRequest } from '../api/productRequestsApi'
+import type { ProductRequest, ProductRequestStatus, UpdatedProfile } from '../types'
+import { CATEGORY_COLORS } from '../components/BarShelf'
 import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
 import { Skeleton } from '@/components/ui/skeleton'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog'
+
+const REQUEST_STATUS_VARIANTS: Record<ProductRequestStatus, 'warning' | 'success' | 'destructive'> = {
+  Pending: 'warning',
+  Approved: 'success',
+  Rejected: 'destructive',
+}
+
+function MyRequestRow({ request }: { request: ProductRequest }) {
+  const { t } = useTranslation()
+  const queryClient = useQueryClient()
+
+  const withdrawMutation = useMutation({
+    mutationFn: () => withdrawProductRequest(request.id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['productRequests'] })
+      toast.success(t('productRequests.withdrawSuccess'))
+    },
+    onError: () => toast.error(t('productRequests.error')),
+  })
+
+  const meta = [
+    CATEGORY_COLORS[request.category]?.label ?? request.category,
+    request.distilleryName ?? request.brand ?? null,
+    request.age != null ? t('products.ageSuffix', { age: request.age }) : null,
+    request.volumeMl != null ? t('products.volumeSuffix', { volume: request.volumeMl }) : null,
+  ]
+    .filter(Boolean)
+    .join(' · ')
+
+  return (
+    <li className="flex items-start justify-between gap-3 border-b border-border py-3 last:border-b-0">
+      <div className="min-w-0 flex-1">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="truncate text-sm font-medium text-foreground">{request.name}</span>
+          <Badge variant={REQUEST_STATUS_VARIANTS[request.status]}>
+            {t(`productRequests.status.${request.status}`)}
+          </Badge>
+        </div>
+        <div className="mt-1 text-xs uppercase tracking-wide text-muted-foreground">{meta}</div>
+        {request.status === 'Rejected' && request.adminNote && (
+          <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground">
+            {t('productRequests.adminNote')}: {request.adminNote}
+          </p>
+        )}
+      </div>
+
+      {request.status === 'Pending' && (
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              aria-label={t('productRequests.withdraw')}
+              disabled={withdrawMutation.isPending}
+            >
+              <X className="size-3.5" />
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>{t('productRequests.withdraw')}</AlertDialogTitle>
+              <AlertDialogDescription>{t('productRequests.withdrawConfirm')}</AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={withdrawMutation.isPending}>
+                {t('productRequests.cancel')}
+              </AlertDialogCancel>
+              <AlertDialogAction
+                variant="destructive"
+                className="bg-destructive text-white hover:bg-destructive/90 dark:bg-destructive dark:hover:bg-destructive/90"
+                disabled={withdrawMutation.isPending}
+                onClick={e => {
+                  e.preventDefault()
+                  withdrawMutation.mutate()
+                }}
+              >
+                {t('productRequests.withdraw')}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      )}
+    </li>
+  )
+}
+
+function MyProductRequests() {
+  const { t } = useTranslation()
+
+  const { data: requests } = useQuery({
+    queryKey: ['productRequests', 'mine'],
+    queryFn: getMyProductRequests,
+  })
+
+  if (!requests || requests.length === 0) return null
+
+  return (
+    <>
+      <Separator className="my-8" />
+
+      <section>
+        <h2 className="font-heading text-2xl font-semibold text-primary sm:text-3xl">
+          {t('productRequests.mineTitle')}
+        </h2>
+
+        <ul className="mt-4">
+          {requests.map(request => (
+            <MyRequestRow key={request.id} request={request} />
+          ))}
+        </ul>
+      </section>
+    </>
+  )
+}
 
 export default function ProfilePage() {
   const { t } = useTranslation()
@@ -210,6 +338,8 @@ export default function ProfilePage() {
             </section>
           </>
         )}
+
+        <MyProductRequests />
       </main>
     </div>
   )

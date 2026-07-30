@@ -304,6 +304,9 @@ namespace VirtualBar.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<Guid?>("ProductId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<string>("Region")
                         .HasColumnType("nvarchar(max)");
 
@@ -322,6 +325,8 @@ namespace VirtualBar.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("DistilleryId");
+
+                    b.HasIndex("ProductId");
 
                     b.HasIndex("UserId", "IsDeleted");
 
@@ -804,6 +809,176 @@ namespace VirtualBar.Infrastructure.Migrations
                     b.ToTable("PriceSnapshots");
                 });
 
+            modelBuilder.Entity("VirtualBar.Domain.Entities.Product", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<double?>("AbvPercent")
+                        .HasColumnType("float");
+
+                    b.Property<int?>("Age")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Barcode")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("Brand")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("CanonicalKey")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<int>("Category")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Country")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid?>("DistilleryId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ImageUrl")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<int>("Origin")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Region")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("VolumeMl")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Barcode");
+
+                    b.HasIndex("CanonicalKey")
+                        .IsUnique()
+                        .HasFilter("[IsDeleted] = 0");
+
+                    b.HasIndex("DistilleryId");
+
+                    b.HasIndex("Category", "Name");
+
+                    b.ToTable("Products");
+                });
+
+            modelBuilder.Entity("VirtualBar.Domain.Entities.ProductRequest", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<double?>("AbvPercent")
+                        .HasColumnType("float");
+
+                    b.Property<string>("AdminNote")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("Age")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Barcode")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Brand")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("CanonicalKey")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<int>("Category")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Country")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("DistilleryId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Region")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid?>("ResolvedProductId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("RespondedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("SourceBottleId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("UserNote")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("VolumeMl")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CanonicalKey")
+                        .IsUnique()
+                        .HasFilter("[Status] = 0 AND [IsDeleted] = 0");
+
+                    b.HasIndex("DistilleryId");
+
+                    b.HasIndex("ResolvedProductId");
+
+                    b.HasIndex("SourceBottleId");
+
+                    b.HasIndex("UserId", "IsDeleted");
+
+                    b.HasIndex("Status", "IsDeleted", "CreatedAt");
+
+                    b.ToTable("ProductRequests");
+                });
+
             modelBuilder.Entity("VirtualBar.Domain.Entities.UserBadge", b =>
                 {
                     b.Property<Guid>("UserId")
@@ -940,6 +1115,11 @@ namespace VirtualBar.Infrastructure.Migrations
                         .HasForeignKey("DistilleryId")
                         .OnDelete(DeleteBehavior.Restrict);
 
+                    b.HasOne("VirtualBar.Domain.Entities.Product", "Product")
+                        .WithMany("Bottles")
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("VirtualBar.Domain.Entities.AppUser", "User")
                         .WithMany("Bottles")
                         .HasForeignKey("UserId")
@@ -947,6 +1127,8 @@ namespace VirtualBar.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("Distillery");
+
+                    b.Navigation("Product");
 
                     b.Navigation("User");
                 });
@@ -1128,6 +1310,46 @@ namespace VirtualBar.Infrastructure.Migrations
                     b.Navigation("Seller");
                 });
 
+            modelBuilder.Entity("VirtualBar.Domain.Entities.Product", b =>
+                {
+                    b.HasOne("VirtualBar.Domain.Entities.Distillery", "Distillery")
+                        .WithMany()
+                        .HasForeignKey("DistilleryId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("Distillery");
+                });
+
+            modelBuilder.Entity("VirtualBar.Domain.Entities.ProductRequest", b =>
+                {
+                    b.HasOne("VirtualBar.Domain.Entities.Distillery", "Distillery")
+                        .WithMany()
+                        .HasForeignKey("DistilleryId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("VirtualBar.Domain.Entities.Product", "ResolvedProduct")
+                        .WithMany()
+                        .HasForeignKey("ResolvedProductId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("VirtualBar.Domain.Entities.Bottle", null)
+                        .WithMany()
+                        .HasForeignKey("SourceBottleId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("VirtualBar.Domain.Entities.AppUser", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Distillery");
+
+                    b.Navigation("ResolvedProduct");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("VirtualBar.Domain.Entities.UserBadge", b =>
                 {
                     b.HasOne("VirtualBar.Domain.Entities.AppUser", "User")
@@ -1221,6 +1443,11 @@ namespace VirtualBar.Infrastructure.Migrations
             modelBuilder.Entity("VirtualBar.Domain.Entities.NewsPost", b =>
                 {
                     b.Navigation("Translations");
+                });
+
+            modelBuilder.Entity("VirtualBar.Domain.Entities.Product", b =>
+                {
+                    b.Navigation("Bottles");
                 });
 #pragma warning restore 612, 618
         }

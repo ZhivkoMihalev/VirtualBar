@@ -25,6 +25,8 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
     public DbSet<BottleReview> BottleReviews => Set<BottleReview>();
     public DbSet<BottleReviewFlavor> BottleReviewFlavors => Set<BottleReviewFlavor>();
     public DbSet<UserBadge> UserBadges => Set<UserBadge>();
+    public DbSet<Product> Products => Set<Product>();
+    public DbSet<ProductRequest> ProductRequests => Set<ProductRequest>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -226,6 +228,33 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
             e.HasOne(b => b.User)
                 .WithMany(u => u.Badges)
                 .HasForeignKey(b => b.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        builder.Entity<Product>(e =>
+        {
+            e.HasIndex(p => p.CanonicalKey)
+                .IsUnique()
+                .HasFilter("[IsDeleted] = 0");
+
+            e.HasIndex(p => p.Barcode);
+
+            e.HasIndex(p => new { p.Category, p.Name });
+        });
+
+        builder.Entity<ProductRequest>(e =>
+        {
+            e.HasIndex(r => r.CanonicalKey)
+                .IsUnique()
+                .HasFilter("[Status] = 0 AND [IsDeleted] = 0");
+
+            e.HasIndex(r => new { r.UserId, r.IsDeleted });
+
+            e.HasIndex(r => new { r.Status, r.IsDeleted, r.CreatedAt });
+
+            e.HasOne<Bottle>()
+                .WithMany()
+                .HasForeignKey(r => r.SourceBottleId)
                 .OnDelete(DeleteBehavior.Restrict);
         });
     }

@@ -81,7 +81,19 @@ public static class DependencyInjection
 
         services.AddHttpClient<ProductLookupService>();
         services.AddScoped<IProductLookupService>(sp =>
-            new ProductValidationDecorator(sp.GetRequiredService<ProductLookupService>()));
+            new ProductValidationDecorator(
+                sp.GetRequiredService<ProductLookupService>(),
+                sp.GetRequiredService<ILogger<ProductValidationDecorator>>()));
+
+        services.AddScoped<ProductCatalogService>();
+        services.AddScoped<IProductCatalogService>(sp => new ProductCatalogValidationDecorator(
+            sp.GetRequiredService<ProductCatalogService>()));
+
+        services.AddScoped<ProductRequestService>();
+        services.AddScoped<IProductRequestService>(sp => new ProductRequestValidationDecorator(
+            sp.GetRequiredService<ProductRequestService>(),
+            sp.GetRequiredService<AppDbContext>(),
+            sp.GetRequiredService<ICurrentUser>()));
 
         services.AddScoped<UserProfileService>();
         services.AddScoped<IUserProfileService>(sp => new UserProfileValidationDecorator(

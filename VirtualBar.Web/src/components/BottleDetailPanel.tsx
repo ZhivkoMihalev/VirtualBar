@@ -1051,7 +1051,7 @@ export default function BottleDetailPanel({
             <div className="mb-5 grid grid-cols-[repeat(auto-fit,minmax(90px,1fr))] gap-x-6 gap-y-4 rounded-md border border-primary/10 bg-primary/[0.04] p-5">
               {bottle.age != null && <DetailRow label={t('bottle.age')} value={`${bottle.age} yr`} />}
               {bottle.abvPercent != null && <DetailRow label={t('bottle.abv')} value={`${bottle.abvPercent}%`} />}
-              {bottle.volumeMl != null && <DetailRow label={t('bottle.volume')} value={`${bottle.volumeMl} ml`} />}
+              {bottle.volumeMl != null && <DetailRow label={t('bottle.volume')} value={t('products.volumeSuffix', { volume: bottle.volumeMl })} />}
               {bottle.vintageYear != null && <DetailRow label={t('bottle.vintage')} value={bottle.vintageYear} />}
             </div>
           )}

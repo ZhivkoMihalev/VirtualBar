@@ -1,7 +1,9 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Moq;
 using VirtualBar.Application.Common;
 using VirtualBar.Application.DTOs.Bottles;
+using VirtualBar.Application.DTOs.ProductRequests;
 using VirtualBar.Application.Interfaces;
 using VirtualBar.Domain.Entities;
 using VirtualBar.Domain.Enums;
@@ -29,10 +31,22 @@ public sealed class BottleServiceTests
         return mock.Object;
     }
 
-    private static IBottleService CreateBottleService(AppDbContext db, Guid currentUserId, INotificationService? notificationService = null, IBadgeService? badgeService = null)
+    private static IBottleService CreateBottleService(
+        AppDbContext db,
+        Guid currentUserId,
+        INotificationService? notificationService = null,
+        IBadgeService? badgeService = null,
+        IProductRequestService? productRequestService = null,
+        ILogger<BottleService>? logger = null)
     {
         var currentUser = CreateCurrentUser(currentUserId);
-        var inner = new BottleService(db, currentUser, notificationService ?? Mock.Of<INotificationService>(), badgeService ?? Mock.Of<IBadgeService>());
+        var inner = new BottleService(
+            db,
+            currentUser,
+            notificationService ?? Mock.Of<INotificationService>(),
+            badgeService ?? Mock.Of<IBadgeService>(),
+            productRequestService ?? Mock.Of<IProductRequestService>(),
+            logger ?? Mock.Of<ILogger<BottleService>>());
         return new BottleValidationDecorator(inner, db, currentUser);
     }
 
@@ -61,13 +75,15 @@ public sealed class BottleServiceTests
         Guid? distilleryId = null,
         int displayOrder = 0,
         DateTime? createdAt = null,
-        SpiritCategory category = SpiritCategory.Whisky)
+        SpiritCategory category = SpiritCategory.Whisky,
+        Guid? productId = null)
     {
         var bottle = new Bottle
         {
             UserId = userId,
             Name = name,
             DistilleryId = distilleryId,
+            ProductId = productId,
             Category = category,
             Condition = BottleCondition.Sealed,
             IsForSale = isForSale,
@@ -90,6 +106,32 @@ public sealed class BottleServiceTests
         db.Distilleries.Add(distillery);
         db.SaveChanges();
         return distillery;
+    }
+
+    private static Product SeedProduct(
+        AppDbContext db,
+        string name = "Sherry Oak 12",
+        SpiritCategory category = SpiritCategory.Whisky,
+        string? producerName = null,
+        int? age = null,
+        int? volumeMl = null,
+        bool isDeleted = false)
+    {
+        var product = new Product
+        {
+            Name = name,
+            Brand = producerName,
+            Category = category,
+            Age = age,
+            VolumeMl = volumeMl,
+            CanonicalKey = ProductKey.For(producerName, name, category, age, null, volumeMl),
+            Origin = ProductOrigin.Seeded,
+            IsDeleted = isDeleted,
+            DeletedAt = isDeleted ? DateTime.UtcNow : null
+        };
+        db.Products.Add(product);
+        db.SaveChanges();
+        return product;
     }
 
     private static BottleReview SeedReview(
@@ -425,6 +467,22 @@ public sealed class BottleServiceTests
 
         Assert.False(result.Success);
         Assert.Equal("Distillery not found.", result.Error);
+    }
+
+    [Fact]
+    public async Task UpdateBottleAsync_WhenDistilleryIdValid_LinksDistillery()
+    {
+        var db = CreateDbContext();
+        var user = SeedUser(db);
+        var bottle = SeedBottle(db, user.Id, "Old Name");
+        var distillery = SeedDistillery(db, "Macallan");
+        var service = CreateBottleService(db, user.Id);
+        var request = new UpdateBottleRequest { Name = "New Name", DistilleryId = distillery.Id };
+
+        var result = await service.UpdateBottleAsync(bottle.Id, request, CancellationToken.None);
+
+        Assert.True(result.Success);
+        Assert.Equal(distillery.Id, result.Data!.DistilleryId);
     }
 
     [Fact]
@@ -1428,6 +1486,320 @@ public sealed class BottleServiceTests
 
         Assert.True(result.Success);
         badgeMock.Verify(b => b.EvaluateAsync(user.Id, BadgeTrigger.BottleListed, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    #endregion
+
+    #region Catalog linking
+
+    [Fact]
+    public async Task AddBottleAsync_WhenProductIdNotFound_ReturnsFail()
+    {
+        var db = CreateDbContext();
+        var user = SeedUser(db);
+        var service = CreateBottleService(db, user.Id);
+        var request = new AddBottleRequest { Name = "Sherry Oak 12", ProductId = Guid.NewGuid() };
+
+        var result = await service.AddBottleAsync(request, CancellationToken.None);
+
+        Assert.False(result.Success);
+        Assert.Equal("Selected product does not exist.", result.Error);
+    }
+
+    [Fact]
+    public async Task AddBottleAsync_WhenProductSoftDeleted_ReturnsFail()
+    {
+        var db = CreateDbContext();
+        var user = SeedUser(db);
+        var product = SeedProduct(db, isDeleted: true);
+        var service = CreateBottleService(db, user.Id);
+        var request = new AddBottleRequest { Name = "Sherry Oak 12", ProductId = product.Id };
+
+        var result = await service.AddBottleAsync(request, CancellationToken.None);
+
+        Assert.False(result.Success);
+        Assert.Equal("Selected product does not exist.", result.Error);
+    }
+
+    [Fact]
+    public async Task AddBottleAsync_WhenProductIdValid_LinksProductAndFilesNoRequest()
+    {
+        var db = CreateDbContext();
+        var user = SeedUser(db);
+        var product = SeedProduct(db, name: "Sherry Oak 12", age: 12, volumeMl: 700);
+        var requestServiceMock = new Mock<IProductRequestService>();
+        var service = CreateBottleService(db, user.Id, productRequestService: requestServiceMock.Object);
+        var request = new AddBottleRequest
+        {
+            Name = "Something Completely Different",
+            Category = SpiritCategory.Whisky,
+            ProductId = product.Id
+        };
+
+        var result = await service.AddBottleAsync(request, CancellationToken.None);
+
+        Assert.True(result.Success);
+        Assert.Equal(product.Id, result.Data!.ProductId);
+        requestServiceMock.Verify(s => s.CreateAsync(
+            It.IsAny<CreateProductRequestRequest>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task AddBottleAsync_WhenCanonicalKeyMatchesCatalog_AutoLinksAndFilesNoRequest()
+    {
+        var db = CreateDbContext();
+        var user = SeedUser(db);
+        var product = SeedProduct(db, name: "Sherry Oak 12", age: 12, volumeMl: 700);
+        var requestServiceMock = new Mock<IProductRequestService>();
+        var service = CreateBottleService(db, user.Id, productRequestService: requestServiceMock.Object);
+        var request = new AddBottleRequest
+        {
+            Name = "The Sherry Oak 12",
+            Category = SpiritCategory.Whisky,
+            Age = 12,
+            VolumeMl = 700
+        };
+
+        var result = await service.AddBottleAsync(request, CancellationToken.None);
+
+        Assert.True(result.Success);
+        Assert.Equal(product.Id, result.Data!.ProductId);
+        requestServiceMock.Verify(s => s.CreateAsync(
+            It.IsAny<CreateProductRequestRequest>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task AddBottleAsync_WhenDistilleryLinkedAndKeyMatches_AutoLinksProduct()
+    {
+        var db = CreateDbContext();
+        var user = SeedUser(db);
+        var distillery = SeedDistillery(db, "Macallan");
+        var product = SeedProduct(db, name: "Sherry Oak 12", producerName: "Macallan", age: 12, volumeMl: 700);
+        var service = CreateBottleService(db, user.Id);
+        var request = new AddBottleRequest
+        {
+            Name = "Sherry Oak 12",
+            DistilleryId = distillery.Id,
+            Category = SpiritCategory.Whisky,
+            Age = 12,
+            VolumeMl = 700
+        };
+
+        var result = await service.AddBottleAsync(request, CancellationToken.None);
+
+        Assert.True(result.Success);
+        Assert.Equal(product.Id, result.Data!.ProductId);
+    }
+
+    [Fact]
+    public async Task AddBottleAsync_WhenCatalogProductSoftDeleted_DoesNotAutoLink()
+    {
+        var db = CreateDbContext();
+        var user = SeedUser(db);
+        SeedProduct(db, name: "Sherry Oak 12", age: 12, volumeMl: 700, isDeleted: true);
+        var service = CreateBottleService(db, user.Id);
+        var request = new AddBottleRequest
+        {
+            Name = "Sherry Oak 12",
+            Category = SpiritCategory.Whisky,
+            Age = 12,
+            VolumeMl = 700
+        };
+
+        var result = await service.AddBottleAsync(request, CancellationToken.None);
+
+        Assert.True(result.Success);
+        Assert.Null(result.Data!.ProductId);
+    }
+
+    [Fact]
+    public async Task AddBottleAsync_WhenNoCatalogMatch_FilesRequestForTheNewBottle()
+    {
+        var db = CreateDbContext();
+        var user = SeedUser(db);
+        var distillery = SeedDistillery(db, "Macallan");
+        CreateProductRequestRequest? captured = null;
+        var requestServiceMock = new Mock<IProductRequestService>();
+        requestServiceMock
+            .Setup(s => s.CreateAsync(It.IsAny<CreateProductRequestRequest>(), It.IsAny<CancellationToken>()))
+            .Callback<CreateProductRequestRequest, CancellationToken>((r, _) => captured = r)
+            .ReturnsAsync(Result<ProductRequestDto>.Ok(new ProductRequestDto()));
+        var service = CreateBottleService(db, user.Id, productRequestService: requestServiceMock.Object);
+        var request = new AddBottleRequest
+        {
+            Name = "Unknown Single Cask",
+            DistilleryId = distillery.Id,
+            Category = SpiritCategory.Whisky,
+            Age = 15,
+            AbvPercent = 57.2,
+            VolumeMl = 700,
+            Country = "Scotland",
+            Region = "Speyside"
+        };
+
+        var result = await service.AddBottleAsync(request, CancellationToken.None);
+
+        Assert.True(result.Success);
+        Assert.Null(result.Data!.ProductId);
+        requestServiceMock.Verify(s => s.CreateAsync(
+            It.IsAny<CreateProductRequestRequest>(), It.IsAny<CancellationToken>()), Times.Once);
+        Assert.NotNull(captured);
+        Assert.Equal(result.Data.Id, captured!.SourceBottleId);
+        Assert.Equal("Unknown Single Cask", captured.Name);
+        Assert.Equal(distillery.Id, captured.DistilleryId);
+        Assert.Equal(SpiritCategory.Whisky, captured.Category);
+        Assert.Equal(15, captured.Age);
+        Assert.Equal(57.2, captured.AbvPercent);
+        Assert.Equal(700, captured.VolumeMl);
+        Assert.Equal("Scotland", captured.Country);
+        Assert.Equal("Speyside", captured.Region);
+    }
+
+    [Fact]
+    public async Task AddBottleAsync_WhenProductRequestFails_StillReturnsSuccess()
+    {
+        var db = CreateDbContext();
+        var user = SeedUser(db);
+        var requestServiceMock = new Mock<IProductRequestService>();
+        requestServiceMock
+            .Setup(s => s.CreateAsync(It.IsAny<CreateProductRequestRequest>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result<ProductRequestDto>.Conflict("This product has already been requested."));
+        var service = CreateBottleService(db, user.Id, productRequestService: requestServiceMock.Object);
+
+        var result = await service.AddBottleAsync(
+            new AddBottleRequest { Name = "Unknown Single Cask", Category = SpiritCategory.Whisky },
+            CancellationToken.None);
+
+        Assert.True(result.Success);
+        Assert.Null(result.Data!.ProductId);
+        Assert.Equal(1, await db.Bottles.CountAsync());
+    }
+
+    [Fact]
+    public async Task AddBottleAsync_WhenProductRequestThrows_StillReturnsSuccess()
+    {
+        var db = CreateDbContext();
+        var user = SeedUser(db);
+        var requestServiceMock = new Mock<IProductRequestService>();
+        requestServiceMock
+            .Setup(s => s.CreateAsync(It.IsAny<CreateProductRequestRequest>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new InvalidOperationException("boom"));
+        var loggerMock = new Mock<ILogger<BottleService>>();
+        var service = CreateBottleService(
+            db, user.Id, productRequestService: requestServiceMock.Object, logger: loggerMock.Object);
+
+        var result = await service.AddBottleAsync(
+            new AddBottleRequest { Name = "Unknown Single Cask", Category = SpiritCategory.Whisky },
+            CancellationToken.None);
+
+        Assert.True(result.Success);
+        Assert.Equal(1, await db.Bottles.CountAsync());
+        loggerMock.Verify(
+            l => l.Log(
+                LogLevel.Error,
+                It.IsAny<EventId>(),
+                It.IsAny<It.IsAnyType>(),
+                It.IsAny<InvalidOperationException>(),
+                It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task UpdateBottleAsync_WhenProductIdNotFound_ReturnsFail()
+    {
+        var db = CreateDbContext();
+        var user = SeedUser(db);
+        var bottle = SeedBottle(db, user.Id);
+        var service = CreateBottleService(db, user.Id);
+        var request = new UpdateBottleRequest { Name = "New Name", ProductId = Guid.NewGuid() };
+
+        var result = await service.UpdateBottleAsync(bottle.Id, request, CancellationToken.None);
+
+        Assert.False(result.Success);
+        Assert.Equal("Selected product does not exist.", result.Error);
+    }
+
+    [Fact]
+    public async Task UpdateBottleAsync_WhenProductIdValid_LinksProduct()
+    {
+        var db = CreateDbContext();
+        var user = SeedUser(db);
+        var bottle = SeedBottle(db, user.Id);
+        var product = SeedProduct(db);
+        var requestServiceMock = new Mock<IProductRequestService>();
+        var service = CreateBottleService(db, user.Id, productRequestService: requestServiceMock.Object);
+        var request = new UpdateBottleRequest { Name = "New Name", ProductId = product.Id };
+
+        var result = await service.UpdateBottleAsync(bottle.Id, request, CancellationToken.None);
+
+        Assert.True(result.Success);
+        Assert.Equal(product.Id, result.Data!.ProductId);
+        requestServiceMock.Verify(s => s.CreateAsync(
+            It.IsAny<CreateProductRequestRequest>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task UpdateBottleAsync_WhenProductIdNull_UnlinksProduct()
+    {
+        var db = CreateDbContext();
+        var user = SeedUser(db);
+        var product = SeedProduct(db);
+        var bottle = SeedBottle(db, user.Id, productId: product.Id);
+        var service = CreateBottleService(db, user.Id);
+        var request = new UpdateBottleRequest { Name = "New Name", ProductId = null };
+
+        var result = await service.UpdateBottleAsync(bottle.Id, request, CancellationToken.None);
+
+        Assert.True(result.Success);
+        Assert.Null(result.Data!.ProductId);
+
+        var stored = await db.Bottles.AsNoTracking().SingleAsync(b => b.Id == bottle.Id);
+        Assert.Null(stored.ProductId);
+    }
+
+    [Fact]
+    public async Task GetBottlesByUserAsync_WhenBottleLinked_MapsProductId()
+    {
+        var db = CreateDbContext();
+        var user = SeedUser(db);
+        var product = SeedProduct(db);
+        SeedBottle(db, user.Id, productId: product.Id);
+        var service = CreateBottleService(db, user.Id);
+
+        var result = await service.GetBottlesByUserAsync(user.Id, CancellationToken.None);
+
+        Assert.True(result.Success);
+        Assert.Equal(product.Id, Assert.Single(result.Data!).ProductId);
+    }
+
+    [Fact]
+    public async Task GetBottleByIdAsync_WhenBottleLinked_MapsProductId()
+    {
+        var db = CreateDbContext();
+        var user = SeedUser(db);
+        var product = SeedProduct(db);
+        var bottle = SeedBottle(db, user.Id, productId: product.Id);
+        var service = CreateBottleService(db, user.Id);
+
+        var result = await service.GetBottleByIdAsync(bottle.Id, CancellationToken.None);
+
+        Assert.True(result.Success);
+        Assert.Equal(product.Id, result.Data!.ProductId);
+    }
+
+    [Fact]
+    public async Task GetMarketplaceAsync_WhenBottleLinked_MapsProductId()
+    {
+        var db = CreateDbContext();
+        var user = SeedUser(db);
+        var product = SeedProduct(db);
+        SeedBottle(db, user.Id, isForSale: true, productId: product.Id);
+        var service = CreateBottleService(db, user.Id);
+
+        var result = await service.GetMarketplaceAsync(new MarketplaceQuery(), CancellationToken.None);
+
+        Assert.True(result.Success);
+        Assert.Equal(product.Id, Assert.Single(result.Data!).ProductId);
     }
 
     #endregion

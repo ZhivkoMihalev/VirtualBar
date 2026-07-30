@@ -6,7 +6,7 @@ This file provides guidance to Claude Code when working with code in this reposi
 
 ## What is VirtualBar
 
-VirtualBar is a platform for collectors of premium spirits (whisky, rum, cognac, vodka and more). Every user gets a **virtual bar** — a public profile showcasing their collection. Others can browse collections, follow collectors, like and comment on bottles, leave **structured reviews** (0–100 score + tasting notes + flavor tags), send direct messages, and buy/sell limited editions through a built-in marketplace. The home page (`/`) is a social news feed showing admin-authored articles and activity from followed users. Users receive **in-app notifications** when someone likes/comments their bottle, follows them, sends a message, or when someone they follow adds a bottle or lists one for sale. Users can add bottles to a **wish list** and get notified when a matching bottle appears for sale. Any user can **make an offer** on any bottle in another collector's bar (regardless of whether it is listed for sale); the seller receives a notification and can accept, decline, or ignore. Collectors earn **permanent achievement badges** for milestones (first bottle, 10 bottles, 5 categories, 50 likes received, first sale…) — shown with progress on the own profile and as an earned-only strip on the public bar. Direct messaging is handled via a **floating chat widget** (Facebook Messenger style) accessible from every page.
+VirtualBar is a platform for collectors of premium spirits (whisky, rum, cognac, vodka and more). Every user gets a **virtual bar** — a public profile showcasing their collection. Others can browse collections, follow collectors, like and comment on bottles, leave **structured reviews** (0–100 score + tasting notes + flavor tags), send direct messages, and buy/sell limited editions through a built-in marketplace. The home page (`/`) is a social news feed showing admin-authored articles and activity from followed users. Users receive **in-app notifications** when someone likes/comments their bottle, follows them, sends a message, or when someone they follow adds a bottle or lists one for sale. Users can add bottles to a **wish list** and get notified when a matching bottle appears for sale. Any user can **make an offer** on any bottle in another collector's bar (regardless of whether it is listed for sale); the seller receives a notification and can accept, decline, or ignore. Collectors earn **permanent achievement badges** for milestones (first bottle, 10 bottles, 5 categories, 50 likes received, first sale…) — shown with progress on the own profile and as an earned-only strip on the public bar. The platform maintains an admin-curated **product catalog** of canonical spirits: adding a bottle links it to a catalog product (explicit pick or silent exact-match auto-link), and an unknown bottle silently files a **product request** the admin approves (creating the product and retro-linking identical bottles) or rejects — the add flow is never blocked. Direct messaging is handled via a **floating chat widget** (Facebook Messenger style) accessible from every page.
 
 **User roles:** Collector (all registered users). Platform administrators have `IsAdmin = true` on their `AppUser` record — seeded via `AdminEmail` in `appsettings.Development.json` on startup.
 
@@ -27,6 +27,11 @@ VirtualBar/
 ```
 
 **Dependency rule:** `Api → Application ← Infrastructure`. Domain has no outward dependencies.
+
+The product catalog is **hand-curated**, not generated. There was an offline import CLI
+(`tools/ProductImport`, slice 08); it was removed because it never produced a single shipped row and
+re-running it would have destroyed the curated files. The invariants it used to check on demand now run
+on every build in `ProductSeedDataTests` — see `docs/product-catalog/08-data-import-pipeline.md`.
 
 ---
 
@@ -205,6 +210,8 @@ Key DbSets:
 | `BottleReviews` | One structured review per user per bottle: score 0–100 + tasting notes + flavors |
 | `BottleReviewFlavors` | Junction: review → flavor tag (composite PK; up to 5 per review) |
 | `UserBadges` | Junction: user → earned achievement badge (composite PK; awards are permanent) |
+| `Products` | Canonical spirits catalog (seeded via `ProductSeeder` + admin-approved requests) — powers add-form autocomplete, auto-linking, barcode L0 |
+| `ProductRequests` | User-filed requests to add a missing catalog product — admin approves/rejects; one pending per canonical key |
 
 All entities extend `BaseEntity` which adds `Id (Guid)`, `CreatedAt`, `UpdatedAt`, `IsDeleted`, `DeletedAt`.
 
@@ -248,6 +255,7 @@ Junction relations: `BottleLike` (liked), `UserFollow` (followers/following), `U
 | `Currency` | `string?` | ISO code e.g. "USD", "EUR" |
 | `ForSaleAt` | `DateTime?` | When the bottle was listed for sale (set by `ListForSaleAsync`, cleared by `UnlistFromSaleAsync`) |
 | `Barcode` | `string?` | Scanned/known EAN-UPC; sharpens canonical price-estimate matching (Collection Value) |
+| `ProductId` | `Guid?` | FK → Product (nullable) — catalog link. Set by explicit pick or exact-`CanonicalKey` auto-link in `AddBottleAsync`; `UpdateBottleAsync` assigns it blindly from the request (null = unlink — clients must echo the current value). The bottle's own fields remain the display truth |
 
 Relations: one `Bottle` → many `BottleImage`, `BottleLike`, `BottleComment`, `BottleReview`.
 
@@ -389,6 +397,8 @@ Both FK relations use `DeleteBehavior.Restrict`. Composite index on `(UserId, Is
 | `OfferDeclined` | `OfferService.DeclineAsync` — sent to the buyer |
 | `BottleReviewed` | `BottleReviewService.AddReviewAsync` — sent to the bottle owner (create only, not on update/delete) |
 | `BadgeEarned` | `BadgeService.EvaluateAsync` — sent to the badge earner via `CreateSystemAsync` (actor = recipient; `ResourceName` = the `BadgeType` name) |
+| `ProductRequestApproved` | `ProductRequestService.ApproveAsync` — sent to the requester (`ResourceId` = new/linked product id, `ResourceName` = product name) |
+| `ProductRequestRejected` | `ProductRequestService.RejectAsync` — sent to the requester (`ResourceId` = request id, `ResourceName` = requested product name) |
 
 **INotificationService methods:**
 - `CreateAsync(recipientId, type, resourceId, resourceName, ct)` — single recipient; decorator skips if `recipientId == currentUser.UserId` (no self-notifications).
@@ -407,7 +417,7 @@ Both FK relations use `DeleteBehavior.Restrict`. Composite index on `(UserId, Is
 | `Country` | `string?` | |
 | `Region` | `string?` | |
 
-Has `ICollection<DistilleryCategory> Categories` and `ICollection<Bottle> Bottles`. Seeded on startup by `DistillerySeeder` (~710 entries across Whisky/Rum/Vodka/Cognac/Brandy/Tequila/Gin). **No `POST /api/distilleries`** — seeder is the single source of truth. Public read via `GET /api/distilleries?category=Rum` (AllowAnonymous).
+Has `ICollection<DistilleryCategory> Categories` and `ICollection<Bottle> Bottles`. Seeded on startup by `DistillerySeeder` with **top-up semantics** — inserts distilleries missing by name (case-insensitive) and missing `(DistilleryId, Category)` pairs, strictly insert-only, never updates existing rows (~710 entries across Whisky/Rum/Vodka/Cognac/Brandy/Tequila/Gin). **No `POST /api/distilleries`** — seeder is the single source of truth. Public read via `GET /api/distilleries?category=Rum` (AllowAnonymous).
 
 ### DistilleryCategory
 Composite PK: `(DistilleryId, Category)`. No `BaseEntity`. Cascade delete from `Distillery`.
@@ -499,6 +509,62 @@ The 18 badges: `FirstBottle` + `Collector5/10/25/50/100` (bottles ≥ 1/5/10/25/
 
 ---
 
+### Product
+Canonical catalog entry for a spirits product. Not user-owned.
+
+| Property | Type | Notes |
+|---|---|---|
+| `Name` | `string` | Required |
+| `Brand` | `string?` | The name on the label. **Independent of `DistilleryId`, not an alternative to it** — every seeded row carries one, and it may differ from the distillery (Caorunn @ Balmenach, Meikle Toir @ GlenAllachie, The One @ Lakes Distillery). Nullable only because an admin-approved product may omit it; both read paths then fall back to the non-deleted distillery name |
+| `DistilleryId` | `Guid?` | FK → Distillery (`DeleteBehavior.Restrict`) — **where it was made**, known only for some products (blends like Johnnie Walker have none) |
+| `Category` | `SpiritCategory` | |
+| `Country`, `Region` | `string?` | |
+| `Age` | `int?` | |
+| `AbvPercent` | `double?` | |
+| `VolumeMl` | `int?` | |
+| `Barcode` | `string?` | EAN/UPC digits |
+| `ImageUrl` | `string?` | |
+| `Description` | `string?` | |
+| `CanonicalKey` | `string` | `ProductKey.For(distilleryName ?? brand, name, category, age, null, volumeMl)` — **filtered unique index** `WHERE [IsDeleted] = 0` |
+| `Origin` | `ProductOrigin` | `Seeded` / `Approved` (append-only enum) |
+
+**No `VintageYear`** — vintage/batch/cask specifics stay on the bottle instance. `ProductKey` normalization is **frozen** (shared with the `PriceSnapshot` cache — changing it would orphan both). Seeded on startup by `ProductSeeder` with **top-up semantics** (the `DistillerySeeder` pattern): one embedded seed file **per category** — `SeedData/products.<category>.seed.json` (`whisky`, `rum`, `cognac`, `brandy`, `vodka`, `gin`, `tequila`, `other`; user-curated and growing — ~3400 rows; no fabricated data — unknown fields are null). The csproj embeds them with the glob `Persistence\SeedData\products.*.seed.json`, and `SeedProductsAsync` reads every matching manifest resource in ordinal order, so adding a new category file needs no code change. Each row still carries its own `category` field. It inserts only rows whose `CanonicalKey` is not yet present — strictly insert-only, never updates or re-inserts existing rows (soft-deleted included); rows with unparseable categories are skipped, in-file duplicate keys collapse to the first, distillery names resolve case-insensitively (miss → `Brand` fallback + null FK). That fallback is a **silent data loss** — the row keeps its name but loses the FK, so it disappears from `/api/distilleries`, the add-bottle picker and wish-list matching. It is therefore both **logged** (`SeedProductsAsync` takes an optional `ILogger` and warns with the offending names) and **enforced**: `ProductSeedDataTests.EverySeedDistillery_ExistsInDistillerySeeder` fails the build when a seed file names a distillery `DistillerySeeder` does not know. When that test fires, either add the name to `DistillerySeeder` (a real production site) or move it to `brand` (a range or label — e.g. Port Charlotte is a Bruichladdich line, not a distillery). `ProductSeedDataTests.EverySeedRow_CarriesABrand` additionally pins that every row names its label brand. Tests assert seed invariants, never an exact row count.
+
+**Add-bottle resolution order** (`BottleService.AddBottleAsync`): (a) explicit `ProductId` from the client (decorator validates existence) → link; (b) else exact `CanonicalKey` match → **auto-link silently**; (c) else auto-file a `ProductRequest` with `SourceBottleId` — wrapped `try/catch → LogError`, non-success `Result` ignored (the badge-engine philosophy: a request bug never fails adding a bottle).
+
+**Barcode L0:** `ProductLookupService.LookupByBarcodeAsync` answers from `Products` **before** the external UPC API (non-deleted match by `Barcode`, `OrderBy(CreatedAt).ThenBy(Id)` — oldest wins; `Brand` falls back to the non-deleted distillery name). Hit → `BarcodeProductDto.ProductId` set, zero external calls; miss → external path unchanged. The lookup decorator trims the barcode once and logs swallowed exceptions.
+
+**API endpoints (`/api/products`):**
+- `GET /api/products?search=&category=&limit=` — `[AllowAnonymous]` catalog search; `search` trimmed, min 2 chars, max 100; `limit` clamped 1–**51** (default 20) — the cap is deliberately one over the 50 a client renders, so asking for 51 and getting 51 back proves there are more matches without a count query; `ProductSelect` uses exactly that to decide whether to show its "refine your search" hint; matches `Name`/`Brand`/`Distillery.Name` (contains; case-insensitivity comes from the SQL Server collation, not the code); starts-with ranked first; the returned `Brand` falls back to the non-deleted distillery name exactly as the barcode endpoint does, so both paths agree on the same product
+- `GET /api/products/barcode/{barcode}` — `[Authorize]`; catalog L0 → external UPC fallback
+
+### ProductRequest
+A user's request to add a missing product to the catalog.
+
+| Property | Type | Notes |
+|---|---|---|
+| `UserId` | `Guid` | FK → AppUser (requester, `DeleteBehavior.Restrict`) |
+| `Name`, `Brand?`, `DistilleryId?`, `Category`, `Age?`, `AbvPercent?`, `VolumeMl?`, `Barcode?`, `Country?`, `Region?` | | Proposed fields mirroring `Product` |
+| `UserNote` | `string?` | ≤ 500 chars (`Brand` ≤ 200) |
+| `CanonicalKey` | `string` | **Filtered unique index** `WHERE [Status] = 0 AND [IsDeleted] = 0` — one pending request per key, globally |
+| `Status` | `ProductRequestStatus` | `Pending` / `Approved` / `Rejected` (append-only — withdraw is a soft-delete, no `Withdrawn` member) |
+| `AdminNote` | `string?` | |
+| `ResolvedProductId` | `Guid?` | FK → Product (`Restrict`) |
+| `SourceBottleId` | `Guid?` | FK → Bottle (`Restrict`) — the bottle whose add triggered it; ownership enforced in the decorator |
+| `RespondedAt` | `DateTime?` | Set on approve/reject |
+
+**Design:** the `Offer` index pattern — the decorator's dedupe pre-checks (existing product / existing pending request with the same key) are a friendly fast path; `ProductRequestService` maps the `DbUpdateException` race loser to `Conflict` (on create AND on the approve-time product insert). Per-user cap: **25 open requests**. Sanity bounds (create + approve effective values): barcode digits-only 8–14, age 1–100, ABV 1–96, volume 20–6000; approve additionally validates the effective `Category` (enum-defined) and effective `DistilleryId` (exists non-deleted). **Approve** (admin-only): optional field overrides (`override ?? request value`) or `ExistingProductId` (link instead of create); `UseSourceBottleImage` copies the source bottle's primary image URL (explicit `ImageUrl` override wins; ignored on the `ExistingProductId` path; missing bottle/images → null, never an error); creates the `Product` (`Origin = Approved`, key recomputed from effective values), marks the request, links the source bottle if still unlinked, then **retro-links** identical unlinked bottles (SQL pre-filter on `Category`/`Age`/`VolumeMl`, in-memory exact `ProductKey` comparison without vintage — silent, no owner notifications). **Reject** sets `AdminNote` + `RespondedAt`. **Withdraw** = the requester soft-deletes an own **pending** request. A rejected key may be requested again (the index only guards `Pending`).
+
+**API endpoints (`/api/product-requests`, all `[Authorize]`):**
+- `POST /api/product-requests` — manual request (`409` duplicate)
+- `GET /api/product-requests/mine` — own requests, newest first
+- `DELETE /api/product-requests/{id}` — withdraw own **pending** request
+- `GET /api/product-requests?status=Pending` — admin queue (`403` non-admin)
+- `PATCH /api/product-requests/{id}/approve` — admin; body `ResolveProductRequestRequest` (**required** — send at least `{}`)
+- `PATCH /api/product-requests/{id}/reject` — admin; body `RejectProductRequestRequest` (**required** — send at least `{}`)
+
+---
+
 ## Collection Value (bottle price estimation)
 
 Shows an **indicative min–max market value per bottle** and a **total collection value** (Sealed bottles only) on the Dashboard. Always indicative — shown with range + confidence + **sources** + "as of" date; `None` renders "—", never a fabricated number.
@@ -575,8 +641,8 @@ Current translation namespaces: `nav`, `lang`, `login`, `register`, `dashboard`,
 - Method naming: `<MethodName>_When<Condition>_<ExpectedOutcome>`.
 - Each test creates an isolated InMemory DB: `Guid.NewGuid().ToString()` as the DB name.
 - Use **EF Core InMemory** by default. Switch to **SQLite in-memory** only when the method calls `ExecuteUpdateAsync` / `ExecuteDeleteAsync`, or when the test must surface a **unique-index or duplicate-PK violation as `DbUpdateException`** (InMemory doesn't enforce secondary unique indexes and throws `ArgumentException`, not `DbUpdateException`, for PK duplicates — e.g. the `BottleReview` duplicate-race and `BadgeService` PK-race tests).
-- Mock only `ICurrentUser`, `INotificationService`, and `IBadgeService` (trigger-service tests) — never mock `AppDbContext`.
-- Services that depend on `INotificationService` / `IBadgeService` receive `Mock.Of<INotificationService>()` / `Mock.Of<IBadgeService>()` in their `CreateXxxService` helper (optional parameters with defaults).
+- Mock only `ICurrentUser`, `INotificationService`, `IBadgeService`, and `IProductRequestService` (trigger-service tests) — never mock `AppDbContext`.
+- Services that depend on `INotificationService` / `IBadgeService` / `IProductRequestService` receive `Mock.Of<T>()` in their `CreateXxxService` helper (optional parameters with defaults).
 - Seed helpers are `private static` methods in the test class: `SeedUser`, `SeedBottle`, `SeedComment`, etc.
 - Cover every branch: every `if`, every `switch` arm, every `?.`, `??`, `&&`, `||`.
 
@@ -658,4 +724,5 @@ Microsoft and EF Core namespaces are overridden to `Warning` to suppress noise.
 On `dotnet run`:
 1. Pending EF Core migrations are applied automatically (`MigrateAsync`).
 2. If `AdminEmail` is configured, that user's `IsAdmin` flag is set to `true`.
-3. Swagger/OpenAPI available at `/openapi/v1.json` (development only).
+3. `DistillerySeeder` tops up missing distilleries/category pairs (insert-only), then `ProductSeeder` tops up the product catalog from the embedded per-category `products.<category>.seed.json` files (insert-only by `CanonicalKey`).
+4. Swagger/OpenAPI available at `/openapi/v1.json` (development only).

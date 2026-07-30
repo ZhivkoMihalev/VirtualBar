@@ -14,4 +14,6 @@ public enum NotificationType
     OfferDeclined,
     BottleReviewed,
     BadgeEarned,
+    ProductRequestApproved,
+    ProductRequestRejected,
 }

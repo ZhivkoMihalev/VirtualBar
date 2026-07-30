@@ -156,6 +156,9 @@ using (var scope = app.Services.CreateScope())
     }
 
     await DistillerySeeder.SeedDistilleriesAsync(db);
+    await ProductSeeder.SeedProductsAsync(
+        db,
+        scope.ServiceProvider.GetRequiredService<ILoggerFactory>().CreateLogger(nameof(ProductSeeder)));
 }
 
 var uploadsPath = Path.Combine(

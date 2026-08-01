@@ -134,6 +134,27 @@ public sealed class BadgeServiceTests
         return offer;
     }
 
+    private static ProductRequest SeedProductRequest(
+        AppDbContext db,
+        Guid userId,
+        ProductRequestStatus status = ProductRequestStatus.Approved,
+        bool isDeleted = false)
+    {
+        var request = new ProductRequest
+        {
+            UserId = userId,
+            Name = "Ardbeg Corryvreckan",
+            Category = SpiritCategory.Whisky,
+            CanonicalKey = $"key-{Guid.NewGuid():N}",
+            Status = status,
+            IsDeleted = isDeleted,
+            DeletedAt = isDeleted ? DateTime.UtcNow : null
+        };
+        db.ProductRequests.Add(request);
+        db.SaveChanges();
+        return request;
+    }
+
     private static UserBadge SeedBadge(AppDbContext db, Guid userId, BadgeType badge, DateTime? awardedAt = null)
     {
         var userBadge = new UserBadge
@@ -568,9 +589,58 @@ public sealed class BadgeServiceTests
     }
 
     [Fact]
+    public async Task EvaluateAsync_WhenProductRequestApproved_AwardsFirstCatalogProduct()
+    {
+        var db = CreateDbContext();
+        var user = SeedUser(db);
+        SeedProductRequest(db, user.Id);
+        var notificationMock = new Mock<INotificationService>();
+        var service = CreateBadgeService(db, user.Id, notificationMock.Object);
+
+        await service.EvaluateAsync(user.Id, BadgeTrigger.ProductRequestApproved, CancellationToken.None);
+
+        var badges = await db.UserBadges.Where(b => b.UserId == user.Id).Select(b => b.Badge).ToListAsync();
+        Assert.Contains(BadgeType.FirstCatalogProduct, badges);
+        VerifyAwarded(notificationMock, user.Id, BadgeType.FirstCatalogProduct, Times.Once());
+    }
+
+    [Fact]
+    public async Task EvaluateAsync_WhenProductRequestsNotApprovedOrDeleted_DoesNotAwardFirstCatalogProduct()
+    {
+        var db = CreateDbContext();
+        var user = SeedUser(db);
+        SeedProductRequest(db, user.Id, ProductRequestStatus.Approved, isDeleted: true);
+        SeedProductRequest(db, user.Id, ProductRequestStatus.Pending);
+        SeedProductRequest(db, user.Id, ProductRequestStatus.Rejected);
+        var notificationMock = new Mock<INotificationService>();
+        var service = CreateBadgeService(db, user.Id, notificationMock.Object);
+
+        await service.EvaluateAsync(user.Id, BadgeTrigger.ProductRequestApproved, CancellationToken.None);
+
+        Assert.Equal(0, await db.UserBadges.CountAsync(b => b.UserId == user.Id));
+        VerifyAwarded(notificationMock, user.Id, BadgeType.FirstCatalogProduct, Times.Never());
+    }
+
+    [Fact]
+    public async Task EvaluateAsync_WhenAnotherUsersRequestApproved_DoesNotAwardFirstCatalogProduct()
+    {
+        var db = CreateDbContext();
+        var user = SeedUser(db, "User");
+        var other = SeedUser(db, "Other");
+        SeedProductRequest(db, other.Id);
+        var notificationMock = new Mock<INotificationService>();
+        var service = CreateBadgeService(db, user.Id, notificationMock.Object);
+
+        await service.EvaluateAsync(user.Id, BadgeTrigger.ProductRequestApproved, CancellationToken.None);
+
+        Assert.Equal(0, await db.UserBadges.CountAsync(b => b.UserId == user.Id));
+        VerifyAwarded(notificationMock, user.Id, BadgeType.FirstCatalogProduct, Times.Never());
+    }
+
+    [Fact]
     public async Task CountAsync_WhenCountKindOutOfRange_ReturnsZero()
     {
-        // The switch's defensive `_` default arm is unreachable through the catalog (all eight kinds are
+        // The switch's defensive `_` default arm is unreachable through the catalog (all nine kinds are
         // mapped), so invoke the private counter directly with an undefined value to cover it.
         var db = CreateDbContext();
         var user = SeedUser(db);
@@ -715,7 +785,7 @@ public sealed class BadgeServiceTests
     #region GetMyProgressAsync
 
     [Fact]
-    public async Task GetMyProgressAsync_ReturnsAllEighteenRowsInCatalogOrder()
+    public async Task GetMyProgressAsync_ReturnsAllNineteenRowsInCatalogOrder()
     {
         var db = CreateDbContext();
         var user = SeedUser(db);
@@ -724,7 +794,7 @@ public sealed class BadgeServiceTests
         var result = await service.GetMyProgressAsync(CancellationToken.None);
 
         Assert.True(result.Success);
-        Assert.Equal(18, result.Data!.Count);
+        Assert.Equal(19, result.Data!.Count);
         Assert.Equal(BadgeCatalog.All.Select(d => d.Type), result.Data.Select(p => p.Badge));
         Assert.Equal(BadgeCatalog.All.Select(d => d.Threshold), result.Data.Select(p => p.Threshold));
     }
@@ -755,6 +825,7 @@ public sealed class BadgeServiceTests
         Assert.Equal(0, rows.Single(p => p.Badge == BadgeType.FirstListing).Current);
         Assert.Equal(0, rows.Single(p => p.Badge == BadgeType.FirstSale).Current);
         Assert.Equal(0, rows.Single(p => p.Badge == BadgeType.FirstPurchase).Current);
+        Assert.Equal(0, rows.Single(p => p.Badge == BadgeType.FirstCatalogProduct).Current);
     }
 
     [Fact]
@@ -790,7 +861,7 @@ public sealed class BadgeServiceTests
         var result = await service.GetMyProgressAsync(CancellationToken.None);
 
         Assert.True(result.Success);
-        Assert.Equal(18, result.Data!.Count);
+        Assert.Equal(19, result.Data!.Count);
         Assert.All(result.Data, p =>
         {
             Assert.False(p.Earned);

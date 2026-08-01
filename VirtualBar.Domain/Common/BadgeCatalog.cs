@@ -24,6 +24,7 @@ public static class BadgeCatalog
         new(BadgeType.FirstListing, BadgeTrigger.BottleListed, BadgeCountKind.ActiveListings, 1),
         new(BadgeType.FirstSale, BadgeTrigger.OfferAccepted, BadgeCountKind.SalesAccepted, 1),
         new(BadgeType.FirstPurchase, BadgeTrigger.OfferAccepted, BadgeCountKind.PurchasesAccepted, 1),
+        new(BadgeType.FirstCatalogProduct, BadgeTrigger.ProductRequestApproved, BadgeCountKind.ApprovedProductRequests, 1),
     ];
 
     public static IReadOnlyList<BadgeDefinition> ForTrigger(BadgeTrigger trigger) =>

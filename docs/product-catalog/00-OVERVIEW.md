@@ -79,7 +79,10 @@ datasets by an offline import tool.
    `ResolvedProductId` + `RespondedAt`, links the source bottle if still unlinked, then a
    **retro-link pass**: candidate bottles (`ProductId == null`, same `Category`/`Age`/`VolumeMl` —
    all SQL-filterable) are compared in memory by `ProductKey.For` and linked on exact match
-   (silently — no notification to their owners). Requester gets `ProductRequestApproved`.
+   (silently — no notification to their owners). Requester gets `ProductRequestApproved` — and, added
+   after this slice, the `FirstCatalogProduct` badge (`BadgeTrigger.ProductRequestApproved`, evaluated
+   for the **requester** as the last line of `ApproveAsync`; see `docs/badges/00-OVERVIEW.md` §3
+   "Added after this slice").
 8. **Reject** sets `Status = Rejected` + `AdminNote?` + `RespondedAt`, notifies
    `ProductRequestRejected`. **Withdraw** = the requester soft-deletes an own **pending** request
    (`DELETE /api/product-requests/{id}`). No `Withdrawn` status — 3 members, **append-only**.
@@ -165,7 +168,9 @@ Curation: the seed files are hand-edited; ProductSeedDataTests guards their inva
 - Enums serialize as strings (global `JsonStringEnumConverter`); all three new enums **append-only**.
 - Mock only `ICurrentUser`, `INotificationService`, `IBadgeService` — **extended for this feature**:
   `BottleServiceTests` also mocks **`IProductRequestService`** (optional ctor parameter,
-  `Mock.Of<IProductRequestService>()` default, same convention as `IBadgeService`).
+  `Mock.Of<IProductRequestService>()` default, same convention as `IBadgeService`). The one sanctioned
+  exception is `VirtualBar.Tests/Integration/`, which wires the real services on purpose — see
+  CLAUDE.md §Testing Conventions.
 
 ## 6. Risks
 - **Wrong auto-link** — mitigated by linking ONLY on exact `CanonicalKey` equality (category + name +

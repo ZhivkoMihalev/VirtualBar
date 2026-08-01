@@ -511,7 +511,8 @@
     "Influencer50": { "name": "Инфлуенсър", "description": "50 последователи" },
     "FirstListing": { "name": "Първа обява", "description": "Първа бутилка за продажба" },
     "FirstSale": { "name": "Първа продажба", "description": "Първа приета продажба" },
-    "FirstPurchase": { "name": "Първа покупка", "description": "Първа приета покупка" }
+    "FirstPurchase": { "name": "Първа покупка", "description": "Първа приета покупка" },
+    "FirstCatalogProduct": { "name": "Приносител", "description": "Ваше предложение е одобрено и добавено в каталога" }
   },
   "products": {
     "searchLabel": "Намери в каталога",

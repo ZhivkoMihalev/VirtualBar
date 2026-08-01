@@ -11,7 +11,8 @@ namespace VirtualBar.Infrastructure.Services;
 public sealed class ProductRequestService(
     AppDbContext db,
     ICurrentUser currentUser,
-    INotificationService notificationService) : IProductRequestService
+    INotificationService notificationService,
+    IBadgeService badgeService) : IProductRequestService
 {
     public async Task<Result<ProductRequestDto>> CreateAsync(CreateProductRequestRequest request, CancellationToken cancellationToken)
     {
@@ -184,6 +185,8 @@ public sealed class ProductRequestService(
 
         await notificationService.CreateAsync(
             entity.UserId, NotificationType.ProductRequestApproved, product.Id, product.Name, cancellationToken);
+
+        await badgeService.EvaluateAsync(entity.UserId, BadgeTrigger.ProductRequestApproved, cancellationToken);
 
         return Result<ProductRequestDto>.Ok(MapToDto(entity));
     }

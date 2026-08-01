@@ -1,6 +1,9 @@
 # 03 — Award Engine & System Notification (the core)
 
 > Depends on: **02** · Read `00-OVERVIEW.md` first.
+>
+> **Since this slice:** the catalog is **19 badges / 6 triggers / 9 count-kinds / 7 hook sites**. The
+> counts below describe the initial 18 — see `00-OVERVIEW.md` §3 "Added after this slice".
 
 ## Goal
 `BadgeService.EvaluateAsync` — the uniform `count >= threshold` engine with PK-backed idempotency — plus

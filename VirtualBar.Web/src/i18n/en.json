@@ -511,7 +511,8 @@
     "Influencer50": { "name": "Influencer", "description": "50 followers" },
     "FirstListing": { "name": "First Listing", "description": "Listed your first bottle for sale" },
     "FirstSale": { "name": "First Sale", "description": "Your first accepted sale" },
-    "FirstPurchase": { "name": "First Purchase", "description": "Your first accepted purchase" }
+    "FirstPurchase": { "name": "First Purchase", "description": "Your first accepted purchase" },
+    "FirstCatalogProduct": { "name": "Contributor", "description": "Your suggestion was approved and added to the catalog" }
   },
   "products": {
     "searchLabel": "Find in the catalog",

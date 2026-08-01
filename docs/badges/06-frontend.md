@@ -1,6 +1,10 @@
 # 06 — Frontend
 
 > Depends on: **04, 05** · Read `00-OVERVIEW.md` first.
+>
+> **Since this slice:** the catalog is **19 badges** — the type union, the icon map and both i18n files
+> each carry one more entry (`FirstCatalogProduct` → `BookPlus`, "Приносител" / "Contributor"), and the
+> profile renders 19 chips. See `00-OVERVIEW.md` §3 "Added after this slice".
 
 ## Goal
 Earned-badge strips on the profile and the public bar, a progress view for the owner, the `BadgeEarned`

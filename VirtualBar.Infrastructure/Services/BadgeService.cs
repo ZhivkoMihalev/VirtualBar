@@ -137,6 +137,9 @@ public sealed class BadgeService(
                 db.Offers.CountAsync(o => o.SellerId == userId && o.Status == OfferStatus.Accepted && !o.IsDeleted, cancellationToken),
             BadgeCountKind.PurchasesAccepted =>
                 db.Offers.CountAsync(o => o.BuyerId == userId && o.Status == OfferStatus.Accepted && !o.IsDeleted, cancellationToken),
+            BadgeCountKind.ApprovedProductRequests =>
+                db.ProductRequests.CountAsync(
+                    r => r.UserId == userId && r.Status == ProductRequestStatus.Approved && !r.IsDeleted, cancellationToken),
             _ => Task.FromResult(0),
         };
 }

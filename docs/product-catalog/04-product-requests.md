@@ -72,6 +72,12 @@ Primary ctor: `(AppDbContext db, ICurrentUser currentUser, INotificationService 
   7. `notificationService.CreateAsync(request.UserId, NotificationType.ProductRequestApproved,
      product.Id, product.Name, cancellationToken)` — plain `CreateAsync`; the decorator self-skip is
      correct (admin approving own request → no notification, fine).
+  8. *(added after this slice)* `badgeService.EvaluateAsync(request.UserId,
+     BadgeTrigger.ProductRequestApproved, cancellationToken)` — awards `FirstCatalogProduct` to the
+     **requester**, never the approving admin. Last line before the `Ok`, after the save and the
+     notification, exactly like the `OfferAccepted` hooks; the `Conflict` return in step 2 means a
+     lost race awards nothing. `ProductRequestService` gained an `IBadgeService` constructor
+     parameter for it. See `docs/badges/00-OVERVIEW.md` §3 "Added after this slice".
 - **`RejectAsync`** — `Status = Rejected`, `AdminNote`, `RespondedAt`, save, then
   `CreateAsync(request.UserId, NotificationType.ProductRequestRejected, request.Id, request.Name, ...)`.
 
@@ -133,3 +139,10 @@ source bottle deleted (skip) / retro-link match + non-match (category same but n
 duplicate product key → `Conflict` (SQLite) / notification fired with `ProductRequestApproved`
 (Moq `Verify`); reject: fields set + `ProductRequestRejected` fired; withdraw branches; `GetAllAsync`
 status filter on/off; non-admin `Forbidden` on all three admin methods.
+
+Added with step 8: `IBadgeService` is `Verify`-ed on both approve paths (new product and
+`ExistingProductId`), asserted **never** called on the duplicate-key `Conflict` path or on reject,
+and the whole chain — approve → notification → badge → what the requester's bell and progress
+endpoint actually return — is covered end-to-end in
+`VirtualBar.Tests\Integration\ProductRequestApprovalFlowTests.cs` with the real notification and
+badge services rather than mocks.

@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using VirtualBar.Domain.Entities;
+using VirtualBar.Infrastructure.Persistence.Conversions;
 
 namespace VirtualBar.Infrastructure.Persistence;
 
@@ -27,6 +28,16 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
     public DbSet<UserBadge> UserBadges => Set<UserBadge>();
     public DbSet<Product> Products => Set<Product>();
     public DbSet<ProductRequest> ProductRequests => Set<ProductRequest>();
+
+    protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
+    {
+        base.ConfigureConventions(configurationBuilder);
+
+        // Every DateTime in this codebase is UTC, but the provider column carries no offset — without
+        // these the API serialises timestamps with no "Z" and clients read UTC as local time.
+        configurationBuilder.Properties<DateTime>().HaveConversion<UtcDateTimeConverter>();
+        configurationBuilder.Properties<DateTime?>().HaveConversion<NullableUtcDateTimeConverter>();
+    }
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

@@ -1,6 +1,10 @@
 # 07 — Backend tests (written LAST)
 
 > Depends on: **01–05** · Read `00-OVERVIEW.md` first.
+>
+> **Since this slice:** the catalog is **19 badges**, so the count assertions below now read 19, and
+> `ProductRequestApprovalFlowTests` (`VirtualBar.Tests/Integration/`) covers the approve → notification
+> → badge chain with the real services. See `00-OVERVIEW.md` §3 "Added after this slice".
 
 ## Goal
 **All** backend unit tests for Badges, written **after the whole backend is implemented** (testing-last

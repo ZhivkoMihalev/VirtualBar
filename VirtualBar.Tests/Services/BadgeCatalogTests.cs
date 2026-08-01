@@ -17,9 +17,9 @@ public sealed class BadgeCatalogTests
     }
 
     [Fact]
-    public void All_HasEighteenDefinitions()
+    public void All_HasNineteenDefinitions()
     {
-        Assert.Equal(18, BadgeCatalog.All.Count);
+        Assert.Equal(19, BadgeCatalog.All.Count);
     }
 
     [Fact]
@@ -91,6 +91,17 @@ public sealed class BadgeCatalogTests
     }
 
     [Fact]
+    public void ForTrigger_ProductRequestApproved_ReturnsFirstCatalogProductOnly()
+    {
+        var defs = BadgeCatalog.ForTrigger(BadgeTrigger.ProductRequestApproved);
+
+        Assert.Single(defs);
+        Assert.Equal(BadgeType.FirstCatalogProduct, defs[0].Type);
+        Assert.Equal(BadgeCountKind.ApprovedProductRequests, defs[0].CountKind);
+        Assert.Equal(1, defs[0].Threshold);
+    }
+
+    [Fact]
     public void ForTrigger_EveryTrigger_ReturnsNonEmpty()
     {
         foreach (var trigger in Enum.GetValues<BadgeTrigger>())
@@ -98,14 +109,14 @@ public sealed class BadgeCatalogTests
     }
 
     [Fact]
-    public void ForTrigger_UnionOfAllTriggers_CoversAllEighteenDefinitionsExactlyOnce()
+    public void ForTrigger_UnionOfAllTriggers_CoversAllNineteenDefinitionsExactlyOnce()
     {
         var union = Enum.GetValues<BadgeTrigger>()
             .SelectMany(BadgeCatalog.ForTrigger)
             .ToList();
 
-        Assert.Equal(18, union.Count);
-        Assert.Equal(18, union.Select(d => d.Type).Distinct().Count());
+        Assert.Equal(19, union.Count);
+        Assert.Equal(19, union.Select(d => d.Type).Distinct().Count());
         Assert.Equal(
             BadgeCatalog.All.Select(d => d.Type).OrderBy(t => t),
             union.Select(d => d.Type).OrderBy(t => t));

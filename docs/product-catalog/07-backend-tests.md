@@ -49,8 +49,23 @@ assert case-insensitivity; a "case differences" test would falsely fail correct 
   null-age/null-volume equality matching; duplicate product key → `Conflict` (**SQLite**);
   `ProductRequestApproved` notification verified (recipient = requester, resourceId = product id,
   resourceName = product name); no notification on `Conflict` paths.
+  (Added with the `FirstCatalogProduct` badge: `IBadgeService.EvaluateAsync` verified with
+  `BadgeTrigger.ProductRequestApproved` and **the requester's** id on both the new-product and the
+  `ExistingProductId` path, never with the admin's id, and never at all on the duplicate-key
+  `Conflict` path.)
 - **RejectAsync**: non-admin → `Forbidden`; missing → `NotFound`; resolved → `Conflict`; happy path
-  sets `Rejected`/`AdminNote`/`RespondedAt` + `ProductRequestRejected` notification verified.
+  sets `Rejected`/`AdminNote`/`RespondedAt` + `ProductRequestRejected` notification verified; no badge
+  evaluation at all.
+
+### `ProductRequestApprovalFlowTests` (`VirtualBar.Tests/Integration/`)
+Added with the `FirstCatalogProduct` badge — the one place that does **not** follow the mocking rule
+above, on purpose: the real `NotificationService` and `BadgeService` are wired behind their decorators
+exactly as `DependencyInjection.cs` does it (one graph per acting user), because mocks would hide the
+chain under test. Covers: approve → product row + badge row for the requester + both notifications
+with their exact actor/resource fields; what the requester's own bell and `/api/badges/progress`
+return; a second approval re-notifying but **not** re-awarding; reject notifying but awarding nothing.
+Asserts `ILogger<BadgeService>` logged no error, so an exception swallowed by the engine cannot pass
+as success. See CLAUDE.md §Testing Conventions.
 
 ### `ProductSeederTests`
 Seeds when empty (count, `Origin=Seeded`, keys computed); second run no-op; distillery exact +

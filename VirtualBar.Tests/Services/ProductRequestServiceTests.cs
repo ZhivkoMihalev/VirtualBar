@@ -48,17 +48,26 @@ public sealed class ProductRequestServiceTests
     private static ProductRequestService CreateInnerService(
         AppDbContext db,
         Guid currentUserId,
-        INotificationService? notificationService = null) =>
-        new(db, CreateCurrentUser(currentUserId), notificationService ?? Mock.Of<INotificationService>());
+        INotificationService? notificationService = null,
+        IBadgeService? badgeService = null) =>
+        new(db,
+            CreateCurrentUser(currentUserId),
+            notificationService ?? Mock.Of<INotificationService>(),
+            badgeService ?? Mock.Of<IBadgeService>());
 
     private static IProductRequestService CreateService(
         AppDbContext db,
         Guid currentUserId,
         bool isAdmin = false,
-        INotificationService? notificationService = null)
+        INotificationService? notificationService = null,
+        IBadgeService? badgeService = null)
     {
         var currentUser = CreateCurrentUser(currentUserId, isAdmin);
-        var inner = new ProductRequestService(db, currentUser, notificationService ?? Mock.Of<INotificationService>());
+        var inner = new ProductRequestService(
+            db,
+            currentUser,
+            notificationService ?? Mock.Of<INotificationService>(),
+            badgeService ?? Mock.Of<IBadgeService>());
         return new ProductRequestValidationDecorator(inner, db, currentUser);
     }
 
@@ -1838,6 +1847,69 @@ public sealed class ProductRequestServiceTests
 
     #endregion
 
+    #region ApproveAsync badge hook
+
+    [Fact]
+    public async Task ApproveAsync_WhenNewProductCreated_EvaluatesBadgesForRequester()
+    {
+        var db = CreateDbContext();
+        var admin = SeedUser(db, "Admin");
+        var collector = SeedUser(db, "Collector");
+        var request = SeedRequest(db, collector.Id);
+        var badgeMock = new Mock<IBadgeService>();
+        var service = CreateService(db, admin.Id, isAdmin: true, badgeService: badgeMock.Object);
+
+        var result = await service.ApproveAsync(request.Id, new ResolveProductRequestRequest(), CancellationToken.None);
+
+        Assert.True(result.Success);
+
+        badgeMock.Verify(b => b.EvaluateAsync(
+            collector.Id, BadgeTrigger.ProductRequestApproved, It.IsAny<CancellationToken>()), Times.Once);
+        badgeMock.Verify(b => b.EvaluateAsync(
+            admin.Id, It.IsAny<BadgeTrigger>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task ApproveAsync_WhenExistingProductLinked_EvaluatesBadgesForRequester()
+    {
+        var db = CreateDbContext();
+        var admin = SeedUser(db, "Admin");
+        var collector = SeedUser(db, "Collector");
+        var product = SeedProduct(db, name: "Sherry Oak 12", age: 12, volumeMl: 700);
+        var request = SeedRequest(db, collector.Id, name: "sherry oak twelve");
+        var badgeMock = new Mock<IBadgeService>();
+        var service = CreateService(db, admin.Id, isAdmin: true, badgeService: badgeMock.Object);
+        var payload = new ResolveProductRequestRequest { ExistingProductId = product.Id };
+
+        var result = await service.ApproveAsync(request.Id, payload, CancellationToken.None);
+
+        Assert.True(result.Success);
+
+        badgeMock.Verify(b => b.EvaluateAsync(
+            collector.Id, BadgeTrigger.ProductRequestApproved, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task ApproveAsync_WhenProductKeyAlreadyExists_SkipsBadgeEvaluation()
+    {
+        var db = CreateSqliteDbContext();
+        var admin = SeedUser(db, "Admin");
+        var collector = SeedUser(db, "Collector");
+        SeedProduct(db, name: "Sherry Oak 12", age: 12, volumeMl: 700);
+        var request = SeedRequest(db, collector.Id, name: "Sherry Oak 12", age: 12, volumeMl: 700);
+        var badgeMock = new Mock<IBadgeService>();
+        var service = CreateService(db, admin.Id, isAdmin: true, badgeService: badgeMock.Object);
+
+        var result = await service.ApproveAsync(request.Id, new ResolveProductRequestRequest(), CancellationToken.None);
+
+        Assert.False(result.Success);
+
+        badgeMock.Verify(b => b.EvaluateAsync(
+            It.IsAny<Guid>(), It.IsAny<BadgeTrigger>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    #endregion
+
     #region RejectAsync
 
     [Fact]
@@ -1959,6 +2031,24 @@ public sealed class ProductRequestServiceTests
 
         var stored = await db.ProductRequests.AsNoTracking().SingleAsync();
         Assert.Equal("old note", stored.AdminNote);
+    }
+
+    [Fact]
+    public async Task RejectAsync_WhenValid_DoesNotEvaluateBadges()
+    {
+        var db = CreateDbContext();
+        var admin = SeedUser(db, "Admin");
+        var collector = SeedUser(db, "Collector");
+        var request = SeedRequest(db, collector.Id);
+        var badgeMock = new Mock<IBadgeService>();
+        var service = CreateService(db, admin.Id, isAdmin: true, badgeService: badgeMock.Object);
+
+        var result = await service.RejectAsync(request.Id, new RejectProductRequestRequest(), CancellationToken.None);
+
+        Assert.True(result.Success);
+
+        badgeMock.Verify(b => b.EvaluateAsync(
+            It.IsAny<Guid>(), It.IsAny<BadgeTrigger>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     #endregion

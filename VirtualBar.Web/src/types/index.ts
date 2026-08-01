@@ -363,6 +363,7 @@ export type BadgeType =
   | 'Liked10' | 'Liked50' | 'Liked100'
   | 'FirstFollower' | 'Popular10' | 'Influencer50'
   | 'FirstListing' | 'FirstSale' | 'FirstPurchase'
+  | 'FirstCatalogProduct'
 
 export interface UserBadge {
   badge: BadgeType

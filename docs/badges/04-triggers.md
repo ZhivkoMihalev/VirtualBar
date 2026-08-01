@@ -1,6 +1,10 @@
 # 04 — Trigger Wiring (six hook sites)
 
 > Depends on: **03** · Read `00-OVERVIEW.md` first.
+>
+> **Since this slice:** a **seventh** hook site was added — `ProductRequestService.ApproveAsync`
+> (`BadgeTrigger.ProductRequestApproved` → the requester), wired by the same recipe as the six below.
+> See `00-OVERVIEW.md` §3 "Added after this slice".
 
 ## Goal
 Wire `EvaluateAsync` into the five services at the six exact points where the corresponding

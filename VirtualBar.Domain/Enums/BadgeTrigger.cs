@@ -7,4 +7,5 @@ public enum BadgeTrigger
     FollowerGained,
     BottleListed,
     OfferAccepted,
+    ProductRequestApproved,
 }

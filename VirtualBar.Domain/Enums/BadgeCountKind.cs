@@ -10,4 +10,5 @@ public enum BadgeCountKind
     ActiveListings,
     SalesAccepted,
     PurchasesAccepted,
+    ApprovedProductRequests,
 }

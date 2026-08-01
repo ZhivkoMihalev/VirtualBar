@@ -20,4 +20,5 @@ public enum BadgeType
     FirstListing,
     FirstSale,
     FirstPurchase,
+    FirstCatalogProduct,
 }

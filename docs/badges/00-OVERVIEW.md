@@ -82,6 +82,37 @@ definition line + two i18n strings.
 | `FirstSale` | `OfferAccepted` | `SalesAccepted` | 1 |
 | `FirstPurchase` | `OfferAccepted` | `PurchasesAccepted` | 1 |
 
+### Added after this slice
+The catalog is append-only and grows exactly as §3.1 says — one enum member, one definition line, two
+i18n strings. Current total: **19 badges / 6 triggers / 9 count-kinds / 7 hook sites**.
+
+| BadgeType | Trigger | CountKind | Threshold | Hook site |
+|---|---|---|---|---|
+| `FirstCatalogProduct` | `ProductRequestApproved` | `ApprovedProductRequests` | 1 | `ProductRequestService.ApproveAsync` → the **requester** |
+
+`ApprovedProductRequests` counts the user's own non-deleted `ProductRequest` rows with
+`Status = Approved` — so an admin who resolves a request by linking it to an **existing** catalog
+product (`ExistingProductId`) awards the badge exactly like creating a new product does; the admin
+approved the proposal either way. The `Conflict` race path returns before the hook, so a request that
+never resolved awards nothing.
+
+Two consequences of §2's evaluate-on-trigger design bite harder here than for the initial 18, because
+approvals are rare where bottles and likes are frequent:
+- **No catch-up for past approvals.** §3.10 parked the backfill job. A collector whose request was
+  approved *before* this badge existed only earns it when a **later** request of theirs is approved.
+- **The badge is the reward for proposing, not for approving.** The hook passes `entity.UserId`, so
+  an admin who files and approves their own request earns it as the requester — but approving other
+  people's requests never does.
+
+Tests: catalog/engine/count-kind branches in `BadgeCatalogTests` + `BadgeServiceTests`, hook-site
+`Verify` in `ProductRequestServiceTests`, and the whole chain — approve → notification → badge → what
+the requester's bell and `/api/badges/progress` actually return — in
+`VirtualBar.Tests\Integration\ProductRequestApprovalFlowTests.cs` (real notification + badge services,
+see CLAUDE.md §Testing Conventions).
+
+The per-slice docs 01–07 below describe the **initial 18** and are kept as the historical record of
+that slice; this section is the running delta. When they disagree, this section wins.
+
 ## 3a. Architecture at a glance
 ```
 AddBottleAsync ─┐                                   ┌─▶ UserBadges (composite PK (UserId, BadgeType))

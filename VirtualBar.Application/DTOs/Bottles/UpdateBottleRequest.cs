@@ -31,6 +31,12 @@ public sealed class UpdateBottleRequest
 
     public BottleCondition Condition { get; set; } = BottleCondition.Sealed;
 
+    /// <summary>
+    /// How many identical bottles the collector owns. Omitting the field keeps the default of 1,
+    /// so an older client that never sends it can never zero out an existing stack.
+    /// </summary>
+    public int Quantity { get; set; } = 1;
+
     public string? Description { get; set; }
 
     public bool IsLimited { get; set; }

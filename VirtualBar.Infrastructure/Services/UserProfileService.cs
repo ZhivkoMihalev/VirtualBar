@@ -23,7 +23,7 @@ public sealed class UserProfileService(AppDbContext db, ICurrentUser currentUser
                 AvatarUrl = u.AvatarUrl,
                 Country = u.Country,
                 City = u.City,
-                BottleCount = u.Bottles.Count(b => !b.IsDeleted),
+                BottleCount = u.Bottles.Where(b => !b.IsDeleted).Sum(b => b.Quantity),
                 FollowerCount = u.Followers.Count,
                 FollowingCount = u.Following.Count,
                 IsFollowedByMe = u.Followers.Any(f => f.FollowerId == currentUser.UserId),
@@ -52,7 +52,7 @@ public sealed class UserProfileService(AppDbContext db, ICurrentUser currentUser
                 AvatarUrl = u.AvatarUrl,
                 Bio = u.Bio,
                 Country = u.Country,
-                BottleCount = u.Bottles.Count(b => !b.IsDeleted),
+                BottleCount = u.Bottles.Where(b => !b.IsDeleted).Sum(b => b.Quantity),
                 FollowerCount = u.Followers.Count,
             })
             .ToListAsync(cancellationToken);

@@ -86,9 +86,9 @@ public sealed class BottlesController(IBottleService bottleService) : Controller
             : result.ToActionResult(this);
     }
 
-    /// <summary>Lists a bottle for sale with a price and currency.</summary>
+    /// <summary>Lists a bottle for sale with a price, currency and how many of the owned bottles to offer.</summary>
     /// <param name="id">The bottle identifier.</param>
-    /// <param name="request">The asking price and currency.</param>
+    /// <param name="request">The asking price, currency and for-sale quantity (1..owned, default 1).</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <response code="200">Bottle listed for sale.</response>
     /// <response code="400">Validation failed.</response>

@@ -7,7 +7,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import type { AxiosError } from 'axios'
-import { Heart, X, ChevronDown, ChevronUp } from 'lucide-react'
+import { Heart, X, ChevronDown, ChevronUp, Minus, Plus } from 'lucide-react'
 import {
   toggleBottleLike,
   getBottleComments,
@@ -16,6 +16,7 @@ import {
   listBottleForSale,
   unlistBottleFromSale,
   removeBottle,
+  updateBottle,
 } from '../api/bottlesApi'
 import { createOffer } from '../api/offersApi'
 import { getBottleEstimate } from '../api/pricesApi'
@@ -593,11 +594,95 @@ function ReviewsSection({ bottle }: { bottle: Bottle }) {
   )
 }
 
+function QuantitySection({ bottle, userId }: { bottle: Bottle; userId: string }) {
+  const { t } = useTranslation()
+  const queryClient = useQueryClient()
+
+  const mutation = useMutation({
+    // UpdateBottleAsync assigns every field from the request, so a quantity-only change still has
+    // to echo the bottle back in full — anything omitted here would be wiped, and a null
+    // productId would silently unlink it from the catalog.
+    mutationFn: (quantity: number) =>
+      updateBottle(bottle.id, {
+        name: bottle.name,
+        distilleryId: bottle.distilleryId,
+        productId: bottle.productId ?? null,
+        region: bottle.region,
+        country: bottle.country,
+        category: bottle.category,
+        age: bottle.age,
+        vintageYear: bottle.vintageYear,
+        abvPercent: bottle.abvPercent,
+        volumeMl: bottle.volumeMl,
+        condition: bottle.condition,
+        quantity,
+        description: bottle.description,
+        isLimited: bottle.isLimited,
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['bottles', userId] })
+      queryClient.invalidateQueries({ queryKey: ['collectionValue', userId] })
+    },
+  })
+
+  return (
+    <div className="mb-5 rounded-md border border-primary/15 bg-primary/[0.04] p-4">
+      <div className="mb-3 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+        {t('bottle.quantityLabel')}
+      </div>
+
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <span className="font-heading text-xl font-semibold text-primary">
+          {t('bottle.quantityOwned', { count: bottle.quantity })}
+        </span>
+        <div className="flex items-center gap-1">
+          <Button
+            variant="outline"
+            size="icon"
+            className="size-8"
+            disabled={mutation.isPending || bottle.quantity <= Math.max(1, bottle.forSaleQuantity)}
+            aria-label={t('addBottle.quantityDecrease')}
+            onClick={() => mutation.mutate(bottle.quantity - 1)}
+          >
+            <Minus className="size-3.5" />
+          </Button>
+          <span className="w-9 text-center font-heading text-base text-foreground">
+            {mutation.isPending ? '···' : bottle.quantity}
+          </span>
+          <Button
+            variant="outline"
+            size="icon"
+            className="size-8"
+            disabled={mutation.isPending || bottle.quantity >= 99}
+            aria-label={t('addBottle.quantityIncrease')}
+            onClick={() => mutation.mutate(bottle.quantity + 1)}
+          >
+            <Plus className="size-3.5" />
+          </Button>
+        </div>
+      </div>
+
+      {bottle.forSaleQuantity > 0 && (
+        <div className="mt-2.5 text-xs text-muted-foreground">
+          {t('bottle.quantityLockedByListing', { forSale: bottle.forSaleQuantity })}
+        </div>
+      )}
+
+      {mutation.isError && (
+        <div className="mt-2.5 text-sm text-destructive">{t('bottle.errorQuantity')}</div>
+      )}
+    </div>
+  )
+}
+
 function SaleSection({ bottle, userId }: { bottle: Bottle; userId: string }) {
   const { t } = useTranslation()
   const queryClient = useQueryClient()
   const [price, setPrice] = useState(bottle.askingPrice?.toString() ?? '')
   const [currency, setCurrency] = useState(bottle.currency ?? 'USD')
+  // Default to one bottle even on a stack: offering more than intended is the costlier mistake.
+  const [saleQuantity, setSaleQuantity] = useState(1)
+  const isStack = bottle.quantity > 1
 
   const invalidate = () => {
     queryClient.invalidateQueries({ queryKey: ['bottles', userId] })
@@ -605,7 +690,7 @@ function SaleSection({ bottle, userId }: { bottle: Bottle; userId: string }) {
   }
 
   const listMutation = useMutation({
-    mutationFn: () => listBottleForSale(bottle.id, Number(price), currency),
+    mutationFn: () => listBottleForSale(bottle.id, Number(price), currency, saleQuantity),
     onSuccess: invalidate,
   })
 
@@ -626,19 +711,31 @@ function SaleSection({ bottle, userId }: { bottle: Bottle; userId: string }) {
       </div>
 
       {bottle.isForSale ? (
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <span className="font-heading text-xl font-semibold text-success">
-            {bottle.currency ?? 'USD'} {bottle.askingPrice?.toLocaleString() ?? '—'}
-          </span>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => unlistMutation.mutate()}
-            disabled={unlistMutation.isPending}
-            className="border-destructive/40 text-destructive hover:bg-destructive/10"
-          >
-            {unlistMutation.isPending ? '···' : t('bottle.removeFromSale')}
-          </Button>
+        <div>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <span className="font-heading text-xl font-semibold text-success">
+              {bottle.currency ?? 'USD'} {bottle.askingPrice?.toLocaleString() ?? '—'}
+              {isStack && (
+                <span className="ml-1.5 text-sm font-normal text-muted-foreground">
+                  {t('bottle.perBottle')}
+                </span>
+              )}
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => unlistMutation.mutate()}
+              disabled={unlistMutation.isPending}
+              className="border-destructive/40 text-destructive hover:bg-destructive/10"
+            >
+              {unlistMutation.isPending ? '···' : t('bottle.removeFromSale')}
+            </Button>
+          </div>
+          {isStack && (
+            <div className="mt-2 text-sm text-success/90">
+              {t('bottle.forSaleOfOwned', { forSale: bottle.forSaleQuantity, owned: bottle.quantity })}
+            </div>
+          )}
         </div>
       ) : (
         <div className="flex flex-wrap items-center gap-2">
@@ -671,6 +768,42 @@ function SaleSection({ bottle, userId }: { bottle: Bottle; userId: string }) {
           >
             {listMutation.isPending ? '···' : t('bottle.listForSale')}
           </Button>
+
+          {isStack && (
+            <div className="mt-1 flex w-full flex-wrap items-center justify-between gap-3 border-t border-primary/10 pt-3">
+              <div className="space-y-0.5">
+                <div className="text-sm text-foreground">{t('bottle.howManyForSale')}</div>
+                <div className="text-xs text-muted-foreground">
+                  {t('bottle.howManyForSaleHint', { owned: bottle.quantity })}
+                </div>
+              </div>
+              <div className="flex items-center gap-1">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="size-8"
+                  disabled={saleQuantity <= 1}
+                  aria-label={t('bottle.forSaleDecrease')}
+                  onClick={() => setSaleQuantity(q => Math.max(1, q - 1))}
+                >
+                  <Minus className="size-3.5" />
+                </Button>
+                <span className="w-9 text-center font-heading text-base text-foreground">
+                  {saleQuantity}
+                </span>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="size-8"
+                  disabled={saleQuantity >= bottle.quantity}
+                  aria-label={t('bottle.forSaleIncrease')}
+                  onClick={() => setSaleQuantity(q => Math.min(bottle.quantity, q + 1))}
+                >
+                  <Plus className="size-3.5" />
+                </Button>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
@@ -1030,6 +1163,7 @@ export default function BottleDetailPanel({
                 {col.label}
               </Badge>
               <Badge variant="outline">{t(`addBottle.condition${bottle.condition}`)}</Badge>
+              {bottle.quantity > 1 && <Badge variant="outline">×{bottle.quantity}</Badge>}
               {bottle.isLimited && <Badge variant="secondary">{t('bottle.limited')}</Badge>}
               {bottle.isForSale && <Badge variant="success">{t('bottle.forSale')}</Badge>}
             </div>
@@ -1071,19 +1205,32 @@ export default function BottleDetailPanel({
 
           {bottle.userId === currentUserId ? (
             <>
+              <QuantitySection bottle={bottle} userId={userId} />
               <SaleSection bottle={bottle} userId={userId} />
               <DeleteSection bottle={bottle} onDelete={onDelete ?? onClose} />
             </>
           ) : (
             <>
               {bottle.isForSale && bottle.askingPrice != null && (
-                <div className="mb-5 flex items-center justify-between rounded-md border border-success/30 bg-success/10 px-5 py-3.5">
-                  <span className="text-xs uppercase tracking-wide text-success">
-                    {t('bottle.askingPrice')}
-                  </span>
-                  <span className="font-heading text-xl font-semibold text-success">
-                    {bottle.currency ?? 'USD'} {bottle.askingPrice.toLocaleString()}
-                  </span>
+                <div className="mb-5 rounded-md border border-success/30 bg-success/10 px-5 py-3.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs uppercase tracking-wide text-success">
+                      {t('bottle.askingPrice')}
+                    </span>
+                    <span className="font-heading text-xl font-semibold text-success">
+                      {bottle.currency ?? 'USD'} {bottle.askingPrice.toLocaleString()}
+                      {bottle.forSaleQuantity > 1 && (
+                        <span className="ml-1.5 text-sm font-normal text-success/70">
+                          {t('bottle.perBottle')}
+                        </span>
+                      )}
+                    </span>
+                  </div>
+                  {bottle.forSaleQuantity > 1 && (
+                    <div className="mt-1.5 text-sm text-success/90">
+                      {t('bottle.availableForSale', { count: bottle.forSaleQuantity })}
+                    </div>
+                  )}
                 </div>
               )}
               {currentUserId && <MakeOfferSection bottle={bottle} />}

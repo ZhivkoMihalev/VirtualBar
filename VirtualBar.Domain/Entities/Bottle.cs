@@ -36,11 +36,15 @@ public class Bottle : BaseEntity
 
     public BottleCondition Condition { get; set; } = BottleCondition.Sealed;
 
+    public int Quantity { get; set; } = 1;
+
     public string? Description { get; set; }
 
     public bool IsLimited { get; set; }
 
     public bool IsForSale { get; set; }
+
+    public int ForSaleQuantity { get; set; }
 
     public decimal? AskingPrice { get; set; }
 

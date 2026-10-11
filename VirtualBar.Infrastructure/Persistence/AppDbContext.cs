@@ -83,6 +83,11 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
             .Property(b => b.AskingPrice)
             .HasColumnType("decimal(18,2)");
 
+        // Existing rows predate the column, so the store default backfills them to a single bottle.
+        builder.Entity<Bottle>()
+            .Property(b => b.Quantity)
+            .HasDefaultValue(1);
+
         builder.Entity<AppUser>()
             .HasIndex(u => u.DisplayName);
 

@@ -66,7 +66,9 @@ public sealed class BadgeServiceTests
         SpiritCategory category = SpiritCategory.Whisky,
         bool isLimited = false,
         bool isForSale = false,
-        bool isDeleted = false)
+        bool isDeleted = false,
+        int quantity = 1,
+        int? forSaleQuantity = null)
     {
         var bottle = new Bottle
         {
@@ -74,8 +76,12 @@ public sealed class BadgeServiceTests
             Name = "Lagavulin 16",
             Category = category,
             Condition = BottleCondition.Sealed,
+            Quantity = quantity,
             IsLimited = isLimited,
             IsForSale = isForSale,
+            // Mirrors the invariant ListForSaleAsync / UnlistFromSaleAsync maintain: a listing always
+            // offers at least one bottle, an unlisted entry offers none.
+            ForSaleQuantity = isForSale ? forSaleQuantity ?? quantity : 0,
             IsDeleted = isDeleted,
             DeletedAt = isDeleted ? DateTime.UtcNow : null
         };
@@ -880,6 +886,137 @@ public sealed class BadgeServiceTests
 
         await Assert.ThrowsAsync<OperationCanceledException>(
             () => service.GetMyProgressAsync(cts.Token));
+    }
+
+    #endregion
+
+    #region EvaluateAsync — quantity counts physical bottles
+
+    [Fact]
+    public async Task EvaluateAsync_WhenSingleEntryHoldsFiveBottles_AwardsFirstBottleAndCollector5()
+    {
+        var db = CreateDbContext();
+        var user = SeedUser(db);
+        SeedBottle(db, user.Id, quantity: 5);
+        var notificationMock = new Mock<INotificationService>();
+        var service = CreateBadgeService(db, user.Id, notificationMock.Object);
+
+        await service.EvaluateAsync(user.Id, BadgeTrigger.BottleAdded, CancellationToken.None);
+
+        var badges = await db.UserBadges.Where(b => b.UserId == user.Id).Select(b => b.Badge).ToListAsync();
+        Assert.Contains(BadgeType.FirstBottle, badges);
+        Assert.Contains(BadgeType.Collector5, badges);
+        Assert.DoesNotContain(BadgeType.Collector10, badges);
+    }
+
+    [Fact]
+    public async Task EvaluateAsync_WhenStacksSumBelowThreshold_DoesNotAwardCollector5()
+    {
+        var db = CreateDbContext();
+        var user = SeedUser(db);
+        SeedBottle(db, user.Id, quantity: 2);
+        SeedBottle(db, user.Id, quantity: 2);
+        var notificationMock = new Mock<INotificationService>();
+        var service = CreateBadgeService(db, user.Id, notificationMock.Object);
+
+        await service.EvaluateAsync(user.Id, BadgeTrigger.BottleAdded, CancellationToken.None);
+
+        var badges = await db.UserBadges.Where(b => b.UserId == user.Id).Select(b => b.Badge).ToListAsync();
+        Assert.Contains(BadgeType.FirstBottle, badges);
+        Assert.DoesNotContain(BadgeType.Collector5, badges);
+    }
+
+    [Fact]
+    public async Task EvaluateAsync_WhenSingleLimitedEntryHoldsFiveBottles_AwardsLimitedHunter()
+    {
+        var db = CreateDbContext();
+        var user = SeedUser(db);
+        SeedBottle(db, user.Id, isLimited: true, quantity: 5);
+        var notificationMock = new Mock<INotificationService>();
+        var service = CreateBadgeService(db, user.Id, notificationMock.Object);
+
+        await service.EvaluateAsync(user.Id, BadgeTrigger.BottleAdded, CancellationToken.None);
+
+        var badges = await db.UserBadges.Where(b => b.UserId == user.Id).Select(b => b.Badge).ToListAsync();
+        Assert.Contains(BadgeType.LimitedHunter, badges);
+    }
+
+    [Fact]
+    public async Task EvaluateAsync_WhenSoftDeletedStackWouldReachThreshold_DoesNotCount()
+    {
+        var db = CreateDbContext();
+        var user = SeedUser(db);
+        SeedBottle(db, user.Id, quantity: 1);
+        SeedBottle(db, user.Id, isDeleted: true, quantity: 20);
+        var notificationMock = new Mock<INotificationService>();
+        var service = CreateBadgeService(db, user.Id, notificationMock.Object);
+
+        await service.EvaluateAsync(user.Id, BadgeTrigger.BottleAdded, CancellationToken.None);
+
+        var badges = await db.UserBadges.Where(b => b.UserId == user.Id).Select(b => b.Badge).ToListAsync();
+        Assert.Contains(BadgeType.FirstBottle, badges);
+        Assert.DoesNotContain(BadgeType.Collector5, badges);
+    }
+
+    [Fact]
+    public async Task GetMyProgressAsync_WhenStackHeld_ReportsPhysicalBottlesAsCurrent()
+    {
+        var db = CreateDbContext();
+        var user = SeedUser(db);
+        SeedBottle(db, user.Id, quantity: 8);
+        var service = CreateBadgeService(db, user.Id);
+
+        var result = await service.GetMyProgressAsync(CancellationToken.None);
+
+        Assert.True(result.Success);
+        Assert.Equal(8, result.Data!.First(p => p.Badge == BadgeType.Collector10).Current);
+    }
+
+    #endregion
+
+    #region ActiveListings — counts listed bottles, not the owned stack
+
+    [Fact]
+    public async Task EvaluateAsync_WhenPartOfStackListed_AwardsFirstListing()
+    {
+        var db = CreateDbContext();
+        var user = SeedUser(db);
+        SeedBottle(db, user.Id, isForSale: true, quantity: 5, forSaleQuantity: 1);
+        var notificationMock = new Mock<INotificationService>();
+        var service = CreateBadgeService(db, user.Id, notificationMock.Object);
+
+        await service.EvaluateAsync(user.Id, BadgeTrigger.BottleListed, CancellationToken.None);
+
+        var badges = await db.UserBadges.Where(b => b.UserId == user.Id).Select(b => b.Badge).ToListAsync();
+        Assert.Contains(BadgeType.FirstListing, badges);
+    }
+
+    [Fact]
+    public async Task GetMyProgressAsync_WhenPartOfStackListed_CountsOnlyTheListedBottles()
+    {
+        var db = CreateDbContext();
+        var user = SeedUser(db);
+        SeedBottle(db, user.Id, isForSale: true, quantity: 5, forSaleQuantity: 2);
+        var service = CreateBadgeService(db, user.Id);
+
+        var result = await service.GetMyProgressAsync(CancellationToken.None);
+
+        Assert.True(result.Success);
+        Assert.Equal(2, result.Data!.First(p => p.Badge == BadgeType.FirstListing).Current);
+    }
+
+    [Fact]
+    public async Task GetMyProgressAsync_WhenStackOwnedButNotListed_CountsNoListings()
+    {
+        var db = CreateDbContext();
+        var user = SeedUser(db);
+        SeedBottle(db, user.Id, quantity: 7);
+        var service = CreateBadgeService(db, user.Id);
+
+        var result = await service.GetMyProgressAsync(CancellationToken.None);
+
+        Assert.True(result.Success);
+        Assert.Equal(0, result.Data!.First(p => p.Badge == BadgeType.FirstListing).Current);
     }
 
     #endregion

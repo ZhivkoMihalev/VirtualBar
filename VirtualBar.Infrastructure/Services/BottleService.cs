@@ -80,6 +80,7 @@ public sealed class BottleService(
             AbvPercent = request.AbvPercent,
             VolumeMl = request.VolumeMl,
             Condition = request.Condition,
+            Quantity = request.Quantity,
             Description = request.Description,
             IsLimited = request.IsLimited
         };
@@ -165,6 +166,7 @@ public sealed class BottleService(
         bottle.AbvPercent = request.AbvPercent;
         bottle.VolumeMl = request.VolumeMl;
         bottle.Condition = request.Condition;
+        bottle.Quantity = request.Quantity;
         bottle.Description = request.Description;
         bottle.IsLimited = request.IsLimited;
         bottle.UpdatedAt = DateTime.UtcNow;
@@ -235,6 +237,7 @@ public sealed class BottleService(
             .FirstOrDefaultAsync(b => b.Id == bottleId && !b.IsDeleted, cancellationToken);
 
         bottle!.IsForSale = true;
+        bottle.ForSaleQuantity = request.Quantity;
         bottle.AskingPrice = request.AskingPrice;
         bottle.Currency = request.Currency;
         bottle.ForSaleAt = DateTime.UtcNow;
@@ -271,6 +274,7 @@ public sealed class BottleService(
             .FirstOrDefaultAsync(b => b.Id == bottleId && !b.IsDeleted, cancellationToken);
 
         bottle!.IsForSale = false;
+        bottle.ForSaleQuantity = 0;
         bottle.AskingPrice = null;
         bottle.Currency = null;
         bottle.ForSaleAt = null;
@@ -339,9 +343,11 @@ public sealed class BottleService(
         AbvPercent = bottle.AbvPercent,
         VolumeMl = bottle.VolumeMl,
         Condition = bottle.Condition,
+        Quantity = bottle.Quantity,
         Description = bottle.Description,
         IsLimited = bottle.IsLimited,
         IsForSale = bottle.IsForSale,
+        ForSaleQuantity = bottle.ForSaleQuantity,
         AskingPrice = bottle.AskingPrice,
         Currency = bottle.Currency,
         LikesCount = likesCount,

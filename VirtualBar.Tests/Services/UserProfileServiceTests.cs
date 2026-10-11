@@ -57,6 +57,19 @@ public sealed class UserProfileServiceTests
         db.SaveChanges();
     }
 
+    private static void SeedBottle(AppDbContext db, Guid userId, int quantity = 1, bool isDeleted = false)
+    {
+        db.Bottles.Add(new Bottle
+        {
+            UserId = userId,
+            Name = "Lagavulin 16",
+            Quantity = quantity,
+            IsDeleted = isDeleted,
+            DeletedAt = isDeleted ? DateTime.UtcNow : null,
+        });
+        db.SaveChanges();
+    }
+
     private static IFormFile CreateFormFile(string fileName = "avatar.jpg", string contentType = "image/jpeg", long length = 1024)
     {
         var mock = new Mock<IFormFile>();
@@ -456,6 +469,54 @@ public sealed class UserProfileServiceTests
 
         await Assert.ThrowsAsync<OperationCanceledException>(
             () => service.UploadAvatarAsync(CreateFormFile(), cts.Token));
+    }
+
+    #endregion
+
+    #region Bottle count
+
+    [Fact]
+    public async Task GetProfileAsync_CountsPhysicalBottlesNotEntries()
+    {
+        var db = CreateDbContext();
+        var target = SeedUser(db, "Target");
+        SeedBottle(db, target.Id, quantity: 4);
+        SeedBottle(db, target.Id);
+        var service = CreateService(db, Guid.NewGuid());
+
+        var result = await service.GetProfileAsync(target.Id, CancellationToken.None);
+
+        Assert.True(result.Success);
+        Assert.Equal(5, result.Data!.BottleCount);
+    }
+
+    [Fact]
+    public async Task GetProfileAsync_WhenOnlySoftDeletedBottles_CountsZero()
+    {
+        var db = CreateDbContext();
+        var target = SeedUser(db, "Target");
+        SeedBottle(db, target.Id, quantity: 9, isDeleted: true);
+        var service = CreateService(db, Guid.NewGuid());
+
+        var result = await service.GetProfileAsync(target.Id, CancellationToken.None);
+
+        Assert.True(result.Success);
+        Assert.Equal(0, result.Data!.BottleCount);
+    }
+
+    [Fact]
+    public async Task SearchUsersAsync_CountsPhysicalBottlesNotEntries()
+    {
+        var db = CreateDbContext();
+        var user = SeedUser(db, "Alice");
+        SeedBottle(db, user.Id, quantity: 3);
+        SeedBottle(db, user.Id, quantity: 2, isDeleted: true);
+        var service = CreateService(db, Guid.NewGuid());
+
+        var result = await service.SearchUsersAsync("Alice", CancellationToken.None);
+
+        Assert.True(result.Success);
+        Assert.Equal(3, Assert.Single(result.Data!).BottleCount);
     }
 
     #endregion

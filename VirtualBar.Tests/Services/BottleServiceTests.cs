@@ -76,7 +76,9 @@ public sealed class BottleServiceTests
         int displayOrder = 0,
         DateTime? createdAt = null,
         SpiritCategory category = SpiritCategory.Whisky,
-        Guid? productId = null)
+        Guid? productId = null,
+        int quantity = 1,
+        int? forSaleQuantity = null)
     {
         var bottle = new Bottle
         {
@@ -86,7 +88,11 @@ public sealed class BottleServiceTests
             ProductId = productId,
             Category = category,
             Condition = BottleCondition.Sealed,
+            Quantity = quantity,
             IsForSale = isForSale,
+            // Mirrors the invariant ListForSaleAsync / UnlistFromSaleAsync maintain: a listing always
+            // offers at least one bottle, an unlisted entry offers none.
+            ForSaleQuantity = isForSale ? forSaleQuantity ?? quantity : 0,
             IsDeleted = isDeleted,
             DeletedAt = isDeleted ? DateTime.UtcNow : null,
             AskingPrice = askingPrice,
@@ -1800,6 +1806,288 @@ public sealed class BottleServiceTests
 
         Assert.True(result.Success);
         Assert.Equal(product.Id, Assert.Single(result.Data!).ProductId);
+    }
+
+    #endregion
+
+    #region Quantity
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(-1)]
+    [InlineData(100)]
+    public async Task AddBottleAsync_WhenQuantityOutOfRange_ReturnsFail(int quantity)
+    {
+        var db = CreateDbContext();
+        var service = CreateBottleService(db, Guid.NewGuid());
+        var request = new AddBottleRequest { Name = "Valid", Quantity = quantity };
+
+        var result = await service.AddBottleAsync(request, CancellationToken.None);
+
+        Assert.False(result.Success);
+        Assert.Equal("Quantity must be between 1 and 99.", result.Error);
+    }
+
+    [Fact]
+    public async Task AddBottleAsync_WhenQuantityOmitted_DefaultsToOne()
+    {
+        var db = CreateDbContext();
+        var userId = Guid.NewGuid();
+        var service = CreateBottleService(db, userId);
+
+        var result = await service.AddBottleAsync(new AddBottleRequest { Name = "Lagavulin 16" }, CancellationToken.None);
+
+        Assert.True(result.Success);
+        Assert.Equal(1, result.Data!.Quantity);
+        Assert.Equal(1, db.Bottles.Single().Quantity);
+    }
+
+    [Theory]
+    [InlineData(1)]
+    [InlineData(6)]
+    [InlineData(99)]
+    public async Task AddBottleAsync_WhenQuantityInRange_PersistsAndMapsQuantity(int quantity)
+    {
+        var db = CreateDbContext();
+        var userId = Guid.NewGuid();
+        var service = CreateBottleService(db, userId);
+        var request = new AddBottleRequest { Name = "Lagavulin 16", Quantity = quantity };
+
+        var result = await service.AddBottleAsync(request, CancellationToken.None);
+
+        Assert.True(result.Success);
+        Assert.Equal(quantity, result.Data!.Quantity);
+        Assert.Equal(quantity, db.Bottles.Single().Quantity);
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(-1)]
+    [InlineData(100)]
+    public async Task UpdateBottleAsync_WhenQuantityOutOfRange_ReturnsFail(int quantity)
+    {
+        var db = CreateDbContext();
+        var user = SeedUser(db);
+        var bottle = SeedBottle(db, user.Id);
+        var service = CreateBottleService(db, user.Id);
+        var request = new UpdateBottleRequest { Name = "Valid", Quantity = quantity };
+
+        var result = await service.UpdateBottleAsync(bottle.Id, request, CancellationToken.None);
+
+        Assert.False(result.Success);
+        Assert.Equal("Quantity must be between 1 and 99.", result.Error);
+    }
+
+    [Fact]
+    public async Task UpdateBottleAsync_WhenQuantityChanged_PersistsNewQuantity()
+    {
+        var db = CreateDbContext();
+        var user = SeedUser(db);
+        var bottle = SeedBottle(db, user.Id, quantity: 2);
+        var service = CreateBottleService(db, user.Id);
+        var request = new UpdateBottleRequest { Name = bottle.Name, Quantity = 7 };
+
+        var result = await service.UpdateBottleAsync(bottle.Id, request, CancellationToken.None);
+
+        Assert.True(result.Success);
+        Assert.Equal(7, result.Data!.Quantity);
+        Assert.Equal(7, db.Bottles.Single().Quantity);
+    }
+
+    [Fact]
+    public async Task GetBottlesByUserAsync_MapsQuantity()
+    {
+        var db = CreateDbContext();
+        var user = SeedUser(db);
+        SeedBottle(db, user.Id, quantity: 4);
+        var service = CreateBottleService(db, user.Id);
+
+        var result = await service.GetBottlesByUserAsync(user.Id, CancellationToken.None);
+
+        Assert.True(result.Success);
+        Assert.Equal(4, Assert.Single(result.Data!).Quantity);
+    }
+
+    [Fact]
+    public async Task GetBottleByIdAsync_MapsQuantity()
+    {
+        var db = CreateDbContext();
+        var user = SeedUser(db);
+        var bottle = SeedBottle(db, user.Id, quantity: 3);
+        var service = CreateBottleService(db, user.Id);
+
+        var result = await service.GetBottleByIdAsync(bottle.Id, CancellationToken.None);
+
+        Assert.True(result.Success);
+        Assert.Equal(3, result.Data!.Quantity);
+    }
+
+    [Fact]
+    public async Task GetMarketplaceAsync_MapsQuantity()
+    {
+        var db = CreateDbContext();
+        var user = SeedUser(db);
+        SeedBottle(db, user.Id, isForSale: true, quantity: 5);
+        var service = CreateBottleService(db, user.Id);
+
+        var result = await service.GetMarketplaceAsync(new MarketplaceQuery(), CancellationToken.None);
+
+        Assert.True(result.Success);
+        Assert.Equal(5, Assert.Single(result.Data!).Quantity);
+    }
+
+    #endregion
+
+    #region For-sale quantity
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(-1)]
+    [InlineData(4)]
+    public async Task ListForSaleAsync_WhenQuantityOutsideOwnedCount_ReturnsFail(int quantity)
+    {
+        var db = CreateDbContext();
+        var user = SeedUser(db);
+        var bottle = SeedBottle(db, user.Id, quantity: 3);
+        var service = CreateBottleService(db, user.Id);
+        var request = new ListForSaleRequest { AskingPrice = 100m, Currency = "USD", Quantity = quantity };
+
+        var result = await service.ListForSaleAsync(bottle.Id, request, CancellationToken.None);
+
+        Assert.False(result.Success);
+        Assert.Equal("For sale quantity must be between 1 and 3.", result.Error);
+        Assert.Equal(0, db.Bottles.Single().ForSaleQuantity);
+        Assert.False(db.Bottles.Single().IsForSale);
+    }
+
+    [Theory]
+    [InlineData(1)]
+    [InlineData(2)]
+    [InlineData(3)]
+    public async Task ListForSaleAsync_WhenQuantityWithinOwnedCount_ListsThatMany(int quantity)
+    {
+        var db = CreateDbContext();
+        var user = SeedUser(db);
+        var bottle = SeedBottle(db, user.Id, quantity: 3);
+        var service = CreateBottleService(db, user.Id);
+        var request = new ListForSaleRequest { AskingPrice = 100m, Currency = "USD", Quantity = quantity };
+
+        var result = await service.ListForSaleAsync(bottle.Id, request, CancellationToken.None);
+
+        Assert.True(result.Success);
+        var stored = db.Bottles.Single();
+        Assert.True(stored.IsForSale);
+        Assert.Equal(quantity, stored.ForSaleQuantity);
+        Assert.Equal(3, stored.Quantity);
+    }
+
+    [Fact]
+    public async Task ListForSaleAsync_WhenQuantityOmitted_ListsASingleBottle()
+    {
+        var db = CreateDbContext();
+        var user = SeedUser(db);
+        var bottle = SeedBottle(db, user.Id, quantity: 5);
+        var service = CreateBottleService(db, user.Id);
+
+        var result = await service.ListForSaleAsync(
+            bottle.Id, new ListForSaleRequest { AskingPrice = 100m, Currency = "USD" }, CancellationToken.None);
+
+        Assert.True(result.Success);
+        Assert.Equal(1, db.Bottles.Single().ForSaleQuantity);
+    }
+
+    [Fact]
+    public async Task UnlistFromSaleAsync_ClearsForSaleQuantity()
+    {
+        var db = CreateDbContext();
+        var user = SeedUser(db);
+        var bottle = SeedBottle(db, user.Id, isForSale: true, quantity: 4, forSaleQuantity: 2);
+        var service = CreateBottleService(db, user.Id);
+
+        var result = await service.UnlistFromSaleAsync(bottle.Id, CancellationToken.None);
+
+        Assert.True(result.Success);
+        var stored = db.Bottles.Single();
+        Assert.False(stored.IsForSale);
+        Assert.Equal(0, stored.ForSaleQuantity);
+        Assert.Equal(4, stored.Quantity);
+    }
+
+    [Fact]
+    public async Task UpdateBottleAsync_WhenQuantityBelowListedCount_ReturnsConflict()
+    {
+        var db = CreateDbContext();
+        var user = SeedUser(db);
+        var bottle = SeedBottle(db, user.Id, isForSale: true, quantity: 3, forSaleQuantity: 3);
+        var service = CreateBottleService(db, user.Id);
+        var request = new UpdateBottleRequest { Name = bottle.Name, Quantity = 2 };
+
+        var result = await service.UpdateBottleAsync(bottle.Id, request, CancellationToken.None);
+
+        Assert.False(result.Success);
+        Assert.Equal("Quantity cannot drop below the 3 bottles listed for sale.", result.Error);
+        Assert.Equal(3, db.Bottles.Single().Quantity);
+    }
+
+    [Fact]
+    public async Task UpdateBottleAsync_WhenQuantityMatchesListedCount_Succeeds()
+    {
+        var db = CreateDbContext();
+        var user = SeedUser(db);
+        var bottle = SeedBottle(db, user.Id, isForSale: true, quantity: 5, forSaleQuantity: 2);
+        var service = CreateBottleService(db, user.Id);
+        var request = new UpdateBottleRequest { Name = bottle.Name, Quantity = 2 };
+
+        var result = await service.UpdateBottleAsync(bottle.Id, request, CancellationToken.None);
+
+        Assert.True(result.Success);
+        Assert.Equal(2, result.Data!.Quantity);
+        Assert.Equal(2, result.Data.ForSaleQuantity);
+    }
+
+    [Fact]
+    public async Task UpdateBottleAsync_WhenBottleNotListed_QuantityIsFreeToDrop()
+    {
+        var db = CreateDbContext();
+        var user = SeedUser(db);
+        var bottle = SeedBottle(db, user.Id, quantity: 5);
+        var service = CreateBottleService(db, user.Id);
+        var request = new UpdateBottleRequest { Name = bottle.Name, Quantity = 1 };
+
+        var result = await service.UpdateBottleAsync(bottle.Id, request, CancellationToken.None);
+
+        Assert.True(result.Success);
+        Assert.Equal(1, result.Data!.Quantity);
+    }
+
+    [Fact]
+    public async Task GetMarketplaceAsync_MapsForSaleQuantity()
+    {
+        var db = CreateDbContext();
+        var user = SeedUser(db);
+        SeedBottle(db, user.Id, isForSale: true, quantity: 6, forSaleQuantity: 2);
+        var service = CreateBottleService(db, user.Id);
+
+        var result = await service.GetMarketplaceAsync(new MarketplaceQuery(), CancellationToken.None);
+
+        Assert.True(result.Success);
+        var line = Assert.Single(result.Data!);
+        Assert.Equal(2, line.ForSaleQuantity);
+        Assert.Equal(6, line.Quantity);
+    }
+
+    [Fact]
+    public async Task GetBottlesByUserAsync_MapsForSaleQuantity()
+    {
+        var db = CreateDbContext();
+        var user = SeedUser(db);
+        SeedBottle(db, user.Id, isForSale: true, quantity: 3, forSaleQuantity: 1);
+        var service = CreateBottleService(db, user.Id);
+
+        var result = await service.GetBottlesByUserAsync(user.Id, CancellationToken.None);
+
+        Assert.True(result.Success);
+        Assert.Equal(1, Assert.Single(result.Data!).ForSaleQuantity);
     }
 
     #endregion

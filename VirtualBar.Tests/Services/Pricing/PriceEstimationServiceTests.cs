@@ -427,7 +427,63 @@ public sealed class PriceEstimationServiceTests
         Assert.False(line.CountedInTotal);
     }
 
-    private static void AddOwnedBottle(AppDbContext db, Guid userId, BottleCondition condition)
+    [Fact]
+    public async Task GetCollectionValueAsync_WhenEntryHoldsSeveralBottles_ScalesTotalAndCounts()
+    {
+        await using var db = CreateDbContext();
+        var userId = Guid.NewGuid();
+        AddOwnedBottle(db, userId, BottleCondition.Sealed, quantity: 3);
+        SeedSnapshot(db, DateTime.UtcNow, price: 100m);
+        var (svc, _) = CreateOrchestrator(db);
+
+        var result = await svc.GetCollectionValueAsync(userId, CancellationToken.None);
+
+        Assert.True(result.Success);
+        Assert.Equal(300m, result.Data!.TotalValue);
+        Assert.Equal(3, result.Data.PricedCount);
+        Assert.Equal(3, result.Data.TotalCount);
+        var line = Assert.Single(result.Data.Items);
+        Assert.Equal(100m, line.EstimatedPrice);
+        Assert.Equal(3, line.Quantity);
+        Assert.True(line.CountedInTotal);
+    }
+
+    [Fact]
+    public async Task GetCollectionValueAsync_WhenOpenedEntryHoldsSeveralBottles_CountsThemButNotTheirValue()
+    {
+        await using var db = CreateDbContext();
+        var userId = Guid.NewGuid();
+        AddOwnedBottle(db, userId, BottleCondition.Opened, quantity: 4);
+        SeedSnapshot(db, DateTime.UtcNow, price: 100m);
+        var (svc, _) = CreateOrchestrator(db);
+
+        var result = await svc.GetCollectionValueAsync(userId, CancellationToken.None);
+
+        Assert.True(result.Success);
+        Assert.Equal(0m, result.Data!.TotalValue);
+        Assert.Equal(4, result.Data.PricedCount);
+        Assert.Equal(4, result.Data.TotalCount);
+        Assert.False(Assert.Single(result.Data.Items).CountedInTotal);
+    }
+
+    [Fact]
+    public async Task GetCollectionValueAsync_WhenUnpricedEntryHoldsSeveralBottles_CountsThemInTotalCountOnly()
+    {
+        await using var db = CreateDbContext();
+        var userId = Guid.NewGuid();
+        AddOwnedBottle(db, userId, BottleCondition.Sealed, quantity: 5);
+        var (svc, _) = CreateOrchestrator(db);
+
+        var result = await svc.GetCollectionValueAsync(userId, CancellationToken.None);
+
+        Assert.True(result.Success);
+        Assert.Equal(0m, result.Data!.TotalValue);
+        Assert.Equal(0, result.Data.PricedCount);
+        Assert.Equal(5, result.Data.TotalCount);
+        Assert.Equal(5, Assert.Single(result.Data.Items).Quantity);
+    }
+
+    private static void AddOwnedBottle(AppDbContext db, Guid userId, BottleCondition condition, int quantity = 1)
     {
         db.Bottles.Add(new Bottle
         {
@@ -437,6 +493,7 @@ public sealed class PriceEstimationServiceTests
             Age = 18,
             VolumeMl = 700,
             Condition = condition,
+            Quantity = quantity,
         });
         db.SaveChanges();
     }

@@ -17,7 +17,7 @@ namespace VirtualBar.Infrastructure.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "9.0.18")
+                .HasAnnotation("ProductVersion", "9.0.20")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
@@ -291,6 +291,9 @@ namespace VirtualBar.Infrastructure.Migrations
                     b.Property<DateTime?>("ForSaleAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<int>("ForSaleQuantity")
+                        .HasColumnType("int");
+
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
@@ -306,6 +309,11 @@ namespace VirtualBar.Infrastructure.Migrations
 
                     b.Property<Guid?>("ProductId")
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Quantity")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(1);
 
                     b.Property<string>("Region")
                         .HasColumnType("nvarchar(max)");

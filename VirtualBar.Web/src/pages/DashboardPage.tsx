@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { useForm, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { ImagePlus, Loader2, Check, X } from 'lucide-react'
+import { ImagePlus, Loader2, Check, X, Minus, Plus } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import NavBar from '../components/NavBar'
 import {
@@ -51,6 +51,7 @@ const makeSchema = (t: TFn) =>
     name: z.string().trim().min(1, t('addBottle.nameRequired')),
     category: z.enum(['Whisky', 'Rum', 'Cognac', 'Vodka', 'Gin', 'Tequila', 'Brandy', 'Other']),
     condition: z.enum(['Sealed', 'Opened', 'Empty']),
+    quantity: z.number().int().min(1, t('addBottle.quantityRange')).max(99, t('addBottle.quantityRange')),
     distilleryId: z.string().nullable(),
     age: z.string(),
     abv: z.string(),
@@ -60,6 +61,21 @@ const makeSchema = (t: TFn) =>
   })
 
 type Values = z.infer<ReturnType<typeof makeSchema>>
+
+// Every headline stat counts physical bottles, so one entry contributes its whole stack.
+const countBottles = (bottles: Bottle[], match?: (b: Bottle) => boolean) =>
+  bottles.reduce((sum, b) => (match && !match(b) ? sum : sum + b.quantity), 0)
+
+// A listed entry may offer only part of its stack, so this counts bottles actually on sale.
+const countForSale = (bottles: Bottle[]) =>
+  bottles.reduce((sum, b) => (b.isForSale ? sum + b.forSaleQuantity : sum), 0)
+
+// The stepper buttons can only produce a valid value; typing can not either, so the form never
+// holds a quantity the API would reject. Clearing the box falls back to a single bottle.
+const clampQuantity = (raw: string) => {
+  const n = Math.trunc(Number(raw))
+  return Number.isFinite(n) ? Math.min(99, Math.max(1, n)) : 1
+}
 
 const identityKey = (name: string, category: string, age: string, volume: string) =>
   JSON.stringify([name.trim(), category, age.trim(), volume.trim()])
@@ -83,6 +99,7 @@ function AddBottlePanel({ onSuccess }: { onSuccess: () => void }) {
       name: '',
       category: 'Whisky',
       condition: 'Sealed',
+      quantity: 1,
       distilleryId: null,
       age: '',
       abv: '',
@@ -236,6 +253,7 @@ function AddBottlePanel({ onSuccess }: { onSuccess: () => void }) {
       region: activeProduct?.region ?? undefined,
       category: v.category,
       condition: v.condition,
+      quantity: v.quantity,
       isLimited: v.isLimited,
       age: v.age ? Number(v.age) : undefined,
       abvPercent: v.abv ? Number(v.abv) : undefined,
@@ -496,6 +514,57 @@ function AddBottlePanel({ onSuccess }: { onSuccess: () => void }) {
 
           <FormField
             control={form.control}
+            name="quantity"
+            render={({ field }) => (
+              <FormItem className="rounded-md border border-input p-3">
+                <div className="flex flex-row items-center justify-between">
+                  <div className="space-y-0.5">
+                    <FormLabel>{t('addBottle.quantity')}</FormLabel>
+                    <p className="text-xs text-muted-foreground">{t('addBottle.quantityHint')}</p>
+                  </div>
+                  <FormControl>
+                    <div className="flex items-center gap-1">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        className="size-8"
+                        disabled={field.value <= 1}
+                        aria-label={t('addBottle.quantityDecrease')}
+                        onClick={() => field.onChange(Math.max(1, field.value - 1))}
+                      >
+                        <Minus className="size-3.5" />
+                      </Button>
+                      <Input
+                        type="number"
+                        min={1}
+                        max={99}
+                        className="h-8 w-14 text-center"
+                        aria-label={t('addBottle.quantity')}
+                        value={field.value}
+                        onChange={e => field.onChange(clampQuantity(e.target.value))}
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        className="size-8"
+                        disabled={field.value >= 99}
+                        aria-label={t('addBottle.quantityIncrease')}
+                        onClick={() => field.onChange(Math.min(99, field.value + 1))}
+                      >
+                        <Plus className="size-3.5" />
+                      </Button>
+                    </div>
+                  </FormControl>
+                </div>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
             name="isLimited"
             render={({ field }) => (
               <FormItem className="flex flex-row items-center justify-between rounded-md border border-input p-3">
@@ -591,7 +660,7 @@ export default function DashboardPage() {
   const categoryCounts = useMemo(
     () =>
       CATEGORIES.reduce((acc, cat) => {
-        acc[cat] = bottles.filter(b => b.category === cat).length
+        acc[cat] = countBottles(bottles, b => b.category === cat)
         return acc
       }, {} as Record<SpiritCategory, number>),
     [bottles],
@@ -613,7 +682,7 @@ export default function DashboardPage() {
             <div className="mt-1.5 text-lg italic text-primary/90">
               {bottles.length === 0
                 ? t('dashboard.collectionAwaits')
-                : t('dashboard.bottlesInCollection', { count: bottles.length })}
+                : t('dashboard.bottlesInCollection', { count: countBottles(bottles) })}
             </div>
           </div>
 
@@ -623,16 +692,16 @@ export default function DashboardPage() {
         {bottles.length > 0 && (
           <Card className="mb-8">
             <CardContent className="flex flex-wrap items-center gap-6 px-6 py-4">
-              <StatItem value={bottles.length} label={t('dashboard.totalBottles')} />
+              <StatItem value={countBottles(bottles)} label={t('dashboard.totalBottles')} />
               <Separator orientation="vertical" className="h-10" />
               <StatItem
-                value={bottles.filter(b => b.condition === 'Sealed').length}
+                value={countBottles(bottles, b => b.condition === 'Sealed')}
                 label={t('dashboard.sealed')}
               />
               <Separator orientation="vertical" className="h-10" />
-              <StatItem value={bottles.filter(b => b.isForSale).length} label={t('dashboard.forSale')} />
+              <StatItem value={countForSale(bottles)} label={t('dashboard.forSale')} />
               <Separator orientation="vertical" className="h-10" />
-              <StatItem value={bottles.filter(b => b.isLimited).length} label={t('dashboard.limited')} />
+              <StatItem value={countBottles(bottles, b => b.isLimited)} label={t('dashboard.limited')} />
             </CardContent>
           </Card>
         )}
@@ -690,7 +759,7 @@ export default function DashboardPage() {
           >
             <ToggleGroupItem value="all" className={TOGGLE_ON}>
               {t('marketplace.allCategories')}
-              <span className="ml-1.5 opacity-70">{bottles.length}</span>
+              <span className="ml-1.5 opacity-70">{countBottles(bottles)}</span>
             </ToggleGroupItem>
             {CATEGORIES.filter(c => categoryCounts[c] > 0).map(cat => (
               <ToggleGroupItem key={cat} value={cat} className={TOGGLE_ON}>
@@ -728,6 +797,8 @@ export default function DashboardPage() {
           <AddBottlePanel
             onSuccess={() => {
               queryClient.invalidateQueries({ queryKey: ['bottles', user?.id] })
+              // The value card's counts are physical bottles, so a new stack moves them too.
+              queryClient.invalidateQueries({ queryKey: ['collectionValue', user?.id] })
               // An unmatched bottle files a catalog request server-side — refresh "My requests".
               queryClient.invalidateQueries({ queryKey: ['productRequests', 'mine'] })
               setAddOpen(false)
@@ -744,6 +815,7 @@ export default function DashboardPage() {
           onClose={() => setSelectedBottle(null)}
           onDelete={() => {
             queryClient.invalidateQueries({ queryKey: ['bottles', user.id] })
+            queryClient.invalidateQueries({ queryKey: ['collectionValue', user.id] })
             setSelectedBottle(null)
           }}
         />

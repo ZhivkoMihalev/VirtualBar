@@ -12,6 +12,8 @@ public sealed class BottleValidationDecorator(
     AppDbContext db,
     ICurrentUser currentUser) : IBottleService
 {
+    private const int MaxQuantity = 99;
+
     public async Task<Result<List<BottleDto>>> GetBottlesByUserAsync(Guid userId, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
@@ -35,6 +37,9 @@ public sealed class BottleValidationDecorator(
 
         if (string.IsNullOrWhiteSpace(request.Name))
             return Result<BottleDto>.Fail("Name is required.");
+
+        if (request.Quantity is < 1 or > MaxQuantity)
+            return Result<BottleDto>.Fail($"Quantity must be between 1 and {MaxQuantity}.");
 
         if (request.DistilleryId is Guid distilleryId)
         {
@@ -62,12 +67,20 @@ public sealed class BottleValidationDecorator(
         if (string.IsNullOrWhiteSpace(request.Name))
             return Result<BottleDto>.Fail("Name is required.");
 
+        if (request.Quantity is < 1 or > MaxQuantity)
+            return Result<BottleDto>.Fail($"Quantity must be between 1 and {MaxQuantity}.");
+
         var bottle = await db.Bottles.FirstOrDefaultAsync(b => b.Id == bottleId && !b.IsDeleted, cancellationToken);
         if (bottle is null)
             return Result<BottleDto>.NotFound("Bottle not found.");
 
         if (bottle.UserId != currentUser.UserId)
             return Result<BottleDto>.Forbidden("Forbidden.");
+
+        // Shrinking the stack below the listed count would leave the marketplace offering bottles the
+        // owner no longer has. Unlisting (or re-listing fewer) is the owner's explicit call, not ours.
+        if (request.Quantity < bottle.ForSaleQuantity)
+            return Result<BottleDto>.Conflict($"Quantity cannot drop below the {bottle.ForSaleQuantity} bottles listed for sale.");
 
         if (request.DistilleryId is Guid distilleryId)
         {
@@ -139,6 +152,10 @@ public sealed class BottleValidationDecorator(
         // + WishListMatch fan-out, spamming followers/wish-list owners. Unlist first to re-list.
         if (bottle.IsForSale)
             return Result<bool>.Conflict("Bottle is already listed for sale.");
+
+        // A stack can go on sale in part, so the offered count is bounded by what the owner holds.
+        if (request.Quantity < 1 || request.Quantity > bottle.Quantity)
+            return Result<bool>.Fail($"For sale quantity must be between 1 and {bottle.Quantity}.");
 
         return await inner.ListForSaleAsync(bottleId, request, cancellationToken);
     }

@@ -32,11 +32,16 @@ public sealed class BottleDto
 
     public BottleCondition Condition { get; set; }
 
+    public int Quantity { get; set; } = 1;
+
     public string? Description { get; set; }
 
     public bool IsLimited { get; set; }
 
     public bool IsForSale { get; set; }
+
+    /// <summary>How many of the owned bottles are on sale. Zero when the entry is not listed.</summary>
+    public int ForSaleQuantity { get; set; }
 
     public decimal? AskingPrice { get; set; }
 

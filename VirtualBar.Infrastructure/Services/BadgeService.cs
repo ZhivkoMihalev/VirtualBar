@@ -118,21 +118,27 @@ public sealed class BadgeService(
     private Task<int> CountAsync(BadgeCountKind countKind, Guid userId, CancellationToken cancellationToken) =>
         countKind switch
         {
+            // Thresholds count physical bottles, so a stack of N counts N times. Existing rows
+            // predate Quantity and sit at 1, so no already-earned badge changes meaning.
             BadgeCountKind.Bottles =>
-                db.Bottles.CountAsync(b => b.UserId == userId && !b.IsDeleted, cancellationToken),
+                db.Bottles.Where(b => b.UserId == userId && !b.IsDeleted)
+                    .SumAsync(b => b.Quantity, cancellationToken),
             BadgeCountKind.Categories =>
                 db.Bottles.Where(b => b.UserId == userId && !b.IsDeleted)
                     .Select(b => b.Category)
                     .Distinct()
                     .CountAsync(cancellationToken),
             BadgeCountKind.LimitedBottles =>
-                db.Bottles.CountAsync(b => b.UserId == userId && !b.IsDeleted && b.IsLimited, cancellationToken),
+                db.Bottles.Where(b => b.UserId == userId && !b.IsDeleted && b.IsLimited)
+                    .SumAsync(b => b.Quantity, cancellationToken),
             BadgeCountKind.LikesReceived =>
                 db.BottleLikes.CountAsync(l => l.Bottle.UserId == userId && !l.Bottle.IsDeleted, cancellationToken),
             BadgeCountKind.Followers =>
                 db.UserFollows.CountAsync(f => f.FollowedId == userId, cancellationToken),
+            // A stack can be listed in part, so a listing counts the bottles actually on offer.
             BadgeCountKind.ActiveListings =>
-                db.Bottles.CountAsync(b => b.UserId == userId && !b.IsDeleted && b.IsForSale, cancellationToken),
+                db.Bottles.Where(b => b.UserId == userId && !b.IsDeleted && b.IsForSale)
+                    .SumAsync(b => b.ForSaleQuantity, cancellationToken),
             BadgeCountKind.SalesAccepted =>
                 db.Offers.CountAsync(o => o.SellerId == userId && o.Status == OfferStatus.Accepted && !o.IsDeleted, cancellationToken),
             BadgeCountKind.PurchasesAccepted =>

@@ -1,5 +1,12 @@
 import { client } from './client'
-import type { Bottle, BottleComment, AddBottlePayload, MarketplaceFilters, BarcodeProduct } from '../types'
+import type {
+  Bottle,
+  BottleComment,
+  AddBottlePayload,
+  UpdateBottlePayload,
+  MarketplaceFilters,
+  BarcodeProduct,
+} from '../types'
 
 export async function getMarketplace(filters: MarketplaceFilters): Promise<Bottle[]> {
   const params: Record<string, string> = {}
@@ -17,6 +24,11 @@ export async function getBottlesByUser(userId: string): Promise<Bottle[]> {
 
 export async function addBottle(payload: AddBottlePayload): Promise<Bottle> {
   const res = await client.post<Bottle>('/bottles', payload)
+  return res.data
+}
+
+export async function updateBottle(id: string, payload: UpdateBottlePayload): Promise<Bottle> {
+  const res = await client.put<Bottle>(`/bottles/${id}`, payload)
   return res.data
 }
 
@@ -45,8 +57,13 @@ export async function lookupBarcode(barcode: string): Promise<BarcodeProduct> {
   return res.data
 }
 
-export async function listBottleForSale(bottleId: string, askingPrice: number, currency: string): Promise<void> {
-  await client.post(`/bottles/${bottleId}/list-for-sale`, { askingPrice, currency })
+export async function listBottleForSale(
+  bottleId: string,
+  askingPrice: number,
+  currency: string,
+  quantity: number,
+): Promise<void> {
+  await client.post(`/bottles/${bottleId}/list-for-sale`, { askingPrice, currency, quantity })
 }
 
 export async function unlistBottleFromSale(bottleId: string): Promise<void> {

@@ -43,9 +43,11 @@ export interface Bottle {
   abvPercent?: number
   volumeMl?: number
   condition: BottleCondition
+  quantity: number
   description?: string
   isLimited: boolean
   isForSale: boolean
+  forSaleQuantity: number
   askingPrice?: number
   currency?: string
   images: BottleImage[]
@@ -213,9 +215,14 @@ export interface AddBottlePayload {
   abvPercent?: number
   volumeMl?: number
   condition: BottleCondition
+  quantity: number
   description?: string
   isLimited: boolean
 }
+
+// Update takes the same shape as add: the API assigns every field blindly, so even a
+// quantity-only edit has to echo the bottle back in full or it would blank the rest.
+export type UpdateBottlePayload = AddBottlePayload
 
 export interface MarketplaceFilters {
   search?: string
@@ -420,6 +427,7 @@ export interface BottlePriceLine {
   bottleId: string
   name: string
   estimatedPrice: number | null
+  quantity: number
   currency: string
   confidence: PriceConfidence
   source: PriceSource

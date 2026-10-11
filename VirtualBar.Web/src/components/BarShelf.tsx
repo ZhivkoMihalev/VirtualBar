@@ -307,6 +307,25 @@ const scoreBadgeStyle: CSSProperties = {
   boxShadow: '0 0 8px rgba(201,168,76,0.25)',
 }
 
+// A stack of identical bottles is one card, so the count has to be on it. Sits bottom-right of
+// the bottle column, clear of the limited diamond, the for-sale dot and the score badge.
+const quantityBadgeStyle: CSSProperties = {
+  position: 'absolute',
+  bottom: 30,
+  right: 0,
+  zIndex: 6,
+  padding: '0 6px',
+  fontSize: 10,
+  fontWeight: 700,
+  lineHeight: 1.7,
+  whiteSpace: 'nowrap',
+  color: '#1C0904',
+  background: 'linear-gradient(180deg, #E8C870, #C9A84C)',
+  border: '0.5px solid rgba(232,200,112,0.7)',
+  borderRadius: 999,
+  boxShadow: '0 0 8px rgba(201,168,76,0.35)',
+}
+
 const hoverPhotoStyle: CSSProperties = {
   display: 'block',
   width: '100%',
@@ -364,6 +383,7 @@ export function BottleCard({
     col.label,
     bottle.volumeMl ? t('products.volumeSuffix', { volume: bottle.volumeMl }) : null,
     t(`addBottle.condition${bottle.condition}`),
+    bottle.quantity > 1 ? `×${bottle.quantity}` : null,
   ]
     .filter(Boolean)
     .join(' · ')
@@ -416,6 +436,11 @@ export function BottleCard({
       )}
       {bottle.reviewsCount > 0 && bottle.averageScore != null && (
         <span style={scoreBadgeStyle}>★ {Math.round(bottle.averageScore)}</span>
+      )}
+      {bottle.quantity > 1 && (
+        <span style={quantityBadgeStyle} title={t('bottle.quantityOwned', { count: bottle.quantity })}>
+          ×{bottle.quantity}
+        </span>
       )}
 
       <div style={{

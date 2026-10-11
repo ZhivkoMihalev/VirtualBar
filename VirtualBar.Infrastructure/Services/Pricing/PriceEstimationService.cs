@@ -36,7 +36,8 @@ public sealed class PriceEstimationService(
                 b.VintageYear,
                 b.VolumeMl,
                 b.Barcode,
-                b.Condition))
+                b.Condition,
+                b.Quantity))
             .FirstOrDefaultAsync(cancellationToken);
 
         if (bottle is null)
@@ -91,7 +92,8 @@ public sealed class PriceEstimationService(
                 b.VintageYear,
                 b.VolumeMl,
                 b.Barcode,
-                b.Condition))
+                b.Condition,
+                b.Quantity))
             .FirstOrDefaultAsync(cancellationToken);
 
         if (bottle is null)
@@ -125,7 +127,8 @@ public sealed class PriceEstimationService(
                 b.VintageYear,
                 b.VolumeMl,
                 b.Barcode,
-                b.Condition))
+                b.Condition,
+                b.Quantity))
             .ToListAsync(cancellationToken);
 
         var baseCurrency = pricingOptions.Value.BaseCurrency;
@@ -158,17 +161,20 @@ public sealed class PriceEstimationService(
             // The total counts only Sealed bottles; per-bottle estimates are shown for all conditions.
             var countedInTotal = snapshot is not null && bottle.Condition == BottleCondition.Sealed;
 
+            // One entry can stand for several identical bottles, and the estimate prices a single
+            // one — so every count and the total scale by Quantity.
             if (snapshot is not null)
-                pricedCount++;
+                pricedCount += bottle.Quantity;
 
             if (countedInTotal)
-                total += snapshot!.EstimatedPrice;
+                total += snapshot!.EstimatedPrice * bottle.Quantity;
 
             items.Add(new BottlePriceLineDto
             {
                 BottleId = bottle.Id,
                 Name = bottle.Name,
                 EstimatedPrice = snapshot?.EstimatedPrice,
+                Quantity = bottle.Quantity,
                 Currency = snapshot?.Currency ?? baseCurrency,
                 Confidence = snapshot?.Confidence ?? PriceConfidence.Low,
                 Source = snapshot?.Source ?? PriceSource.Internal,
@@ -181,7 +187,7 @@ public sealed class PriceEstimationService(
             TotalValue = decimal.Round(total, 2),
             Currency = baseCurrency,
             PricedCount = pricedCount,
-            TotalCount = bottles.Count,
+            TotalCount = bottles.Sum(b => b.Quantity),
             Items = items,
         });
     }
@@ -289,5 +295,6 @@ public sealed class PriceEstimationService(
         int? VintageYear,
         int? VolumeMl,
         string? Barcode,
-        BottleCondition Condition);
+        BottleCondition Condition,
+        int Quantity);
 }

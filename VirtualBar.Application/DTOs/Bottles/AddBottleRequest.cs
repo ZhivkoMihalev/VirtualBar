@@ -32,6 +32,12 @@ public sealed class AddBottleRequest
 
     public BottleCondition Condition { get; set; } = BottleCondition.Sealed;
 
+    /// <summary>
+    /// How many identical bottles the collector owns — one entry represents the whole stack.
+    /// Omitting the field keeps the default of 1, so older clients need no change.
+    /// </summary>
+    public int Quantity { get; set; } = 1;
+
     public string? Description { get; set; }
 
     public bool IsLimited { get; set; }

@@ -8,7 +8,11 @@ public sealed class BottlePriceLineDto
 
     public string Name { get; set; } = string.Empty;
 
+    /// <summary>Indicative value of a single bottle — multiply by <see cref="Quantity"/> for the line total.</summary>
     public decimal? EstimatedPrice { get; set; }
+
+    /// <summary>How many identical bottles this entry stands for.</summary>
+    public int Quantity { get; set; } = 1;
 
     public string Currency { get; set; } = string.Empty;
 

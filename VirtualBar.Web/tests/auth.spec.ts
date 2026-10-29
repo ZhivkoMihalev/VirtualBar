@@ -79,6 +79,20 @@ async function readSession(page: Page): Promise<Session> {
   })
 }
 
+/**
+ * readSession for a page that may still be reloading. A read that lands in the middle of a reload throws
+ * "Execution context was destroyed", and expect.poll does not retry a callback that throws: it only retries
+ * a value that does not match yet. So that one error becomes a value that does not match.
+ */
+async function readSessionWhileReloading(page: Page): Promise<Session | 'reloading'> {
+  try {
+    return await readSession(page)
+  } catch (error) {
+    if (error instanceof Error && error.message.includes('Execution context was destroyed')) return 'reloading'
+    throw error
+  }
+}
+
 /** Uncaught exceptions in the page; registered before navigation. */
 function trackPageErrors(page: Page): string[] {
   const errors: string[] = []
@@ -268,8 +282,8 @@ test.describe('VirtualBar Auth Flow', () => {
 
     await expect(page).toHaveURL('/login')
     // Requests the dashboard still had in flight come back 401 without a token, and the axios interceptor
-    // reloads /login once more; polling rides out that reload instead of reading storage mid-navigation.
-    await expect.poll(() => readSession(page)).toEqual({ token: null, user: null })
+    // reloads /login once more; the poll rides out that reload (see readSessionWhileReloading).
+    await expect.poll(() => readSessionWhileReloading(page)).toEqual({ token: null, user: null })
     await expect(page.getByRole('button', { name: BG.login.submit, exact: true })).toBeVisible()
   })
 
@@ -302,7 +316,7 @@ test.describe('VirtualBar Auth Flow', () => {
     await page.goto('/dashboard')
 
     await expect(page).toHaveURL('/login')
-    await expect.poll(() => readSession(page)).toEqual({ token: null, user: null })
+    await expect.poll(() => readSessionWhileReloading(page)).toEqual({ token: null, user: null })
   })
 
   test('7. Auth Persistence - token and user survive page reload', async ({ page }) => {

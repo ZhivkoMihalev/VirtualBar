@@ -86,6 +86,14 @@ dotnet test VirtualBar.Tests/VirtualBar.Tests.csproj \
 
 Expected output: `Failed: 0`. The `coverage-results/` directory is gitignored.
 
+### CI (GitHub Actions)
+
+`.github/workflows/ci.yml` runs on every PR to `master`, every push to `master`, and on demand. Two parallel jobs:
+- **Backend** — restore → build (Release) → tests with coverage (uploaded as the `backend-test-results` artifact) → `dotnet ef migrations has-pending-model-changes`, which fails when an entity changed without a matching migration. It needs no database or secrets (a throwaway `Jwt:Key` is generated for that step only).
+- **Frontend** — `npm ci` → `npm run lint` (**non-blocking** until the existing lint errors are fixed — then drop `continue-on-error`) → `npm run build`.
+
+`.github/dependabot.yml` opens **monthly** update PRs for npm, NuGet and GitHub Actions (minor + patch grouped into one PR per ecosystem, majors separate). Security updates are not bound to the schedule.
+
 ---
 
 ## Code Style

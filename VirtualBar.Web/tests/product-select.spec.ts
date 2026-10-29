@@ -265,18 +265,20 @@ test.describe('ProductSelect — catalog autocomplete', () => {
 
     await expect(page.getByRole('option').first()).toBeVisible()
 
-    const geometry = await page
-      .locator('[data-slot="popover-content"]')
-      .evaluate(el => {
-        const r = el.getBoundingClientRect()
-        return { top: r.top, bottom: r.bottom, viewportHeight: window.innerHeight }
-      })
-
-    expect(geometry.top).toBeGreaterThanOrEqual(0)
-    expect(
-      Math.round(geometry.bottom),
-      `popover hangs ${Math.round(geometry.bottom - geometry.viewportHeight)}px below the viewport`,
-    ).toBeLessThanOrEqual(geometry.viewportHeight)
+    // Radix repositions the popover a frame after the results change its height (floating-ui's
+    // autoUpdate), so wait for the settled placement rather than sampling the frame in between. A popover
+    // that stays outside the screen still fails here, reporting by how many pixels.
+    const popover = page.locator('[data-slot="popover-content"]')
+    await expect
+      .poll(
+        () =>
+          popover.evaluate(el => {
+            const r = el.getBoundingClientRect()
+            return Math.max(0, Math.round(-r.top), Math.round(r.bottom - window.innerHeight))
+          }),
+        { message: 'pixels of the popover outside the viewport', timeout: 5_000 },
+      )
+      .toBe(0)
 
     // Shrinking the popover must not cost the user access to the rows.
     await expect(listbox(page)).toBeVisible()

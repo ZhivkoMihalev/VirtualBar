@@ -463,7 +463,6 @@ export interface Offer {
 export interface AuthContextValue {
   user: User | null
   token: string | null
-  isLoading: boolean
   isAuthenticated: boolean
   login: (email: string, password: string) => Promise<void>
   register: (email: string, password: string, displayName: string) => Promise<void>

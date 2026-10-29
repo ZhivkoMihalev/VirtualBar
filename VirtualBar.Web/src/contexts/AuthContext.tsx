@@ -25,38 +25,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [storedSession] = useState(readStoredSession)
   const [user, setUser] = useState<User | null>(storedSession?.user ?? null)
   const [token, setToken] = useState<string | null>(storedSession?.token ?? null)
-  const [isLoading, setIsLoading] = useState(false)
 
+  // login and register deliberately set no app-wide loading state: the routes would swap to a spinner,
+  // unmount the form, and lose the error a failed attempt sets on it. The forms show their own pending state.
   const login = async (email: string, password: string) => {
-    setIsLoading(true)
-    try {
-      const response = await authApi.login(email, password)
-      const { token: newToken, user: newUser } = response
+    const { token: newToken, user: newUser } = await authApi.login(email, password)
 
-      localStorage.setItem(TOKEN_KEY, newToken)
-      localStorage.setItem(USER_KEY, JSON.stringify(newUser))
+    localStorage.setItem(TOKEN_KEY, newToken)
+    localStorage.setItem(USER_KEY, JSON.stringify(newUser))
 
-      setToken(newToken)
-      setUser(newUser)
-    } finally {
-      setIsLoading(false)
-    }
+    setToken(newToken)
+    setUser(newUser)
   }
 
   const register = async (email: string, password: string, displayName: string) => {
-    setIsLoading(true)
-    try {
-      const response = await authApi.register(email, password, displayName)
-      const { token: newToken, user: newUser } = response
+    const { token: newToken, user: newUser } = await authApi.register(email, password, displayName)
 
-      localStorage.setItem(TOKEN_KEY, newToken)
-      localStorage.setItem(USER_KEY, JSON.stringify(newUser))
+    localStorage.setItem(TOKEN_KEY, newToken)
+    localStorage.setItem(USER_KEY, JSON.stringify(newUser))
 
-      setToken(newToken)
-      setUser(newUser)
-    } finally {
-      setIsLoading(false)
-    }
+    setToken(newToken)
+    setUser(newUser)
   }
 
   const logout = () => {
@@ -81,7 +70,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const value: AuthContextValue = {
     user,
     token,
-    isLoading,
     isAuthenticated: !!token && !!user,
     login,
     register,

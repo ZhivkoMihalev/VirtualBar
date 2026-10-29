@@ -202,9 +202,8 @@ function SentTab() {
 
 export default function OffersPage() {
   const { t } = useTranslation()
-  const { user, isLoading } = useAuth()
+  const { user } = useAuth()
 
-  if (isLoading) return null
   if (!user) return <Navigate to="/login" replace />
 
   return (

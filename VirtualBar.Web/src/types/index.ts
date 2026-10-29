@@ -459,3 +459,24 @@ export interface Offer {
   respondedAt: string | null
   createdAt: string
 }
+
+export interface AuthContextValue {
+  user: User | null
+  token: string | null
+  isLoading: boolean
+  isAuthenticated: boolean
+  login: (email: string, password: string) => Promise<void>
+  register: (email: string, password: string, displayName: string) => Promise<void>
+  logout: () => void
+  updateUser: (patch: Partial<User>) => void
+}
+
+export interface ChatContextValue {
+  inboxOpen: boolean
+  openInbox: () => void
+  closeInbox: () => void
+  toggleInbox: () => void
+  activeUserId: string | null
+  openChat: (userId: string) => void
+  closeChat: () => void
+}

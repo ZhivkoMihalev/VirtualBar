@@ -94,11 +94,8 @@ jobs:
       - name: Install
         run: npm ci
 
-      # Non-blocking for now: the codebase still has 11 lint errors from before CI existed.
-      # Remove continue-on-error once they are fixed.
       - name: Lint
         run: npm run lint
-        continue-on-error: true
 
       - name: Build (type check + Vite)
         run: npm run build

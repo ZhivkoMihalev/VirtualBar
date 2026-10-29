@@ -5,7 +5,7 @@ import { useForm, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { ImagePlus, Loader2, Check, X, Minus, Plus } from 'lucide-react'
-import { useAuth } from '../contexts/AuthContext'
+import { useAuth } from '../contexts/useAuth'
 import NavBar from '../components/NavBar'
 import {
   getBottlesByUser,
@@ -17,7 +17,8 @@ import {
 } from '../api/bottlesApi'
 import { getCollectionValue } from '../api/pricesApi'
 import type { Bottle, SpiritCategory, AddBottlePayload, Product, LinkedProduct } from '../types'
-import { CATEGORY_COLORS, BottleSvg, VirtualBarScene } from '../components/BarShelf'
+import { BottleSvg, VirtualBarScene } from '../components/BarShelf'
+import { CATEGORY_COLORS } from '../lib/bottlePalette'
 import BottleDetailPanel from '../components/BottleDetailPanel'
 import DistillerySelect from '../components/DistillerySelect'
 import ProductSelect from '../components/ProductSelect'

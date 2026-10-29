@@ -64,6 +64,7 @@ dotnet ef database update --project VirtualBar.Infrastructure --startup-project 
 cd VirtualBar.Web
 npm install        # first time only
 npm run dev        # dev server → http://localhost:5173
+npm run lint       # ESLint — must report 0 problems (CI blocks on it)
 npm run build      # production build — must output "✓ built in ..."
 ```
 
@@ -90,7 +91,7 @@ Expected output: `Failed: 0`. The `coverage-results/` directory is gitignored.
 
 `.github/workflows/ci.yml` runs on every PR to `master`, every push to `master`, and on demand. Two parallel jobs:
 - **Backend** — restore → build (Release) → tests with coverage (uploaded as the `backend-test-results` artifact) → `dotnet ef migrations has-pending-model-changes`, which fails when an entity changed without a matching migration. It needs no database or secrets (a throwaway `Jwt:Key` is generated for that step only).
-- **Frontend** — `npm ci` → `npm run lint` (**non-blocking** until the existing lint errors are fixed — then drop `continue-on-error`) → `npm run build`.
+- **Frontend** — `npm ci` → `npm run lint` (blocking — must report 0 problems) → `npm run build`.
 
 `.github/dependabot.yml` opens **monthly** update PRs for npm, NuGet and GitHub Actions (minor + patch grouped into one PR per ecosystem, majors separate). Security updates are not bound to the schedule.
 
@@ -107,7 +108,7 @@ Expected output: `Failed: 0`. The `coverage-results/` directory is gitignored.
 - `CancellationToken` parameter is always named `cancellationToken`. Never `ct`, never `token`.
 - Never delete or modify database records without asking the user first. EF Core migrations that ADD schema are fine. For any `DELETE`, `UPDATE`, `ExecuteDeleteAsync`, `ExecuteUpdateAsync`, or drop-column migration — stop and ask.
 - After every backend change: run `dotnet build` (0 errors required) and the relevant test class.
-- After every frontend change: run `npm run build` (clean output required).
+- After every frontend change: run `npm run lint` (0 problems — CI blocks on it) and `npm run build` (clean output required).
 - Every new service method needs 100% branch coverage in tests.
 
 ---
@@ -609,7 +610,7 @@ Full slice-by-slice specs live in `docs/collection-value/`.
 
 ## Frontend Architecture
 
-**Auth:** JWT stored in `localStorage` (`token` + `user`). `AuthContext` exposes `user`, `login`, `logout`. The Axios `client` in `src/api/client.ts` attaches the token as a Bearer header on every request and redirects to `/login` on 401. The `user` object includes `isAdmin: boolean` — set from the JWT claim emitted by `AuthService`.
+**Auth:** JWT stored in `localStorage` (`vbar_token` + `vbar_user`). `useAuth()` exposes `user`, `login`, `logout`. The Axios `client` in `src/api/client.ts` attaches the token as a Bearer header on every request and redirects to `/login` on 401. The `user` object includes `isAdmin: boolean` — set from the JWT claim emitted by `AuthService`.
 
 **API layer (`src/api/`):** One file per domain (e.g., `bottlesApi.ts`, `usersApi.ts`, `notificationsApi.ts`). All use named import `{ client }` from `./client`. Return typed data directly (axios `.data` unwrapping).
 
@@ -633,9 +634,11 @@ Current translation namespaces: `nav`, `lang`, `login`, `register`, `dashboard`,
 - `src/components/DistillerySelect.tsx` — autocomplete dropdown for selecting a distillery. Props: `value`, `onChange`, `category?`. ARIA roles (`combobox`/`listbox`/`option`), keyboard navigation (ArrowUp/Down/Enter/Escape), scroll-into-view. Fetches from `GET /api/distilleries?category=...`, `queryKey: ['distilleries', category ?? 'all']`, staleTime 5 min.
 - `src/components/BadgeChip.tsx` — circular gold-bordered achievement medallion: static `badgeType → lucide icon` map (19 entries) + translated name (`badges` namespace); `size` prop; dimmed variant for `earned: false`. Used by `ProfilePage` (achievements section: earned chips first, then unearned with thin gold progress bars + "7/10" labels; `queryKey: ['badges','progress']`) and `PublicBarPage` (earned-only strip under the bar header; `queryKey: ['badges', userId]`; empty/loading/error → renders nothing).
 
-**Contexts:**
-- `src/contexts/AuthContext.tsx` — `user`, `login`, `logout`, `isAuthenticated`, `isLoading`.
-- `src/contexts/ChatContext.tsx` — `inboxOpen`, `openInbox`, `closeInbox`, `toggleInbox`, `activeUserId`, `openChat(userId)`, `closeChat`. Used by NavBar, NotificationBell, MarketplacePage, ChatWidget.
+**Contexts:** each provider file exports only its component; the context object and hook live in a separate `.ts` file (Vite fast refresh needs component-only files — ESLint `react-refresh/only-export-components`). Value types (`AuthContextValue`, `ChatContextValue`) are in `src/types/index.ts`.
+- `src/contexts/AuthContext.tsx` (`AuthProvider`) + `src/contexts/useAuth.ts` (`useAuth()`) — `user`, `login`, `logout`, `isAuthenticated`, `isLoading`. The saved session is read from `localStorage` while the state is created, so the first render already knows who is logged in; `isLoading` is `true` only while `login`/`register` run.
+- `src/contexts/ChatContext.tsx` (`ChatProvider`) + `src/contexts/useChat.ts` (`useChat()`) — `inboxOpen`, `openInbox`, `closeInbox`, `toggleInbox`, `activeUserId`, `openChat(userId)`, `closeChat`. Used by NavBar, NotificationBell, MarketplacePage, PublicBarPage, ChatWidget.
+
+The same rule applies to any component file: shared constants go to their own module (e.g. the bottle colors `CATEGORY_COLORS` / `LIQUID_LEVEL` / `CAP_COLOR` in `src/lib/bottlePalette.ts`). Generated shadcn files in `src/components/ui/` are exempt in `eslint.config.js`.
 
 **App shell (`src/App.tsx`):** Fixed background image (`/public/bg-room.png`) + darkening overlay both `position: fixed; z-index: -1/-2`, content wrapper wrapped in `ChatProvider`, `<ChatWidget />` before `<Footer />`.
 

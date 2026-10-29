@@ -5,7 +5,7 @@ import type { TFunction } from 'i18next'
 import { ChevronsUpDown, Loader2 } from 'lucide-react'
 import { searchProducts } from '../api/productsApi'
 import type { Product, SpiritCategory } from '../types'
-import { CATEGORY_COLORS } from './BarShelf'
+import { CATEGORY_COLORS } from '../lib/bottlePalette'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import {

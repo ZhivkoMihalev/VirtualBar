@@ -90,8 +90,12 @@ Expected output: `Failed: 0`. The `coverage-results/` directory is gitignored.
 ### CI (GitHub Actions)
 
 `.github/workflows/ci.yml` runs on every PR to `master`, every push to `master`, and on demand. Two parallel jobs:
-- **Backend** — restore → build (Release) → tests with coverage (uploaded as the `backend-test-results` artifact) → `dotnet ef migrations has-pending-model-changes`, which fails when an entity changed without a matching migration. It needs no database or secrets (a throwaway `Jwt:Key` is generated for that step only).
+- **Backend** — restore → build (Release) → tests with coverage (raw results in the `backend-test-results` artifact) → **coverage report** (ReportGenerator, `VirtualBar.Infrastructure.Migrations.*` excluded): written to the job summary, posted as one PR comment that is edited in place on every push (skipped on Dependabot and fork PRs, whose token is read-only), and uploaded as the `coverage-report` HTML artifact. Informational: it never fails the build → `dotnet ef migrations has-pending-model-changes`, which fails when an entity changed without a matching migration. It needs no database or secrets (a throwaway `Jwt:Key` is generated for that step only).
 - **Frontend** — `npm ci` → `npm run lint` (blocking — must report 0 problems) → `npm run build`.
+
+`.github/workflows/migration-guard.yml` (the **Migration guard** check) runs on every PR to `master`. Migrations apply automatically on startup, so it scans the `Up()` method of every migration the PR adds or changes (`.github/scripts/check-destructive-migrations.sh`) and fails on `DropTable`, `DropColumn`, `DeleteData`, `UpdateData` or any raw `Sql(...)`: operations that delete or rewrite existing data on the next deploy. `Down()` is ignored, since it legitimately drops what `Up()` created. The check passes once the PR carries the **`db-destructive-approved`** label; add it only after the data change was agreed (see CRITICAL RULES).
+
+**CodeQL** (security scanning of C#, JS/TS and the workflows) runs through GitHub's *default setup*, configured in the repository settings (Advanced Security → Code scanning), not in a workflow file. Findings appear in the Security tab and on PRs.
 
 `.github/dependabot.yml` opens **monthly** update PRs for npm, NuGet and GitHub Actions (minor + patch grouped into one PR per ecosystem, majors separate). Security updates are not bound to the schedule.
 
@@ -106,7 +110,7 @@ Expected output: `Failed: 0`. The `coverage-results/` directory is gitignored.
 ## CRITICAL RULES — Never Violate
 
 - `CancellationToken` parameter is always named `cancellationToken`. Never `ct`, never `token`.
-- Never delete or modify database records without asking the user first. EF Core migrations that ADD schema are fine. For any `DELETE`, `UPDATE`, `ExecuteDeleteAsync`, `ExecuteUpdateAsync`, or drop-column migration — stop and ask.
+- Never delete or modify database records without asking the user first. EF Core migrations that ADD schema are fine. For any `DELETE`, `UPDATE`, `ExecuteDeleteAsync`, `ExecuteUpdateAsync`, or drop-column migration — stop and ask. For migrations the **Migration guard** CI check enforces this: it blocks the PR until it carries the `db-destructive-approved` label.
 - After every backend change: run `dotnet build` (0 errors required) and the relevant test class.
 - After every frontend change: run `npm run lint` (0 problems — CI blocks on it) and `npm run build` (clean output required).
 - Every new service method needs 100% branch coverage in tests.

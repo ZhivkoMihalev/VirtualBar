@@ -1,0 +1,32 @@
+name: Migration guard
+
+# Blocks a PR whose new or changed EF Core migrations drop or rewrite existing data in Up(),
+# until someone adds the db-destructive-approved label. See .github/scripts/check-destructive-migrations.sh.
+on:
+  pull_request:
+    branches: [master]
+    # labeled/unlabeled re-run the check when the approval label is added or removed.
+    types: [opened, synchronize, reopened, labeled, unlabeled]
+
+concurrency:
+  group: migration-guard-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  migration-guard:
+    name: Migration guard
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Check migrations for data-destroying operations
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          APPROVED: ${{ contains(github.event.pull_request.labels.*.name, 'db-destructive-approved') }}
+        run: .github/scripts/check-destructive-migrations.sh "$BASE_SHA"

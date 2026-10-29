@@ -267,7 +267,9 @@ test.describe('VirtualBar Auth Flow', () => {
     await page.getByRole('menuitem', { name: BG.nav.logout }).click()
 
     await expect(page).toHaveURL('/login')
-    expect(await readSession(page)).toEqual({ token: null, user: null })
+    // Requests the dashboard still had in flight come back 401 without a token, and the axios interceptor
+    // reloads /login once more; polling rides out that reload instead of reading storage mid-navigation.
+    await expect.poll(() => readSession(page)).toEqual({ token: null, user: null })
     await expect(page.getByRole('button', { name: BG.login.submit, exact: true })).toBeVisible()
   })
 
@@ -295,11 +297,12 @@ test.describe('VirtualBar Auth Flow', () => {
       )
     })
 
-    // The dashboard's authorized requests get 401, and the axios interceptor drops the session.
+    // The dashboard's authorized requests get 401, and the axios interceptor drops the session. Each 401
+    // starts its own reload of /login, so poll rather than read storage in the middle of one.
     await page.goto('/dashboard')
 
     await expect(page).toHaveURL('/login')
-    expect(await readSession(page)).toEqual({ token: null, user: null })
+    await expect.poll(() => readSession(page)).toEqual({ token: null, user: null })
   })
 
   test('7. Auth Persistence - token and user survive page reload', async ({ page }) => {

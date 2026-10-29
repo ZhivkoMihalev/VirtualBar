@@ -1,4 +1,5 @@
 import { useEffect, useId, useState } from 'react'
+import type { CSSProperties } from 'react'
 import { useQuery, keepPreviousData } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import type { TFunction } from 'i18next'
@@ -33,6 +34,19 @@ const MAX_RESULTS = 50
 // "refine your search" hint is only ever shown when it is true — a full page of exactly 50 is not the
 // same thing as a truncated one. The API clamps to this value.
 const PROBE_LIMIT = MAX_RESULTS + 1
+
+// With a full page of results the popover is ~330px tall, more than either side of the field offers when
+// the field sits mid-screen on a short viewport, so it used to hang off the bottom. The list is therefore
+// capped at the height Radix reports as free on the side it opened, minus the search input, padding and
+// borders (~44px, 3rem leaves a margin). Radix re-measures on its own as the results grow the popover
+// (Floating UI watches its size), so the cap follows without any help from this component.
+// - The 8rem floor (about three rows) is deliberate: when one side is too cramped for even that, the
+//   popover overflows there, and Radix flips it to the roomier side instead of squeezing the list to a
+//   row or two.
+// - The 18rem fallback is the list's normal maximum (max-h-72), used before Radix has measured.
+const LIST_STYLE: CSSProperties = {
+  maxHeight: 'max(8rem, min(18rem, calc(var(--radix-popover-content-available-height, 18rem) - 3rem)))',
+}
 
 function metaLine(product: Product, t: TFunction): string {
   return [
@@ -78,15 +92,6 @@ export default function ProductSelect({ onSelect, category }: Props) {
   // the previous term's results as if they belonged to the current one, and let the user click them.
   // isFetching covers the in-flight request; the term comparison covers the debounce window before it.
   const isStale = isFetching || term.trim() !== debouncedTerm
-
-  // The popover is placed while the list is still empty, and Radix does not re-measure when the results
-  // arrive and make it ~200px taller. Opened near the bottom of the scrolled sheet it therefore flips
-  // upwards using the empty height and ends up hanging off the screen. Floating UI's auto-update does
-  // listen for window resize, so one synthetic event after the content settles is enough to re-place it.
-  useEffect(() => {
-    if (open)
-      window.dispatchEvent(new Event('resize'))
-  }, [open, products.length, isStale])
 
   const handleOpenChange = (next: boolean) => {
     setOpen(next)
@@ -137,7 +142,7 @@ export default function ProductSelect({ onSelect, category }: Props) {
             {/* Everything below that is not a result carries role="presentation": CommandList is a
                 listbox, and a listbox may only own options. Status text announced as an option is
                 both invalid and confusing to a screen reader. */}
-            <CommandList>
+            <CommandList style={LIST_STYLE}>
               {!enabled && (
                 <div role="presentation" className="px-3 py-6 text-center text-xs text-muted-foreground">
                   {t('products.minChars')}

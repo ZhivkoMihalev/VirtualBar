@@ -19,10 +19,10 @@ import { test, expect, Page } from '@playwright/test'
  *  3. Mouse-wheel scrolling. The parent Sheet mounts react-remove-scroll, which cancels wheel events
  *     outside its locked subtree; the popover portals outside it, so it needed Popover `modal`.
  *     page.mouse.wheel dispatches a trusted event, which is what that fix has to survive.
- *  4. Popover placement on a short viewport. Radix places the popover while the list is still empty
- *     and does not re-measure when the results make it ~200px taller, so opened near the bottom of
- *     the sheet it used to hang ~94px off screen. ProductSelect fires one synthetic resize once the
- *     results settle; the invariant is simply that the popover is fully inside the viewport.
+ *  4. Popover placement on a short viewport (issue #29). With a full page of results the popover is
+ *     ~330px tall, so with the field mid-screen it fits on neither side and used to hang up to ~114px
+ *     off screen. ProductSelect caps the list at the height Radix reports as free; the invariant is
+ *     that the popover is fully inside the viewport wherever the field sits.
  */
 
 const API = 'http://localhost:5000/api'
@@ -250,39 +250,70 @@ test.describe('ProductSelect — catalog autocomplete', () => {
     await expect(page.getByRole('option').last()).toBeVisible()
   })
 
-  test('В · on a short viewport the popover stays fully inside the screen', async ({ page }) => {
+  test('В · on a short viewport the popover stays fully inside the screen wherever the field sits', async ({
+    page,
+  }) => {
     test.setTimeout(120_000)
-
-    // 560px puts the catalog field near the bottom of the sheet, which is what makes Radix flip the
-    // popover upwards — the placement that used to be computed from the still-empty list.
-    await page.setViewportSize({ width: 1280, height: 560 })
 
     await seedSession(page, session)
     await page.goto('/dashboard')
     await openAddBottleSheet(page)
-    await openCatalogSearch(page, BG.searchLabel)
-    await searchFor(page, BUSY_TERM)
 
-    await expect(page.getByRole('option').first()).toBeVisible()
+    // The sheet slides in; let it come to rest so the positions below are the final ones.
+    await page
+      .locator('[data-slot="sheet-content"]')
+      .evaluate(el => Promise.all(el.getAnimations().map(a => a.finished)))
 
-    // Radix repositions the popover a frame after the results change its height (floating-ui's
-    // autoUpdate), so wait for the settled placement rather than sampling the frame in between. A popover
-    // that stays outside the screen still fails here, reporting by how many pixels.
+    // Addressed by id: while the modal popover is open the trigger is aria-hidden, and the role query
+    // would match the search input inside the popover instead.
+    const triggerId = await page.getByRole('combobox', { name: BG.searchLabel, exact: true }).getAttribute('id')
+    const trigger = page.locator(`[id="${triggerId}"]`)
+    const fieldTop = () => trigger.evaluate(el => Math.round(el.getBoundingClientRect().top))
     const popover = page.locator('[data-slot="popover-content"]')
-    await expect
-      .poll(
-        () =>
-          popover.evaluate(el => {
-            const r = el.getBoundingClientRect()
-            return Math.max(0, Math.round(-r.top), Math.round(r.bottom - window.innerHeight))
-          }),
-        { message: 'pixels of the popover outside the viewport', timeout: 5_000 },
-      )
-      .toBe(0)
 
-    // Shrinking the popover must not cost the user access to the rows.
-    await expect(listbox(page)).toBeVisible()
-    expect(await listbox(page).evaluate(el => el.scrollHeight > el.clientHeight)).toBe(true)
+    // Where the field sits on screen decides the outcome, and in a real session that depends on how far
+    // the sheet happens to be scrolled. So every placement is set explicitly instead of left to chance:
+    // mid-screen is the case that used to fail, because a full page of results fits on neither side.
+    // After the first search the results come from the query cache, so the extra rounds cost little.
+    for (const height of [480, 560]) {
+      for (const block of ['start', 'center', 'end'] as const) {
+        await test.step(`${height}px viewport, field at the ${block} of the screen`, async () => {
+          await page.setViewportSize({ width: 1280, height })
+          await trigger.evaluate((el, b) => el.scrollIntoView({ block: b }), block)
+          const placedAt = await fieldTop()
+
+          // A dispatched click, not trigger.click(): at the top of the screen the field pokes out by a
+          // fraction of a pixel, and Playwright's click would first scroll it back into view wherever it
+          // sees fit, undoing the placement this step is about.
+          await trigger.dispatchEvent('click')
+          await expect(listbox(page)).toBeVisible()
+          await searchFor(page, BUSY_TERM)
+          expect(await fieldTop(), 'the field moved after it was placed').toBe(placedAt)
+
+          // Radix re-places the popover a frame after the results change its height (Floating UI's
+          // autoUpdate), so wait for the settled placement rather than sampling the frame in between. A
+          // popover that stays outside the screen still fails here, reporting by how many pixels.
+          await expect
+            .poll(
+              () =>
+                popover.evaluate(el => {
+                  const r = el.getBoundingClientRect()
+                  return Math.max(0, Math.round(-r.top), Math.round(r.bottom - window.innerHeight))
+                }),
+              { message: 'pixels of the popover outside the viewport', timeout: 5_000 },
+            )
+            .toBe(0)
+
+          // Shrinking the popover must not cost the user access to the rows.
+          expect(await listbox(page).evaluate(el => el.scrollHeight > el.clientHeight)).toBe(true)
+
+          // Escape closes only the popover; the add-bottle sheet stays open for the next round.
+          await page.keyboard.press('Escape')
+          await expect(listbox(page)).toBeHidden()
+          await expect(page.getByRole('heading', { name: BG.sheetTitle })).toBeVisible()
+        })
+      }
+    }
   })
 
   test('Г · a term with no catalog match offers the product-request notice instead of options', async ({

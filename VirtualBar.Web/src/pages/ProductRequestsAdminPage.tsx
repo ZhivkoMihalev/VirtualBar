@@ -22,7 +22,7 @@ import type {
   ProductRequestStatus,
   SpiritCategory,
 } from '../types'
-import { CATEGORY_COLORS } from '../components/BarShelf'
+import { CATEGORY_COLORS } from '../lib/bottlePalette'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'

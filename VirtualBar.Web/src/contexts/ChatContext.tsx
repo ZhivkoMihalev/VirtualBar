@@ -1,16 +1,6 @@
-import { createContext, useContext, useState, useCallback } from 'react'
-
-interface ChatContextValue {
-  inboxOpen: boolean
-  openInbox: () => void
-  closeInbox: () => void
-  toggleInbox: () => void
-  activeUserId: string | null
-  openChat: (userId: string) => void
-  closeChat: () => void
-}
-
-const ChatContext = createContext<ChatContextValue | undefined>(undefined)
+import { useState, useCallback } from 'react'
+import type { ChatContextValue } from '../types'
+import { ChatContext } from './useChat'
 
 export function ChatProvider({ children }: { children: React.ReactNode }) {
   const [inboxOpen, setInboxOpen] = useState(false)
@@ -38,12 +28,4 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
   }
 
   return <ChatContext.Provider value={value}>{children}</ChatContext.Provider>
-}
-
-export function useChat() {
-  const context = useContext(ChatContext)
-  if (context === undefined) {
-    throw new Error('useChat must be used within ChatProvider')
-  }
-  return context
 }

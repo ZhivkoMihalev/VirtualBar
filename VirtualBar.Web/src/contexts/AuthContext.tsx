@@ -1,43 +1,31 @@
-import { createContext, useContext, useState, useEffect } from 'react'
-import type { User } from '../types'
+import { useState } from 'react'
+import type { AuthContextValue, User } from '../types'
 import * as authApi from '../api/authApi'
 import { TOKEN_KEY, USER_KEY } from '../api/client'
+import { AuthContext } from './useAuth'
 
-interface AuthContextType {
-  user: User | null
-  token: string | null
-  isLoading: boolean
-  isAuthenticated: boolean
-  login: (email: string, password: string) => Promise<void>
-  register: (email: string, password: string, displayName: string) => Promise<void>
-  logout: () => void
-  updateUser: (patch: Partial<User>) => void
+// localStorage is synchronous, so the saved session is read while the state is created: the first render
+// already knows who is logged in, instead of rendering logged-out and correcting itself in an effect.
+function readStoredSession(): { token: string; user: User } | null {
+  const storedToken = localStorage.getItem(TOKEN_KEY)
+  const storedUser = localStorage.getItem(USER_KEY)
+
+  if (!storedToken || !storedUser) return null
+
+  try {
+    return { token: storedToken, user: JSON.parse(storedUser) }
+  } catch {
+    localStorage.removeItem(TOKEN_KEY)
+    localStorage.removeItem(USER_KEY)
+    return null
+  }
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined)
-
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null)
-  const [token, setToken] = useState<string | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
-
-  // Initialize from localStorage on mount
-  useEffect(() => {
-    const storedToken = localStorage.getItem(TOKEN_KEY)
-    const storedUser = localStorage.getItem(USER_KEY)
-
-    if (storedToken && storedUser) {
-      try {
-        setToken(storedToken)
-        setUser(JSON.parse(storedUser))
-      } catch {
-        localStorage.removeItem(TOKEN_KEY)
-        localStorage.removeItem(USER_KEY)
-      }
-    }
-
-    setIsLoading(false)
-  }, [])
+  const [storedSession] = useState(readStoredSession)
+  const [user, setUser] = useState<User | null>(storedSession?.user ?? null)
+  const [token, setToken] = useState<string | null>(storedSession?.token ?? null)
+  const [isLoading, setIsLoading] = useState(false)
 
   const login = async (email: string, password: string) => {
     setIsLoading(true)
@@ -90,7 +78,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     })
   }
 
-  const value: AuthContextType = {
+  const value: AuthContextValue = {
     user,
     token,
     isLoading,
@@ -102,12 +90,4 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
-}
-
-export function useAuth() {
-  const context = useContext(AuthContext)
-  if (context === undefined) {
-    throw new Error('useAuth must be used within AuthProvider')
-  }
-  return context
 }

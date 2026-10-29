@@ -8,7 +8,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { toast } from 'sonner'
 import { Plus, Pencil, Trash2, ChevronDown, Upload, Loader2, X, Newspaper } from 'lucide-react'
-import { useAuth } from '../contexts/AuthContext'
+import { useAuth } from '../contexts/useAuth'
 import {
   createNewsPost,
   updateNewsPost,

@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { Bell } from 'lucide-react'
-import { useChat } from '../contexts/ChatContext'
+import { useChat } from '../contexts/useChat'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   getNotifications,

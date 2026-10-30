@@ -9,6 +9,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using Moq;
+using VirtualBar.Application.Common;
 using VirtualBar.Application.DTOs.Auth;
 using VirtualBar.Application.Interfaces;
 using VirtualBar.Application.Options;
@@ -208,6 +209,8 @@ public sealed class AuthServiceTests
         // Assert
         Assert.False(result.Success);
         Assert.Equal("An account with this email already exists.", result.Error);
+        Assert.Equal(ErrorCode.Conflict, result.ErrorCode);
+        Assert.Equal(AuthErrorReasons.EmailTaken, result.Reason);
     }
 
     [Fact]
@@ -232,6 +235,8 @@ public sealed class AuthServiceTests
         Assert.False(result.Success);
         Assert.NotNull(result.Error);
         Assert.NotEmpty(result.Error);
+        // Identity's password errors carry no reason: the client falls back to its generic message.
+        Assert.Null(result.Reason);
     }
 
     [Fact]
@@ -286,6 +291,7 @@ public sealed class AuthServiceTests
         // Assert
         Assert.False(result.Success);
         Assert.Equal("Invalid email or password.", result.Error);
+        Assert.Equal(AuthErrorReasons.InvalidCredentials, result.Reason);
     }
 
     [Fact]
@@ -310,6 +316,7 @@ public sealed class AuthServiceTests
         // Assert
         Assert.False(result.Success);
         Assert.Equal("Invalid email or password.", result.Error);
+        Assert.Equal(AuthErrorReasons.InvalidCredentials, result.Reason);
     }
 
     [Fact]
@@ -828,6 +835,7 @@ public sealed class AuthServiceTests
         // Assert
         Assert.False(result.Success);
         Assert.Equal("This account is temporarily locked due to too many failed attempts. Please try again later.", result.Error);
+        Assert.Equal(AuthErrorReasons.LockedOut, result.Reason);
     }
 
     [Fact]
@@ -852,6 +860,7 @@ public sealed class AuthServiceTests
         // Assert
         Assert.False(result.Success);
         Assert.Equal("Please confirm your email address before signing in.", result.Error);
+        Assert.Equal(AuthErrorReasons.EmailNotConfirmed, result.Reason);
     }
 
     [Fact]

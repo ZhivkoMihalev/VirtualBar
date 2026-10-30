@@ -5,13 +5,13 @@ import { useTranslation } from 'react-i18next'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import type { AxiosError } from 'axios'
 import { useAuth } from '../contexts/useAuth'
 import AuthLayout from '../components/AuthLayout'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 import { EMAIL_REGEX, type TFn } from '@/lib/validation'
+import { authErrorMessage } from '@/lib/authErrors'
 
 const makeSchema = (t: TFn) =>
   z.object({
@@ -41,10 +41,7 @@ export default function LoginPage() {
     mutationFn: (values: LoginValues) => login(values.email, values.password),
     onSuccess: () => navigate('/dashboard'),
     onError: (err: unknown) => {
-      const axiosErr = err as AxiosError<{ message?: string }>
-      form.setError('root', {
-        message: axiosErr.response?.data?.message || t('login.errorFailed'),
-      })
+      form.setError('root', { message: authErrorMessage(err, t, 'login.errorFailed') })
     },
   })
 

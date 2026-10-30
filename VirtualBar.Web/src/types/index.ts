@@ -124,6 +124,15 @@ export interface AuthResponse {
   user: User
 }
 
+/** Body of an API error response. `reason` is present only where the API defines one, such as the auth endpoints. */
+export interface ApiErrorBody {
+  error?: string
+  reason?: string
+}
+
+/** The reasons the auth endpoints send (backend: AuthErrorReasons). Each one has a translation under `authErrors`. */
+export type AuthErrorReason = 'InvalidCredentials' | 'LockedOut' | 'EmailNotConfirmed' | 'EmailTaken'
+
 export interface UserProfile {
   id: string
   displayName: string

@@ -23,7 +23,8 @@ VirtualBar/
 ├── VirtualBar.Tests/
 │   ├── Services/              # xUnit unit tests (one file per service)
 │   ├── Integration/           # cross-service flow tests (real service graph, no mocks)
-│   └── Persistence/           # EF model conventions (UTC DateTime round-trip)
+│   ├── Persistence/           # EF model conventions (UTC DateTime round-trip)
+│   └── Api/                   # API helpers (ResultExtensions: status code + error body)
 └── VirtualBar.Web/            # React + Vite 7 + Tailwind CSS 4 frontend
 
 **Target framework:** .NET 9 (`net9.0`)
@@ -147,6 +148,8 @@ Result<T>.Forbidden("Forbidden.")         // → 403
 Result<T>.Conflict("Already exists.")     // → 409
 Result<T>.Fail("Name is required.")       // → 400 (validation)
 ```
+
+The error body is `{ error }`. `Fail` and `Conflict` take an optional **reason**: a stable, machine-readable value that `ToActionResult` adds as `{ error, reason }` so the frontend can show a translated message instead of the English `error` text. The auth endpoints use it (`AuthErrorReasons` in `VirtualBar.Application/Common`: `InvalidCredentials`, `LockedOut`, `EmailNotConfirmed`, `EmailTaken`; the frontend translates them in the `authErrors` i18n namespace via `src/lib/authErrors.ts`). Reason values are API contract: never rename one. Login deliberately has a single `InvalidCredentials` for unknown email and wrong password, so it does not reveal which accounts exist.
 
 ### Ownership check
 
@@ -626,7 +629,7 @@ Full slice-by-slice specs live in `docs/collection-value/`.
 
 **Internationalisation:** `react-i18next` + `i18next-browser-languagedetector`. Bulgarian is the default language (`lng: 'bg'`). English is optional. Language choice is persisted in `localStorage` under key `vbar_lang`. Translation files: `src/i18n/bg.json` and `src/i18n/en.json`. i18next is initialised in `src/i18n/index.ts` and imported as the first line of `src/main.tsx`. Every page and component uses `const { t } = useTranslation()`. The `LanguageSwitcher` component (`src/components/LanguageSwitcher.tsx`) renders a speakeasy-styled dropdown (БГ/EN) placed inside the NavBar of every page.
 
-Current translation namespaces: `nav`, `lang`, `login`, `register`, `dashboard`, `addBottle`, `browse`, `marketplace`, `publicBar`, `bottle`, `messages`, `profile`, `footer`, `hero`, `home`, `barShelf`, `notifications`, `wishList`, `distillerySelect`, `offers`, `collectionValue`, `reviews`, `flavors` (28 keys = `FlavorTag` enum member names), `badges` (`title`/`progressTitle`/`earnedOn` + 19 × `<EnumName>.{name,description}`, keys = `BadgeType` enum member names).
+Current translation namespaces: `nav`, `lang`, `login`, `register`, `dashboard`, `addBottle`, `browse`, `marketplace`, `publicBar`, `bottle`, `messages`, `profile`, `footer`, `hero`, `home`, `barShelf`, `notifications`, `wishList`, `distillerySelect`, `offers`, `collectionValue`, `reviews`, `flavors` (28 keys = `FlavorTag` enum member names), `badges` (`title`/`progressTitle`/`earnedOn` + 19 × `<EnumName>.{name,description}`, keys = `BadgeType` enum member names), `authErrors` (4 keys = `AuthErrorReasons` values; login/register show these instead of the API's English `error` text).
 
 **Routing:** `/` is `HomePage.tsx` (public news/social feed). Login and register redirect to `/` after success. `/dashboard` is the user's own virtual bar (protected). `/offers` is the Offers page (protected). There is **no `/messages` route** — messaging is handled entirely by the floating `ChatWidget`.
 

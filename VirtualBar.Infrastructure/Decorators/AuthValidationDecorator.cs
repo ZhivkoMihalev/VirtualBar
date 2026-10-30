@@ -29,7 +29,7 @@ public sealed class AuthValidationDecorator(
             if (userManager.Options.SignIn.RequireConfirmedEmail)
                 return Result<AuthResponse>.Ok(new AuthResponse { RequiresEmailConfirmation = true });
 
-            return Result<AuthResponse>.Conflict("An account with this email already exists.");
+            return Result<AuthResponse>.Conflict("An account with this email already exists.", AuthErrorReasons.EmailTaken);
         }
 
         return await inner.RegisterAsync(request, cancellationToken);
@@ -41,15 +41,17 @@ public sealed class AuthValidationDecorator(
 
         var user = await userManager.FindByEmailAsync(request.Email);
         if (user is null)
-            return Result<AuthResponse>.Fail("Invalid email or password.");
+            return Result<AuthResponse>.Fail("Invalid email or password.", AuthErrorReasons.InvalidCredentials);
 
         var result = await signInManager.CheckPasswordSignInAsync(user, request.Password, lockoutOnFailure: true);
         if (result.IsLockedOut)
-            return Result<AuthResponse>.Fail("This account is temporarily locked due to too many failed attempts. Please try again later.");
+            return Result<AuthResponse>.Fail(
+                "This account is temporarily locked due to too many failed attempts. Please try again later.",
+                AuthErrorReasons.LockedOut);
         if (result.IsNotAllowed)
-            return Result<AuthResponse>.Fail("Please confirm your email address before signing in.");
+            return Result<AuthResponse>.Fail("Please confirm your email address before signing in.", AuthErrorReasons.EmailNotConfirmed);
         if (!result.Succeeded)
-            return Result<AuthResponse>.Fail("Invalid email or password.");
+            return Result<AuthResponse>.Fail("Invalid email or password.", AuthErrorReasons.InvalidCredentials);
 
         return inner.IssueTokenFor(user);
     }

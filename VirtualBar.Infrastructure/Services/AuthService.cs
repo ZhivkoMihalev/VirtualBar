@@ -3,6 +3,7 @@ using System.Security.Claims;
 using System.Text;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using VirtualBar.Application.Common;
@@ -17,7 +18,8 @@ public sealed class AuthService(
     UserManager<AppUser> userManager,
     IConfiguration configuration,
     IEmailService emailService,
-    IOptions<EmailSettings> emailOptions) : IAuthService
+    IOptions<EmailSettings> emailOptions,
+    ILogger<AuthService> logger) : IAuthService
 {
     public const string SecurityStampClaim = "securityStamp";
 
@@ -40,7 +42,7 @@ public sealed class AuthService(
 
         if (userManager.Options.SignIn.RequireConfirmedEmail)
         {
-            await SendConfirmationEmailAsync(user, request.Language, cancellationToken);
+            await TrySendConfirmationEmailAsync(user, request.Language, cancellationToken);
             return Result<AuthResponse>.Ok(new AuthResponse
             {
                 RequiresEmailConfirmation = true,
@@ -102,6 +104,24 @@ public sealed class AuthService(
 
     public Result<AuthResponse> IssueTokenFor(AppUser user) =>
         Result<AuthResponse>.Ok(BuildAuthResponse(user));
+
+    // The account exists by now, so an email that fails to send must not fail the registration: the answer still asks
+    // for confirmation, and the user can ask for a new link (resend-confirmation) once email works again.
+    private async Task TrySendConfirmationEmailAsync(AppUser user, string? language, CancellationToken cancellationToken)
+    {
+        try
+        {
+            await SendConfirmationEmailAsync(user, language, cancellationToken);
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Failed to send the confirmation email to new user {UserId}.", user.Id);
+        }
+    }
 
     private async Task SendConfirmationEmailAsync(AppUser user, string? language, CancellationToken cancellationToken)
     {

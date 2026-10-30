@@ -18,7 +18,7 @@ public sealed class AuthController(IAuthService authService) : ControllerBase
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <response code="200">Account created; returns a token, or a flag indicating an email confirmation was sent.</response>
     /// <response code="400">Password does not meet requirements.</response>
-    /// <response code="409">Email already in use.</response>
+    /// <response code="409">Email already in use (<c>reason</c>: <c>EmailTaken</c>).</response>
     [AllowAnonymous]
     [HttpPost("register")]
     public async Task<IActionResult> Register(RegisterRequest request, CancellationToken cancellationToken)
@@ -33,7 +33,7 @@ public sealed class AuthController(IAuthService authService) : ControllerBase
     /// <param name="request">Email and password.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <response code="200">Authenticated; returns token and user info.</response>
-    /// <response code="400">Invalid credentials, locked account, or unconfirmed email.</response>
+    /// <response code="400">Invalid credentials, locked account, or unconfirmed email; <c>reason</c> says which (<c>AuthErrorReasons</c>).</response>
     [AllowAnonymous]
     [HttpPost("login")]
     public async Task<IActionResult> Login(LoginRequest request, CancellationToken cancellationToken)

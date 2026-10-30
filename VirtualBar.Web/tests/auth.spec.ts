@@ -15,7 +15,9 @@ import { test, expect, type Page } from '@playwright/test'
  *  - LoginPage/RegisterPage navigate to /dashboard on success, while the /login and /register routes
  *    send an already authenticated user to /. Which of the two wins is timing, so a successful login
  *    is "left the form for / or /dashboard, with the user in the navbar".
- *  - A failed login comes back as 400 { error }; the form shows its generic login.errorFailed text.
+ *  - A failed login or registration comes back as { error, reason } (backend: AuthErrorReasons). The form
+ *    shows the translation of the reason (authErrors.<reason>), never the API's English text, and falls
+ *    back to its generic errorFailed text only when there is no known reason.
  *  - Any 401 clears the session and hard-redirects to /login (axios interceptor in client.ts).
  */
 
@@ -41,7 +43,18 @@ const BG = {
     submit: 'Вход',
     errorFailed: 'Входът е неуспешен. Моля, опитайте отново.',
   },
+  authErrors: {
+    invalidCredentials: 'Грешен имейл или парола.',
+    lockedOut: 'Акаунтът е временно заключен след твърде много неуспешни опита. Моля, опитайте отново по-късно.',
+    emailTaken: 'Вече има акаунт с този имейл. Влезте в него или използвайте друг имейл.',
+  },
   nav: { logout: 'ИЗХОД' },
+}
+
+// Exact UI strings (src/i18n/en.json), for the check that the reasons are translated, not just mapped.
+const EN = {
+  login: { email: 'Email', password: 'Password', submit: 'Sign In' },
+  authErrors: { invalidCredentials: 'Incorrect email or password.' },
 }
 
 // A successful login or registration leaves the form for / or /dashboard (see the header comment).
@@ -117,10 +130,25 @@ async function fillRegisterForm(
   await page.getByRole('button', { name: BG.register.submit, exact: true }).click()
 }
 
-async function submitLogin(page: Page, email: string, password: string) {
-  await page.getByLabel(BG.login.email, { exact: true }).fill(email)
-  await page.getByLabel(BG.login.password, { exact: true }).fill(password)
-  await page.getByRole('button', { name: BG.login.submit, exact: true }).click()
+async function submitLogin(
+  page: Page,
+  email: string,
+  password: string,
+  labels: { email: string; password: string; submit: string } = BG.login,
+) {
+  await page.getByLabel(labels.email, { exact: true }).fill(email)
+  await page.getByLabel(labels.password, { exact: true }).fill(password)
+  await page.getByRole('button', { name: labels.submit, exact: true }).click()
+}
+
+/** A login attempt straight against the API, for the attempts a test needs but does not look at. */
+async function loginViaApi(email: string, password: string): Promise<number> {
+  const res = await fetch(`${API}/auth/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, password }),
+  })
+  return res.status
 }
 
 /** The navbar's user menu button carries the display name once the user is logged in. */
@@ -246,11 +274,25 @@ test.describe('VirtualBar Auth Flow', () => {
     await expect(page).toHaveURL('/register')
   })
 
+  test('3. Registration Validation - email already registered', async ({ page }) => {
+    const email = uniqueEmail('taken')
+    await registerViaApi(email, 'First Owner')
+
+    await page.goto('/register')
+    await fillRegisterForm(page, { displayName: 'Second Owner', email, password: PASSWORD, confirmPassword: PASSWORD })
+
+    await expect(page.getByText(BG.authErrors.emailTaken)).toBeVisible()
+    await expect(page).toHaveURL('/register')
+    expect((await readSession(page)).token).toBeNull()
+  })
+
+  // Same message as a wrong password on purpose: login must not reveal which emails have an account.
   test('4. Login Validation - non-existent email', async ({ page }) => {
     await page.goto('/login')
     await submitLogin(page, uniqueEmail('nobody'), PASSWORD)
 
-    await expect(page.getByText(BG.login.errorFailed)).toBeVisible()
+    await expect(page.getByText(BG.authErrors.invalidCredentials)).toBeVisible()
+    await expect(page.getByText(BG.login.errorFailed)).toHaveCount(0)
     await expect(page).toHaveURL('/login')
     expect((await readSession(page)).token).toBeNull()
   })
@@ -262,7 +304,39 @@ test.describe('VirtualBar Auth Flow', () => {
     await page.goto('/login')
     await submitLogin(page, email, 'WrongPassword123')
 
-    await expect(page.getByText(BG.login.errorFailed)).toBeVisible()
+    await expect(page.getByText(BG.authErrors.invalidCredentials)).toBeVisible()
+    await expect(page.getByText(BG.login.errorFailed)).toHaveCount(0)
+    await expect(page).toHaveURL('/login')
+    expect((await readSession(page)).token).toBeNull()
+  })
+
+  test('4. Login Validation - wrong password, in English', async ({ page }) => {
+    const email = uniqueEmail('wrongpwd-en')
+    await registerViaApi(email, 'Wrong Pwd EN', 'CorrectPass123')
+
+    // i18n starts in Bulgarian whatever is saved (lng: 'bg'), so switch with the page's own language menu.
+    await page.goto('/login')
+    await page.getByRole('button', { name: 'BG', exact: true }).click()
+    await page.getByRole('menuitemradio', { name: 'English' }).click()
+    await submitLogin(page, email, 'WrongPassword123', EN.login)
+
+    await expect(page.getByText(EN.authErrors.invalidCredentials)).toBeVisible()
+    await expect(page).toHaveURL('/login')
+  })
+
+  test('4. Login Validation - locked after five failed attempts, even with the right password', async ({ page }) => {
+    const email = uniqueEmail('locked')
+    await registerViaApi(email, 'Locked Test', 'CorrectPass123')
+
+    // Program.cs locks an account after 5 failed attempts (Lockout.MaxFailedAccessAttempts).
+    for (let attempt = 1; attempt <= 5; attempt++) {
+      expect(await loginViaApi(email, 'WrongPassword123'), `failed attempt ${attempt}`).toBe(400)
+    }
+
+    await page.goto('/login')
+    await submitLogin(page, email, 'CorrectPass123')
+
+    await expect(page.getByText(BG.authErrors.lockedOut)).toBeVisible()
     await expect(page).toHaveURL('/login')
     expect((await readSession(page)).token).toBeNull()
   })

@@ -84,6 +84,12 @@
     "errorDisplayNameLength": "Display name must be at least 2 characters.",
     "errorFailed": "Registration failed. Please try again."
   },
+  "authErrors": {
+    "InvalidCredentials": "Incorrect email or password.",
+    "LockedOut": "This account is temporarily locked after too many failed attempts. Please try again later.",
+    "EmailNotConfirmed": "Your email address is not confirmed yet. Please open the link we sent you when you registered.",
+    "EmailTaken": "An account with this email already exists. Sign in or use a different email."
+  },
   "dashboard": {
     "yourCollection": "YOUR COLLECTION",
     "virtualBar": "Virtual Bar",

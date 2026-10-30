@@ -87,14 +87,17 @@ jobs:
 
       # Startup applies the migrations and seeds the distilleries and the product catalog, so the
       # first successful GET /api/distilleries means the API is ready for the tests.
-      # CI-only overrides: no email confirmation (the tests log new users straight in), a higher limit
-      # on the auth endpoints (the suite registers many users from one IP), and no Claude price research.
+      # CI-only overrides: no email confirmation (the tests log new users straight in), emails written to
+      # files instead of sent (email-confirmation.spec.ts follows the links in them; E2E_MAIL_DIR below is the
+      # same directory), a higher limit on the auth endpoints (the suite registers many users from one IP),
+      # and no Claude price research.
       - name: Start the API
         working-directory: VirtualBar.Api
         env:
           ASPNETCORE_ENVIRONMENT: Development
           ConnectionStrings__Default: Server=localhost,1433;Database=VirtualBar;User Id=sa;Password=${{ env.DB_PASSWORD }};TrustServerCertificate=True
           Identity__RequireConfirmedEmail: 'false'
+          Email__PickupDirectory: ${{ runner.temp }}/mail
           RateLimiting__AuthPermitLimit: '10000'
           Anthropic__UseProviderStats: 'false'
           Pricing__RefreshEnabled: 'false'
@@ -124,6 +127,8 @@ jobs:
 
       - name: Run Playwright tests
         working-directory: VirtualBar.Web
+        env:
+          E2E_MAIL_DIR: ${{ runner.temp }}/mail
         run: npx playwright test --project=chromium --reporter=list,github,html
 
       - name: Upload Playwright report

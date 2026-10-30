@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useMutation } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
@@ -7,11 +7,12 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useAuth } from '../contexts/useAuth'
 import AuthLayout from '../components/AuthLayout'
+import ResendConfirmation from '../components/ResendConfirmation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 import { EMAIL_REGEX, type TFn } from '@/lib/validation'
-import { authErrorMessage } from '@/lib/authErrors'
+import { authErrorMessage, authErrorReason } from '@/lib/authErrors'
 
 const makeSchema = (t: TFn) =>
   z.object({
@@ -31,6 +32,8 @@ export default function LoginPage() {
   const navigate = useNavigate()
   const { t } = useTranslation()
   const { login } = useAuth()
+  // Set when the login was refused because the account has not confirmed its email yet.
+  const [unconfirmedEmail, setUnconfirmedEmail] = useState<string | null>(null)
   const schema = useMemo(() => makeSchema(t), [t])
   const form = useForm<LoginValues>({
     resolver: zodResolver(schema),
@@ -39,9 +42,11 @@ export default function LoginPage() {
 
   const loginMutation = useMutation({
     mutationFn: (values: LoginValues) => login(values.email, values.password),
+    onMutate: () => setUnconfirmedEmail(null),
     onSuccess: () => navigate('/dashboard'),
-    onError: (err: unknown) => {
+    onError: (err: unknown, values) => {
       form.setError('root', { message: authErrorMessage(err, t, 'login.errorFailed') })
+      if (authErrorReason(err) === 'EmailNotConfirmed') setUnconfirmedEmail(values.email)
     },
   })
 
@@ -67,6 +72,8 @@ export default function LoginPage() {
               {form.formState.errors.root.message}
             </p>
           )}
+
+          {unconfirmedEmail && <ResendConfirmation key={unconfirmedEmail} email={unconfirmedEmail} />}
 
           <FormField
             control={form.control}

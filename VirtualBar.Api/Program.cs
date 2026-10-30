@@ -50,6 +50,12 @@ if (Encoding.UTF8.GetByteCount(jwtKey) < 32 || jwtKey.Contains("CHANGE_THIS", St
     throw new InvalidOperationException(
         "Jwt:Key must be a unique, high-entropy secret of at least 32 bytes. Replace the placeholder value.");
 
+// The pickup directory writes every email to disk instead of sending it: fine for development and the E2E tests,
+// but anywhere else nobody would get their confirmation or reset emails, and the links would sit in files.
+if (!builder.Environment.IsDevelopment() && !string.IsNullOrWhiteSpace(builder.Configuration["Email:PickupDirectory"]))
+    throw new InvalidOperationException(
+        "Email:PickupDirectory is for development only. Remove it to send emails over SMTP.");
+
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;

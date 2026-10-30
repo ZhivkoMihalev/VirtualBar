@@ -119,16 +119,32 @@ export interface Message {
   createdAt: string
 }
 
+/** A successful POST /auth/login, or POST /auth/register when no email confirmation is needed. */
 export interface AuthResponse {
   token: string
   user: User
 }
+
+/**
+ * POST /auth/register. With email confirmation on, the new account cannot sign in until the link in the email is
+ * opened: the token is empty and requiresEmailConfirmation is true. The user is null when the email already had
+ * an account, because the API answers the same either way and so never reveals which addresses are registered.
+ */
+export type RegisterResponse =
+  | (AuthResponse & { requiresEmailConfirmation: false })
+  | { token: string; user: User | null; requiresEmailConfirmation: true }
+
+/** What AuthContext.register did: signed the user in, or left them to confirm their email first. */
+export type RegisterOutcome = 'signedIn' | 'emailConfirmationRequired'
 
 /** Body of an API error response. `reason` is present only where the API defines one, such as the auth endpoints. */
 export interface ApiErrorBody {
   error?: string
   reason?: string
 }
+
+/** The languages the API writes its emails in (backend: EmailService.NormalizeLanguage). */
+export type EmailLanguage = 'bg' | 'en'
 
 /** The reasons the auth endpoints send (backend: AuthErrorReasons). Each one has a translation under `authErrors`. */
 export type AuthErrorReason = 'InvalidCredentials' | 'LockedOut' | 'EmailNotConfirmed' | 'EmailTaken'
@@ -474,7 +490,7 @@ export interface AuthContextValue {
   token: string | null
   isAuthenticated: boolean
   login: (email: string, password: string) => Promise<void>
-  register: (email: string, password: string, displayName: string) => Promise<void>
+  register: (email: string, password: string, displayName: string, language: EmailLanguage) => Promise<RegisterOutcome>
   logout: () => void
   updateUser: (patch: Partial<User>) => void
 }

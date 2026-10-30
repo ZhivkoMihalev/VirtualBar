@@ -31,8 +31,10 @@
     </AssemblyAttribute>
   </ItemGroup>
 
+  <!-- WithCulture="false": MSBuild reads the ".bg" / ".en" in the file names as cultures and would move the
+       templates into satellite assemblies, where EmailService (which reads the main assembly) cannot find them. -->
   <ItemGroup>
-    <EmbeddedResource Include="EmailTemplates\*.html" />
+    <EmbeddedResource Include="EmailTemplates\*.html" WithCulture="false" />
   </ItemGroup>
 
   <ItemGroup>

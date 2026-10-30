@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import type { AuthContextValue, User } from '../types'
+import type { AuthContextValue, EmailLanguage, RegisterOutcome, User } from '../types'
 import * as authApi from '../api/authApi'
 import { TOKEN_KEY, USER_KEY } from '../api/client'
 import { AuthContext } from './useAuth'
@@ -38,14 +38,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(newUser)
   }
 
-  const register = async (email: string, password: string, displayName: string) => {
-    const { token: newToken, user: newUser } = await authApi.register(email, password, displayName)
+  // With email confirmation on, the API creates the account but issues no token: nothing is stored, and the
+  // register page asks the user to open the link in their email.
+  const register = async (
+    email: string,
+    password: string,
+    displayName: string,
+    language: EmailLanguage,
+  ): Promise<RegisterOutcome> => {
+    const response = await authApi.register(email, password, displayName, language)
+    if (response.requiresEmailConfirmation) return 'emailConfirmationRequired'
 
-    localStorage.setItem(TOKEN_KEY, newToken)
-    localStorage.setItem(USER_KEY, JSON.stringify(newUser))
+    localStorage.setItem(TOKEN_KEY, response.token)
+    localStorage.setItem(USER_KEY, JSON.stringify(response.user))
 
-    setToken(newToken)
-    setUser(newUser)
+    setToken(response.token)
+    setUser(response.user)
+    return 'signedIn'
   }
 
   const logout = () => {

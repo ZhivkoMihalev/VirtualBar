@@ -87,8 +87,27 @@
   "authErrors": {
     "InvalidCredentials": "Incorrect email or password.",
     "LockedOut": "This account is temporarily locked after too many failed attempts. Please try again later.",
-    "EmailNotConfirmed": "Your email address is not confirmed yet. Please open the link we sent you when you registered.",
+    "EmailNotConfirmed": "Your email address is not confirmed yet. Open the link we sent you, or ask for a new one.",
     "EmailTaken": "An account with this email already exists. Sign in or use a different email."
+  },
+  "confirmEmail": {
+    "checkTitle": "Check your email",
+    "checkSubtitle": "One more step",
+    "checkMessage": "We sent a confirmation link to {{email}}. Open it to activate your account.",
+    "checkHint": "Can't find the email? Check your spam folder or ask for a new link.",
+    "title": "Email confirmation",
+    "subtitle": "Activate your account",
+    "confirming": "Confirming your email...",
+    "success": "Your email is confirmed. You can now sign in.",
+    "loginBtn": "Go to sign in",
+    "invalidLink": "This confirmation link is invalid or has expired.",
+    "errorFailed": "We could not confirm your email. Please try again.",
+    "retryBtn": "Try again",
+    "resendBtn": "Send a new link",
+    "resendingBtn": "Sending...",
+    "resendSuccess": "If the account for {{email}} is not confirmed yet, we sent it a new link.",
+    "resendFailed": "We could not send the link. Please try again.",
+    "backToLogin": "← Back to sign in"
   },
   "dashboard": {
     "yourCollection": "YOUR COLLECTION",

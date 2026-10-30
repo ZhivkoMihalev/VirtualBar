@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 import { EMAIL_REGEX, type TFn } from '@/lib/validation'
+import { emailLanguage } from '@/lib/emailLanguage'
 
 const makeSchema = (t: TFn) =>
   z.object({
@@ -32,7 +33,7 @@ export default function ForgotPasswordPage() {
 
   const forgotMutation = useMutation({
     mutationFn: (values: ForgotValues) =>
-      forgotPassword(values.email, i18n.language.startsWith('en') ? 'en' : 'bg'),
+      forgotPassword(values.email, emailLanguage(i18n.language)),
     onError: () => {
       form.setError('root', { message: t('forgotPassword.errorFailed') })
     },

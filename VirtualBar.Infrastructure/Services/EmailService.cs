@@ -67,10 +67,27 @@ public sealed class EmailService(IOptions<EmailSettings> options) : IEmailServic
         message.Subject = subject;
         message.Body = new BodyBuilder { HtmlBody = htmlBody }.ToMessageBody();
 
+        if (!string.IsNullOrWhiteSpace(_settings.PickupDirectory))
+        {
+            await WriteToPickupDirectoryAsync(message, _settings.PickupDirectory, cancellationToken);
+            return;
+        }
+
         using var client = new SmtpClient();
         await client.ConnectAsync(_settings.SmtpHost, _settings.SmtpPort, SecureSocketOptions.StartTls, cancellationToken);
         await client.AuthenticateAsync(_settings.Username, _settings.Password, cancellationToken);
         await client.SendAsync(message, cancellationToken);
         await client.DisconnectAsync(true, cancellationToken);
+    }
+
+    // The file gets its .eml name only once it is complete, so whoever reads the directory never sees half an email.
+    private static async Task WriteToPickupDirectoryAsync(MimeMessage message, string directory, CancellationToken cancellationToken)
+    {
+        Directory.CreateDirectory(directory);
+        var name = $"{DateTime.UtcNow:yyyyMMddHHmmssfff}-{Guid.NewGuid():N}";
+        var partialPath = Path.Combine(directory, name + ".partial");
+
+        await message.WriteToAsync(partialPath, cancellationToken);
+        File.Move(partialPath, Path.Combine(directory, name + ".eml"));
     }
 }

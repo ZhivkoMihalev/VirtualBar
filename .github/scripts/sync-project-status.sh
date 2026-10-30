@@ -40,7 +40,8 @@ projects=$(gh api graphql -f owner="$PROJECT_OWNER" -f query='
   }')
 board=$(jq --arg title "$PROJECT_TITLE" '[.data.user.projectsV2.nodes[] | select(.title == $title)]' <<<"$projects")
 if [ "$(jq 'length' <<<"$board")" -ne 1 ]; then
-  echo "::error::Expected exactly one project titled \"$PROJECT_TITLE\" owned by $PROJECT_OWNER, found $(jq 'length' <<<"$board")."
+  titles=$(jq -r '[.data.user.projectsV2.nodes[].title | "\"" + . + "\""] | join(", ") | if . == "" then "none" else . end' <<<"$projects")
+  echo "::error::Expected exactly one project titled \"$PROJECT_TITLE\" owned by $PROJECT_OWNER, found $(jq 'length' <<<"$board"). Their projects: $titles."
   exit 1
 fi
 project_id=$(jq -r '.[0].id' <<<"$board")

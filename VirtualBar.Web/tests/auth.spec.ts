@@ -10,7 +10,8 @@ import { test, expect, type Page } from '@playwright/test'
  *    10 times a minute from one IP.
  *
  * App facts the tests rely on:
- *  - The UI is Bulgarian by default (i18n `lng: 'bg'`), so labels and messages are the bg.json strings.
+ *  - The UI starts in Bulgarian (a fresh browser context has no saved vbar_lang), so labels and messages are the
+ *    bg.json strings.
  *  - The session lives in localStorage under vbar_token / vbar_user (src/api/client.ts).
  *  - LoginPage/RegisterPage navigate to /dashboard on success, while the /login and /register routes
  *    send an already authenticated user to /. Which of the two wins is timing, so a successful login
@@ -314,7 +315,7 @@ test.describe('VirtualBar Auth Flow', () => {
     const email = uniqueEmail('wrongpwd-en')
     await registerViaApi(email, 'Wrong Pwd EN', 'CorrectPass123')
 
-    // i18n starts in Bulgarian whatever is saved (lng: 'bg'), so switch with the page's own language menu.
+    // A fresh browser context starts in Bulgarian, so switch with the page's own language menu.
     await page.goto('/login')
     await page.getByRole('button', { name: 'BG', exact: true }).click()
     await page.getByRole('menuitemradio', { name: 'English' }).click()

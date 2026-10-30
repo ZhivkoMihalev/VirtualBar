@@ -11,8 +11,11 @@ on:
     branches: [master]
     types: [opened, synchronize, reopened, labeled]
 
+# A newer run for the same PR cancels the older one. A "labeled" event for any label other than "e2e" starts a
+# run whose job is then skipped (see the job's if), and concurrency is applied before that if is evaluated, so
+# such a run gets a group of its own: otherwise adding a second label right after "e2e" cancels the real run.
 concurrency:
-  group: e2e-${{ github.event.pull_request.number || github.ref }}
+  group: e2e-${{ github.event.pull_request.number || github.ref }}${{ github.event.action == 'labeled' && github.event.label.name != 'e2e' && format('-label-{0}', github.event.label.name) || '' }}
   cancel-in-progress: true
 
 permissions:

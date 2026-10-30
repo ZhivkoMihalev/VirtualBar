@@ -79,6 +79,20 @@ public sealed class EmailServiceTests : IDisposable
         Assert.Equal("VirtualBar — Потвърди имейла си", subject);
     }
 
+    [Theory]
+    [InlineData("confirm-email.bg.html")]
+    [InlineData("confirm-email.en.html")]
+    [InlineData("reset-password.bg.html")]
+    [InlineData("reset-password.en.html")]
+    public void EmailTemplate_IsEmbeddedInTheMainAssembly(string template)
+    {
+        // Pins the csproj's WithCulture="false": without it MSBuild treats ".bg" / ".en" as cultures and moves the
+        // templates into satellite assemblies, and every email fails with "template not found".
+        var names = typeof(EmailService).Assembly.GetManifestResourceNames();
+
+        Assert.Contains($"VirtualBar.Infrastructure.EmailTemplates.{template}", names);
+    }
+
     [Fact]
     public async Task SendEmailConfirmationAsync_WhenPickupDirectorySet_WritesTheEmailToAFile()
     {

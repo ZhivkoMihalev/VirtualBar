@@ -13,8 +13,8 @@ import { test, expect, Page } from '@playwright/test'
  *  - localStorage keys (src/api/client.ts): vbar_token, vbar_user. Session is seeded before
  *    navigation via addInitScript so the user is authenticated from the first paint (no
  *    unauthenticated notification poll → no 401s to ignore).
- *  - i18n init hardcodes lng:'bg' (default); English is switched at runtime via the NavBar
- *    LanguageSwitcher (БГ/EN dropdown), NOT by seeding vbar_lang.
+ *  - seedSession saves vbar_lang='bg' before every page load, so each page starts in Bulgarian;
+ *    English is switched at runtime via the NavBar LanguageSwitcher (БГ/EN dropdown).
  *  - Adding a bottle awards the FirstBottle badge SYNCHRONOUSLY inside AddBottleAsync
  *    (badgeService.EvaluateAsync is awaited) → the BadgeEarned notification exists the moment
  *    POST /api/bottles returns. The bell polls every 30 s; instead of waiting we reload.

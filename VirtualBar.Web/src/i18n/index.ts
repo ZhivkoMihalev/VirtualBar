@@ -12,10 +12,13 @@ i18n
       bg: { translation: bg },
       en: { translation: en },
     },
-    lng: 'bg',
+    // No `lng`: it would override detection and ignore the saved choice. Detection reads only the saved choice, never
+    // the browser language, so a first visit is in Bulgarian (fallbackLng) and a choice made in the LanguageSwitcher
+    // is kept from then on. supportedLngs sends an unknown saved value to Bulgarian too.
     fallbackLng: 'bg',
+    supportedLngs: ['bg', 'en'],
     detection: {
-      order: ['localStorage', 'navigator'],
+      order: ['localStorage'],
       caches: ['localStorage'],
       lookupLocalStorage: 'vbar_lang',
     },

@@ -11,9 +11,8 @@ import { test, expect, Page } from '@playwright/test'
  * App facts verified while writing these tests:
  *  - localStorage keys (src/api/client.ts): vbar_token, vbar_user. (auth.spec.ts uses the
  *    stale keys token/user — that spec predates this and is out of scope.)
- *  - i18n init hardcodes `lng: 'bg'`, which overrides the localStorage language detector on
- *    load, so seeding vbar_lang does NOT switch language — language is switched via the UI
- *    LanguageSwitcher (БГ/EN dropdown in the NavBar).
+ *  - seedSession saves vbar_lang='bg' before every page load, so each page starts in Bulgarian;
+ *    language is switched via the UI LanguageSwitcher (БГ/EN dropdown in the NavBar).
  *  - /bar/:userId is a PUBLIC route, BUT the bottle panel's EstimateSection calls
  *    GET /api/prices/bottle/{id}, which is [Authorize] → 401 for anonymous users, and the
  *    global axios interceptor force-redirects to /login. So a truly-anonymous panel open

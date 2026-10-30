@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useMutation } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
@@ -7,11 +7,13 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useAuth } from '../contexts/useAuth'
 import AuthLayout from '../components/AuthLayout'
+import ResendConfirmation from '../components/ResendConfirmation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 import { EMAIL_REGEX, type TFn } from '@/lib/validation'
 import { authErrorMessage } from '@/lib/authErrors'
+import { emailLanguage } from '@/lib/emailLanguage'
 
 const makeSchema = (t: TFn) =>
   z
@@ -42,8 +44,10 @@ type RegisterValues = z.infer<ReturnType<typeof makeSchema>>
 
 export default function RegisterPage() {
   const navigate = useNavigate()
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const { register } = useAuth()
+  // Set when the account was created but must confirm its email before it can sign in.
+  const [pendingEmail, setPendingEmail] = useState<string | null>(null)
   const schema = useMemo(() => makeSchema(t), [t])
   const form = useForm<RegisterValues>({
     resolver: zodResolver(schema),
@@ -52,14 +56,37 @@ export default function RegisterPage() {
 
   const registerMutation = useMutation({
     mutationFn: (values: RegisterValues) =>
-      register(values.email, values.password, values.displayName),
-    onSuccess: () => navigate('/dashboard'),
+      register(values.email, values.password, values.displayName, emailLanguage(i18n.language)),
+    onSuccess: (outcome, values) => {
+      if (outcome === 'emailConfirmationRequired') setPendingEmail(values.email)
+      else navigate('/dashboard')
+    },
     onError: (err: unknown) => {
       form.setError('root', { message: authErrorMessage(err, t, 'register.errorFailed') })
     },
   })
 
   const onSubmit = (values: RegisterValues) => registerMutation.mutate(values)
+
+  if (pendingEmail) {
+    return (
+      <AuthLayout
+        title={t('confirmEmail.checkTitle')}
+        subtitle={t('confirmEmail.checkSubtitle')}
+        footer={
+          <Link to="/login" className="font-medium text-primary hover:underline">
+            {t('confirmEmail.backToLogin')}
+          </Link>
+        }
+      >
+        <div className="space-y-4">
+          <p className="text-sm">{t('confirmEmail.checkMessage', { email: pendingEmail })}</p>
+          <p className="text-sm text-muted-foreground">{t('confirmEmail.checkHint')}</p>
+          <ResendConfirmation key={pendingEmail} email={pendingEmail} />
+        </div>
+      </AuthLayout>
+    )
+  }
 
   return (
     <AuthLayout

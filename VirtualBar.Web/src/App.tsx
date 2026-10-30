@@ -15,6 +15,7 @@ const LoginPage = lazy(() => import('./pages/LoginPage'))
 const RegisterPage = lazy(() => import('./pages/RegisterPage'))
 const ForgotPasswordPage = lazy(() => import('./pages/ForgotPasswordPage'))
 const ResetPasswordPage = lazy(() => import('./pages/ResetPasswordPage'))
+const ConfirmEmailPage = lazy(() => import('./pages/ConfirmEmailPage'))
 const DashboardPage = lazy(() => import('./pages/DashboardPage'))
 const BrowsePage = lazy(() => import('./pages/BrowsePage'))
 const PublicBarPage = lazy(() => import('./pages/PublicBarPage'))
@@ -65,6 +66,7 @@ function AppRoutes() {
       <Route path="/register" element={isAuthenticated ? <Navigate to="/" replace /> : <RegisterPage />} />
       <Route path="/forgot-password" element={<ForgotPasswordPage />} />
       <Route path="/reset-password" element={<ResetPasswordPage />} />
+      <Route path="/confirm-email" element={<ConfirmEmailPage />} />
       <Route
         path="/dashboard"
         element={

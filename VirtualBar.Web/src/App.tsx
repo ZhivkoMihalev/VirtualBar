@@ -36,18 +36,16 @@ function RouteFallback() {
 }
 
 function ProtectedRoute({ children }: { children: ReactNode }) {
-  const { isAuthenticated, isLoading } = useAuth()
+  const { isAuthenticated } = useAuth()
 
-  if (isLoading) return <RouteFallback />
   if (!isAuthenticated) return <Navigate to="/login" replace />
 
   return children
 }
 
 function AdminRoute({ children }: { children: ReactNode }) {
-  const { user, isAuthenticated, isLoading } = useAuth()
+  const { user, isAuthenticated } = useAuth()
 
-  if (isLoading) return <RouteFallback />
   if (!isAuthenticated) return <Navigate to="/login" replace />
   if (!user?.isAdmin) return <Navigate to="/" replace />
 
@@ -55,9 +53,7 @@ function AdminRoute({ children }: { children: ReactNode }) {
 }
 
 function AppRoutes() {
-  const { isAuthenticated, isLoading } = useAuth()
-
-  if (isLoading) return <RouteFallback />
+  const { isAuthenticated } = useAuth()
 
   return (
     <Routes>

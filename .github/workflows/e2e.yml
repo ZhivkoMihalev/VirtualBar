@@ -1,0 +1,144 @@
+name: E2E
+
+# Runs the Playwright tests in VirtualBar.Web/tests against the real stack: SQL Server in a container,
+# the API on a fresh database, and the Vite dev server (started by playwright.config.ts).
+# Too slow for every PR, so it runs nightly on master, on demand, and on PRs labelled "e2e".
+on:
+  schedule:
+    - cron: '17 2 * * *' # every night at 02:17 UTC
+  workflow_dispatch:
+  pull_request:
+    branches: [master]
+    types: [opened, synchronize, reopened, labeled]
+
+concurrency:
+  group: e2e-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  e2e:
+    name: E2E
+    # On PRs: only when the "e2e" label is on the PR, and not again whenever some other label is added.
+    if: >-
+      github.event_name != 'pull_request'
+      || (contains(github.event.pull_request.labels.*.name, 'e2e')
+          && (github.event.action != 'labeled' || github.event.label.name == 'e2e'))
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      # Throwaway database that exists only for this job; not a secret.
+      DB_PASSWORD: CiOnly-Passw0rd
+      DOTNET_NOLOGO: true
+      DOTNET_CLI_TELEMETRY_OPTOUT: true
+
+    services:
+      sqlserver:
+        image: mcr.microsoft.com/mssql/server:2022-latest
+        env:
+          ACCEPT_EULA: 'Y'
+          MSSQL_SA_PASSWORD: CiOnly-Passw0rd # services cannot read env; keep in sync with DB_PASSWORD
+        ports:
+          - 1433:1433
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: 9.0.x
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: VirtualBar.Web/package-lock.json
+
+      - uses: actions/cache@v6
+        with:
+          path: ~/.nuget/packages
+          key: nuget-${{ runner.os }}-${{ hashFiles('**/*.csproj') }}
+          restore-keys: nuget-${{ runner.os }}-
+
+      - name: Build the API
+        run: dotnet build VirtualBar.Api/VirtualBar.Api.csproj --configuration Release
+
+      - name: Wait for SQL Server
+        env:
+          CONTAINER: ${{ job.services.sqlserver.id }}
+        run: |
+          for attempt in $(seq 1 30); do
+            for sqlcmd in /opt/mssql-tools18/bin/sqlcmd /opt/mssql-tools/bin/sqlcmd; do
+              if docker exec "$CONTAINER" "$sqlcmd" -C -S localhost -U sa -P "$DB_PASSWORD" -Q "SELECT 1" -b -o /dev/null 2>/dev/null; then
+                echo "SQL Server is ready (attempt $attempt)."
+                exit 0
+              fi
+            done
+            sleep 3
+          done
+          echo "SQL Server did not become ready."
+          docker logs "$CONTAINER" | tail -n 50
+          exit 1
+
+      # Startup applies the migrations and seeds the distilleries and the product catalog, so the
+      # first successful GET /api/distilleries means the API is ready for the tests.
+      # CI-only overrides: no email confirmation (the tests log new users straight in), a higher limit
+      # on the auth endpoints (the suite registers many users from one IP), and no Claude price research.
+      - name: Start the API
+        working-directory: VirtualBar.Api
+        env:
+          ASPNETCORE_ENVIRONMENT: Development
+          ConnectionStrings__Default: Server=localhost,1433;Database=VirtualBar;User Id=sa;Password=${{ env.DB_PASSWORD }};TrustServerCertificate=True
+          Identity__RequireConfirmedEmail: 'false'
+          RateLimiting__AuthPermitLimit: '10000'
+          Anthropic__UseProviderStats: 'false'
+          Pricing__RefreshEnabled: 'false'
+        run: |
+          Jwt__Key="$(openssl rand -base64 48)"
+          export Jwt__Key
+          nohup dotnet run --no-build --no-launch-profile --configuration Release \
+            --urls http://localhost:5000 > "$RUNNER_TEMP/api.log" 2>&1 &
+          for attempt in $(seq 1 90); do
+            if curl -sf http://localhost:5000/api/distilleries > /dev/null; then
+              echo "API is up (attempt $attempt)."
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "API did not start. Last log lines:"
+          tail -n 100 "$RUNNER_TEMP/api.log"
+          exit 1
+
+      - name: Install frontend dependencies
+        working-directory: VirtualBar.Web
+        run: npm ci
+
+      - name: Install Chromium
+        working-directory: VirtualBar.Web
+        run: npx playwright install --with-deps chromium
+
+      - name: Run Playwright tests
+        working-directory: VirtualBar.Web
+        run: npx playwright test --project=chromium --reporter=list,github,html
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: playwright-report
+          path: |
+            VirtualBar.Web/playwright-report/
+            VirtualBar.Web/test-results/
+          retention-days: 14
+          if-no-files-found: ignore
+
+      - name: Upload API log
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: api-log
+          path: ${{ runner.temp }}/api.log
+          retention-days: 14
+          if-no-files-found: ignore

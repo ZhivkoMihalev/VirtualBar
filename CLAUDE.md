@@ -25,7 +25,7 @@ VirtualBar/
 │   ├── Integration/           # cross-service flow tests (real service graph, no mocks)
 │   ├── Persistence/           # EF model conventions (UTC DateTime round-trip)
 │   └── Api/                   # API helpers (ResultExtensions: status code + error body)
-└── VirtualBar.Web/            # React + Vite 7 + Tailwind CSS 4 frontend
+└── VirtualBar.Web/            # React + Vite 8 + Tailwind CSS 4 frontend
 
 **Target framework:** .NET 9 (`net9.0`)
 ```
@@ -100,7 +100,7 @@ Expected output: `Failed: 0`. The `coverage-results/` directory is gitignored.
 
 **CodeQL** (security scanning of C#, JS/TS and the workflows) runs through GitHub's *default setup*, configured in the repository settings (Advanced Security → Code scanning), not in a workflow file. Findings appear in the Security tab and on PRs.
 
-`.github/dependabot.yml` opens **monthly** update PRs for npm, NuGet and GitHub Actions (minor + patch grouped into one PR per ecosystem, majors separate). Security updates are not bound to the schedule.
+`.github/dependabot.yml` opens **monthly** update PRs for npm, NuGet and GitHub Actions (minor + patch grouped into one PR per ecosystem, majors separate — except `vite` and `@vitejs/*`, whose majors come as one PR because neither installs without the other). Security updates are not bound to the schedule.
 
 ---
 

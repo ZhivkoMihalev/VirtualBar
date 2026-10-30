@@ -113,7 +113,8 @@ public sealed class AuthServiceTests
         IConfiguration configuration,
         IEmailService? emailService = null,
         ICurrentUser? currentUser = null,
-        IdentityOptions? identityOptions = null)
+        IdentityOptions? identityOptions = null,
+        ILogger<AuthService>? authLogger = null)
     {
         var userManager = CreateUserManager(db, identityOptions);
         var signInManager = CreateSignInManager(db, userManager, identityOptions);
@@ -122,7 +123,8 @@ public sealed class AuthServiceTests
         currentUser ??= Mock.Of<ICurrentUser>();
         var emailOptions = Options.Create(new EmailSettings());
 
-        var authService = new AuthService(userManager, configuration, emailService, emailOptions);
+        var authService = new AuthService(
+            userManager, configuration, emailService, emailOptions, authLogger ?? NullLogger<AuthService>.Instance);
         return new AuthValidationDecorator(
             authService,
             userManager,
@@ -744,6 +746,73 @@ public sealed class AuthServiceTests
     }
 
     [Fact]
+    public async Task RegisterAsync_WhenConfirmationEmailFails_OkRequiresConfirmationAndLogsError()
+    {
+        // Arrange — the SMTP send fails after the account was created
+        var db = CreateDbContext();
+        var config = CreateTestConfiguration();
+        var emailMock = new Mock<IEmailService>();
+        emailMock
+            .Setup(e => e.SendEmailConfirmationAsync(
+                It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new InvalidOperationException("SMTP unavailable."));
+        var loggerMock = new Mock<ILogger<AuthService>>();
+        var authService = CreateAuthService(
+            db, config, emailMock.Object, identityOptions: RequireConfirmedEmailOptions(), authLogger: loggerMock.Object);
+
+        var request = new RegisterRequest
+        {
+            Email = "smtp-down@example.com",
+            Password = "ValidPass123",
+            DisplayName = "Pending User"
+        };
+
+        // Act
+        var result = await authService.RegisterAsync(request, CancellationToken.None);
+
+        // Assert — the same answer as a successful send, so the user lands on "check your email" and can resend
+        Assert.True(result.Success);
+        Assert.NotNull(result.Data);
+        Assert.True(result.Data.RequiresEmailConfirmation);
+        Assert.Empty(result.Data.Token);
+        Assert.NotNull(result.Data.User);
+        Assert.True(await db.Users.AnyAsync(u => u.Email == "smtp-down@example.com"));
+        loggerMock.Verify(
+            l => l.Log(
+                LogLevel.Error,
+                It.IsAny<EventId>(),
+                It.IsAny<It.IsAnyType>(),
+                It.Is<Exception?>(ex => ex is InvalidOperationException),
+                It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task RegisterAsync_WhenConfirmationEmailCancelled_Rethrows()
+    {
+        // Arrange
+        var db = CreateDbContext();
+        var config = CreateTestConfiguration();
+        var emailMock = new Mock<IEmailService>();
+        emailMock
+            .Setup(e => e.SendEmailConfirmationAsync(
+                It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new OperationCanceledException());
+        var authService = CreateAuthService(db, config, emailMock.Object, identityOptions: RequireConfirmedEmailOptions());
+
+        var request = new RegisterRequest
+        {
+            Email = "cancelled@example.com",
+            Password = "ValidPass123",
+            DisplayName = "Pending User"
+        };
+
+        // Act + Assert — a cancelled request is not a failed email: it is not swallowed
+        await Assert.ThrowsAsync<OperationCanceledException>(
+            () => authService.RegisterAsync(request, CancellationToken.None));
+    }
+
+    [Fact]
     public async Task RegisterAsync_WhenConfirmationRequiredAndEmailExists_OkGenericWithoutEnumeration()
     {
         // Arrange
@@ -872,7 +941,8 @@ public sealed class AuthServiceTests
         var config = CreateTestConfiguration();
         var userManager = CreateUserManager(db);
         var emailOptions = Options.Create(new EmailSettings());
-        var inner = new AuthService(userManager, config, CreateEmailServiceMock().Object, emailOptions);
+        var inner = new AuthService(
+            userManager, config, CreateEmailServiceMock().Object, emailOptions, NullLogger<AuthService>.Instance);
 
         var request = new LoginRequest { Email = "inner@example.com", Password = "ValidPass123" };
 
@@ -1236,7 +1306,8 @@ public sealed class AuthServiceTests
         var config = CreateTestConfiguration();
         var userManager = CreateUserManager(db);
         var emailOptions = Options.Create(new EmailSettings());
-        var inner = new AuthService(userManager, config, CreateEmailServiceMock().Object, emailOptions);
+        var inner = new AuthService(
+            userManager, config, CreateEmailServiceMock().Object, emailOptions, NullLogger<AuthService>.Instance);
 
         var user = new AppUser
         {

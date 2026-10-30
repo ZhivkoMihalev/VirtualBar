@@ -1,7 +1,9 @@
 version: 2
 
 # Monthly version updates. Minor and patch bumps are grouped into one PR per ecosystem;
-# major bumps arrive as separate PRs because they usually need code changes.
+# major bumps arrive as separate PRs because they usually need code changes. The exception is Vite and its
+# official plugins: each major of one needs the matching major of the other, so apart they cannot install
+# (Vite 8 arrived as #16 and #17, both red on the same peer conflict) and they come as one PR instead.
 # Security updates are not tied to this schedule — they open as soon as a vulnerability is published
 # (enable "Dependabot security updates" in the repository settings).
 updates:
@@ -11,6 +13,9 @@ updates:
       interval: monthly
     open-pull-requests-limit: 5
     groups:
+      vite-major:
+        patterns: ["vite", "@vitejs/*"]
+        update-types: [major]
       npm-minor-and-patch:
         update-types: [minor, patch]
 

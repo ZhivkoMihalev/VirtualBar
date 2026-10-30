@@ -1,0 +1,42 @@
+name: Project board
+
+# Keeps the VirtualBar project board (GitHub Projects) in step with the issues' "status: …" labels. The label is the
+# source of truth: change an issue's status by changing its label, and its card moves to the column of the same
+# name. Dragging a card on the board does not change the label. See .github/scripts/sync-project-status.sh.
+#
+# Needs the PROJECT_TOKEN secret: a classic personal access token with only the project scope. The workflow's own
+# GITHUB_TOKEN cannot reach a project owned by a user account.
+on:
+  issues:
+    types: [opened, reopened, labeled]
+  # Syncs every issue that has a status label: the first time, or after cards were dragged by hand.
+  workflow_dispatch:
+
+# One run per issue at a time. Each run reads the issue's current labels, so a waiting run that a newer one
+# replaces loses nothing: the newer run moves the card to where the labels say.
+concurrency:
+  group: project-board-${{ github.event.issue.number || 'all' }}
+
+permissions:
+  contents: read
+
+jobs:
+  sync:
+    name: Sync the board
+    # Only a status label moves a card; adding "bug" or "e2e" starts nothing.
+    if: github.event_name != 'issues' || github.event.action != 'labeled' || startsWith(github.event.label.name, 'status:')
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          sparse-checkout: .github/scripts
+
+      - name: Move the cards
+        env:
+          GH_TOKEN: ${{ secrets.PROJECT_TOKEN }}
+          REPO: ${{ github.repository }}
+          PROJECT_OWNER: ${{ github.repository_owner }}
+          PROJECT_TITLE: VirtualBar
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+        run: .github/scripts/sync-project-status.sh "$ISSUE_NUMBER"

@@ -1,6 +1,6 @@
 # Slice 03 — Catalog service: browse, product detail, product reviews
 
-> Prereq: slice 02. Build gate only; test targets are listed at the end and written in slice 07.
+> Prereq: slice 02. Implemented together with its tests (`ProductCatalogServiceTests`), so the 100% branch-coverage rule holds per PR.
 
 ## Shared query pieces (private helpers in `ProductCatalogService`)
 - `LinkedBottles(productId)` = `db.Bottles.Where(b => b.ProductId == productId && !b.IsDeleted)`.
@@ -37,10 +37,9 @@ Several small queries (clearer than one giant projection; all `AsNoTracking`):
 5. Listings: `LinkedBottles.Where(IsForSale)` ordered `ForSaleAt desc, Id`, projected to
    `ProductListingDto` with the seller's name/avatar.
 6. Latest reviews: `LinkedReviews` ordered `CreatedAt desc, Id`, `Take(5)`, projected to
-   `BottleReviewDto` **the same way `BottleReviewService` projects it** (extract a shared static
-   `Expression<Func<BottleReview, BottleReviewDto>>` into `VirtualBar.Infrastructure/Services/`
-   `ReviewProjections.cs` and use it from both services, so the two cannot drift; flavors ordered
-   by enum value as today).
+   `BottleReviewDto` **the same way `BottleReviewService` maps it**: both services call the shared
+   `ReviewMapping.ToDto` (`VirtualBar.Infrastructure/Services/ReviewMapping.cs`) after loading
+   `User` + `Flavors`, so the two cannot drift; flavors ordered by enum value as before.
 
 ## `GetProductReviewsAsync(productId, page, pageSize)` — inner
 `LinkedReviews` ordered `CreatedAt desc, Id`, `Skip/Take(pageSize + 1)`, shared projection,
@@ -57,7 +56,7 @@ Every method: `ThrowIfCancellationRequested()` first.
   `page`/`pageSize` clamp: page ≥ 1 (≤ 1000), pageSize 1–50, default 10.
 - Update the DI factory in `DependencyInjection.cs` if the decorator ctor changes.
 
-## Test targets (write in slice 07)
+## Test targets (written in this slice)
 Every branch above: search null/blank/short/long/valid; category on/off; page/pageSize clamps;
 `HasMore` true/false; ordering with and without search; counts ignore deleted bottles, deleted reviews
 and reviews on deleted bottles; `AverageScore` null with no reviews; owners grouped and summed by

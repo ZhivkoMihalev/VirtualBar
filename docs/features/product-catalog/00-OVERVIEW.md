@@ -2,7 +2,7 @@
 
 > **Read this first, before any slice.** Single source of truth for the decisions, the architecture,
 > the conventions, and the risks. Each `NN-*.md` slice assumes you read this. Format mirrors
-> `docs/badges/`, `docs/collection-value/`, `docs/bottle-reviews/`, `docs/barcode-scanning/`.
+> `docs/features/badges/`, `docs/features/collection-value/`, `docs/features/bottle-reviews/`, `docs/features/barcode-scanning/`.
 
 > **Approach — a canonical, admin-curated catalog that enriches but never blocks.** The collector
 > platforms that solved this (Whiskybase, Untappd, Discogs) all use community submissions + moderation,
@@ -12,7 +12,7 @@
 > requester's bottle (and identical unlinked bottles). Seed data comes from open datasets (Iowa ABD
 > product portfolio — public data with UPCs; Open Food Facts — ODbL barcode DB), imported **offline**
 > by a standalone tool — never at runtime. This feature also un-parks the "crowdsourced catalog
-> phase 2" item from `docs/barcode-scanning/00-OVERVIEW.md` §8: the catalog becomes **L0** of the
+> phase 2" item from `docs/features/barcode-scanning/00-OVERVIEW.md` §8: the catalog becomes **L0** of the
 > layered barcode lookup.
 
 ---
@@ -81,7 +81,7 @@ datasets by an offline import tool.
    all SQL-filterable) are compared in memory by `ProductKey.For` and linked on exact match
    (silently — no notification to their owners). Requester gets `ProductRequestApproved` — and, added
    after this slice, the `FirstCatalogProduct` badge (`BadgeTrigger.ProductRequestApproved`, evaluated
-   for the **requester** as the last line of `ApproveAsync`; see `docs/badges/00-OVERVIEW.md` §3
+   for the **requester** as the last line of `ApproveAsync`; see `docs/features/badges/00-OVERVIEW.md` §3
    "Added after this slice").
 8. **Reject** sets `Status = Rejected` + `AdminNote?` + `RespondedAt`, notifies
    `ProductRequestRejected`. **Withdraw** = the requester soft-deletes an own **pending** request
@@ -97,7 +97,7 @@ datasets by an offline import tool.
 11. **Catalog is L0 of the barcode lookup.** `ProductLookupService.LookupByBarcodeAsync` checks
     `Products` by barcode **before** the external UPC call and returns the catalog hit (with a new
     additive `BarcodeProductDto.ProductId`) — zero external cost, and the form links the product.
-    Coexists with the (not yet shipped) L1/L2 layering planned in `docs/barcode-scanning/`.
+    Coexists with the (not yet shipped) L1/L2 layering planned in `docs/features/barcode-scanning/`.
 12. **`ProductSeeder`** (mirror `DistillerySeeder`): runs on startup only when `Products` is empty,
     reads an **embedded** `products.seed.json`, resolves `DistilleryId` by name, computes keys,
     dedupes. The starter seed is **curated (~200–400 iconic core-range bottles), no barcodes, no
@@ -201,11 +201,11 @@ Curation: the seed files are hand-edited; ProductSeedDataTests guards their inva
   set is tiny. Runs only on approve.
 
 ## 7. Open questions (decide later — all parked, none block this feature)
-- ~~**Pricing convergence**~~ — **done in #50** (`docs/product-page/01-pricing-convergence.md`): a
+- ~~**Pricing convergence**~~ — **done in #50** (`docs/features/product-page/01-pricing-convergence.md`): a
   linked bottle prices under `Product.CanonicalKey` via `PriceKey.ForBottle`, researched with the
   product's fields.
 - **Wish list by product** — `WishListItem.ProductId?` as a third, precise matching criterion.
-- ~~**Per-product review aggregation**~~ — **done in #50** (`docs/product-page/`): the product page
+- ~~**Per-product review aggregation**~~ — **done in #50** (`docs/features/product-page/`): the product page
   aggregates the reviews of every linked bottle on read; reviews stay bottle-attached.
 - **Vintage-specific catalog entries** — revisit if requests show real demand; would add
   `VintageYear` to `Product` + key computation.
@@ -213,7 +213,7 @@ Curation: the seed files are hand-edited; ProductSeedDataTests guards their inva
   (approve-time retro-link covers the common case).
 - **Community moderation** (trusted-user approvals) — solo admin is fine at current scale.
 - **Rename `ProductValidationDecorator` → `ProductLookupValidationDecorator`** — clarity refactor.
-- ~~**Public catalog browse page**~~ (`/catalog`) — **done in #50** (`docs/product-page/`), with a
+- ~~**Public catalog browse page**~~ (`/catalog`) — **done in #50** (`docs/features/product-page/`), with a
   paged `GET /api/products/browse`.
 
 ## 8. Slice index, dependencies & order

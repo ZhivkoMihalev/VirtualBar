@@ -2,7 +2,7 @@ import { test, expect, type Page } from '@playwright/test'
 
 /**
  * E2E coverage for the Badges / Achievements frontend feature.
- * Gate: docs/badges/06-frontend.md (§Gate) + docs/badges/00-OVERVIEW.md §3 (the 19-badge catalog —
+ * Gate: docs/features/badges/06-frontend.md (§Gate) + docs/features/badges/00-OVERVIEW.md §3 (the 19-badge catalog —
  * the initial 18 plus FirstCatalogProduct, see §3 "Added after this slice").
  *
  * Real app: Vite dev server (:5173, started by Playwright's webServer config) against the

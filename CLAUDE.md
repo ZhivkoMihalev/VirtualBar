@@ -33,6 +33,12 @@ VirtualBar/
 ├── VirtualBar.Web.Tests/      # frontend tests — its own npm workspace, depends on VirtualBar.Web
 │   ├── unit/                  # Vitest + React Testing Library (jsdom); mirrors VirtualBar.Web/src
 │   └── e2e/                   # Playwright specs, run against the real stack
+├── docs/
+│   └── features/              # feature specs, one folder per feature (00-OVERVIEW.md first, then numbered slices)
+├── .claude/
+│   ├── rules/                 # project rules, one topic per file (see CRITICAL RULES)
+│   ├── agents/                # custom agents: implementers, reviewers, testers
+│   └── skills/                # project skills
 └── package.json               # npm workspaces root: VirtualBar.Web + VirtualBar.Web.Tests, one lockfile
 
 **Target framework:** .NET 9 (`net9.0`)
@@ -47,10 +53,14 @@ query-client context. Listing one of them separately could install a second copy
 
 **Dependency rule:** `Api → Application ← Infrastructure`. Domain has no outward dependencies.
 
+**Feature docs:** `docs/features/<feature>/` holds the specs of each feature we built or planned, one folder per
+feature: `00-OVERVIEW.md` first, then the numbered slices (`01-…`, `02-…`). A new feature's specs go into a new folder
+there. Documents about the whole project (`PRODUCTION.md`) stay in the repo root; project rules go to `.claude/rules/`.
+
 The product catalog is **hand-curated**, not generated. There was an offline import CLI
 (`tools/ProductImport`, slice 08); it was removed because it never produced a single shipped row and
 re-running it would have destroyed the curated files. The invariants it used to check on demand now run
-on every build in `ProductSeedDataTests` — see `docs/product-catalog/08-data-import-pipeline.md`.
+on every build in `ProductSeedDataTests` — see `docs/features/product-catalog/08-data-import-pipeline.md`.
 
 ---
 
@@ -164,6 +174,15 @@ A test that finds a problem sends the issue back to `In Progress`. An issue stay
 - After every backend change: run `dotnet build` (0 errors required) and the relevant test class.
 - After every frontend change: run, from the repo root, `npm run lint` (0 problems — CI blocks on it), `npm test` (0 failed) and `npm run build` (clean output required).
 - Every new service method needs 100% branch coverage in tests.
+
+More project rules live in **`.claude/rules/*.md`**, one topic per file (kebab-case name). **Every new project rule
+goes there as a file of its own, not into this file**, and gets a line in the list below.
+- A file without `paths` frontmatter loads in every session, with the same weight as this file.
+- One with `paths` loads only when Claude works with matching files.
+- Custom agents in `.claude/agents/` receive them too.
+
+Current rules:
+- `bug-issues.md`: every bug found gets its own bug issue right away.
 
 ---
 
@@ -668,7 +687,7 @@ Shows an **indicative min–max market value per bottle** and a **total collecti
 - `Anthropic` — `UseProviderStats` (on/off), `Model` (`claude-sonnet-4-6`), `AnthropicVersion`, `MaxSearchesPerBottle`, `DailyCallBudget`, `AllowedDomains` / `BlockedDomains`.
 - `InternalProvider` — `UseProviderStats`, `MinSamples`, `MinApproxSamples`.
 
-Full slice-by-slice specs live in `docs/collection-value/`.
+Full slice-by-slice specs live in `docs/features/collection-value/`.
 
 ---
 

@@ -54,8 +54,8 @@ Run locally per CLAUDE.md, or add the `e2e` label to PR 2.
 - Frontend routing: `/catalog`, `/product/:id` (public). Shared components: `reviews/ReviewsAggregate`,
   `reviews/ReviewCard`, `PriceEstimateView`; `BottleDetailPanel` "View product" link.
 - i18n namespace list: `catalog`, `product`.
-- `docs/product-catalog/00-OVERVIEW.md` §7 and `docs/bottle-reviews/00-OVERVIEW.md` decision 3:
-  mark the three parked items as done, pointing to `docs/product-page/`.
+- `docs/features/product-catalog/00-OVERVIEW.md` §7 and `docs/features/bottle-reviews/00-OVERVIEW.md` decision 3:
+  mark the three parked items as done, pointing to `docs/features/product-page/`.
 
 ## Gate
 `dotnet build` 0 errors; `dotnet test` → `Failed: 0`; coverage report shows 100% branches on

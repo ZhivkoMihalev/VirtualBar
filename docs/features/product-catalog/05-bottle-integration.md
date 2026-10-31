@@ -81,7 +81,7 @@ if (product is not null)
         AbvPercent = product.AbvPercent,
     });
 ```
-Miss → the existing external path, unchanged. (When `docs/barcode-scanning/` slice 02 lands later,
+Miss → the existing external path, unchanged. (When `docs/features/barcode-scanning/` slice 02 lands later,
 this block simply becomes L0 above its L1/L2 — no conflict.)
 
 ### `VirtualBar.Application/DTOs/Products/BarcodeProductDto.cs`

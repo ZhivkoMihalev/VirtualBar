@@ -2,7 +2,7 @@
 
 > **Read this first, before any slice.** Single source of truth for the decisions, the architecture,
 > the conventions, and the risks. Each `NN-*.md` slice assumes you read this. Format mirrors
-> `docs/shadcn-migration/`.
+> `docs/features/shadcn-migration/`.
 
 > **Approach — AI-research, simplified.** A ToS check of every free external price source showed that
 > **caching + displaying their prices in our app is prohibited without a paid licence / written consent**,

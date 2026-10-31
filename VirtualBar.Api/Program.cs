@@ -197,3 +197,7 @@ app.UseAuthorization();
 app.MapControllers();
 
 await app.RunAsync();
+
+// VirtualBar.HttpTests starts the whole app through WebApplicationFactory<Program>, which needs the class
+// generated for these top-level statements to be public.
+public partial class Program { }

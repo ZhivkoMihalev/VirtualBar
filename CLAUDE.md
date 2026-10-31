@@ -25,6 +25,10 @@ VirtualBar/
 │   ├── Integration/           # cross-service flow tests (real service graph, no mocks)
 │   ├── Persistence/           # EF model conventions (UTC DateTime round-trip)
 │   └── Api/                   # API helpers (ResultExtensions: status code + error body) + controller tests
+├── VirtualBar.HttpTests/      # the whole API over HTTP (WebApplicationFactory) on SQL Server
+│   ├── Support/               # test host, shared throwaway database, email pickup reader, [SqlServerFact]
+│   ├── Auth/                  # email confirmation, email failure, error reasons, JWT + logout
+│   └── Startup/               # configuration Program.cs refuses to start with
 ├── VirtualBar.Web/            # React + Vite 8 + Tailwind CSS 4 frontend
 ├── VirtualBar.Web.Tests/      # frontend tests — its own npm workspace, depends on VirtualBar.Web
 │   ├── unit/                  # Vitest + React Testing Library (jsdom); mirrors VirtualBar.Web/src
@@ -106,10 +110,20 @@ dotnet test VirtualBar.Tests/VirtualBar.Tests.csproj \
 
 Expected output: `Failed: 0`. The `coverage-results/` directory is gitignored.
 
+```bash
+# HTTP tests: the whole API on SQL Server (about 30 s; the first host migrates and seeds a fresh database)
+dotnet test VirtualBar.HttpTests/VirtualBar.HttpTests.csproj --verbosity minimal
+```
+
+They need no setup: the server comes from `VIRTUALBAR_TEST_SQL` if set, else from the API's own
+`appsettings.Development.json`. On a machine where no server answers, the SQL tests are **skipped** with the reason
+(the startup-guard tests still run); in CI (`CI=true`) they **fail** instead, so a missing server never passes as green.
+See Testing Conventions → HTTP tests.
+
 ### CI (GitHub Actions)
 
 `.github/workflows/ci.yml` runs on every PR to `master`, every push to `master`, and on demand. Two parallel jobs:
-- **Backend** — restore → build (Release) → tests with coverage (raw results in the `backend-test-results` artifact) → **coverage report** (ReportGenerator, `VirtualBar.Infrastructure.Migrations.*` excluded): written to the job summary, posted as one PR comment that is edited in place on every push (skipped on Dependabot and fork PRs, whose token is read-only), and uploaded as the `coverage-report` HTML artifact. Informational: it never fails the build → `dotnet ef migrations has-pending-model-changes`, which fails when an entity changed without a matching migration. It needs no database or secrets (a throwaway `Jwt:Key` is generated for that step only).
+- **Backend** — restore → build (Release) → unit tests with coverage → **HTTP tests** (`VirtualBar.HttpTests`) with coverage, against a SQL Server 2022 service container (`VIRTUALBAR_TEST_SQL`; they run even when the unit tests failed, so one push shows every failure; raw results of both in the `backend-test-results` artifact) → **coverage report** (merges both test projects) (ReportGenerator, `VirtualBar.Infrastructure.Migrations.*` excluded): written to the job summary, posted as one PR comment that is edited in place on every push (skipped on Dependabot and fork PRs, whose token is read-only), and uploaded as the `coverage-report` HTML artifact. Informational: it never fails the build → `dotnet ef migrations has-pending-model-changes`, which fails when an entity changed without a matching migration. It needs no secrets: the SQL Server password is a CI-only literal for a container that lives only as long as the job, and a throwaway `Jwt:Key` is generated where one is needed.
 - **Frontend** — from the repo root: `npm ci` (both workspaces, root lockfile) → `npm run lint` (both workspaces; blocking — must report 0 problems) → `npm run typecheck` (the tests) → `npm test` (Vitest, no backend needed) → `npm run build`.
 
 `.github/workflows/migration-guard.yml` (the **Migration guard** check) runs on every PR to `master`. Migrations apply automatically on startup, so it scans the `Up()` method of every migration the PR adds or changes (`.github/scripts/check-destructive-migrations.sh`) and fails on `DropTable`, `DropColumn`, `DeleteData`, `UpdateData` or any raw `Sql(...)`: operations that delete or rewrite existing data on the next deploy. `Down()` is ignored, since it legitimately drops what `Up()` created. The check passes once the PR carries the **`db-destructive-approved`** label; add it only after the data change was agreed (see CRITICAL RULES).
@@ -718,6 +732,34 @@ The same rule applies to any component file: shared constants go to their own mo
 - Cover every branch: every `if`, every `switch` arm, every `?.`, `??`, `&&`, `||`.
 
 **Integration tests (`VirtualBar.Tests/Integration/`)** — the deliberate exception to the mocking rule above. A flow that spans services (trigger service → notification → badge) can only be proven end to end by wiring the **real** collaborators, so these classes assemble the service graph exactly as `DependencyInjection.cs` does — real `NotificationService` and `BadgeService` behind their decorators, one graph per acting user (a request scope), only `ICurrentUser` mocked. Do NOT "fix" them back to `Mock.Of<T>()`: mocks would hide the very chain under test. They complement the per-service classes, never replace them — branch coverage still belongs in `Services/`. Because the badge engine swallows and logs its own exceptions, these tests also assert `ILogger<BadgeService>` logged no error, so a silent failure cannot pass as success. Existing file: `ProductRequestApprovalFlowTests` (approve → requester notified + `FirstCatalogProduct` awarded).
+
+### HTTP tests (`VirtualBar.HttpTests`)
+
+A project of its own, because it is the only backend test layer that needs SQL Server: `VirtualBar.Tests` stays
+self-contained and fast. These tests start the real `Program.cs` in memory (`WebApplicationFactory<Program>`; hence
+`public partial class Program { }` at the end of `Program.cs`) and send it real HTTP requests, so they cover what the
+service tests cannot: DI wiring, middleware, `[Authorize]`/`[AllowAnonymous]`, model validation, JSON shape, status
+codes, JWT validation and the startup guards. They are not a place for branch coverage: that stays in `VirtualBar.Tests`.
+- **SQL Server, not InMemory/SQLite:** startup applies the SQL Server migrations, and the app relies on filtered unique
+  indexes and the case-insensitive collation.
+- **One throwaway database per run** (`VirtualBar_HttpTests_<guid>`, `Support/ApiHosts.cs`): the first host's startup
+  migrates and seeds it exactly as production does (about 16 s), and it is dropped at the end. It is never the
+  development database: only the server is taken from the connection string. Tests keep apart by registering
+  collectors with unique emails (`AuthApi.NewEmail`), as the E2E specs do.
+- **Every class joins `[Collection(ApiCollection.Name)]`** and the assembly runs one test at a time: the classes share
+  `ApiHosts`, and hosts built in parallel can catch each other's startup.
+- **Hosts per configuration**, each started once on first use: `ConfirmationOn` (production behaviour),
+  `ConfirmationOff` (Development / E2E behaviour), `EmailUnreachable` (confirmation on, SMTP refuses every connection).
+  A new configuration is a new lazy host in `ApiHosts`, not a new database.
+- **Settings go in through `UseSetting`** (`Support/ApiFactory.cs`), never `ConfigureAppConfiguration`: Program.cs reads
+  `Jwt:Key`, `Email:PickupDirectory` and `Identity:RequireConfirmedEmail` before `Build()`, and only `UseSetting` reaches
+  it that early. The defaults match the E2E workflow: emails to a temporary pickup folder (`Mailbox` reads them back
+  with MimeKit), no Claude calls, no price pre-warm, auth rate limit raised, a random `Jwt:Key`.
+- **`[SqlServerFact]`** for anything that touches the database; plain `[Fact]` only for tests that never get past the
+  startup guards.
+- **Assert the wire format:** read bodies as `JsonElement` (`AuthApi.JsonAsync`), whose `GetProperty` is
+  case-sensitive, so a test also pins the camelCase names and the `{ error, reason }` shape the frontend reads.
+- Method naming as in the service tests: `<Endpoint>_When<Condition>_<ExpectedOutcome>`.
 
 ### Frontend tests (`VirtualBar.Web.Tests`)
 

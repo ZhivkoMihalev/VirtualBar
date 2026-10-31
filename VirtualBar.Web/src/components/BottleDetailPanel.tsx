@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import type { FormEvent } from 'react'
+import { Link } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import type { TFunction } from 'i18next'
@@ -22,10 +23,14 @@ import { createOffer } from '../api/offersApi'
 import { getBottleEstimate } from '../api/pricesApi'
 import { getReviews, addReview, updateReview, deleteReview } from '../api/reviewsApi'
 import { useAuth } from '../contexts/useAuth'
-import type { Bottle, PriceConfidence, BottleReview, BottleReviewsSummary, FlavorTag, ReviewPayload } from '../types'
-import Avatar from './Avatar'
+import type { Bottle, BottleReview, FlavorTag, ReviewPayload } from '../types'
+import PriceEstimateView from './PriceEstimateView'
+import ReviewsAggregate from './reviews/ReviewsAggregate'
+import ReviewCard from './reviews/ReviewCard'
 import { BottleSvg } from './BarShelf'
 import { CATEGORY_COLORS } from '../lib/bottlePalette'
+import { NOTE_FIELDS, formatRelativeTime, hasAnyNote } from '../lib/reviewFormat'
+import type { NoteField } from '../lib/reviewFormat'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -72,43 +77,12 @@ const CURRENCIES = ['USD', 'EUR', 'GBP', 'BGN', 'CHF', 'JPY', 'CAD', 'AUD']
 
 const QUICK_SCORES = [70, 80, 85, 90, 95]
 
-const NOTE_FIELDS = ['nose', 'palate', 'finish', 'summary'] as const
-type NoteField = (typeof NOTE_FIELDS)[number]
-
 const FLAVOR_TAGS: FlavorTag[] = [
   'Smoky', 'Peaty', 'Medicinal', 'Maritime', 'Vanilla', 'Caramel', 'Toffee',
   'Honey', 'Chocolate', 'Coffee', 'Nutty', 'Malty', 'Creamy', 'Fruity',
   'Citrus', 'TropicalFruit', 'DriedFruit', 'Berry', 'Floral', 'Herbal',
   'Grassy', 'Spicy', 'Pepper', 'Cinnamon', 'Oak', 'Sherry', 'Leather', 'Tobacco',
 ]
-
-function hasAnyNote(review: BottleReview): boolean {
-  return NOTE_FIELDS.some(field => (review[field] ?? '').trim() !== '')
-}
-
-function formatRelativeTime(iso: string, t: TFunction): string {
-  const seconds = Math.floor((Date.now() - new Date(iso).getTime()) / 1000)
-
-  if (seconds < 60) return t('bottle.justNow')
-
-  const units: { limit: number; div: number; key: string }[] = [
-    { limit: 3600, div: 60, key: 'minutesAgo' },
-    { limit: 86400, div: 3600, key: 'hoursAgo' },
-    { limit: 604800, div: 86400, key: 'daysAgo' },
-    { limit: 2592000, div: 604800, key: 'weeksAgo' },
-    { limit: 31536000, div: 2592000, key: 'monthsAgo' },
-    { limit: Infinity, div: 31536000, key: 'yearsAgo' },
-  ]
-
-  for (const unit of units) {
-    if (seconds < unit.limit) {
-      const count = Math.floor(seconds / unit.div)
-      return t(`bottle.${unit.key}`, { count })
-    }
-  }
-
-  return t('bottle.justNow')
-}
 
 function LikesSection({ bottle, userId }: { bottle: Bottle; userId: string }) {
   const { t } = useTranslation()
@@ -230,103 +204,6 @@ function CommentsSection({ bottle, currentUserId }: { bottle: Bottle; currentUse
           {addMutation.isPending ? t('bottle.posting') : t('bottle.post')}
         </Button>
       </form>
-    </div>
-  )
-}
-
-function ReviewsAggregate({ summary }: { summary: BottleReviewsSummary }) {
-  const { t } = useTranslation()
-  const avg = summary.averageScore
-
-  return (
-    <div className="mb-5 flex flex-wrap items-center gap-x-6 gap-y-3 rounded-md border border-primary/15 bg-primary/[0.04] p-4">
-      <div className="flex flex-col items-center">
-        <div className="flex items-baseline gap-1">
-          {avg != null ? (
-            <>
-              <span className="font-heading text-4xl font-bold text-primary">{avg.toFixed(1)}</span>
-              <span className="text-sm text-muted-foreground">/100</span>
-            </>
-          ) : (
-            <span className="font-heading text-4xl font-bold text-muted-foreground">—</span>
-          )}
-        </div>
-        {avg != null && (
-          <span className="text-[10px] uppercase tracking-wide text-muted-foreground">
-            {t('reviews.average')}
-          </span>
-        )}
-      </div>
-
-      <div className="flex flex-col gap-1.5">
-        <span className="text-sm text-muted-foreground">
-          {summary.reviewsCount > 0
-            ? t('reviews.count', { count: summary.reviewsCount })
-            : t('reviews.invite')}
-        </span>
-        {summary.topFlavors.length > 0 && (
-          <div className="flex flex-wrap gap-1.5">
-            {summary.topFlavors.map(flavor => (
-              <Badge key={flavor} variant="outline" className="border-primary/30 text-primary">
-                {t(`flavors.${flavor}`)}
-              </Badge>
-            ))}
-          </div>
-        )}
-      </div>
-    </div>
-  )
-}
-
-function ReviewCard({ review }: { review: BottleReview }) {
-  const { t } = useTranslation()
-  const edited = new Date(review.updatedAt).getTime() > new Date(review.createdAt).getTime()
-
-  return (
-    <div className="flex flex-col gap-2.5 rounded-md border border-primary/10 bg-primary/[0.03] p-4">
-      <div className="flex items-start justify-between gap-2">
-        <div className="flex items-center gap-2.5">
-          <Avatar displayName={review.userDisplayName} avatarUrl={review.userAvatarUrl} size={32} />
-          <div className="flex flex-col">
-            <span className="text-sm font-medium text-primary">{review.userDisplayName}</span>
-            <span className="text-xs text-muted-foreground">
-              {formatRelativeTime(review.createdAt, t)}
-              {edited && ` · ${t('reviews.edited')}`}
-            </span>
-          </div>
-        </div>
-        <Badge variant="outline" className="border-primary/40 text-primary">
-          <span className="font-heading text-sm font-semibold">{review.score}</span>
-          <span className="text-muted-foreground">/100</span>
-        </Badge>
-      </div>
-
-      {hasAnyNote(review) && (
-        <div className="flex flex-col gap-1.5">
-          {NOTE_FIELDS.map(field => {
-            const value = review[field]
-            if (!value || !value.trim()) return null
-            return (
-              <div key={field} className="text-sm leading-relaxed">
-                <span className="mr-1.5 text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                  {t(`reviews.${field}`)}
-                </span>
-                <span className="text-foreground">{value}</span>
-              </div>
-            )
-          })}
-        </div>
-      )}
-
-      {review.flavors.length > 0 && (
-        <div className="flex flex-wrap gap-1.5">
-          {review.flavors.map(flavor => (
-            <Badge key={flavor} variant="secondary">
-              {t(`flavors.${flavor}`)}
-            </Badge>
-          ))}
-        </div>
-      )}
     </div>
   )
 }
@@ -576,7 +453,11 @@ function ReviewsSection({ bottle }: { bottle: Bottle }) {
 
       {summary && (
         <>
-          <ReviewsAggregate summary={summary} />
+          <ReviewsAggregate
+            averageScore={summary.averageScore}
+            reviewsCount={summary.reviewsCount}
+            topFlavors={summary.topFlavors}
+          />
 
           {isAuthenticated && (
             <ReviewForm key={summary.myReview?.id ?? 'new'} bottle={bottle} existing={summary.myReview} />
@@ -1003,92 +884,13 @@ function MakeOfferSection({ bottle }: { bottle: Bottle }) {
   )
 }
 
-const CONFIDENCE_VARIANT: Record<PriceConfidence, 'success' | 'secondary' | 'outline'> = {
-  High: 'success',
-  Medium: 'secondary',
-  Low: 'outline',
-}
-
 function EstimateSection({ bottleId }: { bottleId: string }) {
-  const { t, i18n } = useTranslation()
-
   const { data: estimate, isLoading } = useQuery({
     queryKey: ['priceEstimate', bottleId],
     queryFn: () => getBottleEstimate(bottleId),
   })
 
-  const formatDate = (iso: string) =>
-    new Date(iso).toLocaleDateString(i18n.language === 'bg' ? 'bg-BG' : 'en-GB', { dateStyle: 'medium' })
-
-  return (
-    <div className="mb-5 rounded-md border border-primary/15 bg-primary/[0.04] p-4">
-      <div className="mb-2 flex items-center justify-between gap-2">
-        <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-          {t('collectionValue.estimateLabel')}
-        </span>
-        <Badge variant="outline" className="text-[10px] uppercase">
-          {t('collectionValue.indicative')}
-        </Badge>
-      </div>
-
-      {isLoading ? (
-        <div className="text-sm text-muted-foreground">{t('collectionValue.loading')}</div>
-      ) : !estimate ? (
-        <div className="flex items-baseline gap-2">
-          <span className="font-heading text-2xl font-semibold text-muted-foreground">
-            {t('collectionValue.empty')}
-          </span>
-          <span className="text-xs text-muted-foreground/80">{t('collectionValue.noEstimate')}</span>
-        </div>
-      ) : (
-        <>
-          <div className="flex flex-wrap items-center gap-3">
-            <span className="font-heading text-2xl font-semibold text-primary">
-              {t('collectionValue.range', {
-                currency: estimate.currency,
-                low: (estimate.lowEstimate ?? estimate.estimatedPrice).toLocaleString(),
-                high: (estimate.highEstimate ?? estimate.estimatedPrice).toLocaleString(),
-              })}
-            </span>
-            <Badge variant={CONFIDENCE_VARIANT[estimate.confidence]}>
-              {t('collectionValue.confidenceLabel')}: {t(`collectionValue.confidence${estimate.confidence}`)}
-            </Badge>
-          </div>
-
-          <div className="mt-1.5 text-xs text-muted-foreground">
-            {t('collectionValue.sourceLabel')}:{' '}
-            {estimate.source === 'ClaudeResearch'
-              ? t('collectionValue.sourceResearched')
-              : t('collectionValue.sourceCommunity')}
-            {' · '}
-            {t('collectionValue.asOf', { date: formatDate(estimate.asOf) })}
-          </div>
-
-          {estimate.sources.length > 0 && (
-            <div className="mt-3 border-t border-primary/10 pt-3">
-              <div className="mb-1.5 text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                {t('collectionValue.sources')}
-              </div>
-              <ul className="flex flex-col gap-1">
-                {estimate.sources.map(source => (
-                  <li key={source.url}>
-                    <a
-                      href={source.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="break-all text-sm text-primary underline underline-offset-2 hover:text-primary/80"
-                    >
-                      {source.title}
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-        </>
-      )}
-    </div>
-  )
+  return <PriceEstimateView estimate={estimate} isLoading={isLoading} />
 }
 
 function DetailRow({ label, value }: { label: string; value: string | number }) {
@@ -1182,6 +984,16 @@ export default function BottleDetailPanel({
         </div>
 
         <div className="px-7 pb-10 pt-6">
+          {bottle.productId && (
+            <Link
+              to={`/product/${bottle.productId}`}
+              onClick={onClose}
+              className="mb-5 inline-block text-sm font-medium uppercase tracking-wide text-primary underline-offset-4 hover:underline"
+            >
+              {t('bottle.viewProduct')}
+            </Link>
+          )}
+
           {(bottle.age != null || bottle.abvPercent != null || bottle.volumeMl != null || bottle.vintageYear != null) && (
             <div className="mb-5 grid grid-cols-[repeat(auto-fit,minmax(90px,1fr))] gap-x-6 gap-y-4 rounded-md border border-primary/10 bg-primary/[0.04] p-5">
               {bottle.age != null && <DetailRow label={t('bottle.age')} value={`${bottle.age} yr`} />}

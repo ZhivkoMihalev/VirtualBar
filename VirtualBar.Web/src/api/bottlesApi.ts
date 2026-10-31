@@ -17,6 +17,11 @@ export async function getMarketplace(filters: MarketplaceFilters): Promise<Bottl
   return data
 }
 
+export async function getBottle(id: string): Promise<Bottle> {
+  const { data } = await client.get<Bottle>(`/bottles/${id}`)
+  return data
+}
+
 export async function getBottlesByUser(userId: string): Promise<Bottle[]> {
   const res = await client.get<Bottle[]>('/bottles', { params: { userId } })
   return res.data

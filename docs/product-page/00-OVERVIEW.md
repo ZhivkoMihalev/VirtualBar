@@ -172,10 +172,10 @@ so it carries its own tests.
 - Do **not** commit or push unless the user asks.
 
 ## 10. Done when (from #50)
-- [ ] The product page shows the score, flavors, owners, listings and reviews of every bottle linked
+- [x] The product page shows the score, flavors, owners, listings and reviews of every bottle linked
       to the product. → slices 3, 6
-- [ ] `/catalog` lets a visitor who is not logged in find a product and open its page. → slices 3, 5, 7 (E2E)
-- [ ] Two linked bottles of the same product share one price snapshot. → slice 1
-- [ ] Tests at 100% branch coverage for the new service methods; `dotnet test` → `Failed: 0`. → slices 1, 7
-- [ ] `npm run lint` → 0 problems; `npm run build` clean. → slices 5, 6
-- [ ] CLAUDE.md updated (new endpoints, routes, pricing key note, i18n namespaces). → slice 7
+- [x] `/catalog` lets a visitor who is not logged in find a product and open its page. → slices 3, 5, 7 (E2E)
+- [x] Two linked bottles of the same product share one price snapshot. → slice 1
+- [x] Tests at 100% branch coverage for the new service methods; `dotnet test` → `Failed: 0`. → slices 1, 7
+- [x] `npm run lint` → 0 problems; `npm run build` clean. → slices 5, 6
+- [x] CLAUDE.md updated (new endpoints, routes, pricing key note, i18n namespaces). → slice 7

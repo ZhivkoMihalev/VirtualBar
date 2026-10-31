@@ -48,6 +48,9 @@ export default function NavBar() {
             <Link to="/browse">{t('nav.browse')}</Link>
           </Button>
           <Button asChild variant="ghost" size="sm">
+            <Link to="/catalog">{t('nav.catalog')}</Link>
+          </Button>
+          <Button asChild variant="ghost" size="sm">
             <Link to="/marketplace">{t('nav.marketplace')}</Link>
           </Button>
           {isAuthenticated && (
@@ -128,6 +131,11 @@ export default function NavBar() {
               <SheetClose asChild>
                 <Button asChild variant="ghost" className="justify-start">
                   <Link to="/browse">{t('nav.browse')}</Link>
+                </Button>
+              </SheetClose>
+              <SheetClose asChild>
+                <Button asChild variant="ghost" className="justify-start">
+                  <Link to="/catalog">{t('nav.catalog')}</Link>
                 </Button>
               </SheetClose>
               <SheetClose asChild>

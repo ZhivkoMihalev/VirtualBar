@@ -23,8 +23,8 @@ import { BottleSvg } from '../components/BarShelf'
 import { CATEGORY_COLORS } from '../lib/bottlePalette'
 import BottleDetailPanel from '../components/BottleDetailPanel'
 import DistillerySelect from '../components/DistillerySelect'
+import CategoryPill from '../components/CategoryPill'
 import NavBar from '../components/NavBar'
-import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
@@ -95,35 +95,6 @@ function useDebounced<T>(value: T, delay: number): T {
 
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })
-}
-
-function CategoryPill({
-  label,
-  active,
-  color,
-  onClick,
-}: {
-  label: string
-  active: boolean
-  color?: string
-  onClick: () => void
-}) {
-  return (
-    <Button
-      type="button"
-      variant="outline"
-      size="sm"
-      onClick={onClick}
-      className={cn(
-        'shrink-0 rounded-full',
-        active && !color && 'border-primary bg-primary/10 text-primary',
-        !active && 'border-border text-muted-foreground',
-      )}
-      style={active && color ? { background: `${color}26`, borderColor: color, color } : undefined}
-    >
-      {label}
-    </Button>
-  )
 }
 
 function MarketplaceCard({ bottle, onView }: { bottle: Bottle; onView: () => void }) {

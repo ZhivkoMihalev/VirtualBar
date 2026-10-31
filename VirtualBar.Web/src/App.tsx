@@ -18,6 +18,8 @@ const ResetPasswordPage = lazy(() => import('./pages/ResetPasswordPage'))
 const ConfirmEmailPage = lazy(() => import('./pages/ConfirmEmailPage'))
 const DashboardPage = lazy(() => import('./pages/DashboardPage'))
 const BrowsePage = lazy(() => import('./pages/BrowsePage'))
+const CatalogPage = lazy(() => import('./pages/CatalogPage'))
+const ProductPage = lazy(() => import('./pages/ProductPage'))
 const PublicBarPage = lazy(() => import('./pages/PublicBarPage'))
 const MarketplacePage = lazy(() => import('./pages/MarketplacePage'))
 const OffersPage = lazy(() => import('./pages/OffersPage'))
@@ -60,6 +62,8 @@ function AppRoutes() {
     <Routes>
       <Route path="/" element={<HomePage />} />
       <Route path="/browse" element={<BrowsePage />} />
+      <Route path="/catalog" element={<CatalogPage />} />
+      <Route path="/product/:id" element={<ProductPage />} />
       <Route path="/marketplace" element={<MarketplacePage />} />
       <Route path="/bar/:userId" element={<PublicBarPage />} />
       <Route path="/login" element={isAuthenticated ? <Navigate to="/" replace /> : <LoginPage />} />

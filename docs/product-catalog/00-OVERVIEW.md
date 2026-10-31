@@ -201,19 +201,20 @@ Curation: the seed files are hand-edited; ProductSeedDataTests guards their inva
   set is tiny. Runs only on approve.
 
 ## 7. Open questions (decide later — all parked, none block this feature)
-- **Pricing convergence** — when a bottle is linked, build `PriceProviderInput` from the *product's*
-  canonical fields (+ its barcode) so identical bottles share one `PriceSnapshot` row reliably.
-  Natural next slice after ship; touches `PriceEstimationService` only.
+- ~~**Pricing convergence**~~ — **done in #50** (`docs/product-page/01-pricing-convergence.md`): a
+  linked bottle prices under `Product.CanonicalKey` via `PriceKey.ForBottle`, researched with the
+  product's fields.
 - **Wish list by product** — `WishListItem.ProductId?` as a third, precise matching criterion.
-- **Per-product review aggregation** — "all reviews of Macallan 12 across the platform" (reviews stay
-  bottle-attached; aggregation is a query, not a migration).
+- ~~**Per-product review aggregation**~~ — **done in #50** (`docs/product-page/`): the product page
+  aggregates the reviews of every linked bottle on read; reviews stay bottle-attached.
 - **Vintage-specific catalog entries** — revisit if requests show real demand; would add
   `VintageYear` to `Product` + key computation.
 - **Periodic retro-link job** — a background pass linking old unlinked bottles as the catalog grows
   (approve-time retro-link covers the common case).
 - **Community moderation** (trusted-user approvals) — solo admin is fine at current scale.
 - **Rename `ProductValidationDecorator` → `ProductLookupValidationDecorator`** — clarity refactor.
-- **Public catalog browse page** (`/catalog`) — the search API already allows it; UI only.
+- ~~**Public catalog browse page**~~ (`/catalog`) — **done in #50** (`docs/product-page/`), with a
+  paged `GET /api/products/browse`.
 
 ## 8. Slice index, dependencies & order
 | Slice | Doc | Depends on |

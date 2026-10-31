@@ -285,6 +285,56 @@ export interface Product {
   imageUrl: string | null
 }
 
+/** One page of a list; `hasMore` comes from the server fetching one row past the page. */
+export interface PagedResult<T> {
+  items: T[]
+  hasMore: boolean
+}
+
+/** A product on a `/catalog` card, with its community counts over every linked bottle. */
+export interface ProductCard extends Product {
+  ownersCount: number
+  averageScore: number | null
+  reviewsCount: number
+  listingsCount: number
+}
+
+export interface ProductOwner {
+  userId: string
+  displayName: string
+  avatarUrl: string | null
+  /** Physical bottles: the sum of `quantity` over the owner's linked bottles. */
+  bottleCount: number
+}
+
+/** A linked bottle that is listed for sale; `askingPrice` is per bottle. */
+export interface ProductListing {
+  bottleId: string
+  sellerId: string
+  sellerDisplayName: string
+  sellerAvatarUrl: string | null
+  forSaleQuantity: number
+  askingPrice: number | null
+  currency: string | null
+  condition: BottleCondition
+  vintageYear: number | null
+  forSaleAt: string | null
+}
+
+/** The `/product/:id` page: the product plus aggregates over every non-deleted linked bottle. */
+export interface ProductDetail extends Product {
+  description: string | null
+  averageScore: number | null
+  reviewsCount: number
+  topFlavors: FlavorTag[]
+  /** All distinct owners; `owners` holds at most the top 20. */
+  ownersCount: number
+  owners: ProductOwner[]
+  listings: ProductListing[]
+  /** The newest 5; the rest come from the paged product reviews endpoint. */
+  latestReviews: BottleReview[]
+}
+
 /**
  * What the add-bottle form knows about the catalog entry it is linking to. A catalog pick supplies a
  * whole {@link Product}; a barcode hit only proves the id and an image, so the rest is genuinely

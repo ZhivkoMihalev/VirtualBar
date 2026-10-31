@@ -24,6 +24,15 @@ internal static class TestSqlServer
     /// <summary>Null when the server answers; otherwise why the HTTP tests cannot use it.</summary>
     public static string? UnreachableReason => UnreachableReasonValue.Value;
 
+    /// <summary>
+    /// Why a test that needs SQL Server is skipped on this machine, with how to fix it; null when it runs. In CI it is
+    /// always null: there the test runs and fails, so a missing server can never pass as a green build.
+    /// </summary>
+    public static string? SkipReason =>
+        !IsCi && UnreachableReason is { } reason
+            ? $"No SQL Server for the HTTP tests: {reason}. Set {EnvironmentVariable} to a SQL Server connection string to run them."
+            : null;
+
     /// <summary>The server's connection string, pointed at <paramref name="database"/>.</summary>
     public static string ForDatabase(string database) =>
         new SqlConnectionStringBuilder(ConnectionStringValue.Value) { InitialCatalog = database }.ConnectionString;

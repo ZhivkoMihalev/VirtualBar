@@ -225,9 +225,7 @@ public sealed class OwnershipTests(ApiHosts hosts)
         var (owner, other) = await TwoCollectorsAsync();
         await other.FollowAsync(owner.Id);
         // The follow also earns the owner FirstFollower, which notifies too, so pick the follow by its type.
-        var notificationId = Assert.Single(
-            await owner.NotificationsAsync(),
-            notification => notification.GetProperty("type").GetString() == "NewFollower").GetProperty("id").GetGuid();
+        var notificationId = Assert.Single(await owner.NotificationsAsync("NewFollower")).GetProperty("id").GetGuid();
 
         var response = await other.Client.PostAsync($"/api/notifications/{notificationId}/read", content: null);
 

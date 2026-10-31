@@ -19,11 +19,12 @@ internal static class CollectorApi
     public static string UniqueName(string purpose) => $"HTTP test {purpose} {Guid.NewGuid():N}";
 
     /// <summary>The multipart form the frontend sends to an upload endpoint: one <c>file</c> field.</summary>
-    public static MultipartFormDataContent ImageForm(byte[] content, string contentType = "image/png")
+    public static MultipartFormDataContent ImageForm(
+        byte[] content, string contentType = "image/png", string fileName = "image.png")
     {
         var file = new ByteArrayContent(content);
         file.Headers.ContentType = new MediaTypeHeaderValue(contentType);
-        return new MultipartFormDataContent { { file, "file", "image.png" } };
+        return new MultipartFormDataContent { { file, "file", fileName } };
     }
 
     public static async Task<Guid> AddBottleAsync(this Collector collector) =>
@@ -74,6 +75,22 @@ internal static class CollectorApi
         var response = await collector.Client.GetAsync("/api/notifications");
         await AssertSucceededAsync(response);
         return (await response.JsonAsync()).GetProperty("notifications").EnumerateArray().ToList();
+    }
+
+    /// <summary>The collector's notifications of one <paramref name="type"/> (a <c>NotificationType</c> name).</summary>
+    public static async Task<List<JsonElement>> NotificationsAsync(this Collector collector, string type) =>
+        (await collector.NotificationsAsync())
+            .Where(notification => notification.GetProperty("type").GetString() == type)
+            .ToList();
+
+    /// <summary>Whether the collector has earned each badge, by <c>BadgeType</c> name, from their own progress page.</summary>
+    public static async Task<Dictionary<string, bool>> EarnedBadgesAsync(this Collector collector)
+    {
+        var response = await collector.Client.GetAsync("/api/badges/progress");
+        await AssertSucceededAsync(response);
+        return (await response.JsonAsync()).EnumerateArray().ToDictionary(
+            badge => badge.GetProperty("badge").GetString()!,
+            badge => badge.GetProperty("earned").GetBoolean());
     }
 
     public static async Task<Guid> CreateNewsPostAsync(this Collector admin) =>

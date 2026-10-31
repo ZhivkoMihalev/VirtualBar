@@ -26,9 +26,11 @@ VirtualBar/
 │   ├── Persistence/           # EF model conventions (UTC DateTime round-trip)
 │   └── Api/                   # API helpers (ResultExtensions: status code + error body) + controller tests
 ├── VirtualBar.HttpTests/      # the whole API over HTTP (WebApplicationFactory) on SQL Server
-│   ├── Support/               # test host, shared throwaway database, email pickup reader, [SqlServerFact], collectors + admins, setup calls
+│   ├── Support/               # test host, shared throwaway database, email pickup reader, [SqlServerFact]/[SqlServerTheory], collectors + admins, setup calls
 │   ├── Access/                # access matrix (anonymous list, 401 without a token), other collectors' resources, admin-only actions
 │   ├── Auth/                  # email confirmation, email failure, error reasons, JWT + logout
+│   ├── Uploads/               # the four multipart upload endpoints: saved + served, wrong type and oversized refused
+│   ├── Flows/                 # cross-user flows end to end (offer → accept → notifications + badges)
 │   └── Startup/               # configuration Program.cs refuses to start with
 ├── VirtualBar.Web/            # React + Vite 8 + Tailwind CSS 4 frontend
 ├── VirtualBar.Web.Tests/      # frontend tests — its own npm workspace, depends on VirtualBar.Web
@@ -786,8 +788,9 @@ codes, JWT validation and the startup guards. They are not a place for branch co
 - **Admins:** `Collector.RegisterAdminAsync` sets `IsAdmin` through the app's own `AppDbContext` (`factory.Services`)
   and logs in again, because the `isAdmin` claim is written into the token at login. `AdminEmail` cannot be used: it is
   read only at startup, before the test user exists.
-- **`[SqlServerFact]`** for anything that touches the database; plain `[Fact]` only for tests that never get past the
-  startup guards.
+- **`[SqlServerFact]`** (or **`[SqlServerTheory]`** for a data-driven test) for anything that touches the database;
+  plain `[Fact]` only for tests that never get past the startup guards. Both skip for the same reason
+  (`TestSqlServer.SkipReason`), never in CI.
 - **Assert the wire format:** read bodies as `JsonElement` (`AuthApi.JsonAsync`), whose `GetProperty` is
   case-sensitive, so a test also pins the camelCase names and the `{ error, reason }` shape the frontend reads.
 - **The access matrix** (`Access/EndpointAccessTests.cs`) reads every controller endpoint from the running app's
@@ -803,6 +806,14 @@ codes, JWT validation and the startup guards. They are not a place for branch co
   framework 404/403 cannot pass for it. A new mutating action on a user-owned resource gets a test here. A success or a
   500 is a bug: file it (`bug-issues.md`), never adjust the test to it.
 - **Admin-only actions** (`Access/AdminTests.cs`): each one twice, 403 for a collector and success for an admin.
+- **Uploads** (`Uploads/UploadTests.cs`): one theory per case over the four upload endpoints. A PNG sent under an
+  `.html` file name is saved as `.png` in the temporary web root and served under `/uploads`, since the extension comes
+  from the checked content type, never the file name. An SVG, or a file one byte over the endpoint's limit (10 MB for
+  bottle images and news covers, 5 MB for avatars and wishes), answers 400 and leaves no file behind. A new upload
+  endpoint joins the `Endpoint` enum.
+- **Flows** (`Flows/`): a chain across users and services end to end over HTTP, one token per collector, like
+  `VirtualBar.Tests/Integration` at service level. `MarketplaceFlowTests` lists a bottle, makes an offer and accepts it,
+  then checks both collectors' notifications and their `FirstSale` / `FirstPurchase` badges.
 - Method naming as in the service tests: `<Endpoint>_When<Condition>_<ExpectedOutcome>`.
 
 ### Frontend tests (`VirtualBar.Web.Tests`)

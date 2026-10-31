@@ -6,10 +6,5 @@ namespace VirtualBar.HttpTests.Support;
 /// </summary>
 public sealed class SqlServerFactAttribute : FactAttribute
 {
-    public SqlServerFactAttribute()
-    {
-        if (!TestSqlServer.IsCi && TestSqlServer.UnreachableReason is { } reason)
-            Skip = $"No SQL Server for the HTTP tests: {reason}. " +
-                   $"Set {TestSqlServer.EnvironmentVariable} to a SQL Server connection string to run them.";
-    }
+    public SqlServerFactAttribute() => Skip = TestSqlServer.SkipReason;
 }

@@ -26,8 +26,8 @@ VirtualBar/
 │   ├── Persistence/           # EF model conventions (UTC DateTime round-trip)
 │   └── Api/                   # API helpers (ResultExtensions: status code + error body) + controller tests
 ├── VirtualBar.HttpTests/      # the whole API over HTTP (WebApplicationFactory) on SQL Server
-│   ├── Support/               # test host, shared throwaway database, email pickup reader, [SqlServerFact]
-│   ├── Access/                # access matrix: the anonymous endpoints listed, 401 without a token for the rest
+│   ├── Support/               # test host, shared throwaway database, email pickup reader, [SqlServerFact], collectors + admins, setup calls
+│   ├── Access/                # access matrix (anonymous list, 401 without a token), other collectors' resources, admin-only actions
 │   ├── Auth/                  # email confirmation, email failure, error reasons, JWT + logout
 │   └── Startup/               # configuration Program.cs refuses to start with
 ├── VirtualBar.Web/            # React + Vite 8 + Tailwind CSS 4 frontend
@@ -776,6 +776,16 @@ codes, JWT validation and the startup guards. They are not a place for branch co
   `Jwt:Key`, `Email:PickupDirectory` and `Identity:RequireConfirmedEmail` before `Build()`, and only `UseSetting` reaches
   it that early. The defaults match the E2E workflow: emails to a temporary pickup folder (`Mailbox` reads them back
   with MimeKit), no Claude calls, no price pre-warm, auth rate limit raised, a random `Jwt:Key`.
+- **A temporary web root:** `ApiFactory` also sets `webroot` to a folder of its own (`ApiFactory.WebRoot`), created
+  before the host starts (static files are served only from a web root that exists at startup) and deleted with the
+  factory. Every upload lands there, never in `VirtualBar.Api/wwwroot`; a test finds an uploaded file under it.
+- **Collectors through the API:** `Collector.RegisterAsync(api, purpose)` registers a collector on `ConfirmationOff`
+  and returns their id, email and an `HttpClient` that sends their token. `CollectorApi` sets data up the way the
+  frontend does (`AddBottleAsync`, `MakeOfferAsync`, `RequestProductAsync`, …): each call asserts it succeeded and
+  returns the new id, so a test states only what it is about.
+- **Admins:** `Collector.RegisterAdminAsync` sets `IsAdmin` through the app's own `AppDbContext` (`factory.Services`)
+  and logs in again, because the `isAdmin` claim is written into the token at login. `AdminEmail` cannot be used: it is
+  read only at startup, before the test user exists.
 - **`[SqlServerFact]`** for anything that touches the database; plain `[Fact]` only for tests that never get past the
   startup guards.
 - **Assert the wire format:** read bodies as `JsonElement` (`AuthApi.JsonAsync`), whose `GetProperty` is
@@ -787,6 +797,12 @@ codes, JWT validation and the startup guards. They are not a place for branch co
   token, and every listed one must answer without 401 or a 5xx. Requests carry placeholder route values and a body in
   the content type the endpoint accepts: routing checks that before authentication, so an upload endpoint answers a
   JSON body with 415, not 401. The OpenAPI and Scalar endpoints (Development only) are not part of the matrix.
+- **Other collectors' resources** (`Access/OwnershipTests.cs`): one test per action that changes a user-owned resource,
+  called by another collector. Each pins the refusal the API gives today (403; `ReorderBottles` 404, since it only sees
+  the caller's own bottles) with `CollectorApi.AssertRefusedAsync`, which also checks the `{ error }` body, so a bare
+  framework 404/403 cannot pass for it. A new mutating action on a user-owned resource gets a test here. A success or a
+  500 is a bug: file it (`bug-issues.md`), never adjust the test to it.
+- **Admin-only actions** (`Access/AdminTests.cs`): each one twice, 403 for a collector and success for an admin.
 - Method naming as in the service tests: `<Endpoint>_When<Condition>_<ExpectedOutcome>`.
 
 ### Frontend tests (`VirtualBar.Web.Tests`)

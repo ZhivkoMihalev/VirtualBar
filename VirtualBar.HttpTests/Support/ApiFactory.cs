@@ -19,14 +19,27 @@ public sealed class ApiFactory(
     /// <summary>Where the API writes every email it sends (<c>Email:PickupDirectory</c>).</summary>
     public PickupMailbox Mailbox { get; } = PickupMailbox.CreateTemporary();
 
+    /// <summary>
+    /// The app's web root (<c>webroot</c>), a temporary folder: every upload is written here and served from here, so
+    /// the tests never write into <c>VirtualBar.Api/wwwroot</c>.
+    /// </summary>
+    public string WebRoot { get; } =
+        Path.Combine(Path.GetTempPath(), "virtualbar-httptests", $"webroot-{Guid.NewGuid():N}");
+
     public override async ValueTask DisposeAsync()
     {
         await base.DisposeAsync();
         Mailbox.Delete();
+
+        if (Directory.Exists(WebRoot))
+            Directory.Delete(WebRoot, recursive: true);
     }
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
+        // The host serves static files only from a web root that exists when it starts.
+        Directory.CreateDirectory(WebRoot);
+
         builder.UseEnvironment(environment);
 
         foreach (var (key, value) in DefaultSettings())
@@ -38,9 +51,11 @@ public sealed class ApiFactory(
 
     // The same overrides the E2E workflow gives the API: nothing leaves the machine (no emails, no Claude calls,
     // no background price research) and the auth rate limit does not throttle a suite that runs from one address.
+    // On top of those, uploads go to a temporary web root instead of the API project's wwwroot.
     private Dictionary<string, string> DefaultSettings() => new()
     {
         ["ConnectionStrings:Default"] = connectionString,
+        [WebHostDefaults.WebRootKey] = WebRoot,
         ["Jwt:Key"] = Convert.ToBase64String(RandomNumberGenerator.GetBytes(48)),
         ["Email:PickupDirectory"] = Mailbox.Folder,
         ["AdminEmail"] = "",

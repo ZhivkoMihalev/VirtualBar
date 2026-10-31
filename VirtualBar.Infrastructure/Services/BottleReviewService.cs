@@ -21,7 +21,7 @@ public sealed class BottleReviewService(
             .OrderByDescending(r => r.CreatedAt)
             .ToListAsync(cancellationToken);
 
-        var reviewDtos = reviews.Select(MapToDto).ToList();
+        var reviewDtos = reviews.Select(ReviewMapping.ToDto).ToList();
 
         var summary = new BottleReviewsSummaryDto
         {
@@ -81,7 +81,7 @@ public sealed class BottleReviewService(
 
         await notificationService.CreateAsync(bottleInfo.UserId, NotificationType.BottleReviewed, bottleId, bottleInfo.Name, cancellationToken);
 
-        return Result<BottleReviewDto>.Ok(MapToDto(review));
+        return Result<BottleReviewDto>.Ok(ReviewMapping.ToDto(review));
     }
 
     public async Task<Result<BottleReviewDto>> UpdateReviewAsync(Guid reviewId, UpdateReviewRequest request, CancellationToken cancellationToken)
@@ -104,7 +104,7 @@ public sealed class BottleReviewService(
 
         await db.SaveChangesAsync(cancellationToken);
 
-        return Result<BottleReviewDto>.Ok(MapToDto(review));
+        return Result<BottleReviewDto>.Ok(ReviewMapping.ToDto(review));
     }
 
     public async Task<Result<bool>> DeleteReviewAsync(Guid reviewId, CancellationToken cancellationToken)
@@ -119,24 +119,4 @@ public sealed class BottleReviewService(
 
         return Result<bool>.Ok(true);
     }
-
-    private static BottleReviewDto MapToDto(BottleReview r) => new()
-    {
-        Id = r.Id,
-        BottleId = r.BottleId,
-        UserId = r.UserId,
-        UserDisplayName = r.User.DisplayName,
-        UserAvatarUrl = r.User.AvatarUrl,
-        Score = r.Score,
-        Nose = r.Nose,
-        Palate = r.Palate,
-        Finish = r.Finish,
-        Summary = r.Summary,
-        Flavors = r.Flavors
-            .Select(f => f.Flavor)
-            .OrderBy(f => f)
-            .ToList(),
-        CreatedAt = r.CreatedAt,
-        UpdatedAt = r.UpdatedAt,
-    };
 }

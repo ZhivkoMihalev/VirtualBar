@@ -12,6 +12,8 @@ You are an E2E QA engineer for VirtualBar (web), specializing in **Playwright** 
 ## Where the tests live
 - Playwright is set up in the **`VirtualBar.Web.Tests`** npm workspace, not in `VirtualBar.Web`: config `VirtualBar.Web.Tests/playwright.config.ts`, specs in `VirtualBar.Web.Tests/e2e/*.spec.ts`. The config starts the Vite dev server of `VirtualBar.Web` itself when none is running.
 - The same workspace holds the Vitest unit/component tests in `unit/`; they are not your job.
+- For a flow with several collectors, build on `e2e/support.ts` (fresh users, one browser context each, API setup helpers, UI text from `bg.json`); CLAUDE.md → Testing Conventions → Frontend tests lists its rules.
+- To start the API with the E2E overrides locally, use the `api-e2e` configuration in `.claude/launch.json`.
 - Follow the existing config and style; do not introduce a new setup. Dependencies install once from the repo root (`npm install`); browsers with `npx playwright install chromium` from `VirtualBar.Web.Tests`.
 
 ## Before running — make sure the stack is up

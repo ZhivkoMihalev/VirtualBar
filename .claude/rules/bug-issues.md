@@ -9,7 +9,7 @@ in code you are changing or only reading, in a test run, in CI, in a review, or 
   - **Problem:** what goes wrong and how to reproduce it;
   - **Relevant code;**
   - **Proposed fix;**
-  - **Done when;**
+  - **Done when**, which always includes a test that fails without the fix (see `regression-tests.md`);
   - **Status.**
 - **Do this even when the fix looks trivial**, or is out of scope for the current task.
 - **Never fix an unrelated bug silently inside another PR.** The PR names the new issue (`#N`) as a known gap instead.

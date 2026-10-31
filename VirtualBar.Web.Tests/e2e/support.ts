@@ -6,14 +6,16 @@ import {
   type Page,
 } from '@playwright/test'
 import bg from '../../VirtualBar.Web/src/i18n/bg.json' with { type: 'json' }
+import en from '../../VirtualBar.Web/src/i18n/en.json' with { type: 'json' }
 
 /**
- * Shared helpers for the multi-user specs (marketplace, offers, messages). Every collector is registered fresh through
- * the API, so a test never depends on data another test or an earlier run left behind. The expected UI text comes from
- * the app's own bg.json, so a reworded translation cannot leave a spec checking for the old words.
+ * Shared helpers for the specs that set up their own data (marketplace, offers, messages, catalog browsing, product
+ * page). Every collector is registered fresh through the API, so a test never depends on data another test or an
+ * earlier run left behind. The expected UI text comes from the app's own bg.json and en.json, so a reworded
+ * translation cannot leave a spec checking for the old words.
  */
 
-export { bg }
+export { bg, en }
 
 /**
  * Time limits for the multi-user flows. A test drives two or three browser contexts through several page loads and
@@ -83,7 +85,7 @@ export async function api<T = unknown>(who: Collector, method: string, path: str
 
 export async function createBottle(
   owner: Collector,
-  fields: { name: string; category?: SpiritCategory; quantity?: number; distilleryId?: string },
+  fields: { name: string; category?: SpiritCategory; quantity?: number; distilleryId?: string; productId?: string },
 ): Promise<{ id: string; name: string }> {
   return api(owner, 'POST', '/bottles', {
     category: 'Whisky',
@@ -92,6 +94,44 @@ export async function createBottle(
     quantity: 1,
     ...fields,
   })
+}
+
+export type CatalogProduct = { id: string; name: string; category: SpiritCategory }
+
+type ProductCardBody = CatalogProduct & { ownersCount: number; reviewsCount: number; listingsCount: number }
+
+/**
+ * A catalog product no collector has linked a bottle to yet, so the numbers a test reads on its page and its card
+ * come only from the bottles that test creates. It is picked from a random catalog page, so tests running at the same
+ * time almost never pick the same one, and only if a search for its name in its category lists it on the first page,
+ * where a test looking for its card will find it.
+ */
+export async function untouchedProduct(): Promise<CatalogProduct> {
+  for (let attempt = 0; attempt < 20; attempt++) {
+    const page = 1 + Math.floor(Math.random() * 60)
+    const res = await fetch(`${API}/products/browse?page=${page}&pageSize=48`)
+    if (!res.ok) throw new Error(`GET /products/browse failed: ${res.status}`)
+    const { items }: { items: ProductCardBody[] } = await res.json()
+    const candidates = items.filter(
+      p => p.ownersCount === 0 && p.reviewsCount === 0 && p.listingsCount === 0 && p.name.length >= 8,
+    )
+    for (const candidate of candidates.sort(() => Math.random() - 0.5).slice(0, 3)) {
+      const query = new URLSearchParams({ search: candidate.name, category: candidate.category, pageSize: '24' })
+      const found = await fetch(`${API}/products/browse?${query}`)
+      const { items: matches }: { items: ProductCardBody[] } = await found.json()
+      if (matches.some(m => m.id === candidate.id)) {
+        return { id: candidate.id, name: candidate.name, category: candidate.category }
+      }
+    }
+  }
+  throw new Error('No untouched, findable catalog product found')
+}
+
+/** Switches the UI language with the NavBar's language switcher. */
+export async function switchToEnglish(page: Page): Promise<void> {
+  await page.getByRole('button', { name: 'BG', exact: true }).click()
+  await page.getByRole('menuitemradio', { name: 'English' }).click()
+  await expect(page.getByRole('button', { name: 'EN', exact: true })).toBeVisible()
 }
 
 /** The first seeded distillery of a category: wish list matching needs a real distillery id. */

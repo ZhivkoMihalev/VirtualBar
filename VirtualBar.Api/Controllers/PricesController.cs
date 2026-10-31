@@ -36,6 +36,28 @@ public sealed class PricesController(
     }
 
     /// <summary>
+    /// Returns the cached indicative market estimate for a catalog product — the snapshot every bottle
+    /// linked to it shares. Reads through the cache only; it never triggers a synchronous Claude call.
+    /// </summary>
+    /// <param name="productId">The catalog product identifier.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <response code="200">Returns the cached indicative price estimate.</response>
+    /// <response code="204">No estimate is cached yet for this product; the UI renders "—".</response>
+    /// <response code="404">The product does not exist or was deleted.</response>
+    [HttpGet("product/{productId:guid}")]
+    public async Task<IActionResult> GetProductEstimate(Guid productId, CancellationToken cancellationToken)
+    {
+        var result = await priceEstimationService.GetCachedProductEstimateAsync(productId, cancellationToken);
+
+        if (!result.Success)
+            return result.ToActionResult(this);
+
+        return result.Data is null
+            ? NoContent()
+            : Ok(result.Data);
+    }
+
+    /// <summary>
     /// Returns the current collector's total collection value (Sealed bottles only) together with the
     /// per-bottle estimate lines for their whole collection.
     /// </summary>

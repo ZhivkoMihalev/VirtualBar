@@ -105,6 +105,32 @@ public sealed class PriceEstimationValidationDecoratorTests
     }
 
     [Fact]
+    public async Task GetCachedProductEstimateAsync_PassesThroughToInner()
+    {
+        var inner = new StubPriceEstimationService
+        {
+            ProductResult = Result<PriceEstimateDto>.Ok(new PriceEstimateDto { EstimatedPrice = 9m }),
+        };
+        var decorator = new PriceEstimationValidationDecorator(inner, CurrentUser(Guid.NewGuid()));
+
+        var result = await decorator.GetCachedProductEstimateAsync(Guid.NewGuid(), CancellationToken.None);
+
+        Assert.True(result.Success);
+        Assert.Equal(9m, result.Data!.EstimatedPrice);
+        Assert.Equal(1, inner.ProductCalls);
+    }
+
+    [Fact]
+    public async Task GetCachedProductEstimateAsync_WhenCancelled_ThrowsWithoutCallingInner()
+    {
+        var inner = new StubPriceEstimationService { ThrowIfCalled = true };
+        var decorator = new PriceEstimationValidationDecorator(inner, CurrentUser(Guid.NewGuid()));
+
+        await Assert.ThrowsAsync<OperationCanceledException>(
+            () => decorator.GetCachedProductEstimateAsync(Guid.NewGuid(), Cancelled()));
+    }
+
+    [Fact]
     public async Task GetCachedBottleEstimateAsync_WhenCancelled_ThrowsWithoutCallingInner()
     {
         var inner = new StubPriceEstimationService { ThrowIfCalled = true };

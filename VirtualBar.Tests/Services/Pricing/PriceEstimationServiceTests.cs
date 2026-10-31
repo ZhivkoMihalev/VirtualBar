@@ -497,4 +497,254 @@ public sealed class PriceEstimationServiceTests
         });
         db.SaveChanges();
     }
+
+    private const string ProductCanonicalKey = "whisky|macallan|sherry oak|18yo|700";
+
+    private static Product SeedProduct(
+        AppDbContext db,
+        string? brand = "Macallan",
+        string? barcode = "5010314101011",
+        Distillery? distillery = null,
+        bool isDeleted = false)
+    {
+        var product = new Product
+        {
+            Name = "Sherry Oak 18",
+            Brand = brand,
+            DistilleryId = distillery?.Id,
+            Category = SpiritCategory.Whisky,
+            Age = 18,
+            VolumeMl = 700,
+            Barcode = barcode,
+            CanonicalKey = ProductCanonicalKey,
+            Origin = ProductOrigin.Seeded,
+            IsDeleted = isDeleted,
+        };
+        db.Products.Add(product);
+        db.SaveChanges();
+        return product;
+    }
+
+    private static Distillery SeedDistillery(AppDbContext db, string name, bool isDeleted = false)
+    {
+        var distillery = new Distillery { Name = name, IsDeleted = isDeleted };
+        db.Distilleries.Add(distillery);
+        db.SaveChanges();
+        return distillery;
+    }
+
+    private static Bottle SeedLinkedBottle(
+        AppDbContext db,
+        Guid productId,
+        string name = "Macallan 18 Sherry",
+        int? vintageYear = null,
+        string? barcode = null,
+        SpiritCategory category = SpiritCategory.Whisky,
+        Guid? userId = null)
+    {
+        var bottle = new Bottle
+        {
+            UserId = userId ?? Guid.NewGuid(),
+            Name = name,
+            Category = category,
+            Age = 18,
+            VintageYear = vintageYear,
+            VolumeMl = 700,
+            Barcode = barcode,
+            Condition = BottleCondition.Sealed,
+            ProductId = productId,
+        };
+        db.Bottles.Add(bottle);
+        db.SaveChanges();
+        return bottle;
+    }
+
+    /// <summary>Captures the request body Claude receives, so a test can assert what was researched.</summary>
+    private static Func<HttpRequestMessage, int, HttpResponseMessage> Capturing(List<string> bodies) =>
+        (request, _) =>
+        {
+            bodies.Add(request.Content!.ReadAsStringAsync().GetAwaiter().GetResult());
+            return FakeHttpHandler.JsonOk(HappyResponse);
+        };
+
+    [Fact]
+    public async Task GetBottleEstimateAsync_WhenTwoBottlesLinkedToSameProduct_ShareOneSnapshot()
+    {
+        await using var db = CreateDbContext();
+        var product = SeedProduct(db);
+        var first = SeedLinkedBottle(db, product.Id, name: "Macallan 18 Sherry", vintageYear: 1998);
+        var second = SeedLinkedBottle(db, product.Id, name: "The Macallan 18yo Sherry Oak");
+        var (svc, claude) = CreateOrchestrator(db, internalEnabled: false);
+
+        var firstResult = await svc.GetBottleEstimateAsync(first.Id, CancellationToken.None);
+        var secondResult = await svc.GetBottleEstimateAsync(second.Id, CancellationToken.None);
+
+        Assert.True(firstResult.Success);
+        Assert.True(secondResult.Success);
+        Assert.Equal(1, claude.CallCount);
+        var snapshot = await db.PriceSnapshots.SingleAsync();
+        Assert.Equal(ProductCanonicalKey, snapshot.ProductKey);
+    }
+
+    [Fact]
+    public async Task GetBottleEstimateAsync_WhenLinked_ResearchesTheProductWithoutVintage()
+    {
+        await using var db = CreateDbContext();
+        var distillery = SeedDistillery(db, "The Macallan");
+        var product = SeedProduct(db, distillery: distillery);
+        // The bottle's own category disagrees with the product: the product wins for the snapshot too.
+        var bottle = SeedLinkedBottle(db, product.Id, name: "My Mac", vintageYear: 1998, barcode: "1111111111111", category: SpiritCategory.Other);
+        var bodies = new List<string>();
+        var (svc, _) = CreateOrchestrator(db, internalEnabled: false, claudeResponder: Capturing(bodies));
+
+        var result = await svc.GetBottleEstimateAsync(bottle.Id, CancellationToken.None);
+
+        Assert.True(result.Success);
+        var body = Assert.Single(bodies);
+        Assert.Contains("Name: Sherry Oak 18", body);
+        Assert.Contains("Distillery/brand: The Macallan", body);
+        Assert.Contains("Barcode/UPC: 5010314101011", body);
+        Assert.DoesNotContain("Vintage:", body);
+        Assert.DoesNotContain("My Mac", body);
+        var snapshot = await db.PriceSnapshots.SingleAsync();
+        Assert.Equal("5010314101011", snapshot.Barcode);
+        Assert.Equal(SpiritCategory.Whisky, snapshot.Category);
+    }
+
+    [Fact]
+    public async Task GetBottleEstimateAsync_WhenLinkedProductHasNoDistilleryOrBarcode_UsesBrandAndBottleBarcode()
+    {
+        await using var db = CreateDbContext();
+        var product = SeedProduct(db, brand: "Macallan", barcode: null);
+        var bottle = SeedLinkedBottle(db, product.Id, barcode: "2222222222222");
+        var bodies = new List<string>();
+        var (svc, _) = CreateOrchestrator(db, internalEnabled: false, claudeResponder: Capturing(bodies));
+
+        await svc.GetBottleEstimateAsync(bottle.Id, CancellationToken.None);
+
+        var body = Assert.Single(bodies);
+        Assert.Contains("Distillery/brand: Macallan", body);
+        Assert.Contains("Barcode/UPC: 2222222222222", body);
+        Assert.Equal("2222222222222", (await db.PriceSnapshots.SingleAsync()).Barcode);
+    }
+
+    [Fact]
+    public async Task GetBottleEstimateAsync_WhenLinkedProductDistilleryDeleted_UsesBrand()
+    {
+        await using var db = CreateDbContext();
+        var distillery = SeedDistillery(db, "Gone Distillery", isDeleted: true);
+        var product = SeedProduct(db, brand: "Macallan", distillery: distillery);
+        var bottle = SeedLinkedBottle(db, product.Id);
+        var bodies = new List<string>();
+        var (svc, _) = CreateOrchestrator(db, internalEnabled: false, claudeResponder: Capturing(bodies));
+
+        await svc.GetBottleEstimateAsync(bottle.Id, CancellationToken.None);
+
+        var body = Assert.Single(bodies);
+        Assert.Contains("Distillery/brand: Macallan", body);
+        Assert.DoesNotContain("Gone Distillery", body);
+    }
+
+    [Fact]
+    public async Task GetBottleEstimateAsync_WhenLinkedProductDeleted_FallsBackToTheBottleKey()
+    {
+        await using var db = CreateDbContext();
+        var product = SeedProduct(db, isDeleted: true);
+        var bottle = SeedLinkedBottle(db, product.Id, name: "Macallan 18");
+        var (svc, _) = CreateOrchestrator(db, internalEnabled: false);
+
+        var result = await svc.GetBottleEstimateAsync(bottle.Id, CancellationToken.None);
+
+        Assert.True(result.Success);
+        Assert.Equal(BottleKey, (await db.PriceSnapshots.SingleAsync()).ProductKey);
+    }
+
+    [Fact]
+    public async Task GetCachedBottleEstimateAsync_WhenLinked_ReadsTheProductSnapshot()
+    {
+        await using var db = CreateDbContext();
+        var product = SeedProduct(db);
+        var bottle = SeedLinkedBottle(db, product.Id, vintageYear: 2001);
+        SeedSnapshot(db, DateTime.UtcNow, price: 456m, key: ProductCanonicalKey);
+        var (svc, claude) = CreateOrchestrator(db);
+
+        var result = await svc.GetCachedBottleEstimateAsync(bottle.Id, CancellationToken.None);
+
+        Assert.True(result.Success);
+        Assert.Equal(456m, result.Data!.EstimatedPrice);
+        Assert.Equal(0, claude.CallCount);
+    }
+
+    [Fact]
+    public async Task GetCollectionValueAsync_WhenLinked_PricesFromTheProductSnapshot()
+    {
+        await using var db = CreateDbContext();
+        var userId = Guid.NewGuid();
+        var product = SeedProduct(db);
+        SeedLinkedBottle(db, product.Id, vintageYear: 1998, userId: userId);
+        SeedLinkedBottle(db, product.Id, name: "Other spelling", userId: userId);
+        SeedSnapshot(db, DateTime.UtcNow, price: 200m, key: ProductCanonicalKey);
+        var (svc, _) = CreateOrchestrator(db);
+
+        var result = await svc.GetCollectionValueAsync(userId, CancellationToken.None);
+
+        Assert.True(result.Success);
+        Assert.Equal(400m, result.Data!.TotalValue);
+        Assert.Equal(2, result.Data.PricedCount);
+    }
+
+    [Fact]
+    public async Task GetCachedProductEstimateAsync_WhenProductMissing_ReturnsNotFound()
+    {
+        await using var db = CreateDbContext();
+        var (svc, _) = CreateOrchestrator(db);
+
+        var result = await svc.GetCachedProductEstimateAsync(Guid.NewGuid(), CancellationToken.None);
+
+        Assert.False(result.Success);
+        Assert.Equal(Application.Common.ErrorCode.NotFound, result.ErrorCode);
+    }
+
+    [Fact]
+    public async Task GetCachedProductEstimateAsync_WhenProductDeleted_ReturnsNotFound()
+    {
+        await using var db = CreateDbContext();
+        var product = SeedProduct(db, isDeleted: true);
+        SeedSnapshot(db, DateTime.UtcNow, key: ProductCanonicalKey);
+        var (svc, _) = CreateOrchestrator(db);
+
+        var result = await svc.GetCachedProductEstimateAsync(product.Id, CancellationToken.None);
+
+        Assert.False(result.Success);
+        Assert.Equal(Application.Common.ErrorCode.NotFound, result.ErrorCode);
+    }
+
+    [Fact]
+    public async Task GetCachedProductEstimateAsync_WhenNoSnapshot_ReturnsSuccessWithNullData()
+    {
+        await using var db = CreateDbContext();
+        var product = SeedProduct(db);
+        var (svc, claude) = CreateOrchestrator(db);
+
+        var result = await svc.GetCachedProductEstimateAsync(product.Id, CancellationToken.None);
+
+        Assert.True(result.Success);
+        Assert.Null(result.Data);
+        Assert.Equal(0, claude.CallCount);
+    }
+
+    [Fact]
+    public async Task GetCachedProductEstimateAsync_WhenSnapshotPresent_ReturnsDto()
+    {
+        await using var db = CreateDbContext();
+        var product = SeedProduct(db);
+        SeedSnapshot(db, DateTime.UtcNow, price: 789m, key: ProductCanonicalKey);
+        var (svc, claude) = CreateOrchestrator(db);
+
+        var result = await svc.GetCachedProductEstimateAsync(product.Id, CancellationToken.None);
+
+        Assert.True(result.Success);
+        Assert.Equal(789m, result.Data!.EstimatedPrice);
+        Assert.Equal(0, claude.CallCount);
+    }
 }

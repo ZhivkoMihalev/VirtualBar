@@ -14,5 +14,12 @@ public interface IPriceEstimationService
     /// </summary>
     Task<Result<PriceEstimateDto>> GetCachedBottleEstimateAsync(Guid bottleId, CancellationToken cancellationToken);
 
+    /// <summary>
+    /// Cache-only read of a catalog product's estimate: the snapshot stored under the product's canonical
+    /// key, which every linked bottle shares. Successful result with <c>null</c> data when none is cached;
+    /// <c>NotFound</c> for an unknown or deleted product. Never triggers a Claude call.
+    /// </summary>
+    Task<Result<PriceEstimateDto>> GetCachedProductEstimateAsync(Guid productId, CancellationToken cancellationToken);
+
     Task<Result<CollectionValueDto>> GetCollectionValueAsync(Guid userId, CancellationToken cancellationToken);
 }

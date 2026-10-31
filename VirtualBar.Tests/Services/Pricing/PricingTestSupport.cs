@@ -58,6 +58,8 @@ public sealed class StubPriceEstimationService : IPriceEstimationService
 
     public int CachedCalls { get; private set; }
 
+    public int ProductCalls { get; private set; }
+
     public int CollectionCalls { get; private set; }
 
     public Guid LastCollectionUserId { get; private set; }
@@ -65,6 +67,8 @@ public sealed class StubPriceEstimationService : IPriceEstimationService
     public Result<PriceEstimateDto> BottleResult { get; set; } = Result<PriceEstimateDto>.Ok(new PriceEstimateDto());
 
     public Result<PriceEstimateDto> CachedResult { get; set; } = Result<PriceEstimateDto>.Ok(new PriceEstimateDto());
+
+    public Result<PriceEstimateDto> ProductResult { get; set; } = Result<PriceEstimateDto>.Ok(new PriceEstimateDto());
 
     public Result<CollectionValueDto> CollectionResult { get; set; } = Result<CollectionValueDto>.Ok(new CollectionValueDto());
 
@@ -88,6 +92,13 @@ public sealed class StubPriceEstimationService : IPriceEstimationService
         Guard();
         CachedCalls++;
         return Task.FromResult(CachedResult);
+    }
+
+    public Task<Result<PriceEstimateDto>> GetCachedProductEstimateAsync(Guid productId, CancellationToken cancellationToken)
+    {
+        Guard();
+        ProductCalls++;
+        return Task.FromResult(ProductResult);
     }
 
     public Task<Result<CollectionValueDto>> GetCollectionValueAsync(Guid userId, CancellationToken cancellationToken)

@@ -499,7 +499,7 @@ Read-through cache of an **indicative market-value estimate** for a canonical pr
 
 | Property | Type | Notes |
 |---|---|---|
-| `ProductKey` | `string` | Canonical key from `ProductKey.For(...)`; **unique index** |
+| `ProductKey` | `string` | The bottle's price key from `PriceKey.ForBottle(...)` — `Product.CanonicalKey` for a bottle linked to a non-deleted product, else `ProductKey.For(...)` of the bottle; **unique index** |
 | `Barcode` | `string?` | Last barcode seen for this product |
 | `Category` | `SpiritCategory` | |
 | `EstimatedPrice` | `decimal` | Median, base currency; `decimal(18,2)` |
@@ -606,8 +606,11 @@ Shows an **indicative min–max market value per bottle** and a **total collecti
 
 **Selection order (shipped):** Claude → Internal fallback → `None`.
 
+**Price key rule (#50):** every pricing path computes a bottle's key through `PriceKey.ForBottle` (`VirtualBar.Application/Common/PriceKey.cs`) — `PriceEstimationService` (estimate, cached read, collection value), `PreWarmWorker` (grouping) and `InternalMarketPriceProvider` (listings + accepted offers). A bottle linked to a **non-deleted** product uses the stored `Product.CanonicalKey`, so every copy of the product shares one snapshot whatever its spelling or vintage, and Claude researches the **product's** fields (name, non-deleted distillery ?? brand, age, volume, no vintage, product barcode ?? bottle barcode). Any other bottle keeps `ProductKey.For(bottle fields)`. Never call `ProductKey.For` directly in pricing code: two paths computing the key differently means snapshots written by one are never read by the other. Snapshots written under the old bottle keys before this rule are left in place (a cache; they are simply no longer read).
+
 **API (`/api/prices`, `[Authorize]`):**
 - `GET /api/prices/bottle/{bottleId}` → `PriceEstimateDto` — **cache-only** read (never triggers a synchronous Claude call on the request path); `204` when no estimate is cached yet, `404` when the bottle is missing.
+- `GET /api/prices/product/{productId}` → `PriceEstimateDto` — **cache-only** read of the snapshot under the product's `CanonicalKey` (the one its linked bottles share); `204` when none is cached, `404` for an unknown or deleted product.
 - `GET /api/prices/collection` → `CollectionValueDto` — Sealed-only total + per-bottle lines; owner-scoped (decorator enforces `userId == currentUser.UserId`).
 
 **Config** (`appsettings.json`; `Anthropic:ApiKey` is empty there — set it in `appsettings.Development.json` / user-secrets, never committed):

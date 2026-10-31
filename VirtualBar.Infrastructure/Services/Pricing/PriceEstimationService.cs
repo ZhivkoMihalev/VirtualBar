@@ -1,3 +1,4 @@
+using System.Linq.Expressions;
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
@@ -27,23 +28,13 @@ public sealed class PriceEstimationService(
         var bottle = await db.Bottles
             .AsNoTracking()
             .Where(b => b.Id == bottleId && !b.IsDeleted)
-            .Select(b => new BottleKeyInfo(
-                b.Id,
-                b.Name,
-                b.Distillery != null ? b.Distillery.Name : null,
-                b.Category,
-                b.Age,
-                b.VintageYear,
-                b.VolumeMl,
-                b.Barcode,
-                b.Condition,
-                b.Quantity))
+            .Select(ToKeyInfo)
             .FirstOrDefaultAsync(cancellationToken);
 
         if (bottle is null)
             return Result<PriceEstimateDto>.NotFound("Bottle not found.");
 
-        var productKey = ProductKey.For(bottle.DistilleryName, bottle.Name, bottle.Category, bottle.Age, bottle.VintageYear, bottle.VolumeMl);
+        var productKey = KeyOf(bottle);
 
         // 1. Cache first: a fresh snapshot returns immediately, without calling any external provider.
         var snapshot = await db.PriceSnapshots
@@ -55,16 +46,7 @@ public sealed class PriceEstimationService(
 
         // 2. Miss or stale: the external research is always the reference. Internal data is used only
         //    as a fallback when Claude returns nothing (and only if we have any of our own data).
-        var input = new PriceProviderInput(
-            bottle.Name,
-            bottle.DistilleryName,
-            bottle.Category,
-            bottle.Age,
-            bottle.VintageYear,
-            bottle.VolumeMl,
-            bottle.Barcode,
-            productKey,
-            bottle.Id);
+        var input = ToProviderInput(bottle, productKey);
 
         var estimate = await claudeProvider.TryEstimateAsync(input, cancellationToken)
             ?? await internalProvider.TryEstimateAsync(input, cancellationToken);
@@ -73,7 +55,7 @@ public sealed class PriceEstimationService(
             return Result<PriceEstimateDto>.NotFound("No estimate available for this bottle.");
 
         // 3. Persist the chosen estimate to the read-through cache.
-        await UpsertSnapshotAsync(snapshot, productKey, bottle.Barcode, bottle.Category, estimate, cancellationToken);
+        await UpsertSnapshotAsync(snapshot, productKey, input.Barcode, input.Category, estimate, cancellationToken);
 
         return Result<PriceEstimateDto>.Ok(estimate);
     }
@@ -83,27 +65,39 @@ public sealed class PriceEstimationService(
         var bottle = await db.Bottles
             .AsNoTracking()
             .Where(b => b.Id == bottleId && !b.IsDeleted)
-            .Select(b => new BottleKeyInfo(
-                b.Id,
-                b.Name,
-                b.Distillery != null ? b.Distillery.Name : null,
-                b.Category,
-                b.Age,
-                b.VintageYear,
-                b.VolumeMl,
-                b.Barcode,
-                b.Condition,
-                b.Quantity))
+            .Select(ToKeyInfo)
             .FirstOrDefaultAsync(cancellationToken);
 
         if (bottle is null)
             return Result<PriceEstimateDto>.NotFound("Bottle not found.");
 
-        var productKey = ProductKey.For(bottle.DistilleryName, bottle.Name, bottle.Category, bottle.Age, bottle.VintageYear, bottle.VolumeMl);
+        var productKey = KeyOf(bottle);
 
         // Cache-only: the request path never makes a billed Claude call. A missing snapshot returns a
         // successful result with null data — the controller renders 204 and the UI shows "—". The
         // pre-warm job (or a future async refresh) populates the cache out of band.
+        var snapshot = await db.PriceSnapshots
+            .AsNoTracking()
+            .FirstOrDefaultAsync(s => s.ProductKey == productKey, cancellationToken);
+
+        return snapshot is null
+            ? Result<PriceEstimateDto>.Ok(null!)
+            : Result<PriceEstimateDto>.Ok(MapToDto(snapshot));
+    }
+
+    public async Task<Result<PriceEstimateDto>> GetCachedProductEstimateAsync(Guid productId, CancellationToken cancellationToken)
+    {
+        var productKey = await db.Products
+            .AsNoTracking()
+            .Where(p => p.Id == productId && !p.IsDeleted)
+            .Select(p => p.CanonicalKey)
+            .FirstOrDefaultAsync(cancellationToken);
+
+        if (productKey is null)
+            return Result<PriceEstimateDto>.NotFound("Product not found.");
+
+        // Linked bottles are priced under the product's canonical key (PriceKey.ForBottle), so this is the
+        // same snapshot every linked bottle reads. Cache-only, exactly like the bottle read above.
         var snapshot = await db.PriceSnapshots
             .AsNoTracking()
             .FirstOrDefaultAsync(s => s.ProductKey == productKey, cancellationToken);
@@ -118,17 +112,7 @@ public sealed class PriceEstimationService(
         var bottles = await db.Bottles
             .AsNoTracking()
             .Where(b => b.UserId == userId && !b.IsDeleted)
-            .Select(b => new BottleKeyInfo(
-                b.Id,
-                b.Name,
-                b.Distillery != null ? b.Distillery.Name : null,
-                b.Category,
-                b.Age,
-                b.VintageYear,
-                b.VolumeMl,
-                b.Barcode,
-                b.Condition,
-                b.Quantity))
+            .Select(ToKeyInfo)
             .ToListAsync(cancellationToken);
 
         var baseCurrency = pricingOptions.Value.BaseCurrency;
@@ -137,9 +121,7 @@ public sealed class PriceEstimationService(
             return Result<CollectionValueDto>.Ok(new CollectionValueDto { Currency = baseCurrency });
 
         // Resolve each bottle's canonical key, then load the latest snapshot per key in one query.
-        var keyByBottle = bottles.ToDictionary(
-            b => b.Id,
-            b => ProductKey.For(b.DistilleryName, b.Name, b.Category, b.Age, b.VintageYear, b.VolumeMl));
+        var keyByBottle = bottles.ToDictionary(b => b.Id, KeyOf);
 
         var distinctKeys = keyByBottle.Values.Distinct().ToList();
 
@@ -286,6 +268,68 @@ public sealed class PriceEstimationService(
         }
     }
 
+    private static string KeyOf(BottleKeyInfo bottle) => PriceKey.ForBottle(
+        bottle.Product?.CanonicalKey,
+        bottle.DistilleryName,
+        bottle.Name,
+        bottle.Category,
+        bottle.Age,
+        bottle.VintageYear,
+        bottle.VolumeMl);
+
+    /// <summary>
+    /// A linked bottle is researched as its product (no vintage), so the estimate fits every copy that
+    /// shares the snapshot. An unlinked bottle is researched from its own fields, as before.
+    /// </summary>
+    private static PriceProviderInput ToProviderInput(BottleKeyInfo bottle, string productKey)
+    {
+        var product = bottle.Product;
+
+        return product is null
+            ? new PriceProviderInput(
+                bottle.Name,
+                bottle.DistilleryName,
+                bottle.Category,
+                bottle.Age,
+                bottle.VintageYear,
+                bottle.VolumeMl,
+                bottle.Barcode,
+                productKey,
+                bottle.Id)
+            : new PriceProviderInput(
+                product.Name,
+                product.MakerName,
+                product.Category,
+                product.Age,
+                null,
+                product.VolumeMl,
+                product.Barcode ?? bottle.Barcode,
+                productKey,
+                bottle.Id);
+    }
+
+    private static readonly Expression<Func<Bottle, BottleKeyInfo>> ToKeyInfo = b => new BottleKeyInfo(
+        b.Id,
+        b.Name,
+        b.Distillery != null ? b.Distillery.Name : null,
+        b.Category,
+        b.Age,
+        b.VintageYear,
+        b.VolumeMl,
+        b.Barcode,
+        b.Condition,
+        b.Quantity,
+        b.Product != null && !b.Product.IsDeleted
+            ? new LinkedProductInfo(
+                b.Product.CanonicalKey,
+                b.Product.Name,
+                b.Product.Distillery != null && !b.Product.Distillery.IsDeleted ? b.Product.Distillery.Name : b.Product.Brand,
+                b.Product.Category,
+                b.Product.Age,
+                b.Product.VolumeMl,
+                b.Product.Barcode)
+            : null);
+
     private sealed record BottleKeyInfo(
         Guid Id,
         string Name,
@@ -296,5 +340,16 @@ public sealed class PriceEstimationService(
         int? VolumeMl,
         string? Barcode,
         BottleCondition Condition,
-        int Quantity);
+        int Quantity,
+        LinkedProductInfo? Product);
+
+    /// <summary>The bottle's catalog product, present only when it is linked and not deleted.</summary>
+    private sealed record LinkedProductInfo(
+        string CanonicalKey,
+        string Name,
+        string? MakerName,
+        SpiritCategory Category,
+        int? Age,
+        int? VolumeMl,
+        string? Barcode);
 }

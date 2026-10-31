@@ -33,11 +33,11 @@ public sealed class BottleImagesController(IBottleImageService bottleImageServic
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <response code="200">Image deleted.</response>
     /// <response code="403">Bottle belongs to another collector.</response>
-    /// <response code="404">Image not found.</response>
+    /// <response code="404">Image not found, or it belongs to another bottle.</response>
     [HttpDelete("{bottleId:guid}/images/{imageId:guid}")]
     public async Task<IActionResult> DeleteImage(Guid bottleId, Guid imageId, CancellationToken cancellationToken)
     {
-        var result = await bottleImageService.DeleteImageAsync(imageId, cancellationToken);
+        var result = await bottleImageService.DeleteImageAsync(bottleId, imageId, cancellationToken);
         return result.Success ? Ok() : result.ToActionResult(this);
     }
 

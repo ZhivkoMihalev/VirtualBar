@@ -49,10 +49,10 @@ public sealed class BottleImageService(
         return Result<BottleImageDto>.Ok(MapToDto(image));
     }
 
-    public async Task<Result<bool>> DeleteImageAsync(Guid imageId, CancellationToken cancellationToken)
+    public async Task<Result<bool>> DeleteImageAsync(Guid bottleId, Guid imageId, CancellationToken cancellationToken)
     {
         var image = await db.BottleImages
-            .FirstOrDefaultAsync(i => i.Id == imageId && !i.IsDeleted, cancellationToken);
+            .FirstOrDefaultAsync(i => i.Id == imageId && i.BottleId == bottleId && !i.IsDeleted, cancellationToken);
 
         image!.IsDeleted = true;
         image.DeletedAt = DateTime.UtcNow;

@@ -37,11 +37,14 @@ public sealed class BottleImageValidationDecorator(
         return await inner.AddImageAsync(bottleId, file, cancellationToken);
     }
 
-    public async Task<Result<bool>> DeleteImageAsync(Guid imageId, CancellationToken cancellationToken)
+    public async Task<Result<bool>> DeleteImageAsync(Guid bottleId, Guid imageId, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
 
-        var image = await db.BottleImages.FirstOrDefaultAsync(i => i.Id == imageId && !i.IsDeleted, cancellationToken);
+        // Matched on the bottle too: an image of another bottle, even one the caller owns, answers like a missing one,
+        // so the route can never delete an image it does not name (#72).
+        var image = await db.BottleImages.FirstOrDefaultAsync(
+            i => i.Id == imageId && i.BottleId == bottleId && !i.IsDeleted, cancellationToken);
         if (image is null)
             return Result<bool>.NotFound("Image not found.");
 
@@ -52,7 +55,7 @@ public sealed class BottleImageValidationDecorator(
         if (bottle.UserId != currentUser.UserId)
             return Result<bool>.Forbidden("Forbidden.");
 
-        return await inner.DeleteImageAsync(imageId, cancellationToken);
+        return await inner.DeleteImageAsync(bottleId, imageId, cancellationToken);
     }
 
     public async Task<Result<BottleImageDto>> LinkImageAsync(Guid bottleId, LinkImageRequest request, CancellationToken cancellationToken)

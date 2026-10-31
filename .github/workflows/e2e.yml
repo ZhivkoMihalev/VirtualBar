@@ -1,7 +1,7 @@
 name: E2E
 
-# Runs the Playwright tests in VirtualBar.Web/tests against the real stack: SQL Server in a container,
-# the API on a fresh database, and the Vite dev server (started by playwright.config.ts).
+# Runs the Playwright tests in VirtualBar.Web.Tests/e2e against the real stack: SQL Server in a container,
+# the API on a fresh database, and the Vite dev server of VirtualBar.Web (started by playwright.config.ts).
 # Too slow for every PR, so it runs nightly on master, on demand, and on PRs labelled "e2e".
 on:
   schedule:
@@ -57,7 +57,7 @@ jobs:
         with:
           node-version: 22
           cache: npm
-          cache-dependency-path: VirtualBar.Web/package-lock.json
+          cache-dependency-path: package-lock.json
 
       - uses: actions/cache@v6
         with:
@@ -117,16 +117,16 @@ jobs:
           tail -n 100 "$RUNNER_TEMP/api.log"
           exit 1
 
+      # Both npm workspaces (the app and its tests) install from the root lockfile.
       - name: Install frontend dependencies
-        working-directory: VirtualBar.Web
         run: npm ci
 
       - name: Install Chromium
-        working-directory: VirtualBar.Web
+        working-directory: VirtualBar.Web.Tests
         run: npx playwright install --with-deps chromium
 
       - name: Run Playwright tests
-        working-directory: VirtualBar.Web
+        working-directory: VirtualBar.Web.Tests
         env:
           E2E_MAIL_DIR: ${{ runner.temp }}/mail
         run: npx playwright test --project=chromium --reporter=list,github,html
@@ -137,8 +137,8 @@ jobs:
         with:
           name: playwright-report
           path: |
-            VirtualBar.Web/playwright-report/
-            VirtualBar.Web/test-results/
+            VirtualBar.Web.Tests/playwright-report/
+            VirtualBar.Web.Tests/test-results/
           retention-days: 14
           if-no-files-found: ignore
 

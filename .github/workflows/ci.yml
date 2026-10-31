@@ -138,9 +138,6 @@ jobs:
     name: Frontend
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    defaults:
-      run:
-        working-directory: VirtualBar.Web
     steps:
       - uses: actions/checkout@v7
 
@@ -148,13 +145,21 @@ jobs:
         with:
           node-version: 22
           cache: npm
-          cache-dependency-path: VirtualBar.Web/package-lock.json
+          cache-dependency-path: package-lock.json
 
+      # One install for both npm workspaces (VirtualBar.Web and VirtualBar.Web.Tests) from the root lockfile.
       - name: Install
         run: npm ci
 
-      - name: Lint
+      - name: Lint (both workspaces)
         run: npm run lint
+
+      - name: Type check tests
+        run: npm run typecheck
+
+      # Vitest + React Testing Library in jsdom: no backend, so it runs on every PR in seconds.
+      - name: Unit and component tests
+        run: npm test
 
       - name: Build (type check + Vite)
         run: npm run build

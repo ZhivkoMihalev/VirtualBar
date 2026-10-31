@@ -108,7 +108,7 @@ Pricing: bottle ─▶ PriceKey.ForBottle(product?.CanonicalKey, bottle fields�
   `BrowsePage` (card-grid reference), `PublicBarPage` (opens the panel from a list).
 - Tests: `ProductCatalogServiceTests`, `PriceEstimationServiceTests`, `PreWarmWorkerTests`,
   `InternalMarketPriceProviderTests`, `PriceEstimationValidationDecoratorTests`, `PricesControllerTests`.
-  E2E: `VirtualBar.Web/tests/product-select.spec.ts`, `reviews.spec.ts`.
+  E2E: `VirtualBar.Web.Tests/e2e/product-select.spec.ts`, `reviews.spec.ts`.
 
 ## 5. Backend conventions (from CLAUDE.md — follow exactly)
 - `Result<T>` + typed factories; decorator owns all guards + `ThrowIfCancellationRequested()`;

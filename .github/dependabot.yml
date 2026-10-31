@@ -7,8 +7,10 @@ version: 2
 # Security updates are not tied to this schedule — they open as soon as a vulnerability is published
 # (enable "Dependabot security updates" in the repository settings).
 updates:
+  # The root package.json declares the npm workspaces (VirtualBar.Web and VirtualBar.Web.Tests), so one entry at
+  # the root updates both manifests and the single root lockfile.
   - package-ecosystem: npm
-    directory: /VirtualBar.Web
+    directory: /
     schedule:
       interval: monthly
     open-pull-requests-limit: 5

@@ -20,8 +20,10 @@ dist/
 .env.local
 
 ## Playwright generated output
-VirtualBar.Web/test-results/
-VirtualBar.Web/playwright-report/
+VirtualBar.Web.Tests/test-results/
+VirtualBar.Web.Tests/playwright-report/
+# Emails the API writes when started with the api-e2e launch configuration (.claude/launch.json).
+VirtualBar.Web.Tests/.e2e-mail/
 
 ## OS
 .DS_Store

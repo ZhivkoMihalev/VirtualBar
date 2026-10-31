@@ -9,6 +9,23 @@
       "port": 5000
     },
     {
+      "name": "api-e2e",
+      "runtimeExecutable": "dotnet",
+      "runtimeArgs": [
+        "run",
+        "--launch-profile",
+        "http",
+        "--",
+        "--Identity:RequireConfirmedEmail=false",
+        "--Email:PickupDirectory=../VirtualBar.Web.Tests/.e2e-mail",
+        "--RateLimiting:AuthPermitLimit=10000",
+        "--Anthropic:UseProviderStats=false",
+        "--Pricing:RefreshEnabled=false"
+      ],
+      "cwd": "VirtualBar.Api",
+      "port": 5000
+    },
+    {
       "name": "web",
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "dev"],

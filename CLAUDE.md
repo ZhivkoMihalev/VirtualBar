@@ -25,10 +25,21 @@ VirtualBar/
 │   ├── Integration/           # cross-service flow tests (real service graph, no mocks)
 │   ├── Persistence/           # EF model conventions (UTC DateTime round-trip)
 │   └── Api/                   # API helpers (ResultExtensions: status code + error body) + controller tests
-└── VirtualBar.Web/            # React + Vite 8 + Tailwind CSS 4 frontend
+├── VirtualBar.Web/            # React + Vite 8 + Tailwind CSS 4 frontend
+├── VirtualBar.Web.Tests/      # frontend tests — its own npm workspace, depends on VirtualBar.Web
+│   ├── unit/                  # Vitest + React Testing Library (jsdom); mirrors VirtualBar.Web/src
+│   └── e2e/                   # Playwright specs, run against the real stack
+└── package.json               # npm workspaces root: VirtualBar.Web + VirtualBar.Web.Tests, one lockfile
 
 **Target framework:** .NET 9 (`net9.0`)
 ```
+
+The frontend is two **npm workspaces**, the JS counterpart of a solution with a test project. One `npm install`
+in the repo root installs both into the root `node_modules`, from the single root `package-lock.json`.
+`VirtualBar.Web.Tests` declares `virtualbar.web` as a dependency, the way `VirtualBar.Tests` references the backend
+projects. It deliberately does **not** list the app's runtime packages (`react`, `react-dom`, `@tanstack/react-query`,
+`react-router-dom`, `i18next`, …): it uses the app's own copies, so a component and its test share one React and one
+query-client context. Listing one of them separately could install a second copy, which breaks hooks.
 
 **Dependency rule:** `Api → Application ← Infrastructure`. Domain has no outward dependencies.
 
@@ -61,13 +72,20 @@ dotnet ef database update --project VirtualBar.Infrastructure --startup-project 
 
 ### Frontend
 
+Run from the **repo root** (each script forwards to its workspace):
+
 ```bash
-cd VirtualBar.Web
-npm install        # first time only
-npm run dev        # dev server → http://localhost:5173
-npm run lint       # ESLint — must report 0 problems (CI blocks on it)
-npm run build      # production build — must output "✓ built in ..."
+npm install        # first time only — installs both workspaces into the root node_modules
+npm run dev        # VirtualBar.Web dev server → http://localhost:5173
+npm run lint       # ESLint in both workspaces — must report 0 problems (CI blocks on it)
+npm test           # Vitest unit + component tests (VirtualBar.Web.Tests/unit) — must report 0 failed
+npm run typecheck  # tsc over VirtualBar.Web.Tests (unit + e2e + configs)
+npm run build      # VirtualBar.Web production build — must output "✓ built in ..."
+npm run test:e2e   # Playwright (VirtualBar.Web.Tests/e2e) — needs the API running, see CI → E2E
 ```
+
+Inside a workspace folder the same scripts work too (`cd VirtualBar.Web && npm run dev`; in `VirtualBar.Web.Tests`
+also `npm run test:watch` and `npm run test:e2e:ui` / `test:e2e:debug` / `test:e2e:report`).
 
 The Vite dev server proxies `/api` and `/uploads` to `http://localhost:5000`.
 
@@ -92,11 +110,11 @@ Expected output: `Failed: 0`. The `coverage-results/` directory is gitignored.
 
 `.github/workflows/ci.yml` runs on every PR to `master`, every push to `master`, and on demand. Two parallel jobs:
 - **Backend** — restore → build (Release) → tests with coverage (raw results in the `backend-test-results` artifact) → **coverage report** (ReportGenerator, `VirtualBar.Infrastructure.Migrations.*` excluded): written to the job summary, posted as one PR comment that is edited in place on every push (skipped on Dependabot and fork PRs, whose token is read-only), and uploaded as the `coverage-report` HTML artifact. Informational: it never fails the build → `dotnet ef migrations has-pending-model-changes`, which fails when an entity changed without a matching migration. It needs no database or secrets (a throwaway `Jwt:Key` is generated for that step only).
-- **Frontend** — `npm ci` → `npm run lint` (blocking — must report 0 problems) → `npm run build`.
+- **Frontend** — from the repo root: `npm ci` (both workspaces, root lockfile) → `npm run lint` (both workspaces; blocking — must report 0 problems) → `npm run typecheck` (the tests) → `npm test` (Vitest, no backend needed) → `npm run build`.
 
 `.github/workflows/migration-guard.yml` (the **Migration guard** check) runs on every PR to `master`. Migrations apply automatically on startup, so it scans the `Up()` method of every migration the PR adds or changes (`.github/scripts/check-destructive-migrations.sh`) and fails on `DropTable`, `DropColumn`, `DeleteData`, `UpdateData` or any raw `Sql(...)`: operations that delete or rewrite existing data on the next deploy. `Down()` is ignored, since it legitimately drops what `Up()` created. The check passes once the PR carries the **`db-destructive-approved`** label; add it only after the data change was agreed (see CRITICAL RULES).
 
-`.github/workflows/e2e.yml` (the **E2E** check) runs the Playwright suite in `VirtualBar.Web/tests` on Chromium against the real stack: SQL Server 2022 in a service container, the API in `Development` on a fresh database (migrations + seeders run on startup), and the Vite dev server that `playwright.config.ts` starts. It is too slow for every PR, so it runs nightly on `master` (02:17 UTC), on demand (Actions → E2E → Run workflow), and on PRs labelled **`e2e`**; it is therefore not a required check. CI-only config overrides, set as environment variables in the workflow: `Identity:RequireConfirmedEmail=false` (the tests log new users straight in), `Email:PickupDirectory` (every email is written there as an `.eml` file instead of sent; `email-confirmation.spec.ts` reads the same directory through the `E2E_MAIL_DIR` environment variable and opens the link in the email), `RateLimiting:AuthPermitLimit=10000` (`Program.cs` defaults to 10 auth requests a minute per IP, which the suite exceeds from one machine), `Anthropic:UseProviderStats=false` and `Pricing:RefreshEnabled=false`. The Playwright HTML report (traces + screenshots of failures) and the API log are uploaded as artifacts. To run the suite locally, start the API with the same overrides (e.g. in `appsettings.Development.json`), then `cd VirtualBar.Web && E2E_MAIL_DIR=<the pickup directory> npx playwright test --project=chromium`. `Email:PickupDirectory` is for development only: the API refuses to start with it in any other environment, where it would silently stop every email.
+`.github/workflows/e2e.yml` (the **E2E** check) runs the Playwright suite in `VirtualBar.Web.Tests/e2e` on Chromium against the real stack: SQL Server 2022 in a service container, the API in `Development` on a fresh database (migrations + seeders run on startup), and the Vite dev server of `VirtualBar.Web` that `VirtualBar.Web.Tests/playwright.config.ts` starts. It is too slow for every PR, so it runs nightly on `master` (02:17 UTC), on demand (Actions → E2E → Run workflow), and on PRs labelled **`e2e`**; it is therefore not a required check. CI-only config overrides, set as environment variables in the workflow: `Identity:RequireConfirmedEmail=false` (the tests log new users straight in), `Email:PickupDirectory` (every email is written there as an `.eml` file instead of sent; `email-confirmation.spec.ts` reads the same directory through the `E2E_MAIL_DIR` environment variable and opens the link in the email), `RateLimiting:AuthPermitLimit=10000` (`Program.cs` defaults to 10 auth requests a minute per IP, which the suite exceeds from one machine), `Anthropic:UseProviderStats=false` and `Pricing:RefreshEnabled=false`. The Playwright HTML report (traces + screenshots of failures) and the API log are uploaded as artifacts. To run the suite locally, start the API with the same overrides: the **`api-e2e`** configuration in `.claude/launch.json` passes them as command-line arguments and writes the emails to `VirtualBar.Web.Tests/.e2e-mail/` (gitignored). It uses the database of `appsettings.Development.json`, and the suite fills that database with test collectors, bottles, listings, offers, wishes and messages. Then run `cd VirtualBar.Web.Tests && E2E_MAIL_DIR=<absolute path of .e2e-mail> npx playwright test --project=chromium`. CI runs one test at a time (`workers: 1`); a local run at Playwright's default parallelism makes many browsers compete for the CPU against the unbundled dev server, which can push the older specs' 5 s assertions over their limit, so `--workers=1` reproduces CI. `Email:PickupDirectory` is for development only: the API refuses to start with it in any other environment, where it would silently stop every email.
 
 `.github/workflows/project-board.yml` (the **Project board** workflow) keeps the **Virtual Bar** board in GitHub Projects in step with the issues' `status: …` labels (`To Do` → `In Progress` → `Ready For Testing` → `In Testing` → `Ready for deployment` → `Done`). The label is the source of truth: change a status by changing the label, and `.github/scripts/sync-project-status.sh` moves the card to the board's Status column of the same name (ignoring case), adding the issue to the board first. An issue is on the board once it has a status label; dragging a card does not change the label. It runs on `opened`/`reopened` and on adding a `status: …` label; run it by hand (Actions → Project board → Run workflow) to sync every issue at once. It needs the `PROJECT_TOKEN` secret, a classic personal access token with only the `project` scope, because the workflow's own token cannot reach a project owned by a user account.
 
@@ -115,7 +133,7 @@ A test that finds a problem sends the issue back to `In Progress`. An issue stay
 
 **CodeQL** (security scanning of C#, JS/TS and the workflows) runs through GitHub's *default setup*, configured in the repository settings (Advanced Security → Code scanning), not in a workflow file. Findings appear in the Security tab and on PRs.
 
-`.github/dependabot.yml` opens **monthly** update PRs for npm, NuGet and GitHub Actions (minor + patch grouped into one PR per ecosystem, majors separate — except `vite` and `@vitejs/*`, whose majors come as one PR because neither installs without the other). Security updates are not bound to the schedule.
+`.github/dependabot.yml` opens **monthly** update PRs for npm (one entry at the repo root, which covers both workspaces and the root lockfile), NuGet and GitHub Actions (minor + patch grouped into one PR per ecosystem, majors separate — except `vite` and `@vitejs/*`, whose majors come as one PR because neither installs without the other). Security updates are not bound to the schedule.
 
 ---
 
@@ -130,7 +148,7 @@ A test that finds a problem sends the issue back to `In Progress`. An issue stay
 - `CancellationToken` parameter is always named `cancellationToken`. Never `ct`, never `token`.
 - Never delete or modify database records without asking the user first. EF Core migrations that ADD schema are fine. For any `DELETE`, `UPDATE`, `ExecuteDeleteAsync`, `ExecuteUpdateAsync`, or drop-column migration — stop and ask. For migrations the **Migration guard** CI check enforces this: it blocks the PR until it carries the `db-destructive-approved` label.
 - After every backend change: run `dotnet build` (0 errors required) and the relevant test class.
-- After every frontend change: run `npm run lint` (0 problems — CI blocks on it) and `npm run build` (clean output required).
+- After every frontend change: run, from the repo root, `npm run lint` (0 problems — CI blocks on it), `npm test` (0 failed) and `npm run build` (clean output required).
 - Every new service method needs 100% branch coverage in tests.
 
 ---
@@ -700,6 +718,29 @@ The same rule applies to any component file: shared constants go to their own mo
 - Cover every branch: every `if`, every `switch` arm, every `?.`, `??`, `&&`, `||`.
 
 **Integration tests (`VirtualBar.Tests/Integration/`)** — the deliberate exception to the mocking rule above. A flow that spans services (trigger service → notification → badge) can only be proven end to end by wiring the **real** collaborators, so these classes assemble the service graph exactly as `DependencyInjection.cs` does — real `NotificationService` and `BadgeService` behind their decorators, one graph per acting user (a request scope), only `ICurrentUser` mocked. Do NOT "fix" them back to `Mock.Of<T>()`: mocks would hide the very chain under test. They complement the per-service classes, never replace them — branch coverage still belongs in `Services/`. Because the badge engine swallows and logs its own exceptions, these tests also assert `ILogger<BadgeService>` logged no error, so a silent failure cannot pass as success. Existing file: `ProductRequestApprovalFlowTests` (approve → requester notified + `FirstCatalogProduct` awarded).
+
+### Frontend tests (`VirtualBar.Web.Tests`)
+
+**Unit and component tests (`unit/`)** — Vitest + React Testing Library in jsdom, run by `npm test` on every PR.
+- One file per module under test, in the folder that mirrors `VirtualBar.Web/src`: `src/lib/authErrors.ts` → `unit/lib/authErrors.test.ts`, `src/pages/ConfirmEmailPage.tsx` → `unit/pages/ConfirmEmailPage.test.tsx`.
+- Import the code under test through the app's `@/` alias (`vitest.config.ts` and `tsconfig.json` point it at `../VirtualBar.Web/src`), exactly as the app imports it.
+- Mock only the **API layer** (`vi.mock('@/api/authApi')`), never React Query, the router or i18n: components render with the real providers through `renderWithProviders` in `unit/testUtils.tsx` (fresh `QueryClient` without retries, `MemoryRouter` at a given route, real i18n in Bulgarian). `apiError(status, body)` / `networkError()` build real `AxiosError`s, so `isAxiosError` and the `reason` handling run as in production; `deferred()` holds a request pending to check loading states.
+- Assert translated text from the translation files (`bg.confirmEmail.invalidLink`, or `i18n.t(...)` for interpolated text), never a hard-coded string.
+- Query by role and accessible name first (`getByRole('button', { name: … })`), then text.
+- `unit/setup.ts` unmounts after every test and clears `localStorage`; mocks are reset between tests (`mockReset`, `restoreMocks`).
+- `unit/i18n/translations.test.ts` pins that `bg.json` and `en.json` have the same keys, the same `{{placeholders}}` per key, and no empty value. A new i18n key therefore goes into **both** files in the same change.
+- Code under test is never changed to make a test pass. A test exists to fail on the bug it names, so check that it does once: break the code, watch it go red, restore.
+
+**E2E tests (`e2e/`)** — Playwright against the real stack (see CI → E2E): one spec per feature flow, role/text selectors first, no fixed waits.
+- Flows with several collectors (`marketplace.spec.ts`, `offers.spec.ts`, `messages.spec.ts`) build on `e2e/support.ts`:
+  - `registerCollector` registers fresh users through the API;
+  - the `openAs(who)` fixture (use the `test` exported by `support.ts`) gives each collector a browser context of its own, `null` an anonymous visitor, and closes them all after the test, failed or not. A context left open keeps polling the API every 30 s for the rest of the worker's run;
+  - `api` / `createBottle` set up data through the API;
+  - `card`, `openBottlePanel`, `notification`, `chatToggle`, `chatMessage` and `searchMarketplace` locate the UI.
+- **Set up through the API, assert through the UI**: a spec drives only the flow it is about, and creates everything else directly.
+- Expected text comes from the app's `bg.json`, imported with `with { type: 'json' }`, never copied into the spec. The older specs predate this and keep their own string constants.
+- A multi-user flow uses `FLOW_TIMEOUT` and the `expect` exported by `support.ts`, which waits up to 15 s. Each step crosses browser contexts and page loads.
+- Names come from `uniqueName`, so a run never collides with data from an earlier run, and a spec that leaves something other collectors would see removes it: a wish matches every later listing of its category.
 
 ---
 

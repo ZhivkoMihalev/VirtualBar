@@ -121,8 +121,10 @@ Uploaded images are stored in `wwwroot/uploads/`. In production this directory m
 
 ## 9. Frontend Build
 
+From the repo root (npm workspaces: one install covers `VirtualBar.Web` and `VirtualBar.Web.Tests`):
+
 ```bash
-cd VirtualBar.Web
+npm ci
 npm run build
 ```
 

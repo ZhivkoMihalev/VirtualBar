@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Link, useSearchParams } from 'react-router-dom'
+import { Link, NavigationType, useLocation, useNavigationType, useSearchParams } from 'react-router-dom'
 import { keepPreviousData, useInfiniteQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { Search } from 'lucide-react'
@@ -116,8 +116,22 @@ export default function CatalogPage() {
   const { t } = useTranslation()
   // The URL is the state, so back/forward and shared links reproduce the same view.
   const [searchParams, setSearchParams] = useSearchParams()
-  const typed = searchParams.get('q') ?? ''
+  const location = useLocation()
+  const navigationType = useNavigationType()
+  const urlTerm = searchParams.get('q') ?? ''
   const category = parseCategory(searchParams.get('category'))
+
+  // The search box keeps what is typed in its own state and writes it to the URL. React Router commits a URL change
+  // in a transition, so a box bound to the URL itself is re-rendered with the old value before the new one lands, and
+  // a fast typist loses letters ("Lagavulin" became "gvlin"). The URL still wins when it changes from outside the
+  // box: back/forward (a POP) sets the box to the term of the entry it returns to.
+  const [typed, setTyped] = useState(urlTerm)
+  const [seenLocationKey, setSeenLocationKey] = useState(location.key)
+  if (location.key !== seenLocationKey) {
+    setSeenLocationKey(location.key)
+    if (navigationType === NavigationType.Pop) setTyped(urlTerm)
+  }
+
   const term = useSettledTerm(typed.trim(), 300)
 
   const updateParam = (key: 'q' | 'category', value: string | undefined, replace: boolean) => {
@@ -174,7 +188,10 @@ export default function CatalogPage() {
                 type="search"
                 value={typed}
                 // Every keystroke replaces the history entry, so Back leaves the page instead of undoing letters.
-                onChange={e => updateParam('q', e.target.value, true)}
+                onChange={e => {
+                  setTyped(e.target.value)
+                  updateParam('q', e.target.value, true)
+                }}
                 placeholder={t('catalog.searchPlaceholder')}
                 aria-label={t('catalog.searchLabel')}
                 className="h-10 pl-9"

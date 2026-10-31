@@ -250,11 +250,33 @@ public sealed class BottleImageServiceTests
         var user = SeedUser(db);
         var service = CreateService(db, user.Id);
 
-        var result = await service.DeleteImageAsync(Guid.NewGuid(), CancellationToken.None);
+        var result = await service.DeleteImageAsync(Guid.NewGuid(), Guid.NewGuid(), CancellationToken.None);
 
         Assert.False(result.Success);
         Assert.Equal("Image not found.", result.Error);
         Assert.Equal(ErrorCode.NotFound, result.ErrorCode);
+    }
+
+    /// <summary>
+    /// The image belongs to another bottle of the same owner. The route names a bottle that has no such image, so the
+    /// image stays (#72).
+    /// </summary>
+    [Fact]
+    public async Task DeleteImageAsync_WhenImageBelongsToAnotherBottle_ReturnsNotFoundAndKeepsTheImage()
+    {
+        using var db = CreateDbContext();
+        var user = SeedUser(db);
+        var namedBottle = SeedBottle(db, user.Id);
+        var imagesBottle = SeedBottle(db, user.Id);
+        var image = SeedImage(db, imagesBottle.Id);
+        var service = CreateService(db, user.Id);
+
+        var result = await service.DeleteImageAsync(namedBottle.Id, image.Id, CancellationToken.None);
+
+        Assert.False(result.Success);
+        Assert.Equal("Image not found.", result.Error);
+        Assert.Equal(ErrorCode.NotFound, result.ErrorCode);
+        Assert.False((await db.BottleImages.IgnoreQueryFilters().SingleAsync(i => i.Id == image.Id)).IsDeleted);
     }
 
     [Fact]
@@ -266,7 +288,7 @@ public sealed class BottleImageServiceTests
         var image = SeedImage(db, bottle.Id);
         var service = CreateService(db, user.Id);
 
-        var result = await service.DeleteImageAsync(image.Id, CancellationToken.None);
+        var result = await service.DeleteImageAsync(bottle.Id, image.Id, CancellationToken.None);
 
         Assert.False(result.Success);
         Assert.Equal("Bottle not found.", result.Error);
@@ -283,7 +305,7 @@ public sealed class BottleImageServiceTests
         var image = SeedImage(db, bottle.Id);
         var service = CreateService(db, other.Id);
 
-        var result = await service.DeleteImageAsync(image.Id, CancellationToken.None);
+        var result = await service.DeleteImageAsync(bottle.Id, image.Id, CancellationToken.None);
 
         Assert.False(result.Success);
         Assert.Equal("Forbidden.", result.Error);
@@ -299,7 +321,7 @@ public sealed class BottleImageServiceTests
         var image = SeedImage(db, bottle.Id);
         var service = CreateService(db, user.Id);
 
-        var result = await service.DeleteImageAsync(image.Id, CancellationToken.None);
+        var result = await service.DeleteImageAsync(bottle.Id, image.Id, CancellationToken.None);
 
         Assert.True(result.Success);
         Assert.True(result.Data);
@@ -335,7 +357,7 @@ public sealed class BottleImageServiceTests
 
         var service = CreateService(db, user.Id, webRootPath: webRoot);
 
-        var result = await service.DeleteImageAsync(image.Id, CancellationToken.None);
+        var result = await service.DeleteImageAsync(bottle.Id, image.Id, CancellationToken.None);
 
         Assert.True(result.Success);
         Assert.False(File.Exists(fullPath));
@@ -353,7 +375,7 @@ public sealed class BottleImageServiceTests
         cts.Cancel();
 
         await Assert.ThrowsAsync<OperationCanceledException>(
-            () => service.DeleteImageAsync(image.Id, cts.Token));
+            () => service.DeleteImageAsync(bottle.Id, image.Id, cts.Token));
     }
 
     [Fact]

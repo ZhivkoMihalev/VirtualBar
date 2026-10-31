@@ -24,8 +24,21 @@ jobs:
       contents: read
       pull-requests: write # the coverage comment
     env:
+      # Throwaway database server for the HTTP tests; it exists only for this job, so not a secret.
+      DB_PASSWORD: CiOnly-Passw0rd
       DOTNET_NOLOGO: true
       DOTNET_CLI_TELEMETRY_OPTOUT: true
+
+    # SQL Server for VirtualBar.HttpTests, which start the whole API on it. The unit tests do not use it.
+    services:
+      sqlserver:
+        image: mcr.microsoft.com/mssql/server:2022-latest
+        env:
+          ACCEPT_EULA: 'Y'
+          MSSQL_SA_PASSWORD: CiOnly-Passw0rd # services cannot read env; keep in sync with DB_PASSWORD
+        ports:
+          - 1433:1433
+
     steps:
       - uses: actions/checkout@v7
 
@@ -39,16 +52,53 @@ jobs:
           key: nuget-${{ runner.os }}-${{ hashFiles('**/*.csproj') }}
           restore-keys: nuget-${{ runner.os }}-
 
-      # The test project references every other project, so building it builds the whole backend.
+      # Both test projects reference every other project, so building them builds the whole backend.
       - name: Restore
-        run: dotnet restore VirtualBar.Tests/VirtualBar.Tests.csproj
+        run: |
+          dotnet restore VirtualBar.Tests/VirtualBar.Tests.csproj
+          dotnet restore VirtualBar.HttpTests/VirtualBar.HttpTests.csproj
 
       - name: Build
-        run: dotnet build VirtualBar.Tests/VirtualBar.Tests.csproj --no-restore --configuration Release
+        id: build
+        run: |
+          dotnet build VirtualBar.Tests/VirtualBar.Tests.csproj --no-restore --configuration Release
+          dotnet build VirtualBar.HttpTests/VirtualBar.HttpTests.csproj --no-restore --configuration Release
 
       - name: Test
         run: >
           dotnet test VirtualBar.Tests/VirtualBar.Tests.csproj
+          --no-build --configuration Release
+          --logger trx
+          --collect:"XPlat Code Coverage"
+          --results-directory ./test-results
+
+      # The HTTP tests also run when the unit tests failed, so one push shows every failure.
+      - name: Wait for SQL Server
+        if: ${{ !cancelled() && steps.build.outcome == 'success' }}
+        env:
+          CONTAINER: ${{ job.services.sqlserver.id }}
+        run: |
+          for attempt in $(seq 1 30); do
+            for sqlcmd in /opt/mssql-tools18/bin/sqlcmd /opt/mssql-tools/bin/sqlcmd; do
+              if docker exec "$CONTAINER" "$sqlcmd" -C -S localhost -U sa -P "$DB_PASSWORD" -Q "SELECT 1" -b -o /dev/null 2>/dev/null; then
+                echo "SQL Server is ready (attempt $attempt)."
+                exit 0
+              fi
+            done
+            sleep 3
+          done
+          echo "SQL Server did not become ready."
+          docker logs "$CONTAINER" | tail -n 50
+          exit 1
+
+      # Writes its coverage next to the unit tests', so the report below merges both. GitHub sets CI=true,
+      # under which a test that cannot reach SQL Server fails instead of skipping.
+      - name: HTTP tests
+        if: ${{ !cancelled() && steps.build.outcome == 'success' }}
+        env:
+          VIRTUALBAR_TEST_SQL: Server=localhost,1433;User Id=sa;Password=${{ env.DB_PASSWORD }};TrustServerCertificate=True
+        run: >
+          dotnet test VirtualBar.HttpTests/VirtualBar.HttpTests.csproj
           --no-build --configuration Release
           --logger trx
           --collect:"XPlat Code Coverage"

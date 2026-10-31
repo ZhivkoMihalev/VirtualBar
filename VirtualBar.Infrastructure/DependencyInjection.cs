@@ -87,7 +87,8 @@ public static class DependencyInjection
 
         services.AddScoped<ProductCatalogService>();
         services.AddScoped<IProductCatalogService>(sp => new ProductCatalogValidationDecorator(
-            sp.GetRequiredService<ProductCatalogService>()));
+            sp.GetRequiredService<ProductCatalogService>(),
+            sp.GetRequiredService<AppDbContext>()));
 
         services.AddScoped<ProductRequestService>();
         services.AddScoped<IProductRequestService>(sp => new ProductRequestValidationDecorator(

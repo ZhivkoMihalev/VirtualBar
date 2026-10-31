@@ -33,7 +33,7 @@ If `PricesControllerTests` is the pattern for controllers, add `ProductsControll
 three actions (200 / 400 / 404 mapping). Otherwise skip — `ToActionResult` is already covered.
 
 ### Shared review projection
-`BottleReviewServiceTests` must still pass unchanged after extracting `ReviewProjections` (that is
+`BottleReviewServiceTests` must still pass unchanged after extracting `ReviewMapping` (that is
 the regression test for the move).
 
 ## E2E — `VirtualBar.Web/tests/catalog.spec.ts`

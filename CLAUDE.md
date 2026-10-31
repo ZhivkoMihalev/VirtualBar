@@ -24,7 +24,7 @@ VirtualBar/
 │   ├── Services/              # xUnit unit tests (one file per service)
 │   ├── Integration/           # cross-service flow tests (real service graph, no mocks)
 │   ├── Persistence/           # EF model conventions (UTC DateTime round-trip)
-│   └── Api/                   # API helpers (ResultExtensions: status code + error body)
+│   └── Api/                   # API helpers (ResultExtensions: status code + error body) + controller tests
 └── VirtualBar.Web/            # React + Vite 8 + Tailwind CSS 4 frontend
 
 **Target framework:** .NET 9 (`net9.0`)
@@ -564,6 +564,11 @@ Canonical catalog entry for a spirits product. Not user-owned.
 **API endpoints (`/api/products`):**
 - `GET /api/products?search=&category=&limit=` — `[AllowAnonymous]` catalog search; `search` trimmed, min 2 chars, max 100; `limit` clamped 1–**51** (default 20) — the cap is deliberately one over the 50 a client renders, so asking for 51 and getting 51 back proves there are more matches without a count query; `ProductSelect` uses exactly that to decide whether to show its "refine your search" hint; matches `Name`/`Brand`/`Distillery.Name` (contains; case-insensitivity comes from the SQL Server collation, not the code); starts-with ranked first; the returned `Brand` falls back to the non-deleted distillery name exactly as the barcode endpoint does, so both paths agree on the same product
 - `GET /api/products/barcode/{barcode}` — `[Authorize]`; catalog L0 → external UPC fallback
+- `GET /api/products/browse?search=&category=&page=&pageSize=` — `[AllowAnonymous]`; the public `/catalog` → `PagedResult<ProductCardDto> { Items, HasMore }`. `search` is optional (omitted/blank lists the whole catalog ordered `Name, Id`; a term filters and ranks exactly like the search endpoint, 2–100 chars); `page` ≥ 1 (≤ 1000, beyond → `400`); `pageSize` clamped 1–48 (default 24). Each card adds `OwnersCount` (distinct users), `ReviewsCount`, `AverageScore` and `ListingsCount` over the product's non-deleted linked bottles
+- `GET /api/products/{id}` — `[AllowAnonymous]`; the `/product/:id` page → `ProductDetailDto`: the product (+ `Description`) plus, over every non-deleted linked bottle, the review aggregate (`AverageScore`, `ReviewsCount`, top-3 `TopFlavors` with the same tie-break as a bottle), `OwnersCount` + the top 20 `Owners` ranked by physical bottles (`Sum(Quantity)`), every for-sale `Listings` entry (newest first) and the 5 `LatestReviews`; `404` unknown/deleted product
+- `GET /api/products/{id}/reviews?page=&pageSize=` — `[AllowAnonymous]`; the rest of the product's reviews, newest first → `PagedResult<BottleReviewDto>`; `pageSize` clamped 1–50 (default 10); `404` unknown/deleted product
+
+All three are **computed on read** (no stored aggregates, no migration) and use `pageSize + 1` for `HasMore` instead of a count query. Reviews on the product page are mapped through the same `ReviewMapping.ToDto` as the bottle reviews, so the two cannot drift.
 
 ### ProductRequest
 A user's request to add a missing product to the catalog.

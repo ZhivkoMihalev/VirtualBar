@@ -183,6 +183,7 @@ goes there as a file of its own, not into this file**, and gets a line in the li
 
 Current rules:
 - `bug-issues.md`: every bug found gets its own bug issue right away.
+- `regression-tests.md`: every bug fix comes with a test that fails without the fix, so the bug cannot come back.
 
 ---
 

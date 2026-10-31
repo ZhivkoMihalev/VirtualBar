@@ -27,6 +27,7 @@ VirtualBar/
 │   └── Api/                   # API helpers (ResultExtensions: status code + error body) + controller tests
 ├── VirtualBar.HttpTests/      # the whole API over HTTP (WebApplicationFactory) on SQL Server
 │   ├── Support/               # test host, shared throwaway database, email pickup reader, [SqlServerFact]
+│   ├── Access/                # access matrix: the anonymous endpoints listed, 401 without a token for the rest
 │   ├── Auth/                  # email confirmation, email failure, error reasons, JWT + logout
 │   └── Startup/               # configuration Program.cs refuses to start with
 ├── VirtualBar.Web/            # React + Vite 8 + Tailwind CSS 4 frontend
@@ -778,6 +779,13 @@ codes, JWT validation and the startup guards. They are not a place for branch co
   startup guards.
 - **Assert the wire format:** read bodies as `JsonElement` (`AuthApi.JsonAsync`), whose `GetProperty` is
   case-sensitive, so a test also pins the camelCase names and the `{ error, reason }` shape the frontend reads.
+- **The access matrix** (`Access/EndpointAccessTests.cs`) reads every controller endpoint from the running app's
+  `EndpointDataSource`. The endpoints a visitor may call without a token are written out in its `AnonymousEndpoints`
+  list, and the test fails until the attributes and the list agree. So a new `[AllowAnonymous]` endpoint, or a removed
+  one, goes into that list in the same change, as a deliberate decision. Every other endpoint must answer 401 without a
+  token, and every listed one must answer without 401 or a 5xx. Requests carry placeholder route values and a body in
+  the content type the endpoint accepts: routing checks that before authentication, so an upload endpoint answers a
+  JSON body with 415, not 401. The OpenAPI and Scalar endpoints (Development only) are not part of the matrix.
 - Method naming as in the service tests: `<Endpoint>_When<Condition>_<ExpectedOutcome>`.
 
 ### Frontend tests (`VirtualBar.Web.Tests`)
@@ -814,7 +822,7 @@ codes, JWT validation and the startup guards. They are not a place for branch co
 
 ## Security Rules
 
-- All controllers require `[Authorize]`. Public endpoints (browse public bars, view bottle details) use `[AllowAnonymous]` explicitly.
+- All controllers require `[Authorize]`. Public endpoints (browse public bars, view bottle details) use `[AllowAnonymous]` explicitly, and are listed in `AnonymousEndpoints` in `VirtualBar.HttpTests/Access/EndpointAccessTests.cs` (see Testing Conventions → HTTP tests).
 - Every mutation on a user-owned resource checks `resource.UserId == currentUser.UserId`.
 - `appsettings.Development.json` is gitignored. Connection strings and JWT keys never go in committed files.
 - Only EF Core LINQ queries — no raw SQL. If raw SQL is ever added, parameterize it.

@@ -8,5 +8,11 @@ export const getBottleEstimate = (bottleId: string): Promise<PriceEstimate | nul
     .get<PriceEstimate>(`/prices/bottle/${bottleId}`)
     .then(r => (r.status === 204 || !r.data ? null : r.data))
 
+// The snapshot every bottle linked to the product shares. Same cache-only contract: 204 → null.
+export const getProductEstimate = (productId: string): Promise<PriceEstimate | null> =>
+  client
+    .get<PriceEstimate>(`/prices/product/${productId}`)
+    .then(r => (r.status === 204 || !r.data ? null : r.data))
+
 export const getCollectionValue = () =>
   client.get<CollectionValue>('/prices/collection').then(r => r.data)

@@ -40,7 +40,9 @@ panel and as a small badge on bottle cards. The bottle owner gets a **notificati
    already-reviewed pre-check is only a friendly fast path; `BottleReviewService.AddReviewAsync` maps the
    index violation (`DbUpdateException`) to `Conflict` when a concurrent create loses the race.
 3. **Reviews attach to the bottle instance** (like likes/comments), not to a canonical product.
-   ProductKey-level aggregation across identical bottles is a **parked** future option (discovery phase).
+   Aggregation across identical bottles shipped in #50 as a **read-only** view: the product page
+   (`/product/:id`, `docs/product-page/`) gathers the reviews of every bottle linked to a catalog
+   product; nothing is stored per product.
 4. **The owner CAN review their own bottle** — a collector's tasting journal for their own bar is the
    primary use case. No self-notification (the existing `NotificationValidationDecorator` already skips
    `recipientId == currentUser.UserId`).

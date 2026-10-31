@@ -11,6 +11,7 @@ export default function Footer() {
   const navLinks = [
     { to: '/', label: t('nav.home') },
     { to: '/browse', label: t('nav.browse') },
+    { to: '/catalog', label: t('nav.catalog') },
     { to: '/marketplace', label: t('nav.marketplace') },
     ...(isAuthenticated ? [{ to: '/dashboard', label: t('nav.myBar') }] : []),
   ]

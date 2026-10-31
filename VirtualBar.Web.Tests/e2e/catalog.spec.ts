@@ -1,4 +1,4 @@
-import { test, expect, Page } from '@playwright/test'
+import { test, expect, type Page } from '@playwright/test'
 
 /**
  * E2E coverage for the public catalog (/catalog) and the product page (/product/:id), issue #50.

@@ -32,8 +32,10 @@ When invoked:
 
 **Стил:** Tailwind CSS 4 utility classes. Цветова тема: тъмни amber/stone тонове (evoke whisky). Акцент: `amber-500` / `amber-600`. Фон: `stone-900` / `stone-800`. Текст: `stone-100` / `stone-300`.
 
-След имплементацията — провери build-а:
+След имплементацията — провери lint, тестовете и build-а (от корена на repo-то; npm workspaces):
 ```bash
-cd VirtualBar.Web && npm run build
+npm run lint    # и двата workspace-а — 0 problems
+npm test        # Vitest unit/component тестовете във VirtualBar.Web.Tests — 0 failed
+npm run build   # VirtualBar.Web — ✓ built in ...
 ```
-Очаквано: `✓ built in ...` без грешки. После дай кратко резюме на файловете и ключовите решения.
+Очаквано: и трите без грешки. Тестовете се пишат във `VirtualBar.Web.Tests/unit/`, не във `VirtualBar.Web`. После дай кратко резюме на файловете и ключовите решения.

@@ -36,7 +36,7 @@ three actions (200 / 400 / 404 mapping). Otherwise skip — `ToActionResult` is 
 `BottleReviewServiceTests` must still pass unchanged after extracting `ReviewMapping` (that is
 the regression test for the move).
 
-## E2E — `VirtualBar.Web/tests/catalog.spec.ts`
+## E2E — `VirtualBar.Web.Tests/e2e/catalog.spec.ts`
 Logged out: open `/catalog` → results without a term → search a seeded product name → open it →
 heading shows the name, no estimate section. Logged in (reuse the helpers from `reviews.spec.ts`):
 add a bottle linked to that product, review it → the product page shows the score and the review.

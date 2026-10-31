@@ -20,8 +20,8 @@ dist/
 .env.local
 
 ## Playwright generated output
-VirtualBar.Web/test-results/
-VirtualBar.Web/playwright-report/
+VirtualBar.Web.Tests/test-results/
+VirtualBar.Web.Tests/playwright-report/
 
 ## OS
 .DS_Store

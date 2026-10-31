@@ -1,0 +1,31 @@
+{
+  // Type-checks the tests and the configs. The app's own files are checked again here only as far as a test
+  // imports them, with the same compiler options as VirtualBar.Web/tsconfig.app.json.
+  "compilerOptions": {
+    "target": "es2023",
+    "lib": ["ES2023", "DOM"],
+    "module": "esnext",
+    "types": ["node", "vite/client"],
+    "skipLibCheck": true,
+
+    "paths": {
+      "@/*": ["../VirtualBar.Web/src/*"]
+    },
+
+    /* Bundler mode */
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "resolveJsonModule": true,
+    "verbatimModuleSyntax": true,
+    "moduleDetection": "force",
+    "noEmit": true,
+    "jsx": "react-jsx",
+
+    /* Linting */
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "erasableSyntaxOnly": true,
+    "noFallthroughCasesInSwitch": true
+  },
+  "include": ["unit", "e2e", "vitest.config.ts", "playwright.config.ts"]
+}

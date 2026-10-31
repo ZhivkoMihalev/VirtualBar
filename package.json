@@ -1,0 +1,16 @@
+{
+  "name": "virtualbar",
+  "private": true,
+  "workspaces": [
+    "VirtualBar.Web",
+    "VirtualBar.Web.Tests"
+  ],
+  "scripts": {
+    "dev": "npm run dev -w VirtualBar.Web",
+    "lint": "npm run lint --workspaces",
+    "build": "npm run build -w VirtualBar.Web",
+    "typecheck": "npm run typecheck -w VirtualBar.Web.Tests",
+    "test": "npm test -w VirtualBar.Web.Tests",
+    "test:e2e": "npm run test:e2e -w VirtualBar.Web.Tests"
+  }
+}

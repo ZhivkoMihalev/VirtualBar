@@ -4,7 +4,7 @@
 
 ## Goal
 **All** backend unit tests for Bottle Reviews, written **after the whole backend is implemented** (per the
-testing-last protocol from `docs/collection-value/`). **100% branch** for every new service method.
+testing-last protocol from `docs/features/collection-value/`). **100% branch** for every new service method.
 
 ## `BottleReviewServiceTests` (new class, `VirtualBar.Tests/Services/`)
 Test **through the decorator** (the `CreateService` helper returns

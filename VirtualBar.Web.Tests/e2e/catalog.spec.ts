@@ -2,7 +2,7 @@ import { test, expect, type Page } from '@playwright/test'
 
 /**
  * E2E coverage for the public catalog (/catalog) and the product page (/product/:id), issue #50.
- * Plan: docs/product-page/07-tests-and-docs.md.
+ * Plan: docs/features/product-page/07-tests-and-docs.md.
  *
  * Real app: Vite dev server (:5173, started by Playwright's webServer config) against the running
  * backend API (:5000) and its seeded catalog. Throwaway users are registered through the API and the

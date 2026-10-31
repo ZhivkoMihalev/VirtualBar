@@ -269,7 +269,7 @@ Test every text-bearing change in **both** `bg` and `en`. Bulgarian is default; 
 
 ## 11. Slice index, dependencies & recommended order
 
-Execute in ID order. Each has its own `docs/shadcn-migration/NN-*.md`.
+Execute in ID order. Each has its own `docs/features/shadcn-migration/NN-*.md`.
 
 | Slice | Doc | Depends on | Notes |
 |---|---|---|---|

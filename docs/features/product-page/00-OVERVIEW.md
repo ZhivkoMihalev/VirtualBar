@@ -2,7 +2,7 @@
 
 > **Read this first, before any slice.** Single source of truth for the decisions, the architecture,
 > the conventions and the risks. Each `NN-*.md` slice assumes you read this. Format mirrors
-> `docs/product-catalog/` and `docs/bottle-reviews/`. Tracking issue: **#50**.
+> `docs/features/product-catalog/` and `docs/features/bottle-reviews/`. Tracking issue: **#50**.
 
 > **Approach — the product becomes a page, the bottle stays the truth.** Reviews, listings and
 > ownership stay attached to the bottle instance. A product page is a set of **read-only queries**
@@ -21,9 +21,9 @@
 - Two bottles linked to the same product share **one** price snapshot (one Claude call, one cache row).
 
 ## 2. What is parked today (and is un-parked by this feature)
-- `docs/product-catalog/00-OVERVIEW.md` §7: "Public catalog browse page", "Per-product review
+- `docs/features/product-catalog/00-OVERVIEW.md` §7: "Public catalog browse page", "Per-product review
   aggregation", "Pricing convergence".
-- `docs/bottle-reviews/00-OVERVIEW.md` decision 3 (reviews attach to the bottle; aggregation parked).
+- `docs/features/bottle-reviews/00-OVERVIEW.md` decision 3 (reviews attach to the bottle; aggregation parked).
   Decision 3 itself **stays**: reviews are still written per bottle. Only the read side aggregates.
 
 ## 3. Locked decisions

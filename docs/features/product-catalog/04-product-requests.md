@@ -77,7 +77,7 @@ Primary ctor: `(AppDbContext db, ICurrentUser currentUser, INotificationService 
      **requester**, never the approving admin. Last line before the `Ok`, after the save and the
      notification, exactly like the `OfferAccepted` hooks; the `Conflict` return in step 2 means a
      lost race awards nothing. `ProductRequestService` gained an `IBadgeService` constructor
-     parameter for it. See `docs/badges/00-OVERVIEW.md` §3 "Added after this slice".
+     parameter for it. See `docs/features/badges/00-OVERVIEW.md` §3 "Added after this slice".
 - **`RejectAsync`** — `Status = Rejected`, `AdminNote`, `RespondedAt`, save, then
   `CreateAsync(request.UserId, NotificationType.ProductRequestRejected, request.Id, request.Name, ...)`.
 

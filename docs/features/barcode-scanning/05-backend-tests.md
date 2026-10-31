@@ -4,7 +4,7 @@
 
 ## Goal
 **All** backend unit tests for Barcode/Label Scanning, written **after the whole backend is implemented**
-(testing-last protocol from `docs/collection-value/`). **100% branch** for every new/changed service
+(testing-last protocol from `docs/features/collection-value/`). **100% branch** for every new/changed service
 method.
 
 ## `BottleServiceTests` — additions (slice 01)

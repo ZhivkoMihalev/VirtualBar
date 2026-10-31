@@ -2,7 +2,7 @@
 
 > **Read this first, before any slice.** Single source of truth for the decisions, the architecture,
 > the conventions, and the risks. Each `NN-*.md` slice assumes you read this. Format mirrors
-> `docs/collection-value/`.
+> `docs/features/collection-value/`.
 
 > **Approach — structured ratings on the existing social surface.** Deep research (verified against
 > Whiskybase, Distiller, Drammer primary docs) showed a structured **score + tasting-note system** is the
@@ -41,7 +41,7 @@ panel and as a small badge on bottle cards. The bottle owner gets a **notificati
    index violation (`DbUpdateException`) to `Conflict` when a concurrent create loses the race.
 3. **Reviews attach to the bottle instance** (like likes/comments), not to a canonical product.
    Aggregation across identical bottles shipped in #50 as a **read-only** view: the product page
-   (`/product/:id`, `docs/product-page/`) gathers the reviews of every bottle linked to a catalog
+   (`/product/:id`, `docs/features/product-page/`) gathers the reviews of every bottle linked to a catalog
    product; nothing is stored per product.
 4. **The owner CAN review their own bottle** — a collector's tasting journal for their own bar is the
    primary use case. No self-notification (the existing `NotificationValidationDecorator` already skips

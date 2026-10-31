@@ -2,7 +2,7 @@ import { test, expect, type Page } from '@playwright/test'
 
 /**
  * E2E coverage for the Bottle Reviews frontend feature.
- * Gate: docs/bottle-reviews/06-frontend.md (§Gate).
+ * Gate: docs/features/bottle-reviews/06-frontend.md (§Gate).
  *
  * Real app: Vite dev server (:5173, started by Playwright's webServer config) against the
  * running backend API (:5000). Fresh users/bottles are created per test via the API (the

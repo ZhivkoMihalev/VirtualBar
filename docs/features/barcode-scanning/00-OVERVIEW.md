@@ -2,7 +2,7 @@
 
 > **Read this first, before any slice.** Single source of truth for the decisions, the architecture,
 > the conventions, and the risks. Each `NN-*.md` slice assumes you read this. Format mirrors
-> `docs/collection-value/` and `docs/bottle-reviews/`.
+> `docs/features/collection-value/` and `docs/features/bottle-reviews/`.
 
 > **Approach — camera scan + layered lookup + AI label reading.** Deep research (BoozApp/BAXUS 75k-bottle
 > scanner, Whiskybase barcode+label scanner, Drammer's ~20k crowdsourced barcode DB) confirmed scan-to-add

@@ -2,7 +2,7 @@
 
 > **Read this first, before any slice.** Single source of truth for the decisions, the architecture,
 > the conventions, and the risks. Each `NN-*.md` slice assumes you read this. Format mirrors
-> `docs/collection-value/`, `docs/bottle-reviews/`, `docs/barcode-scanning/`.
+> `docs/features/collection-value/`, `docs/features/bottle-reviews/`, `docs/features/barcode-scanning/`.
 
 > **Approach — a pure-code award engine on the existing event stream.** Deep research (Drammer's 50+
 > earnable badges — the "Untappd for whisky" retention mechanic) ranked gamification as the cheapest
@@ -169,7 +169,7 @@ ProfilePage (earned + progress bars)   PublicBarPage (earned strip)   Notificati
   correct in practice; a user who unlisted everything pre-feature misses it — acceptable).
 
 ## 7. Open questions (decide during build)
-- **Review badges** (`FirstReview`, `Reviewer10`) — natural additions **after** `docs/bottle-reviews/`
+- **Review badges** (`FirstReview`, `Reviewer10`) — natural additions **after** `docs/features/bottle-reviews/`
   ships; the engine needs zero changes (new trigger + count-kind + defs). Parked as the first catalog
   extension.
 - **Backfill for dormant users** (§3.10) — ship without, measure, decide.

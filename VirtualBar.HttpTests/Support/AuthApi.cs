@@ -36,13 +36,21 @@ internal static class AuthApi
     public static async Task<JsonElement> JsonAsync(this HttpResponseMessage response) =>
         await response.Content.ReadFromJsonAsync<JsonElement>();
 
-    /// <summary>A 200 auth response that issued no token and asks the user to confirm their email.</summary>
+    /// <summary>
+    /// The 200 answer register gives with email confirmation on, checked in full: it asks the user to confirm their
+    /// email, issues no token, carries no user and nothing else. A new email and an email that already has an account
+    /// both get exactly this, so the answer does not reveal which emails are registered (#66).
+    /// </summary>
     public static async Task AssertConfirmationRequestedAsync(HttpResponseMessage response)
     {
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         var body = await response.JsonAsync();
+        Assert.Equal(
+            new[] { "requiresEmailConfirmation", "token", "user" },
+            body.EnumerateObject().Select(property => property.Name).Order(StringComparer.Ordinal));
         Assert.True(body.GetProperty("requiresEmailConfirmation").GetBoolean());
         Assert.Equal("", body.GetProperty("token").GetString());
+        Assert.Equal(JsonValueKind.Null, body.GetProperty("user").ValueKind);
     }
 
     /// <summary>A 200 auth response with a token, which it returns.</summary>

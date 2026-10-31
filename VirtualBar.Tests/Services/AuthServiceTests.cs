@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Http;
@@ -730,12 +731,13 @@ public sealed class AuthServiceTests
         // Act
         var result = await authService.RegisterAsync(request, CancellationToken.None);
 
-        // Assert
+        // Assert — no user: an email that already has an account gets this same answer, and has no new user to show
         Assert.True(result.Success);
         Assert.NotNull(result.Data);
         Assert.True(result.Data.RequiresEmailConfirmation);
         Assert.Empty(result.Data.Token);
-        Assert.NotNull(result.Data.User);
+        Assert.Null(result.Data.User);
+        Assert.True(await db.Users.AnyAsync(u => u.Email == "confirm-me@example.com"));
         emailMock.Verify(
             e => e.SendEmailConfirmationAsync(
                 "confirm-me@example.com",
@@ -775,7 +777,7 @@ public sealed class AuthServiceTests
         Assert.NotNull(result.Data);
         Assert.True(result.Data.RequiresEmailConfirmation);
         Assert.Empty(result.Data.Token);
-        Assert.NotNull(result.Data.User);
+        Assert.Null(result.Data.User);
         Assert.True(await db.Users.AnyAsync(u => u.Email == "smtp-down@example.com"));
         loggerMock.Verify(
             l => l.Log(
@@ -824,6 +826,10 @@ public sealed class AuthServiceTests
         var emailMock = CreateEmailServiceMock();
         var authService = CreateAuthService(db, config, emailMock.Object, identityOptions: RequireConfirmedEmailOptions());
 
+        var newAccount = await authService.RegisterAsync(
+            new RegisterRequest { Email = "free@example.com", Password = "ValidPass123", DisplayName = "New User" },
+            CancellationToken.None);
+
         var request = new RegisterRequest
         {
             Email = "taken@example.com",
@@ -834,13 +840,18 @@ public sealed class AuthServiceTests
         // Act
         var result = await authService.RegisterAsync(request, CancellationToken.None);
 
-        // Assert — same shape as a fresh registration; existence is not revealed
+        // Assert — every field equals the new email's answer (compared as JSON, so a field added later is compared too);
+        // nothing in it reveals that the email already has an account
+        Assert.True(newAccount.Success);
         Assert.True(result.Success);
         Assert.NotNull(result.Data);
+        Assert.Equal(JsonSerializer.Serialize(newAccount.Data), JsonSerializer.Serialize(result.Data));
         Assert.True(result.Data.RequiresEmailConfirmation);
+        Assert.Empty(result.Data.Token);
+        Assert.Null(result.Data.User);
         emailMock.Verify(
             e => e.SendEmailConfirmationAsync(
-                It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()),
+                "taken@example.com", It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()),
             Times.Never);
     }
 

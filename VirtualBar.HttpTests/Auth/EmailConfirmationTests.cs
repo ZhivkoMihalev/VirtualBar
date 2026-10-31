@@ -88,12 +88,13 @@ public sealed class EmailConfirmationTests(ApiHosts hosts)
     {
         var client = Api.CreateClient();
         var email = AuthApi.NewEmail("taken");
-        await client.RegisterAsync(email);
+        var first = await client.RegisterAsync(email);
 
         var second = await client.RegisterAsync(email);
 
-        // Status, flag and token match a new account's answer, so they do not reveal which emails have an account.
+        // The whole answer, byte for byte, is the one the new account got, so it does not reveal that the email is taken.
         await AuthApi.AssertConfirmationRequestedAsync(second);
+        Assert.Equal(await first.Content.ReadAsStringAsync(), await second.Content.ReadAsStringAsync());
         Assert.Single(Api.Mailbox.To(email));
     }
 }

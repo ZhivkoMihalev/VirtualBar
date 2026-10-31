@@ -127,12 +127,12 @@ export interface AuthResponse {
 
 /**
  * POST /auth/register. With email confirmation on, the new account cannot sign in until the link in the email is
- * opened: the token is empty and requiresEmailConfirmation is true. The user is null when the email already had
- * an account, because the API answers the same either way and so never reveals which addresses are registered.
+ * opened: the token is empty, the user is null and requiresEmailConfirmation is true. An email that already has an
+ * account gets exactly the same answer, so the API never reveals which addresses are registered.
  */
 export type RegisterResponse =
   | (AuthResponse & { requiresEmailConfirmation: false })
-  | { token: string; user: User | null; requiresEmailConfirmation: true }
+  | { token: string; user: null; requiresEmailConfirmation: true }
 
 /** What AuthContext.register did: signed the user in, or left them to confirm their email first. */
 export type RegisterOutcome = 'signedIn' | 'emailConfirmationRequired'

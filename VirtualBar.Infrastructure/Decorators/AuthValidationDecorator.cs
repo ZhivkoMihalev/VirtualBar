@@ -27,7 +27,7 @@ public sealed class AuthValidationDecorator(
         if (existing is not null)
         {
             if (userManager.Options.SignIn.RequireConfirmedEmail)
-                return Result<AuthResponse>.Ok(new AuthResponse { RequiresEmailConfirmation = true });
+                return Result<AuthResponse>.Ok(AuthService.ConfirmationRequiredResponse());
 
             return Result<AuthResponse>.Conflict("An account with this email already exists.", AuthErrorReasons.EmailTaken);
         }

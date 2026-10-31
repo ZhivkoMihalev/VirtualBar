@@ -43,15 +43,17 @@ public sealed class AuthService(
         if (userManager.Options.SignIn.RequireConfirmedEmail)
         {
             await TrySendConfirmationEmailAsync(user, request.Language, cancellationToken);
-            return Result<AuthResponse>.Ok(new AuthResponse
-            {
-                RequiresEmailConfirmation = true,
-                User = MapUser(user)
-            });
+            return Result<AuthResponse>.Ok(ConfirmationRequiredResponse());
         }
 
         return Result<AuthResponse>.Ok(BuildAuthResponse(user));
     }
+
+    // With email confirmation on, register gives this same answer for a new email and for an email that already has
+    // an account (AuthValidationDecorator), so the answer never reveals which emails are registered. It therefore
+    // carries no user: only the new account has one to show.
+    internal static AuthResponse ConfirmationRequiredResponse() =>
+        new() { RequiresEmailConfirmation = true };
 
     // Login authenticates in AuthValidationDecorator (password + lockout/confirmation checks) which then
     // calls IssueTokenFor. The inner service must NEVER be the login entry point — issuing a token here

@@ -171,7 +171,7 @@ test.describe('Email confirmation', () => {
       registerLanguage = route.request().postDataJSON().language
       const response = await route.fetch()
       const body = await response.json()
-      await route.fulfill({ response, json: { ...body, token: '', requiresEmailConfirmation: true } })
+      await route.fulfill({ response, json: { ...body, token: '', user: null, requiresEmailConfirmation: true } })
     })
 
     await page.goto('/register')

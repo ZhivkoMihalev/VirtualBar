@@ -95,16 +95,18 @@ public sealed class PreWarmWorker(
                 b.Category,
                 b.Age,
                 b.VintageYear,
-                b.VolumeMl))
+                b.VolumeMl,
+                b.Product != null && !b.Product.IsDeleted ? b.Product.CanonicalKey : null))
             .ToListAsync(cancellationToken);
 
         if (bottles.Count == 0)
             return [];
 
-        // Group by canonical key → ownership count + a representative bottle id (ProductKey is computed
-        // in C#, so the grouping cannot run in the database).
+        // Group by price key → ownership count + a representative bottle id (the key is computed in C#,
+        // so the grouping cannot run in the database). Every copy of a linked product lands in one group,
+        // and the representative resolves to the same key inside the orchestrator.
         var groups = bottles
-            .GroupBy(b => ProductKey.For(b.DistilleryName, b.Name, b.Category, b.Age, b.VintageYear, b.VolumeMl))
+            .GroupBy(b => PriceKey.ForBottle(b.ProductCanonicalKey, b.DistilleryName, b.Name, b.Category, b.Age, b.VintageYear, b.VolumeMl))
             .Select(g => new CanonicalGroup(g.Key, g.Count(), g.First().Id))
             .ToList();
 
@@ -136,7 +138,8 @@ public sealed class PreWarmWorker(
         SpiritCategory Category,
         int? Age,
         int? VintageYear,
-        int? VolumeMl);
+        int? VolumeMl,
+        string? ProductCanonicalKey);
 
     private sealed record CanonicalGroup(string ProductKey, int OwnershipCount, Guid RepresentativeBottleId);
 

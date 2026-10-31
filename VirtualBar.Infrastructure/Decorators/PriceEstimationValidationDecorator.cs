@@ -24,6 +24,12 @@ public sealed class PriceEstimationValidationDecorator(
         return await inner.GetCachedBottleEstimateAsync(bottleId, cancellationToken);
     }
 
+    public async Task<Result<PriceEstimateDto>> GetCachedProductEstimateAsync(Guid productId, CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        return await inner.GetCachedProductEstimateAsync(productId, cancellationToken);
+    }
+
     public async Task<Result<CollectionValueDto>> GetCollectionValueAsync(Guid userId, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();

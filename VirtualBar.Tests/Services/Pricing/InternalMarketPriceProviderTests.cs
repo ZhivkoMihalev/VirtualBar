@@ -81,6 +81,80 @@ public sealed class InternalMarketPriceProviderTests
         db.SaveChanges();
     }
 
+    private const string ProductCanonicalKey = "whisky|macallan|sherry oak|18yo|700";
+
+    private static Product SeedProduct(AppDbContext db, bool isDeleted = false)
+    {
+        var product = new Product
+        {
+            Name = "Sherry Oak 18",
+            Brand = "Macallan",
+            Category = SpiritCategory.Whisky,
+            Age = 18,
+            VolumeMl = 700,
+            CanonicalKey = ProductCanonicalKey,
+            Origin = ProductOrigin.Seeded,
+            IsDeleted = isDeleted,
+        };
+        db.Products.Add(product);
+        db.SaveChanges();
+        return product;
+    }
+
+    private static Bottle SeedLinkedBottle(AppDbContext db, Guid productId, string name, int? vintageYear, decimal? askingPrice = null)
+    {
+        var bottle = SeedBottle(db, name: name, askingPrice: askingPrice, currency: askingPrice is null ? null : "EUR");
+        bottle.VintageYear = vintageYear;
+        bottle.ProductId = productId;
+        db.SaveChanges();
+        return bottle;
+    }
+
+    private static PriceProviderInput ProductInput() =>
+        new("Sherry Oak 18", "Macallan", SpiritCategory.Whisky, 18, null, 700, null, ProductCanonicalKey);
+
+    [Fact]
+    public async Task TryEstimateAsync_WhenListingsOnLinkedBottles_MatchTheProductKeyWhateverTheVintage()
+    {
+        await using var db = CreateDbContext();
+        var product = SeedProduct(db);
+        SeedLinkedBottle(db, product.Id, "Mac 18 1998", vintageYear: 1998, askingPrice: 100m);
+        SeedLinkedBottle(db, product.Id, "Macallan Sherry", vintageYear: null, askingPrice: 200m);
+        var provider = Create(db, minSamples: 2);
+
+        var estimate = await provider.TryEstimateAsync(ProductInput(), CancellationToken.None);
+
+        Assert.NotNull(estimate);
+        Assert.Equal(2, estimate!.SampleSize);
+    }
+
+    [Fact]
+    public async Task TryEstimateAsync_WhenAcceptedOfferOnLinkedBottle_MatchesTheProductKey()
+    {
+        await using var db = CreateDbContext();
+        var product = SeedProduct(db);
+        var bottle = SeedLinkedBottle(db, product.Id, "Mac 18 2001", vintageYear: 2001);
+        SeedAcceptedOffer(db, bottle.Id, 300m, "EUR");
+        var provider = Create(db);
+
+        var estimate = await provider.TryEstimateAsync(ProductInput(), CancellationToken.None);
+
+        Assert.NotNull(estimate);
+        Assert.Equal(1, estimate!.SampleSize);
+    }
+
+    [Fact]
+    public async Task TryEstimateAsync_WhenLinkedProductDeleted_BottleMatchesByItsOwnKey()
+    {
+        await using var db = CreateDbContext();
+        var product = SeedProduct(db, isDeleted: true);
+        SeedLinkedBottle(db, product.Id, "Macallan 18", vintageYear: null, askingPrice: 100m);
+        var provider = Create(db);
+
+        Assert.Null(await provider.TryEstimateAsync(ProductInput(), CancellationToken.None));
+        Assert.NotNull(await provider.TryEstimateAsync(MatchingInput(), CancellationToken.None));
+    }
+
     [Fact]
     public async Task TryEstimateAsync_WhenDisabled_ReturnsNull()
     {

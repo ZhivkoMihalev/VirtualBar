@@ -177,6 +177,73 @@ public sealed class PreWarmWorkerTests
         Assert.Equal(2, await db.PriceSnapshots.CountAsync());
     }
 
+    private const string ProductCanonicalKey = "whisky|macallan|sherry oak|18yo|700";
+
+    private static Product SeedProduct(AppDbContext db)
+    {
+        var product = new Product
+        {
+            Name = "Sherry Oak 18",
+            Brand = "Macallan",
+            Category = SpiritCategory.Whisky,
+            Age = 18,
+            VolumeMl = 700,
+            CanonicalKey = ProductCanonicalKey,
+            Origin = ProductOrigin.Seeded,
+        };
+        db.Products.Add(product);
+        db.SaveChanges();
+        return product;
+    }
+
+    private static void SeedLinkedBottle(AppDbContext db, Guid productId, string name, int? vintageYear = null)
+    {
+        db.Bottles.Add(new Bottle
+        {
+            UserId = Guid.NewGuid(),
+            Name = name,
+            Category = SpiritCategory.Whisky,
+            VintageYear = vintageYear,
+            Condition = BottleCondition.Sealed,
+            ProductId = productId,
+        });
+        db.SaveChanges();
+    }
+
+    [Fact]
+    public async Task PreWarmAsync_WhenBottlesLinkedToOneProduct_ResearchesTheProductOnceAndRanksItByAllCopies()
+    {
+        await using var db = CreateDbContext();
+        var product = SeedProduct(db);
+        SeedBottle(db, "Lagavulin"); // seeded first, so it would win a tie on insertion order
+        SeedLinkedBottle(db, product.Id, "Mac 18", vintageYear: 1998);
+        SeedLinkedBottle(db, product.Id, "Macallan Sherry Oak");
+        var (worker, claude) = CreateWorker(db, topN: 1, dailyBudget: 10);
+
+        var researched = await worker.PreWarmAsync(CancellationToken.None);
+
+        Assert.Equal(1, researched);
+        Assert.Equal(1, claude.CallCount);
+        Assert.Equal(ProductCanonicalKey, (await db.PriceSnapshots.SingleAsync()).ProductKey);
+    }
+
+    [Fact]
+    public async Task PreWarmAsync_WhenProductSnapshotFresh_SkipsAllLinkedBottles()
+    {
+        await using var db = CreateDbContext();
+        var product = SeedProduct(db);
+        SeedLinkedBottle(db, product.Id, "Mac 18", vintageYear: 1998);
+        SeedLinkedBottle(db, product.Id, "Macallan Sherry Oak");
+        SeedBottle(db, "Lagavulin");
+        SeedSnapshot(db, ProductCanonicalKey, DateTime.UtcNow);
+        var (worker, claude) = CreateWorker(db, topN: 10, dailyBudget: 10);
+
+        var researched = await worker.PreWarmAsync(CancellationToken.None);
+
+        Assert.Equal(1, researched); // only Lagavulin
+        Assert.Equal(1, claude.CallCount);
+    }
+
     [Fact]
     public async Task PreWarmAsync_SkipsFreshSnapshots()
     {

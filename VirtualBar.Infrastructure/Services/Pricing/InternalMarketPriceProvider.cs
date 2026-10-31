@@ -47,7 +47,8 @@ public sealed class InternalMarketPriceProvider(
                 b.Category,
                 b.Age,
                 b.VintageYear,
-                b.VolumeMl))
+                b.VolumeMl,
+                b.Product != null && !b.Product.IsDeleted ? b.Product.CanonicalKey : null))
             .ToListAsync(cancellationToken);
 
         AddMatching(listings, input, points);
@@ -67,7 +68,8 @@ public sealed class InternalMarketPriceProvider(
                 o.Bottle.Category,
                 o.Bottle.Age,
                 o.Bottle.VintageYear,
-                o.Bottle.VolumeMl))
+                o.Bottle.VolumeMl,
+                o.Bottle.Product != null && !o.Bottle.Product.IsDeleted ? o.Bottle.Product.CanonicalKey : null))
             .ToListAsync(cancellationToken);
 
         AddMatching(acceptedOffers, input, points);
@@ -89,7 +91,7 @@ public sealed class InternalMarketPriceProvider(
     {
         foreach (var c in candidates)
         {
-            var key = ProductKey.For(c.DistilleryName, c.Name, c.Category, c.Age, c.VintageYear, c.VolumeMl);
+            var key = PriceKey.ForBottle(c.ProductCanonicalKey, c.DistilleryName, c.Name, c.Category, c.Age, c.VintageYear, c.VolumeMl);
             if (key == input.ProductKey)
                 points.Add(new PricePoint(c.Amount, c.Currency));
         }
@@ -103,5 +105,6 @@ public sealed class InternalMarketPriceProvider(
         SpiritCategory Category,
         int? Age,
         int? VintageYear,
-        int? VolumeMl);
+        int? VolumeMl,
+        string? ProductCanonicalKey);
 }

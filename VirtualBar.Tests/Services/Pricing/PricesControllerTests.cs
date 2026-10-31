@@ -53,6 +53,41 @@ public sealed class PricesControllerTests
     }
 
     [Fact]
+    public async Task GetProductEstimate_WhenCached_ReturnsOk()
+    {
+        var dto = new PriceEstimateDto { EstimatedPrice = 250m };
+        var stub = new StubPriceEstimationService { ProductResult = Result<PriceEstimateDto>.Ok(dto) };
+        var controller = new PricesController(stub, CurrentUser(Guid.NewGuid()));
+
+        var result = await controller.GetProductEstimate(Guid.NewGuid(), CancellationToken.None);
+
+        var ok = Assert.IsType<OkObjectResult>(result);
+        Assert.Same(dto, ok.Value);
+    }
+
+    [Fact]
+    public async Task GetProductEstimate_WhenNoEstimateCached_ReturnsNoContent()
+    {
+        var stub = new StubPriceEstimationService { ProductResult = Result<PriceEstimateDto>.Ok(null!) };
+        var controller = new PricesController(stub, CurrentUser(Guid.NewGuid()));
+
+        var result = await controller.GetProductEstimate(Guid.NewGuid(), CancellationToken.None);
+
+        Assert.IsType<NoContentResult>(result);
+    }
+
+    [Fact]
+    public async Task GetProductEstimate_WhenProductMissing_ReturnsNotFound()
+    {
+        var stub = new StubPriceEstimationService { ProductResult = Result<PriceEstimateDto>.NotFound("Product not found.") };
+        var controller = new PricesController(stub, CurrentUser(Guid.NewGuid()));
+
+        var result = await controller.GetProductEstimate(Guid.NewGuid(), CancellationToken.None);
+
+        Assert.IsType<NotFoundObjectResult>(result);
+    }
+
+    [Fact]
     public async Task GetCollectionValue_ReturnsOkForCurrentUser()
     {
         var userId = Guid.NewGuid();

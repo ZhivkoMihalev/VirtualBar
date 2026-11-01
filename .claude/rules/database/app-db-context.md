@@ -1,17 +1,31 @@
 ---
 paths:
-  - "**/*.cs"
+  - "VirtualBar.Domain/**"
+  - "VirtualBar.Infrastructure/**"
+  - "VirtualBar.Tests/**"
 ---
 
 # Database — AppDbContext
 
 `AppDbContext` extends `IdentityDbContext<AppUser, IdentityRole<Guid>, Guid>`.
 
-**Global rule:** all FK delete behavior defaults to `DeleteBehavior.Restrict` (set via a loop in `OnModelCreating`). Cascade deletes are added only explicitly per entity.
+## Global rules
+- **Delete behaviour:** all FK delete behavior defaults to `DeleteBehavior.Restrict` (set via a loop in
+  `OnModelCreating`). Cascade deletes are added only explicitly per entity.
+- **Every `DateTime` round-trips as UTC.**
+  - `ConfigureConventions` maps every `DateTime` / `DateTime?` property through `UtcDateTimeConverter` /
+    `NullableUtcDateTimeConverter` (`VirtualBar.Infrastructure/Persistence/Conversions/`).
+  - Reason: `datetime2` carries no offset, so EF materialises values as `DateTimeKind.Unspecified`, System.Text.Json
+    then omits the `Z`, and clients parse UTC as local time. Every timestamp in the API was shifted by the viewer's
+    offset (a seconds-old notification rendered as "3h ago" in UTC+3).
+  - Reading always re-stamps `Utc`. Writing converts only an explicitly `Local` value and leaves `Unspecified`
+    untouched (assumed already UTC — shifting it would corrupt data).
+  - Keep writing `DateTime.UtcNow`; **never** compensate for the offset on the frontend.
+  - Pure conversion — no schema change, no migration.
+  - Pinned by `VirtualBar.Tests/Persistence/UtcDateTimeConverterTests.cs`, whose round-trip tests need **SQLite** (EF
+    InMemory returns the same CLR instance and so preserves `Kind` on its own, hiding the bug).
 
-**Global rule — every `DateTime` round-trips as UTC.** `ConfigureConventions` maps every `DateTime` / `DateTime?` property through `UtcDateTimeConverter` / `NullableUtcDateTimeConverter` (`VirtualBar.Infrastructure/Persistence/Conversions/`). Reason: `datetime2` carries no offset, so EF materialises values as `DateTimeKind.Unspecified`, System.Text.Json then omits the `Z`, and clients parse UTC as local time — every timestamp in the API was shifted by the viewer's offset (a seconds-old notification rendered as "3h ago" in UTC+3). Reading always re-stamps `Utc`; writing converts only an explicitly `Local` value and leaves `Unspecified` untouched (assumed already UTC — shifting it would corrupt data). Keep writing `DateTime.UtcNow`; **never** compensate for the offset on the frontend. Pure conversion — no schema change, no migration. Pinned by `VirtualBar.Tests/Persistence/UtcDateTimeConverterTests.cs`, whose round-trip tests need **SQLite** (EF InMemory returns the same CLR instance and so preserves `Kind` on its own, hiding the bug).
-
-Key DbSets:
+## Key DbSets
 
 | DbSet | Purpose |
 |---|---|
@@ -35,8 +49,11 @@ Key DbSets:
 | `Products` | Canonical spirits catalog (seeded via `ProductSeeder` + admin-approved requests) — powers add-form autocomplete, auto-linking, barcode L0 |
 | `ProductRequests` | User-filed requests to add a missing catalog product — admin approves/rejects; one pending per canonical key |
 
-All entities extend `BaseEntity` which adds `Id (Guid)`, `CreatedAt`, `UpdatedAt`, `IsDeleted`, `DeletedAt`.
-
-**Soft delete:** an entity that extends `BaseEntity` is deleted by setting `IsDeleted = true` and `DeletedAt`, and every query filters `!IsDeleted`. Only junction rows without `BaseEntity` are removed physically: unlike and unfollow delete their row, and a review update replaces its flavor rows.
-
-`BottleLike`, `UserFollow`, `DistilleryCategory`, `BottleReviewFlavor`, and `UserBadge` are junction tables with composite PKs — no `BaseEntity`.
+## BaseEntity and soft delete
+- All entities extend `BaseEntity` which adds `Id (Guid)`, `CreatedAt`, `UpdatedAt`, `IsDeleted`, `DeletedAt`.
+- `BottleLike`, `UserFollow`, `DistilleryCategory`, `BottleReviewFlavor`, and `UserBadge` are junction tables with
+  composite PKs — no `BaseEntity`.
+- **Soft delete:** an entity that extends `BaseEntity` is deleted by setting `IsDeleted = true` and `DeletedAt`, and
+  every query filters `!IsDeleted`.
+- Only junction rows without `BaseEntity` are removed physically: unlike and unfollow delete their row, and a review
+  update replaces its flavor rows.

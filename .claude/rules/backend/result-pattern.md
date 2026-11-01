@@ -25,4 +25,13 @@ Result<T>.Conflict("Already exists.")     // → 409
 Result<T>.Fail("Name is required.")       // → 400 (validation)
 ```
 
-The error body is `{ error }`. `Fail` and `Conflict` take an optional **reason**: a stable, machine-readable value that `ToActionResult` adds as `{ error, reason }` so the frontend can show a translated message instead of the English `error` text. The auth endpoints use it (`AuthErrorReasons` in `VirtualBar.Application/Common`: `InvalidCredentials`, `LockedOut`, `EmailNotConfirmed`, `EmailTaken`; the frontend translates them in the `authErrors` i18n namespace via `src/lib/authErrors.ts`). Reason values are API contract: never rename one. Login deliberately has a single `InvalidCredentials` for unknown email and wrong password, so it does not reveal which accounts exist.
+## Error body and reasons
+- The error body is `{ error }`.
+- `Fail` and `Conflict` take an optional **reason**: a stable, machine-readable value that `ToActionResult` adds as
+  `{ error, reason }`, so the frontend can show a translated message instead of the English `error` text.
+- The auth endpoints use it: `AuthErrorReasons` in `VirtualBar.Application/Common` (`InvalidCredentials`, `LockedOut`,
+  `EmailNotConfirmed`, `EmailTaken`). The frontend translates them in the `authErrors` i18n namespace via
+  `src/lib/authErrors.ts`.
+- Reason values are API contract: never rename one.
+- Login deliberately has a single `InvalidCredentials` for unknown email and wrong password, so it does not reveal
+  which accounts exist.

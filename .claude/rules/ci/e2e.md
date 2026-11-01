@@ -7,4 +7,36 @@ paths:
 
 # E2E
 
-`.github/workflows/e2e.yml` (the **E2E** check) runs the Playwright suite in `VirtualBar.Web.Tests/e2e` on Chromium against the real stack: SQL Server 2022 in a service container, the API in `Development` on a fresh database (migrations + seeders run on startup), and the Vite dev server of `VirtualBar.Web` that `VirtualBar.Web.Tests/playwright.config.ts` starts. It is too slow for every PR, so it runs nightly on `master` (02:17 UTC), on demand (Actions → E2E → Run workflow), and on PRs labelled **`e2e`**; it is therefore not a required check. CI-only config overrides, set as environment variables in the workflow: `Identity:RequireConfirmedEmail=false` (the tests log new users straight in), `Email:PickupDirectory` (every email is written there as an `.eml` file instead of sent; `email-confirmation.spec.ts` reads the same directory through the `E2E_MAIL_DIR` environment variable and opens the link in the email), `RateLimiting:AuthPermitLimit=10000` (`Program.cs` defaults to 10 auth requests a minute per IP, which the suite exceeds from one machine), `Anthropic:UseProviderStats=false` and `Pricing:RefreshEnabled=false`. The Playwright HTML report (traces + screenshots of failures) and the API log are uploaded as artifacts. To run the suite locally, start the API with the same overrides: the **`api-e2e`** configuration in `.claude/launch.json` passes them as command-line arguments and writes the emails to `VirtualBar.Web.Tests/.e2e-mail/` (gitignored). It uses the database of `appsettings.Development.json`, and the suite fills that database with test collectors, bottles, listings, offers, wishes and messages. Then run `cd VirtualBar.Web.Tests && E2E_MAIL_DIR=<absolute path of .e2e-mail> npx playwright test --project=chromium`. CI runs one test at a time (`workers: 1`); a local run at Playwright's default parallelism makes many browsers compete for the CPU against the unbundled dev server, which can push the older specs' 5 s assertions over their limit, so `--workers=1` reproduces CI. `Email:PickupDirectory` is for development only: the API refuses to start with it in any other environment, where it would silently stop every email.
+`.github/workflows/e2e.yml` (the **E2E** check) runs the Playwright suite in `VirtualBar.Web.Tests/e2e` on Chromium
+against the real stack:
+- SQL Server 2022 in a service container;
+- the API in `Development` on a fresh database (migrations + seeders run on startup);
+- the Vite dev server of `VirtualBar.Web` that `VirtualBar.Web.Tests/playwright.config.ts` starts.
+
+## When it runs
+- It is too slow for every PR, so it runs nightly on `master` (02:17 UTC), on demand (Actions → E2E → Run workflow),
+  and on PRs labelled **`e2e`**.
+- It is therefore not a required check.
+
+## CI-only config overrides
+Set as environment variables in the workflow:
+- `Identity:RequireConfirmedEmail=false`: the tests log new users straight in.
+- `Email:PickupDirectory`: every email is written there as an `.eml` file instead of sent. `email-confirmation.spec.ts`
+  reads the same directory through the `E2E_MAIL_DIR` environment variable and opens the link in the email.
+- `RateLimiting:AuthPermitLimit=10000`: `Program.cs` defaults to 10 auth requests a minute per IP, which the suite
+  exceeds from one machine.
+- `Anthropic:UseProviderStats=false` and `Pricing:RefreshEnabled=false`.
+
+The Playwright HTML report (traces + screenshots of failures) and the API log are uploaded as artifacts.
+
+## Running it locally
+- Start the API with the same overrides: the **`api-e2e`** configuration in `.claude/launch.json` passes them as
+  command-line arguments and writes the emails to `VirtualBar.Web.Tests/.e2e-mail/` (gitignored).
+- It uses the database of `appsettings.Development.json`, and the suite fills that database with test collectors,
+  bottles, listings, offers, wishes and messages.
+- Then run `cd VirtualBar.Web.Tests && E2E_MAIL_DIR=<absolute path of .e2e-mail> npx playwright test --project=chromium`.
+- CI runs one test at a time (`workers: 1`). A local run at Playwright's default parallelism makes many browsers compete
+  for the CPU against the unbundled dev server, which can push the older specs' 5 s assertions over their limit, so
+  `--workers=1` reproduces CI.
+- `Email:PickupDirectory` is for development only: the API refuses to start with it in any other environment, where it
+  would silently stop every email.

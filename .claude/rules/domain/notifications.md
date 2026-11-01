@@ -17,7 +17,7 @@ paths:
 
 Both FK relations use `DeleteBehavior.Restrict`. Composite index on `(UserId, IsDeleted, CreatedAt)`.
 
-**NotificationType enum:**
+## NotificationType enum
 | Value | Triggered by |
 |---|---|
 | `BottleLiked` | `BottleLikeService.LikeAsync` |
@@ -35,10 +35,20 @@ Both FK relations use `DeleteBehavior.Restrict`. Composite index on `(UserId, Is
 | `ProductRequestApproved` | `ProductRequestService.ApproveAsync` — sent to the requester (`ResourceId` = new/linked product id, `ResourceName` = product name) |
 | `ProductRequestRejected` | `ProductRequestService.RejectAsync` — sent to the requester (`ResourceId` = request id, `ResourceName` = requested product name) |
 
-**INotificationService methods:**
-- `CreateAsync(recipientId, type, resourceId, resourceName, ct)` — single recipient; decorator skips if `recipientId == currentUser.UserId` (no self-notifications).
-- `CreateBulkAsync(recipientIds, type, resourceId, resourceName, ct)` — fan-out; queries actor display name once, `AddRange` + single `SaveChangesAsync`. Decorator filters out self from the list.
-- `CreateSystemAsync(recipientId, type, resourceId, resourceName, ct)` — system notification with **no self-skip**: the recipient MAY equal the current user (own-milestone notifications); inner sets `ActorId = recipientId` + the recipient's **own** display name (missing recipient → silent return). Used only by the badge engine (`BadgeEarned`). Do NOT "fix" the self-skip on the other two — it protects every other type.
-- All three are fire-and-forget calls from trigger services (not controller-exposed). They return `Task` (not `Result<T>`).
+## INotificationService methods
+- `CreateAsync(recipientId, type, resourceId, resourceName, cancellationToken)` — single recipient; decorator skips if
+  `recipientId == currentUser.UserId` (no self-notifications).
+- `CreateBulkAsync(recipientIds, type, resourceId, resourceName, cancellationToken)` — fan-out; queries actor display
+  name once, `AddRange` + single `SaveChangesAsync`. Decorator filters out self from the list.
+- `CreateSystemAsync(recipientId, type, resourceId, resourceName, cancellationToken)` — system notification with **no
+  self-skip**:
+  - the recipient MAY equal the current user (own-milestone notifications);
+  - inner sets `ActorId = recipientId` + the recipient's **own** display name (missing recipient → silent return);
+  - used only by the badge engine (`BadgeEarned`);
+  - do NOT "fix" the self-skip on the other two — it protects every other type.
+- All three are fire-and-forget calls from trigger services (not controller-exposed). They return `Task` (not
+  `Result<T>`).
+
+## API endpoints
 - `GET /api/notifications` — returns last 30 + global unread count.
 - `PATCH /api/notifications/{id}/read` and `POST /api/notifications/read-all`.

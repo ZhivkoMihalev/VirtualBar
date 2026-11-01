@@ -6,7 +6,19 @@ This file provides guidance to Claude Code when working with code in this reposi
 
 ## What is VirtualBar
 
-VirtualBar is a platform for collectors of premium spirits (whisky, rum, cognac, vodka and more). Every user gets a **virtual bar** — a public profile showcasing their collection. Others can browse collections, follow collectors, like and comment on bottles, leave **structured reviews** (0–100 score + tasting notes + flavor tags), send direct messages, and buy/sell limited editions through a built-in marketplace. The home page (`/`) is a social news feed showing admin-authored articles and activity from followed users. Users receive **in-app notifications** when someone likes/comments their bottle, follows them, sends a message, or when someone they follow adds a bottle or lists one for sale. Users can add bottles to a **wish list** and get notified when a matching bottle appears for sale. Any user can **make an offer** on any bottle in another collector's bar (regardless of whether it is listed for sale); the seller receives a notification and can accept, decline, or ignore. Collectors earn **permanent achievement badges** for milestones (first bottle, 10 bottles, 5 categories, 50 likes received, first sale…) — shown with progress on the own profile and as an earned-only strip on the public bar. The platform maintains an admin-curated **product catalog** of canonical spirits: adding a bottle links it to a catalog product (explicit pick or silent exact-match auto-link), and an unknown bottle silently files a **product request** the admin approves (creating the product and retro-linking identical bottles) or rejects — the add flow is never blocked. Anyone, logged in or not, can browse that catalog at **`/catalog`** and open a **product page** (`/product/:id`) that gathers every collector's bottle of it: the community score and top flavors, the owners, the current listings and all the reviews, computed on read. Direct messaging is handled via a **floating chat widget** (Facebook Messenger style) accessible from every page.
+VirtualBar is a platform for collectors of premium spirits (whisky, rum, cognac, vodka and more).
+- Every user gets a **virtual bar** — a public profile showcasing their collection.
+- Others can browse collections, follow collectors, like and comment on bottles, leave **structured reviews** (0–100 score + tasting notes + flavor tags), send direct messages, and buy/sell limited editions through a built-in marketplace.
+- The home page (`/`) is a social news feed showing admin-authored articles and activity from followed users.
+- Users receive **in-app notifications** when someone likes/comments their bottle, follows them, sends a message, or when someone they follow adds a bottle or lists one for sale.
+- Users can add bottles to a **wish list** and get notified when a matching bottle appears for sale.
+- Any user can **make an offer** on any bottle in another collector's bar (regardless of whether it is listed for sale); the seller receives a notification and can accept, decline, or ignore.
+- Collectors earn **permanent achievement badges** for milestones (first bottle, 10 bottles, 5 categories, 50 likes received, first sale…) — shown with progress on the own profile and as an earned-only strip on the public bar.
+- The platform maintains an admin-curated **product catalog** of canonical spirits: adding a bottle links it to a catalog product (explicit pick or silent exact-match auto-link).
+- An unknown bottle silently files a **product request** the admin approves (creating the product and retro-linking identical bottles) or rejects — the add flow is never blocked.
+- Anyone, logged in or not, can browse that catalog at **`/catalog`** and open a **product page** (`/product/:id`) that gathers every collector's bottle of it: the community score and top flavors, the owners, the current listings and all the reviews, computed on read.
+- Direct messaging is handled via a **floating chat widget** (Facebook Messenger style) accessible from every page.
+- A forgotten password is reset through a link sent by email.
 
 **User roles:** Collector (all registered users). Platform administrators have `IsAdmin = true` on their `AppUser` record — seeded via `AdminEmail` in `appsettings.Development.json` on startup.
 
@@ -139,7 +151,11 @@ See `.claude/rules/testing/http.md`.
 ## CRITICAL RULES — Never Violate
 
 - `CancellationToken` parameter is always named `cancellationToken`. Never `ct`, never `token`.
-- Never delete or modify database records without asking the user first. EF Core migrations that ADD schema are fine. For any `DELETE`, `UPDATE`, `ExecuteDeleteAsync`, `ExecuteUpdateAsync`, or drop-column migration — stop and ask. For migrations the **Migration guard** CI check enforces this: it blocks the PR until it carries the `db-destructive-approved` label.
+- Never delete or modify database records without asking the user first.
+  - EF Core migrations that ADD schema are fine.
+  - For any `DELETE`, `UPDATE`, `ExecuteDeleteAsync`, `ExecuteUpdateAsync`, or drop-column migration — stop and ask.
+  - For migrations the **Migration guard** CI check enforces this: it blocks the PR until it carries the
+    `db-destructive-approved` label.
 - After every backend change: run `dotnet build` (0 errors required) and the relevant test class.
 - After every frontend change: run, from the repo root, `npm run lint` (0 problems — CI blocks on it), `npm test` (0 failed) and `npm run build` (clean output required).
 - Every new service method needs 100% branch coverage in tests.
@@ -162,11 +178,11 @@ Every other file has `paths` for the code it describes.
 - `bug-issues.md`: every bug found gets its own bug issue right away.
 - `regression-tests.md`: every bug fix comes with a test that fails without the fix, so the bug cannot come back.
 - `issue-status.md`: the `status: …` labels, what each status means, and `Part of #N` (never `Closes #N`) in a PR.
-- `backend/`: `code-style.md`, `naming.md`, `result-pattern.md`, `ownership-check.md`, `primary-constructor-di.md`, `controller-xml-docs.md`, `cancellation-token.md`, `validation-decorators.md`, `service-registration.md`, `admin.md`, `middleware.md`, `startup.md`.
+- `backend/`: `result-pattern.md`, `validation-decorators.md`, `conventions.md` (ownership check, DI, registration, `CancellationToken`, naming, code style, XML docs, admin), `middleware.md`, `startup.md`.
 - `database/`: `app-db-context.md` (global delete behaviour and UTC rules, the DbSets).
 - `domain/`: one file per feature, with its entities, endpoints and design: `users.md`, `bottles.md`, `reviews.md`, `follows.md`, `messages.md`, `news.md`, `notifications.md`, `distilleries.md`, `wish-list.md`, `offers.md`, `pricing.md` (with Collection Value), `badges.md`, `catalog.md`.
-- `frontend/`: `api-and-data.md`, `i18n.md`, `routing.md`, `shared-components.md`, `contexts.md`, `app-shell-and-theme.md`.
-- `testing/`: `backend-unit.md`, `integration.md`, `http.md`, `frontend-unit.md`, `e2e.md`.
+- `frontend/`: `conventions.md` (auth, API layer, data, types, contexts, i18n, app shell and theme), `routing.md`, `shared-components.md`.
+- `testing/`: `backend.md` (service and integration tests), `http.md`, `frontend-unit.md`, `e2e.md`.
 - `ci/`: `workflows.md`, `migration-guard.md`, `e2e.md`, `codeql-and-dependabot.md`.
 
 ---

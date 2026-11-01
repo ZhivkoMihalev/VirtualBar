@@ -16,11 +16,11 @@ them and name the conflict in your report.
    (CLAUDE.md → Build & Run Commands → Tests).
 2. Read the service's existing test class, or a neighbouring one in `VirtualBar.Tests/Services/`, and copy its style
    exactly: the `CreateXxxService` helper, the seed helpers, the naming.
-3. Write the tests by `.claude/rules/testing/backend-unit.md`. Check these points, which tests get wrong most often:
+3. Write the tests by `.claude/rules/testing/backend.md`. Check these points, which tests get wrong most often:
    - **InMemory or SQLite:** which one the method under test needs;
    - **mocks:** only what the conventions allow, never `AppDbContext`;
    - **isolation:** a fresh database per test, no shared mutable state;
-   - **`Integration/`** uses the real services on purpose (`testing/integration.md`); never replace them with mocks.
+   - **`Integration/`** uses the real services on purpose (`testing/backend.md` → Integration tests); never replace them with mocks.
 4. Reach 100% branch coverage of every new or changed service and decorator method: every `if`, every `switch` arm
    (the `_` default included), every `?.`, `??`, `&&`, `||`, both ways. Run the coverage command from CLAUDE.md and check
    `branch-rate="1"` for each changed class.

@@ -89,9 +89,9 @@ Then add Related rules back from the other side, add the file to the `CLAUDE.md`
 A new file of an existing feature that its rule's `paths` miss: extend those `paths` instead.
 
 **When the code contradicts its own intent** (its XML doc, its spec, the issue it implements): describe what the code
-does, not what it was meant to do. File the bug, and name it in the rule as a known gap, the way
-`.claude/rules/domain/users.md` names #81. Documenting the intended behaviour as if it worked hides the bug from the
-next reader. If it is a mistake in the very change being documented (not yet on `master`), tell the user instead of
+does, not what it was meant to do. File the bug, and name it in the rule as a known gap ("Known gap: #N. What goes
+wrong."); the PR that fixes the bug removes that line. Documenting the intended behaviour as if it worked hides the bug
+from the next reader. If it is a mistake in the very change being documented (not yet on `master`), tell the user instead of
 filing it (`bug-issues.md` → Not a new issue).
 
 **Agents** (`.claude/agents/`): change one only if its role, workflow or report changes. Never copy a rule into it.

@@ -36,3 +36,5 @@ Composite PK: `(ReviewId, Flavor)`. No `BaseEntity`. Cascade delete from `Bottle
 |---|---|
 | `ReviewId` | `Guid` |
 | `Flavor` | `FlavorTag` |
+
+Design record (the spec, written before the code): `docs/features/bottle-reviews/`.

@@ -22,3 +22,5 @@ The 19 badges (every bottle count below sums `Bottle.Quantity`, so one ×5 entry
 **API endpoints (`/api/badges`):**
 - `GET /api/badges/user/{userId}` — `[AllowAnonymous]` (public bars are public); earned badges only, newest first; `404` unknown user
 - `GET /api/badges/progress` — `[Authorize]`; all 19 catalog entries with `current`/`threshold`/`earned`/`awardedAt` for the **current** user (own-only — never exposed for other users)
+
+Design record (the spec, written before the code): `docs/features/badges/`.

@@ -162,7 +162,7 @@ Every other file has `paths` for the code it describes.
 - `bug-issues.md`: every bug found gets its own bug issue right away.
 - `regression-tests.md`: every bug fix comes with a test that fails without the fix, so the bug cannot come back.
 - `issue-status.md`: the `status: …` labels, what each status means, and `Part of #N` (never `Closes #N`) in a PR.
-- `backend/`: `code-style.md`, `result-pattern.md`, `ownership-check.md`, `primary-constructor-di.md`, `controller-xml-docs.md`, `cancellation-token.md`, `validation-decorators.md`, `service-registration.md`, `admin.md`, `middleware.md`, `startup.md`.
+- `backend/`: `code-style.md`, `naming.md`, `result-pattern.md`, `ownership-check.md`, `primary-constructor-di.md`, `controller-xml-docs.md`, `cancellation-token.md`, `validation-decorators.md`, `service-registration.md`, `admin.md`, `middleware.md`, `startup.md`.
 - `database/`: `app-db-context.md` (global delete behaviour and UTC rules, the DbSets).
 - `domain/`: one file per feature, with its entities, endpoints and design: `users.md`, `bottles.md`, `reviews.md`, `follows.md`, `messages.md`, `news.md`, `notifications.md`, `distilleries.md`, `wish-list.md`, `offers.md`, `pricing.md` (with Collection Value), `badges.md`, `catalog.md`.
 - `frontend/`: `api-and-data.md`, `i18n.md`, `routing.md`, `shared-components.md`, `contexts.md`, `app-shell-and-theme.md`.

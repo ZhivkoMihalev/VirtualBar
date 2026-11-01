@@ -67,3 +67,5 @@ A user's request to add a missing product to the catalog.
 - `GET /api/product-requests?status=Pending` — admin queue (`403` non-admin)
 - `PATCH /api/product-requests/{id}/approve` — admin; body `ResolveProductRequestRequest` (**required** — send at least `{}`)
 - `PATCH /api/product-requests/{id}/reject` — admin; body `RejectProductRequestRequest` (**required** — send at least `{}`)
+
+Design records (the specs, written before the code): `docs/features/product-catalog/` and, for the public catalog and the product page, `docs/features/product-page/`.

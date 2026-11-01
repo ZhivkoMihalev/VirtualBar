@@ -55,7 +55,7 @@ Shows an **indicative min–max market value per bottle** and a **total collecti
 
 **Config** (`appsettings.json`; `Anthropic:ApiKey` is empty there — set it in `appsettings.Development.json` / user-secrets, never committed):
 - `Pricing` — `BaseCurrency`, `SnapshotTtlDays` (5), `FxToBase`, `RefreshIntervalHours`, `PreWarmTopNBottles`, `RefreshEnabled`.
-- `Anthropic` — `UseProviderStats` (on/off), `Model` (`claude-sonnet-4-6`), `AnthropicVersion`, `MaxSearchesPerBottle`, `DailyCallBudget`, `AllowedDomains` / `BlockedDomains`.
+- `Anthropic` — `UseProviderStats` (on/off), `Model` (`claude-sonnet-4-6`), `AnthropicVersion`, `MaxSearchesPerBottle`, `DailyCallBudget`, `AllowedDomains` / `BlockedDomains`, `BaseUrl`, `ApiKey`.
 - `InternalProvider` — `UseProviderStats`, `MinSamples`, `MinApproxSamples`.
 
 Full slice-by-slice specs live in `docs/features/collection-value/`.

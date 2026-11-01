@@ -1,5 +1,7 @@
 # Barcode / Label Scanning (Баркод и етикет сканиране) — OVERVIEW & SHARED CONTEXT
 
+> **Status:** planned, not built yet (#49). The barcode lookup that exists today (the catalog first, then the UPC API) is described in `.claude/rules/domain/catalog.md`.
+
 > **Read this first, before any slice.** Single source of truth for the decisions, the architecture,
 > the conventions, and the risks. Each `NN-*.md` slice assumes you read this. Format mirrors
 > `docs/features/collection-value/` and `docs/features/bottle-reviews/`.

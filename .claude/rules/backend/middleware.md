@@ -12,6 +12,7 @@ UseCors
 → RequestResponseLoggingMiddleware   (outermost logger)
   → GlobalExceptionMiddleware        (catches unhandled exceptions)
     → UseStaticFiles
+    → UseRateLimiter                 (the auth rate limit, `RateLimiting:AuthPermitLimit`)
     → UseAuthentication
     → UseAuthorization
     → MapControllers

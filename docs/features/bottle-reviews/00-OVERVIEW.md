@@ -1,5 +1,7 @@
 # Bottle Reviews (Оценки + Tasting Notes) — OVERVIEW & SHARED CONTEXT
 
+> **Status:** design record, written before the code. The code as it is now is described in `.claude/rules/domain/reviews.md`; where the two differ, that file is right.
+
 > **Read this first, before any slice.** Single source of truth for the decisions, the architecture,
 > the conventions, and the risks. Each `NN-*.md` slice assumes you read this. Format mirrors
 > `docs/features/collection-value/`.

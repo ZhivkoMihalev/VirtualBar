@@ -37,4 +37,6 @@ Key DbSets:
 
 All entities extend `BaseEntity` which adds `Id (Guid)`, `CreatedAt`, `UpdatedAt`, `IsDeleted`, `DeletedAt`.
 
+**Soft delete:** an entity that extends `BaseEntity` is deleted by setting `IsDeleted = true` and `DeletedAt`, and every query filters `!IsDeleted`. Only junction rows without `BaseEntity` are removed physically: unlike and unfollow delete their row, and a review update replaces its flavor rows.
+
 `BottleLike`, `UserFollow`, `DistilleryCategory`, `BottleReviewFlavor`, and `UserBadge` are junction tables with composite PKs — no `BaseEntity`.

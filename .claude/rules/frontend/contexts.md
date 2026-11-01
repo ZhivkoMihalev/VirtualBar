@@ -1,3 +1,9 @@
+---
+paths:
+  - "VirtualBar.Web/**"
+  - "VirtualBar.Web.Tests/unit/**"
+---
+
 # Contexts
 
 **Contexts:** each provider file exports only its component; the context object and hook live in a separate `.ts` file (Vite fast refresh needs component-only files — ESLint `react-refresh/only-export-components`). Value types (`AuthContextValue`, `ChatContextValue`) are in `src/types/index.ts`.

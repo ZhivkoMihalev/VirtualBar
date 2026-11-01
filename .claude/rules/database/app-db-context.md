@@ -1,3 +1,8 @@
+---
+paths:
+  - "**/*.cs"
+---
+
 # Database — AppDbContext
 
 `AppDbContext` extends `IdentityDbContext<AppUser, IdentityRole<Guid>, Guid>`.

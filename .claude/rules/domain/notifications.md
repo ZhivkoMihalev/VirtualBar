@@ -1,3 +1,9 @@
+---
+paths:
+  - "**/*Notification*"
+  - "**/notification*"
+---
+
 # Notification
 | Property | Type | Notes |
 |---|---|---|

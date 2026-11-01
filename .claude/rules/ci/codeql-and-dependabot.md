@@ -1,3 +1,10 @@
+---
+paths:
+  - ".github/**"
+  - "**/package.json"
+  - "**/*.csproj"
+---
+
 # CodeQL and Dependabot
 
 **CodeQL** (security scanning of C#, JS/TS and the workflows) runs through GitHub's *default setup*, configured in the repository settings (Advanced Security → Code scanning), not in a workflow file. Findings appear in the Security tab and on PRs.

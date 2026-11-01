@@ -1,3 +1,15 @@
+---
+paths:
+  - "**/*Price*"
+  - "**/price*"
+  - "**/Pricing/**"
+  - "**/*PreWarm*"
+  - "**/*Anthropic*"
+  - "**/*CollectionValue*"
+  - "**/collection-value/**"
+  - "**/ProductKey*"
+---
+
 # Pricing
 
 ## PriceSnapshot

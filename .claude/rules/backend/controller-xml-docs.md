@@ -1,3 +1,8 @@
+---
+paths:
+  - "VirtualBar.Api/**/*.cs"
+---
+
 # Controller XML docs
 
 Every public action must have:

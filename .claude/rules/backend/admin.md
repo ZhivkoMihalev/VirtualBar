@@ -1,3 +1,8 @@
+---
+paths:
+  - "**/*.cs"
+---
+
 # Admin
 
 Admin is determined by `AppUser.IsAdmin` (bool, default `false`). It is:

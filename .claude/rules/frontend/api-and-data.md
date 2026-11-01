@@ -1,3 +1,9 @@
+---
+paths:
+  - "VirtualBar.Web/**"
+  - "VirtualBar.Web.Tests/unit/**"
+---
+
 # Auth, API layer, data fetching and types
 
 **Auth:** JWT stored in `localStorage` (`vbar_token` + `vbar_user`). `useAuth()` exposes `user`, `login`, `logout`. The Axios `client` in `src/api/client.ts` attaches the token as a Bearer header on every request and redirects to `/login` on 401. The `user` object includes `isAdmin: boolean` — set from the JWT claim emitted by `AuthService`.

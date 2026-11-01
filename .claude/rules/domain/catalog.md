@@ -1,3 +1,12 @@
+---
+paths:
+  - "**/*Product*"
+  - "**/product*"
+  - "**/CatalogPage*"
+  - "**/catalog*"
+  - "**/barcode*"
+---
+
 # Product catalog
 
 ## Product

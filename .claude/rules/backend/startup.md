@@ -1,3 +1,10 @@
+---
+paths:
+  - "VirtualBar.Api/Program.cs"
+  - "**/*Seeder*"
+  - "**/SeedData/**"
+---
+
 # Startup Behavior
 
 On `dotnet run`:

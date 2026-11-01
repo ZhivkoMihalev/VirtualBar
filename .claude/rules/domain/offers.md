@@ -1,3 +1,9 @@
+---
+paths:
+  - "**/*Offer*"
+  - "**/offer*"
+---
+
 # Offer
 | Property | Type | Notes |
 |---|---|---|

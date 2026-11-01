@@ -1,3 +1,13 @@
+---
+paths:
+  - "**/*Bottle*"
+  - "**/*bottle*"
+  - "**/BarShelf*"
+  - "**/DashboardPage*"
+  - "**/MarketplacePage*"
+  - "**/PublicBarPage*"
+---
+
 # Bottles
 
 ## Bottle

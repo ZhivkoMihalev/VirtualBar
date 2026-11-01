@@ -1,3 +1,9 @@
+---
+paths:
+  - "**/*Distiller*"
+  - "**/distiller*"
+---
+
 # Distilleries
 
 ## Distillery

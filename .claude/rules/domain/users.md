@@ -1,3 +1,12 @@
+---
+paths:
+  - "**/AppUser*"
+  - "**/*Profile*"
+  - "**/*Auth*"
+  - "**/*auth*"
+  - "**/usersApi*"
+---
+
 # AppUser (extends IdentityUser\<Guid\>)
 | Property | Type | Notes |
 |---|---|---|

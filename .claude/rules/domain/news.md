@@ -32,15 +32,15 @@ Composite PK: `(PostId, LanguageCode)`. Cascade delete from `NewsPost`.
 the first 50 items.
 - `FeedValidationDecorator`: a negative `skip` becomes 0, a `take` outside 1–100 becomes 20, a blank `lang` becomes `bg`.
 - `FeedItemType` (append-only): `News`, `NewBottle`, `ForSale`, `Reviewed`.
-- **News:** the 50 newest non-deleted posts, translated like `NewsService.Resolve` (`lang`, falling back to `bg`).
-  - Known gap: #91. The 50 is fixed, so a page that reaches past the 50th post never returns an older one.
+- **News:** non-deleted posts, translated like `NewsService.Resolve` (`lang`, falling back to `bg`).
 - **Followed activity**, only for a logged-in collector who follows someone:
   - `NewBottle`: a followed collector's non-deleted bottle, at its `CreatedAt`;
   - `ForSale`: their listed bottle, at its `ForSaleAt`;
   - `Reviewed`: their non-deleted review of a non-deleted bottle, at the review's `CreatedAt` (an edit does not bring it
     back to the top). A review of their own bottle shows too.
-- Each followed-activity source loads only its newest `skip + take` items (added as `long`, so a huge `skip` cannot
-  overflow): the page is cut from the merge of every source, so no source can put more on it.
+- Each source, the news included, loads exactly its newest `skip + take` items (added as `long`, so a huge `skip` cannot
+  overflow). The page is cut from the merge of every source, so no source can put more on it, and a page deep in one
+  source still gets every item it needs from it (#91: a fixed 50 news posts once left a page past the 50th empty).
 
 ### A `Reviewed` item
 - `ActorUserId` / `ActorDisplayName` / `ActorAvatarUrl`: the reviewer. `BottleUserId` / `BottleUserDisplayName` stay

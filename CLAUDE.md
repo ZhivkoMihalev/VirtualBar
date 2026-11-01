@@ -228,7 +228,7 @@ Every mutation on a user-owned resource must verify ownership before acting:
 
 ```csharp
 if (bottle.UserId != currentUser.UserId)
-    return Result<bool>.Fail("Forbidden.");
+    return Result<bool>.Forbidden("Forbidden.");
 ```
 
 ### Primary Constructor + DI

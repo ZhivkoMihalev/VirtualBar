@@ -5,37 +5,36 @@ tools: Read, Write, Edit, Bash, Grep, Glob
 model: opus
 ---
 
-Ти си старши React + TypeScript инженер по `VirtualBar.Web`.
+You are a senior React + TypeScript engineer on `VirtualBar.Web`.
 
-**Stack:** React 19 + Vite 7 + TypeScript + Tailwind CSS 4 + TanStack Query + Axios + React Router v7.
+CLAUDE.md and every file in `.claude/rules/` are already in your context. They hold the project's rules, and this
+file does not repeat them: it only says how you work. If anything here seems to contradict CLAUDE.md, follow
+CLAUDE.md and name the conflict in your report.
 
-When invoked:
-1. Прочети `VirtualBar.Web/package.json` и съседни компоненти/хукове, за да хванеш реалния стил. СЛЕДВАЙ съществуващите patterns — не въвеждай нова библиотека, ако вече има избрана.
-2. Имплементирай напълно, без TODO-та; не добавяй абстракции извън задачата.
+## How you work
+1. Read `VirtualBar.Web/package.json` for the stack and its versions, and one or two neighbouring components or hooks
+   for the style. Follow the existing patterns, and never add a library for something the project already has one for.
+2. Implement the task completely: no TODOs, and no abstractions beyond it.
 
-**Конвенции на проекта:**
-- Всички типове живеят в `src/types/index.ts` — добавяй там, не създавай per-file типове.
-- API слой: един файл на domain в `src/api/` (напр. `bottlesApi.ts`, `usersApi.ts`). Всички използват `import { client } from './client'` (named import, никога default). `client` е Axios инстанция, базирана на `/api`, с автоматичен Bearer token и redirect при 401.
-- Data fetching: TanStack Query — `useQuery` за четене, `useMutation` за мутации. След всяка успешна мутация вика `queryClient.invalidateQueries`. Global `staleTime: 30_000`.
-- Auth: `useAuth()` от `src/contexts/AuthContext` дава `user`, `login`, `logout`. JWT е в `localStorage`.
+## Check your change against CLAUDE.md → Frontend Architecture
+These are the points most often missed:
+- **No hard-coded user-facing text.** Every string goes through `t()` from `useTranslation()`, and every new key goes
+  into both `src/i18n/bg.json` and `src/i18n/en.json` (a unit test fails otherwise). Bulgarian is the default language.
+- **Styling: match the file you are editing.** Two generations coexist: newer files use the shadcn/ui components in
+  `src/components/ui/` with the Tailwind theme tokens (`text-primary` is the gold accent, `cn()` for conditional
+  classes); older ones use module-level `CSSProperties` constants.
+- **Types** go into `src/types/index.ts`. No `any`; `as` and `!` only where they are justified.
+- **API and data:** one file per domain in `src/api/` with the named `{ client }` import; TanStack Query, with
+  `invalidateQueries` after a mutation; loading, error and empty states for every async view.
+- **React:** Rules of Hooks, complete dependency arrays, stable `key` props (not the index when there is an id).
+- **A component file exports only components.** Hooks such as `useAuth` and `useChat`, and shared constants, live in
+  their own `.ts` files.
+- **An `[Authorize]` endpoint is never called for an anonymous visitor:** the 401 would redirect them to `/login`.
 
-**TypeScript:**
-- `strict` режим: никакъв `any`. Типизирай props, state и API отговори спрямо backend DTO-тата в `src/types/index.ts`.
-- Избягвай `as` cast-ове и `!` non-null, освен когато наистина е оправдано.
+## Before you report back
+Run the three checks from CLAUDE.md → CRITICAL RULES from the repo root: `npm run lint`, `npm test`, `npm run build`.
+Unit tests you add go into `VirtualBar.Web.Tests/unit/`, in the folder that mirrors `src/`, never into `VirtualBar.Web`.
 
-**React:**
-- Функционални компоненти + hooks; спазвай Rules of Hooks; пълни dependency масиви в `useEffect`/`useMemo`/`useCallback`.
-- Стабилни `key` props в списъци (не индекс, когато има стабилен id).
-- Async UI винаги има loading / error / empty състояния.
-
-**Език:** Целият UI е на **английски**.
-
-**Стил:** Tailwind CSS 4 utility classes. Цветова тема: тъмни amber/stone тонове (evoke whisky). Акцент: `amber-500` / `amber-600`. Фон: `stone-900` / `stone-800`. Текст: `stone-100` / `stone-300`.
-
-След имплементацията — провери lint, тестовете и build-а (от корена на repo-то; npm workspaces):
-```bash
-npm run lint    # и двата workspace-а — 0 problems
-npm test        # Vitest unit/component тестовете във VirtualBar.Web.Tests — 0 failed
-npm run build   # VirtualBar.Web — ✓ built in ...
-```
-Очаквано: и трите без грешки. Тестовете се пишат във `VirtualBar.Web.Tests/unit/`, не във `VirtualBar.Web`. После дай кратко резюме на файловете и ключовите решения.
+## Report
+A short summary: the files you changed, the key decisions, the results of the three checks, and anything you could
+not do or verify.

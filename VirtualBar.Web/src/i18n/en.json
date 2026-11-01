@@ -340,6 +340,8 @@
     "noNews": "No news yet. Check back soon.",
     "addedToCollection": "added to their collection",
     "listedForSale": "listed for sale",
+    "rated": "rated",
+    "fromBarOf": "from {{name}}'s bar",
     "forSale": "FOR SALE",
     "errorLoading": "THE PRESS HAS STALLED",
     "createPostTitle": "NEW ARTICLE",

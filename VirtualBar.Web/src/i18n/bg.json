@@ -340,6 +340,8 @@
     "noNews": "Няма новини. Проверете по-късно.",
     "addedToCollection": "добави към колекцията си",
     "listedForSale": "пусна за продажба",
+    "rated": "оцени",
+    "fromBarOf": "от бара на {{name}}",
     "forSale": "ЗА ПРОДАЖБА",
     "errorLoading": "ПРЕСАТА СПРЯ",
     "createPostTitle": "НОВА СТАТИЯ",

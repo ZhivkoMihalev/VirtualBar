@@ -156,6 +156,8 @@ A user's request to add a missing product to the catalog.
   approve evaluates the requester's badges (`FirstCatalogProduct`, `.claude/rules/domain/badges.md`).
 - `CanonicalKey` is the price key of every linked bottle (`.claude/rules/domain/pricing.md`, Price key rule).
 - The `/catalog` and `/product/:id` pages: `.claude/rules/frontend/routing.md`.
+- The home feed links a followed collector's review of a linked bottle to its product page
+  (`.claude/rules/domain/news.md`).
 
 Design records (the specs, written before the code): `docs/features/product-catalog/` and, for the public catalog and
 the product page, `docs/features/product-page/`.

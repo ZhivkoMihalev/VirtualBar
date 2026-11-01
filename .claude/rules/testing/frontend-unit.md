@@ -1,3 +1,8 @@
+---
+paths:
+  - "VirtualBar.Web.Tests/**"
+---
+
 # Frontend tests (`VirtualBar.Web.Tests`)
 
 **Unit and component tests (`unit/`)** — Vitest + React Testing Library in jsdom, run by `npm test` on every PR.

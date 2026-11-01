@@ -1,3 +1,8 @@
+---
+paths:
+  - ".github/**"
+---
+
 # CI (GitHub Actions)
 
 `.github/workflows/ci.yml` runs on every PR to `master`, every push to `master`, and on demand. Two parallel jobs:

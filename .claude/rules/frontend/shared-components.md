@@ -1,3 +1,9 @@
+---
+paths:
+  - "VirtualBar.Web/**"
+  - "VirtualBar.Web.Tests/unit/**"
+---
+
 # Shared components
 
 **Shared components:**

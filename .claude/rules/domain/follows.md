@@ -1,3 +1,9 @@
+---
+paths:
+  - "**/*Follow*"
+  - "**/usersApi*"
+---
+
 # UserFollow
 Composite PK: `(FollowerId, FollowedId)`. No `BaseEntity`.
 | Property | Type |

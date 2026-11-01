@@ -1,3 +1,11 @@
+---
+paths:
+  - "**/*News*"
+  - "**/news*"
+  - "**/*Feed*"
+  - "**/HomePage*"
+---
+
 # News
 
 ## NewsPost

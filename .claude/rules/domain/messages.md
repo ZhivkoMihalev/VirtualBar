@@ -1,3 +1,10 @@
+---
+paths:
+  - "**/*Message*"
+  - "**/messages*"
+  - "**/*Chat*"
+---
+
 # Message
 | Property | Type | Notes |
 |---|---|---|

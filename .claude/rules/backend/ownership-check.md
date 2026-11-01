@@ -1,3 +1,8 @@
+---
+paths:
+  - "**/*.cs"
+---
+
 # Ownership check
 
 Every mutation on a user-owned resource must verify ownership before acting:

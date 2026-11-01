@@ -1,3 +1,9 @@
+---
+paths:
+  - "VirtualBar.HttpTests/**"
+  - "VirtualBar.Api/**"
+---
+
 # HTTP tests (`VirtualBar.HttpTests`)
 
 A project of its own, because it is the only backend test layer that needs SQL Server: `VirtualBar.Tests` stays

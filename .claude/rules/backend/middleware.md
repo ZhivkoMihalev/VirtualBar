@@ -1,3 +1,8 @@
+---
+paths:
+  - "VirtualBar.Api/**"
+---
+
 # Middleware
 
 Located in `VirtualBar.Api/Middleware/`. Registered in `Program.cs` in this exact order:

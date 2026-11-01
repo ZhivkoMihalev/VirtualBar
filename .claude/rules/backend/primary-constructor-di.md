@@ -1,3 +1,8 @@
+---
+paths:
+  - "**/*.cs"
+---
+
 # Primary Constructor + DI
 
 ```csharp

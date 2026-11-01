@@ -1,3 +1,8 @@
+---
+paths:
+  - "VirtualBar.Tests/**"
+---
+
 # Testing Conventions
 
 - One test class per service: `<ServiceName>Tests` in `VirtualBar.Tests/Services/`.

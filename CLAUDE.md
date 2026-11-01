@@ -99,7 +99,7 @@ npm run lint       # ESLint in both workspaces — must report 0 problems (CI bl
 npm test           # Vitest unit + component tests (VirtualBar.Web.Tests/unit) — must report 0 failed
 npm run typecheck  # tsc over VirtualBar.Web.Tests (unit + e2e + configs)
 npm run build      # VirtualBar.Web production build — must output "✓ built in ..."
-npm run test:e2e   # Playwright (VirtualBar.Web.Tests/e2e) — needs the API running, see CI → E2E
+npm run test:e2e   # Playwright (VirtualBar.Web.Tests/e2e) — needs the API running, see `.claude/rules/ci/e2e.md`
 ```
 
 Inside a workspace folder the same scripts work too (`cd VirtualBar.Web && npm run dev`; in `VirtualBar.Web.Tests`
@@ -132,7 +132,7 @@ dotnet test VirtualBar.HttpTests/VirtualBar.HttpTests.csproj --verbosity minimal
 They need no setup: the server comes from `VIRTUALBAR_TEST_SQL` if set, else from the API's own
 `appsettings.Development.json`. On a machine where no server answers, the SQL tests are **skipped** with the reason
 (the startup-guard tests still run); in CI (`CI=true`) they **fail** instead, so a missing server never passes as green.
-See Testing Conventions → HTTP tests.
+See `.claude/rules/testing/http.md`.
 
 ---
 
@@ -144,13 +144,21 @@ See Testing Conventions → HTTP tests.
 - After every frontend change: run, from the repo root, `npm run lint` (0 problems — CI blocks on it), `npm test` (0 failed) and `npm run build` (clean output required).
 - Every new service method needs 100% branch coverage in tests.
 
-More project rules live in **`.claude/rules/*.md`**, one topic per file (kebab-case name). **Every new project rule
-goes there as a file of its own, not into this file**, and gets a line in the list below.
+More project rules live in **`.claude/rules/`**, one topic per file (kebab-case name), in folders by area. **Every new
+project rule goes there as a file of its own, not into this file**, and is added to the list below.
 - A file without `paths` frontmatter loads in every session, with the same weight as this file.
-- One with `paths` loads only when Claude works with matching files.
-- Custom agents in `.claude/agents/` receive them too.
+- A file with `paths` loads only when Claude reads, writes or edits a matching file (also `cat` or `head` on one file),
+  not when it only searches with Grep or Glob. The patterns are relative to the repo root, and each one is also tried
+  against every folder on the path: `**/badges*` loads `domain/badges.md` for `docs/features/badges/00-OVERVIEW.md`.
+- A new rule gets `paths`, unless it is needed when no code file is open: planning, writing an issue, opening a PR.
+- A reference to a rule with `paths` names its file (`.claude/rules/testing/http.md`), never just its section: the
+  section is not in context until the file loads.
+- Custom agents in `.claude/agents/` receive them too, the rules with `paths` included (checked in #70). A subagent gets
+  the always-loaded files as its session loaded them at start: a rule changed during a session reaches its subagents
+  only from the next session.
 
-Current rules:
+Current rules. **Always loaded:** the first three, `backend/result-pattern.md` and `backend/validation-decorators.md`.
+Every other file has `paths` for the code it describes.
 - `bug-issues.md`: every bug found gets its own bug issue right away.
 - `regression-tests.md`: every bug fix comes with a test that fails without the fix, so the bug cannot come back.
 - `issue-status.md`: the `status: …` labels, what each status means, and `Part of #N` (never `Closes #N`) in a PR.
@@ -165,7 +173,7 @@ Current rules:
 
 ## Security Rules
 
-- All controllers require `[Authorize]`. Public endpoints (browse public bars, view bottle details) use `[AllowAnonymous]` explicitly, and are listed in `AnonymousEndpoints` in `VirtualBar.HttpTests/Access/EndpointAccessTests.cs` (see Testing Conventions → HTTP tests).
+- All controllers require `[Authorize]`. Public endpoints (browse public bars, view bottle details) use `[AllowAnonymous]` explicitly, and are listed in `AnonymousEndpoints` in `VirtualBar.HttpTests/Access/EndpointAccessTests.cs` (see `.claude/rules/testing/http.md`).
 - Every mutation on a user-owned resource checks `resource.UserId == currentUser.UserId`.
 - `appsettings.Development.json` is gitignored. Connection strings and JWT keys never go in committed files.
 - Only EF Core LINQ queries — no raw SQL. If raw SQL is ever added, parameterize it.

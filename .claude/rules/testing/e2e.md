@@ -1,6 +1,14 @@
+---
+paths:
+  - "VirtualBar.Web.Tests/e2e/**"
+  - "VirtualBar.Web.Tests/playwright.config.ts"
+  - ".github/workflows/e2e.yml"
+  - ".claude/launch.json"
+---
+
 # E2E tests
 
-**E2E tests (`e2e/`)** — Playwright against the real stack (see CI → E2E): one spec per feature flow, role/text selectors first, no fixed waits.
+**E2E tests (`e2e/`)** — Playwright against the real stack (see `.claude/rules/ci/e2e.md`): one spec per feature flow, role/text selectors first, no fixed waits.
 - The newer specs (`marketplace`, `offers`, `messages`, `catalog-browse`, `product-page`) build on `e2e/support.ts`:
   - `registerCollector` registers fresh users through the API;
   - the `openAs(who)` fixture (use the `test` exported by `support.ts`) gives each collector a browser context of its own, `null` an anonymous visitor, and closes them all after the test, failed or not. A context left open keeps polling the API every 30 s for the rest of the worker's run;

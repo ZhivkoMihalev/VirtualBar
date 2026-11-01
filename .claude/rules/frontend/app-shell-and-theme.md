@@ -1,3 +1,9 @@
+---
+paths:
+  - "VirtualBar.Web/**"
+  - "VirtualBar.Web.Tests/unit/**"
+---
+
 # App shell and visual theme
 
 **App shell (`src/App.tsx`):** Fixed background image (`/public/bg-room.png`) + darkening overlay both `position: fixed; z-index: -1/-2`, content wrapper wrapped in `ChatProvider`, `<ChatWidget />` before `<Footer />`.

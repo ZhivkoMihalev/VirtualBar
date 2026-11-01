@@ -1,3 +1,10 @@
+---
+paths:
+  - "**/*Review*"
+  - "**/*review*"
+  - "**/*Flavor*"
+---
+
 # Reviews
 
 ## BottleReview

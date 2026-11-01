@@ -1,3 +1,10 @@
+---
+paths:
+  - "**/*Badge*.cs"
+  - "**/BadgeChip*"
+  - "**/badges*"
+---
+
 # UserBadge
 Composite PK: `(UserId, Badge)`. No `BaseEntity`. FK → AppUser (`DeleteBehavior.Restrict`); index on `UserId` for profile/public-bar reads.
 | Property | Type |

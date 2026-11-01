@@ -1,3 +1,10 @@
+---
+paths:
+  - "**/*WishList*"
+  - "**/wishList*"
+  - "**/MarketplacePage*"
+---
+
 # WishListItem
 | Property | Type | Notes |
 |---|---|---|

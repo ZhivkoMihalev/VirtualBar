@@ -50,4 +50,9 @@ npx playwright show-report                # HTML report after a run
 - `--workers=1` reproduces CI. At the default parallelism the older specs' 5 s assertions can time out from CPU load alone.
 
 ## Output
-Report: which scenarios pass/fail (with the failure reason), and separately — the UI/UX observations as recommendations. If a failure points to a real bug in the app (not the test), call it out with how to reproduce it, so the main conversation can file the issue (`.claude/rules/bug-issues.md`); do not tweak the test to make it pass.
+Report:
+- which scenarios pass/fail (with the failure reason);
+- separately — the UI/UX observations as recommendations.
+
+If a failure points to a real bug in the app (not the test), call it out with how to reproduce it, so the main
+conversation can file the issue (`.claude/rules/bug-issues.md`); do not tweak the test to make it pass.

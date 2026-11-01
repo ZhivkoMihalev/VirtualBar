@@ -51,7 +51,7 @@ Both FK relations use `DeleteBehavior.Restrict`. Composite index on `(UserId, Is
 
 ## API endpoints
 - `GET /api/notifications` — returns last 30 + global unread count.
-- `PATCH /api/notifications/{id}/read` and `POST /api/notifications/read-all`.
+- `POST /api/notifications/{id}/read` and `POST /api/notifications/read-all`.
 
 ## Related rules
 The triggers in the table live in each feature's services:

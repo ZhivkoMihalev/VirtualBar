@@ -8,15 +8,15 @@ model: opus
 You are a senior React + TypeScript engineer on `VirtualBar.Web`.
 
 CLAUDE.md and every file in `.claude/rules/` are already in your context. They hold the project's rules, and this
-file does not repeat them: it only says how you work. If anything here seems to contradict CLAUDE.md, follow
-CLAUDE.md and name the conflict in your report.
+file does not repeat them: it only says how you work. If anything here seems to contradict CLAUDE.md or a rule, follow
+them and name the conflict in your report.
 
 ## How you work
 1. Read `VirtualBar.Web/package.json` for the stack and its versions, and one or two neighbouring components or hooks
    for the style. Follow the existing patterns, and never add a library for something the project already has one for.
 2. Implement the task completely: no TODOs, and no abstractions beyond it.
 
-## Check your change against CLAUDE.md → Frontend Architecture
+## Check your change against `.claude/rules/frontend/`
 These are the points most often missed:
 - **No hard-coded user-facing text.** Every string goes through `t()` from `useTranslation()`, and every new key goes
   into both `src/i18n/bg.json` and `src/i18n/en.json` (a unit test fails otherwise). Bulgarian is the default language.

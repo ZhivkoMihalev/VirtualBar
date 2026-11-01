@@ -16,5 +16,5 @@ in code you are changing or only reading, in a test run, in CI, in a review, or 
 
 ## Not a new issue
 - **A mistake in the change you are still making** is part of that work.
-- **A test that fails the issue under test** sends that issue back to `In Progress` (see the status table under CI in
-  CLAUDE.md).
+- **A test that fails the issue under test** sends that issue back to `In Progress` (see the status table in
+  `issue-status.md`).

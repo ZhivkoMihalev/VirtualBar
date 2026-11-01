@@ -19,6 +19,7 @@ import {
 import { getFeed } from '../api/feedApi'
 import type { CreateNewsPostPayload, FeedItem, NewsPost } from '../types'
 import NavBar from '../components/NavBar'
+import Avatar from '../components/Avatar'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -246,6 +247,80 @@ function BottleActivityCard({ item }: { item: FeedItem }) {
       </div>
 
       <BottleThumb url={item.bottlePrimaryImageUrl} category={item.bottleCategory} />
+    </Card>
+  )
+}
+
+/**
+ * "X rated Y": a followed collector's review. It links to the product page when the bottle is linked to the catalog,
+ * under the product's name and brand as the catalog shows them; otherwise to the bar the bottle stands in, naming that
+ * bar when it is not the reviewer's own.
+ */
+function ReviewActivityCard({ item }: { item: FeedItem }) {
+  const { t } = useTranslation()
+  const linked = item.productId != null
+  const title = linked ? item.productName : item.bottleName
+  const linkTo = linked ? `/product/${item.productId}` : `/bar/${item.bottleUserId}`
+  const inOthersBar = !linked && item.bottleUserId !== item.actorUserId
+  const flavors = item.reviewFlavors ?? []
+
+  return (
+    <Card className="group flex flex-row items-start gap-4 border-l-[3px] border-l-primary p-5 transition-all hover:-translate-y-1 hover:shadow-xl">
+      <div className="min-w-0 flex-1">
+        <div className="mb-2 flex flex-wrap items-center gap-2 text-sm italic text-muted-foreground">
+          <Avatar displayName={item.actorDisplayName ?? ''} avatarUrl={item.actorAvatarUrl} size={24} />
+          <Link to={`/bar/${item.actorUserId}`} className="text-primary not-italic hover:underline">
+            {item.actorDisplayName}
+          </Link>
+          <span>{t('home.rated')}</span>
+        </div>
+
+        <Link to={linkTo} className="hover:underline">
+          <h3 className="font-heading text-lg font-semibold text-foreground">{title}</h3>
+        </Link>
+        {linked && item.productBrand && (
+          <p className="text-sm italic text-primary/85">{item.productBrand}</p>
+        )}
+        {inOthersBar && (
+          <p className="text-xs italic text-muted-foreground">
+            {t('home.fromBarOf', { name: item.bottleUserDisplayName })}
+          </p>
+        )}
+
+        <div className="mt-2 flex flex-wrap items-center gap-3">
+          <Badge variant="outline" className="border-primary/40 text-primary">
+            <span className="font-heading text-sm font-semibold">{item.reviewScore}</span>
+            <span className="text-muted-foreground">/100</span>
+          </Badge>
+          {item.bottleCategory && (
+            <Badge variant="outline" className="uppercase">
+              {item.bottleCategory}
+            </Badge>
+          )}
+          <span className="text-xs italic text-muted-foreground">{formatDate(item.timestamp)}</span>
+        </div>
+
+        {item.reviewSummary && (
+          <blockquote className="mt-3 border-l-2 border-primary/30 pl-3 text-sm italic leading-relaxed text-foreground/90">
+            {item.reviewSummary}
+          </blockquote>
+        )}
+
+        {flavors.length > 0 && (
+          <div className="mt-3 flex flex-wrap gap-1.5">
+            {flavors.map(flavor => (
+              <Badge key={flavor} variant="secondary">
+                {t(`flavors.${flavor}`)}
+              </Badge>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* On a phone the review's text needs the whole width more than the card needs a picture. */}
+      <div className="hidden sm:block">
+        <BottleThumb url={item.bottlePrimaryImageUrl} category={item.bottleCategory} />
+      </div>
     </Card>
   )
 }
@@ -580,6 +655,10 @@ export default function HomePage() {
                     onDelete={() => setConfirmDelete(item.postId!)}
                   />
                 )
+              }
+
+              if (item.type === 'Reviewed') {
+                return <ReviewActivityCard key={`review-${item.reviewId}`} item={item} />
               }
 
               return <BottleActivityCard key={`${item.type}-${item.bottleId}`} item={item} />

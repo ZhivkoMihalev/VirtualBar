@@ -190,7 +190,7 @@ export interface NewsPost {
   translations: NewsPostTranslation[]
 }
 
-export type FeedItemType = 'News' | 'NewBottle' | 'ForSale'
+export type FeedItemType = 'News' | 'NewBottle' | 'ForSale' | 'Reviewed'
 
 export interface FeedItem {
   type: FeedItemType
@@ -204,10 +204,26 @@ export interface FeedItem {
   bottleName?: string
   bottleCategory?: string
   bottlePrimaryImageUrl?: string
+  /** The bottle's owner; on a `Reviewed` item the reviewer is the actor instead. */
   bottleUserId?: string
   bottleUserDisplayName?: string
   askingPrice?: number
   currency?: string
+  /** The reviewer of a `Reviewed` item. */
+  actorUserId?: string | null
+  actorDisplayName?: string | null
+  actorAvatarUrl?: string | null
+  reviewId?: string | null
+  reviewScore?: number | null
+  /** The start of the review's summary, already shortened by the API. */
+  reviewSummary?: string | null
+  /** At most three of the review's flavors. */
+  reviewFlavors?: FlavorTag[] | null
+  /** The catalog product the bottle is linked to, when it is not deleted. */
+  productId?: string | null
+  productName?: string | null
+  /** The product's brand, or its distillery when it has none. */
+  productBrand?: string | null
 }
 
 export interface ConversationSummary {

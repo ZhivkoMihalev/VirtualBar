@@ -12,7 +12,7 @@ fix.
   proves nothing.
 - **Name the issue** in the test's doc comment (e.g. `(#66)`), so a later reader knows which bug it guards and does not
   delete it as redundant.
-- Follow the conventions of the test project it goes into (Testing Conventions in CLAUDE.md).
+- Follow the conventions of the test project it goes into (the files in `.claude/rules/testing/`).
 
 ## Where it goes
 At the lowest layer that still fails on the bug, which is the fastest test that can catch it:

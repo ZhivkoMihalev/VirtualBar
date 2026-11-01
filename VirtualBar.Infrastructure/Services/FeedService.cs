@@ -17,8 +17,9 @@ public sealed class FeedService(AppDbContext db, ICurrentUser currentUser) : IFe
 
     public async Task<Result<List<FeedItemDto>>> GetFeedAsync(int skip, int take, string lang, CancellationToken cancellationToken)
     {
-        // The page is cut from the merge of every source, so no followed-activity source can put more than its newest
-        // skip + take items on it. Long arithmetic, so a huge skip cannot overflow into a negative Take.
+        // The page is cut from the merge of every source, so no source can put more than its newest skip + take items
+        // on it, and each one needs all of those (#91). Long arithmetic, so a huge skip cannot overflow into a negative
+        // Take.
         var perSource = (int)Math.Min((long)skip + take, int.MaxValue);
 
         var newsPosts = await db.NewsPosts
@@ -26,7 +27,7 @@ public sealed class FeedService(AppDbContext db, ICurrentUser currentUser) : IFe
             .Include(p => p.Author)
             .Include(p => p.Translations)
             .OrderByDescending(p => p.CreatedAt)
-            .Take(50)
+            .Take(perSource)
             .ToListAsync(cancellationToken);
 
         var newsItems = newsPosts

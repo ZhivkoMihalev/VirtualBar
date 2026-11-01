@@ -927,5 +927,27 @@ public sealed class FeedServiceTests
         Assert.Equal(["Reviewed 3h", "Reviewed 4h"], result.Data!.Select(i => i.BottleName));
     }
 
+    /// <summary>
+    /// The news used to be capped at the 50 newest posts, so a page past the 50th post came back empty although older
+    /// posts were left (#91).
+    /// </summary>
+    [Fact]
+    public async Task GetFeedAsync_WhenPageStartsPastTheFiftiethNewsPost_ReturnsTheOlderPosts()
+    {
+        var db = CreateDbContext();
+        var now = DateTime.UtcNow;
+        var author = SeedUser(db, "Author");
+        for (var hour = 1; hour <= 60; hour++)
+            SeedNewsPost(db, author.Id, [Translation("bg", $"News {hour}h", "")], createdAt: now.AddHours(-hour));
+        var service = CreateFeedService(db);
+
+        var result = await service.GetFeedAsync(50, 20, "bg", CancellationToken.None);
+
+        Assert.True(result.Success);
+        Assert.Equal(
+            Enumerable.Range(51, 10).Select(hour => $"News {hour}h"),
+            result.Data!.Select(i => i.PostTitle));
+    }
+
     #endregion
 }

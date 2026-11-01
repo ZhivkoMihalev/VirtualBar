@@ -152,12 +152,15 @@ project rule goes there as a file of its own, not into this file**, and is added
 - Custom agents in `.claude/agents/` receive them too, the rules with `paths` included (checked in #70). A subagent gets
   the always-loaded files as its session loaded them at start: a rule changed during a session reaches its subagents
   only from the next session.
+- After a change, the **`document-repository`** skill (`/document-repository`) updates the documentation it touches and
+  checks it against the code; `documentation.md` holds the conventions it follows.
 
 Current rules. **Always loaded:** the first three, `backend/result-pattern.md` and `backend/validation-decorators.md`.
 Every other file has `paths` for the code it describes.
 - `bug-issues.md`: every bug found gets its own bug issue right away.
 - `regression-tests.md`: every bug fix comes with a test that fails without the fix, so the bug cannot come back.
 - `issue-status.md`: the `status: …` labels, what each status means, and `Part of #N` (never `Closes #N`) in a PR.
+- `documentation.md`: where documentation goes, `paths`, how a rule file is written; the `document-repository` skill applies it.
 - `backend/`: `result-pattern.md`, `validation-decorators.md`, `conventions.md` (ownership check, DI, registration, `CancellationToken`, naming, code style, XML docs, admin), `middleware.md`, `startup.md`.
 - `database/`: `app-db-context.md` (global delete behaviour and UTC rules, the DbSets).
 - `domain/`: one file per feature, with its entities, endpoints and design: `users.md`, `bottles.md`, `reviews.md`, `follows.md`, `messages.md`, `news.md`, `notifications.md`, `distilleries.md`, `wish-list.md`, `offers.md`, `pricing.md` (with Collection Value), `badges.md`, `catalog.md`.

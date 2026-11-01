@@ -20,6 +20,16 @@ paths:
 Relations: one user → many `Bottle`, `BottleComment`, `Message` (sent/received).
 Junction relations: `BottleLike` (liked), `UserFollow` (followers/following), `UserBadge` (earned badges).
 
+## Auth endpoints (`/api/auth`)
+Every action is rate-limited by the `auth` policy (`[EnableRateLimiting("auth")]` on the controller).
+- `POST /api/auth/register` — `[AllowAnonymous]`; a token, or `requiresEmailConfirmation: true` when confirmation is
+  on (`.claude/rules/frontend/routing.md` → Email confirmation); `409` with `reason: EmailTaken`
+- `POST /api/auth/login` — `[AllowAnonymous]`; a token and the user; `400` with an `AuthErrorReasons` reason
+- `POST /api/auth/logout` — `[Authorize]`; revokes the user's existing tokens by rotating the security stamp
+- `POST /api/auth/confirm-email` — `[AllowAnonymous]`; `400` for an invalid or expired link
+- `POST /api/auth/resend-confirmation` — `[AllowAnonymous]`; always a generic answer
+- `POST /api/auth/forgot-password` and `POST /api/auth/reset-password` — see Password reset below
+
 ## Password reset
 - `POST /api/auth/forgot-password` (`[AllowAnonymous]`, `{ email, language? }`):
   - always answers `200` with the same generic message, whether or not the email has an account;

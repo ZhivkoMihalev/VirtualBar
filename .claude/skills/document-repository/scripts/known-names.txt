@@ -1,0 +1,24 @@
+# Names the documentation mentions on purpose although the code does not contain them.
+# One per line; text after # is a comment. check.mjs skips these. Add a name here only when it is
+# deliberately absent (an API we tell Claude not to use, something removed, a placeholder), never to
+# silence a fact that went stale.
+
+# Framework APIs the rules name although the code does not call them (yet).
+ExecuteDeleteAsync          # EF Core; CRITICAL RULES require approval before using it
+IHostedService              # ASP.NET Core interface behind PreWarmWorker
+ConfigureAppConfiguration   # WebApplicationFactory; testing/http.md says why it must not be used
+waitForTimeout              # Playwright; the e2e agent says never to use it
+toHaveScreenshot            # Playwright; no screenshot baselines exist on purpose
+dangerouslySetInnerHTML     # React; the frontend reviewer checks it is not used
+
+# Deliberate counter-examples and removed things.
+btl                         # backend/conventions.md: "`bottle`, never `btl`"
+tools/ProductImport         # removed import CLI, see domain/catalog.md → Seeding
+
+# Words that are labels or GitHub keywords, not code.
+Done                        # a status label
+Closes                      # a GitHub closing keyword PRs must not use
+Fixes                       # a GitHub closing keyword PRs must not use
+
+# Endpoints documented as deliberately absent.
+POST /api/distilleries      # domain/distilleries.md: "No `POST /api/distilleries`" (the seeder is the source)

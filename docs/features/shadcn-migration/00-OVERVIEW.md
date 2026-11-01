@@ -1,5 +1,7 @@
 # VirtualBar.Web → shadcn/ui Migration — OVERVIEW & SHARED CONTEXT
 
+> **Status:** design record, written before the code. The code as it is now is described in `.claude/rules/frontend/`; where the two differ, that file is right.
+
 > **Read this document first, in every session, before executing any slice doc.**
 > It is the single source of truth for the decisions, the theme, the component APIs,
 > the established patterns, and the gotchas. Each `NN-*.md` slice doc assumes you have

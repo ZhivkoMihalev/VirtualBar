@@ -33,6 +33,7 @@ paths:
 | `ForSaleAt` | `DateTime?` | When the bottle was listed for sale (set by `ListForSaleAsync`, cleared by `UnlistFromSaleAsync`) |
 | `Barcode` | `string?` | Scanned/known EAN-UPC; sharpens canonical price-estimate matching (Collection Value) |
 | `ProductId` | `Guid?` | FK → Product (nullable) — catalog link. Set by explicit pick or exact-`CanonicalKey` auto-link in `AddBottleAsync`; `UpdateBottleAsync` assigns it blindly from the request (null = unlink — clients must echo the current value). The bottle's own fields remain the display truth |
+| `DisplayOrder` | `int` | The bottle's place on its owner's shelf: a user's bottles are listed in this order. `PUT /api/bottles/reorder` sets it from the order of ids the owner sends; it sees only the caller's own bottles, so another collector's id answers `404` |
 
 Relations: one `Bottle` → many `BottleImage`, `BottleLike`, `BottleComment`, `BottleReview`.
 

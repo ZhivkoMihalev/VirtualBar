@@ -26,12 +26,12 @@ them and name the conflict in your report.
   - every guard and admin check is in the `XxxValidationDecorator`, which starts with
     `cancellationToken.ThrowIfCancellationRequested()`; the inner service has neither;
   - primary constructor, `sealed`, the decorator wired in `DependencyInjection.cs`, XML docs on every public action;
-  - no abbreviated names (not in the rules yet).
+  - no abbreviated names (`.claude/rules/backend/naming.md`).
 - **CLAUDE.md → CRITICAL RULES:** `cancellationToken` is named that way and passed to every EF call; no data-changing operation or
   destructive migration without the user's approval.
 - **`.claude/rules/database/`:** `DeleteBehavior.Restrict` unless cascade is intended; a schema change comes with its migration.
-- **Soft delete** (not in the rules yet): an entity that extends `BaseEntity` is deleted by setting `IsDeleted`, and
-  every query filters `!IsDeleted`. Only junction rows without `BaseEntity` (likes, follows) are removed physically.
+- **Soft delete** (`.claude/rules/database/app-db-context.md`): deletes set `IsDeleted`, and every query filters
+  `!IsDeleted`.
 - **CLAUDE.md → Security Rules:** the ownership check on every mutation; `[Authorize]` by default, `[AllowAnonymous]` deliberate
   and in the access matrix (`.claude/rules/testing/http.md`); no secrets; no raw SQL.
 - **Tests, when the diff has them:** 100% branch coverage of new service methods; a bug fix has a test that fails

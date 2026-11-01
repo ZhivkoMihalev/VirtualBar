@@ -27,11 +27,8 @@ They are where backend changes most often go wrong:
 - **CLAUDE.md → Security Rules:** the ownership check on every mutation, and `[AllowAnonymous]` only as a deliberate decision.
 - **`.claude/rules/testing/http.md`:** a new or removed `[AllowAnonymous]` endpoint changes the access matrix in the
   same change.
-
-Two rules neither CLAUDE.md nor `.claude/rules/` states yet:
-- **Soft delete:** an entity that extends `BaseEntity` is deleted by setting `IsDeleted`, and every query filters
-  `!IsDeleted`. Only junction rows without `BaseEntity` (likes, follows) are removed physically.
-- **No abbreviated names:** `cancellationToken`, never `ct`; the same goes for every other name.
+- **`.claude/rules/database/app-db-context.md` → Soft delete** and **`.claude/rules/backend/naming.md`**: deletes set
+  `IsDeleted`, every query filters `!IsDeleted`, and no name is abbreviated.
 
 ## When the task needs the user's approval
 You cannot ask the user. If the task needs something CRITICAL RULES reserves for the user's approval (a `DELETE` or

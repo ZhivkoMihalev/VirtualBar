@@ -16,3 +16,5 @@ paths:
 - Fonts: Playfair Display (headings), Cormorant Garamond, Cinzel (labels/nav)
 
 **Static inline styles:** Module-level `CSSProperties` constants (never created inside render). Dynamic values (hover state, `item.isRead` background) stay inline.
+
+Design record of the move to shadcn/ui: `docs/features/shadcn-migration/`.

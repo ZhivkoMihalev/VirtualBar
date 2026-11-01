@@ -15,8 +15,7 @@ them and name the conflict in your report.
 1. Run the existing suite first, so you know what was already failing before your tests
    (CLAUDE.md → Build & Run Commands → Tests).
 2. Read the service's existing test class, or a neighbouring one in `VirtualBar.Tests/Services/`, and copy its style
-   exactly: the `CreateXxxService` helper, the seed helpers, the naming, `CancellationToken.None` as the
-   `cancellationToken` argument.
+   exactly: the `CreateXxxService` helper, the seed helpers, the naming.
 3. Write the tests by `.claude/rules/testing/backend-unit.md`. Check these points, which tests get wrong most often:
    - **InMemory or SQLite:** which one the method under test needs;
    - **mocks:** only what the conventions allow, never `AppDbContext`;

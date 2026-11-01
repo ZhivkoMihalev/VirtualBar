@@ -62,4 +62,10 @@ Every bottle count below sums `Bottle.Quantity`, so one ×5 entry counts as five
 - `GET /api/badges/progress` — `[Authorize]`; all 19 catalog entries with `current`/`threshold`/`earned`/`awardedAt`
   for the **current** user (own-only — never exposed for other users)
 
+## Related rules
+- The hook sites live in the features' services: `.claude/rules/domain/bottles.md` (add, list, like),
+  `.claude/rules/domain/follows.md`, `.claude/rules/domain/offers.md`, `.claude/rules/domain/catalog.md` (approve).
+- Earning a badge sends `BadgeEarned` through `CreateSystemAsync` (`.claude/rules/domain/notifications.md`).
+- In the frontend: `BadgeChip` on the profile and the public bar (`.claude/rules/frontend/shared-components.md`).
+
 Design record (the spec, written before the code): `docs/features/badges/`.

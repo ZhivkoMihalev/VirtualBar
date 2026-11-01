@@ -2,6 +2,8 @@
 paths:
   - "VirtualBar.Web/**"
   - "VirtualBar.Web.Tests/unit/**"
+  - "package.json"
+  - "VirtualBar.Web.Tests/package.json"
 ---
 
 # Frontend conventions
@@ -82,3 +84,12 @@ Current translation namespaces:
 - **Static inline styles:** Module-level `CSSProperties` constants (never created inside render). Dynamic values (hover
   state, `item.isRead` background) stay inline.
 - Design record of the move to shadcn/ui: `docs/features/shadcn-migration/`.
+
+## npm workspaces
+- The frontend is two **npm workspaces**, the JS counterpart of a solution with a test project. One `npm install` in
+  the repo root installs both into the root `node_modules`, from the single root `package-lock.json`.
+- `VirtualBar.Web.Tests` declares `virtualbar.web` as a dependency, the way `VirtualBar.Tests` references the backend
+  projects.
+- It deliberately does **not** list the app's runtime packages (`react`, `react-dom`, `@tanstack/react-query`,
+  `react-router-dom`, `i18next`, …): it uses the app's own copies, so a component and its test share one React and
+  one query-client context. Listing one of them separately could install a second copy, which breaks hooks.

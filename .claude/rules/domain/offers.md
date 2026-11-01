@@ -36,3 +36,8 @@ paths:
 - `PATCH /api/offers/{id}/accept` — seller accepts
 - `PATCH /api/offers/{id}/decline` — seller declines
 - `PATCH /api/offers/{id}/withdraw` — buyer withdraws
+
+## Related rules
+- `OfferService` sends `OfferReceived`, `OfferAccepted` and `OfferDeclined` (`.claude/rules/domain/notifications.md`).
+- `AcceptAsync` evaluates the badges of seller and buyer (`OfferAccepted`, `.claude/rules/domain/badges.md`).
+- Accepted offers feed the internal price estimate (`.claude/rules/domain/pricing.md`).

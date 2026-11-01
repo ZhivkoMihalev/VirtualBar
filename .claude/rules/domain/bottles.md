@@ -94,3 +94,14 @@ Composite PK: `(BottleId, UserId)`. No `BaseEntity`.
 | `BottleId` | `Guid` | FK → Bottle |
 | `UserId` | `Guid` | FK → AppUser (author) |
 | `Content` | `string` | |
+
+## Related rules
+Bottle code also does work that other rule files describe:
+- `BottleService.AddBottleAsync` links the bottle to the catalog (`.claude/rules/domain/catalog.md`, Add-bottle resolution
+  order), notifies followers (`NewBottleFromFollowing`) and evaluates badges (`BottleAdded`).
+- `BottleService.ListForSaleAsync` notifies followers (`BottleListedForSale`), matches wish lists and notifies their
+  owners (`WishListMatch`, `.claude/rules/domain/wish-list.md`) and evaluates badges (`BottleListed`).
+- `BottleLikeService.LikeAsync` sends `BottleLiked` and evaluates the owner's badges (`LikeReceived`);
+  `BottleCommentService.AddCommentAsync` sends `BottleCommented`.
+- Notification types: `.claude/rules/domain/notifications.md`. Badges: `.claude/rules/domain/badges.md`. A bottle's price estimate
+  and the collection value: `.claude/rules/domain/pricing.md`.

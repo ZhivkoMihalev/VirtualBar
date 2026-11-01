@@ -52,3 +52,12 @@ Both FK relations use `DeleteBehavior.Restrict`. Composite index on `(UserId, Is
 ## API endpoints
 - `GET /api/notifications` — returns last 30 + global unread count.
 - `PATCH /api/notifications/{id}/read` and `POST /api/notifications/read-all`.
+
+## Related rules
+The triggers in the table live in each feature's services:
+- `.claude/rules/domain/bottles.md`: likes, comments, new bottles, listings;
+- `.claude/rules/domain/follows.md`, `.claude/rules/domain/messages.md`, `.claude/rules/domain/offers.md`, `.claude/rules/domain/reviews.md`;
+- `.claude/rules/domain/wish-list.md` (matching), `.claude/rules/domain/badges.md` (`BadgeEarned`), `.claude/rules/domain/catalog.md`
+  (product requests).
+
+The bell in the frontend: `.claude/rules/frontend/shared-components.md`.

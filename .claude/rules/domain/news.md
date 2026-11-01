@@ -26,3 +26,7 @@ Composite PK: `(PostId, LanguageCode)`. Cascade delete from `NewsPost`.
 | `Content` | `string` | Full article body |
 
 `NewsService.Resolve(post, lang)` returns the translation matching `lang`, falls back to `"bg"`. Bulgarian translation is required — enforced in `NewsValidationDecorator`.
+
+## Related rules
+- The feed (`GET /api/feed`) also shows the new bottles and listings of followed collectors (`.claude/rules/domain/bottles.md`,
+  `.claude/rules/domain/follows.md`).

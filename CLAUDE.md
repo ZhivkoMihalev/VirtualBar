@@ -32,19 +32,8 @@ VirtualBar/
 ├── VirtualBar.Application     # Interfaces, DTOs, Result<T>
 ├── VirtualBar.Infrastructure  # EF Core, service implementations
 ├── VirtualBar.Api             # ASP.NET Core controllers, Program.cs
-├── VirtualBar.Tests/
-│   ├── Services/              # xUnit unit tests (one file per service)
-│   ├── Integration/           # cross-service flow tests (real service graph, no mocks)
-│   ├── Persistence/           # EF model conventions (UTC DateTime round-trip)
-│   └── Api/                   # API helpers (ResultExtensions: status code + error body) + controller tests
-├── VirtualBar.HttpTests/      # the whole API over HTTP (WebApplicationFactory) on SQL Server
-│   ├── Support/               # test host, shared throwaway database, email pickup reader, [SqlServerFact]/[SqlServerTheory], collectors + admins, setup calls
-│   ├── Access/                # access matrix (anonymous list, 401 without a token), other collectors' resources, admin-only actions
-│   ├── Auth/                  # email confirmation, email failure, error reasons, JWT + logout
-│   ├── Bottles/               # bottle routes: an image is deleted only through its own bottle's route (#72)
-│   ├── Uploads/               # the four multipart upload endpoints: saved + served, wrong type and oversized refused
-│   ├── Flows/                 # cross-user flows end to end (offer → accept → notifications + badges)
-│   └── Startup/               # configuration Program.cs refuses to start with
+├── VirtualBar.Tests/          # service, integration and persistence tests (folders: .claude/rules/testing/backend.md)
+├── VirtualBar.HttpTests/      # the whole API over HTTP on SQL Server (folders: .claude/rules/testing/http.md)
 ├── VirtualBar.Web/            # React + Vite 8 + Tailwind CSS 4 frontend
 ├── VirtualBar.Web.Tests/      # frontend tests — its own npm workspace, depends on VirtualBar.Web
 │   ├── unit/                  # Vitest + React Testing Library (jsdom); mirrors VirtualBar.Web/src
@@ -60,23 +49,14 @@ VirtualBar/
 **Target framework:** .NET 9 (`net9.0`)
 ```
 
-The frontend is two **npm workspaces**, the JS counterpart of a solution with a test project. One `npm install`
-in the repo root installs both into the root `node_modules`, from the single root `package-lock.json`.
-`VirtualBar.Web.Tests` declares `virtualbar.web` as a dependency, the way `VirtualBar.Tests` references the backend
-projects. It deliberately does **not** list the app's runtime packages (`react`, `react-dom`, `@tanstack/react-query`,
-`react-router-dom`, `i18next`, …): it uses the app's own copies, so a component and its test share one React and one
-query-client context. Listing one of them separately could install a second copy, which breaks hooks.
+The frontend is two **npm workspaces** with one root lockfile; how the test workspace uses the app's packages:
+`.claude/rules/frontend/conventions.md`.
 
 **Dependency rule:** `Api → Application ← Infrastructure`. Domain has no outward dependencies.
 
 **Feature docs:** `docs/features/<feature>/` holds the specs of each feature we built or planned, one folder per
 feature: `00-OVERVIEW.md` first, then the numbered slices (`01-…`, `02-…`). A new feature's specs go into a new folder
 there. Documents about the whole project (`PRODUCTION.md`) stay in the repo root; project rules go to `.claude/rules/`.
-
-The product catalog is **hand-curated**, not generated. There was an offline import CLI
-(`tools/ProductImport`, slice 08); it was removed because it never produced a single shipped row and
-re-running it would have destroyed the curated files. The invariants it used to check on demand now run
-on every build in `ProductSeedDataTests` — see `docs/features/product-catalog/08-data-import-pipeline.md`.
 
 ---
 

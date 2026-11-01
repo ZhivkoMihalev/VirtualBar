@@ -151,7 +151,7 @@ public sealed class AuthValidationDecorator(
 
         var user = await userManager.FindByEmailAsync(request.Email);
         if (user is null)
-            return Result<bool>.Fail("Invalid or expired reset link.");
+            return Result<bool>.Fail(AuthService.InvalidResetLinkMessage);
 
         return await inner.ResetPasswordAsync(request, cancellationToken);
     }

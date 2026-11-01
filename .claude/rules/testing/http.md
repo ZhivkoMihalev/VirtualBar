@@ -68,7 +68,7 @@ codes, JWT validation and the startup guards. They are not a place for branch co
 - `Support/`: test host, shared throwaway database, email pickup reader, `[SqlServerFact]`/`[SqlServerTheory]`,
   collectors + admins, setup calls
 - `Access/`: access matrix (anonymous list, 401 without a token), other collectors' resources, admin-only actions
-- `Auth/`: email confirmation, email failure, error reasons, JWT + logout
+- `Auth/`: email confirmation, email failure, error reasons, JWT + logout, password reset (#81)
 - `Bottles/`: bottle routes: an image is deleted only through its own bottle's route (#72)
 - `Uploads/`: the four multipart upload endpoints: saved + served, wrong type and oversized refused
 - `Flows/`: cross-user flows end to end (offer → accept → notifications + badges)

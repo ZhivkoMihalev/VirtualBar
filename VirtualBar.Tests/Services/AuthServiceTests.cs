@@ -653,8 +653,12 @@ public sealed class AuthServiceTests
         Assert.Equal("Invalid or expired reset link.", result.Error);
     }
 
+    /// <summary>
+    /// A made-up token for a registered email answers exactly like an unknown email, so reset-password does not reveal
+    /// which emails have an account (#81).
+    /// </summary>
     [Fact]
-    public async Task ResetPasswordAsync_WhenTokenInvalid_Fail()
+    public async Task ResetPasswordAsync_WhenTokenInvalid_FailsLikeAnUnknownEmail()
     {
         // Arrange
         var db = CreateDbContext();
@@ -675,8 +679,39 @@ public sealed class AuthServiceTests
 
         // Assert
         Assert.False(result.Success);
-        Assert.NotNull(result.Error);
-        Assert.NotEmpty(result.Error);
+        Assert.Equal("Invalid or expired reset link.", result.Error);
+    }
+
+    /// <summary>
+    /// A valid link with a password that breaks the rules still answers the password errors: only a wrong token is
+    /// answered like an unknown email (#81).
+    /// </summary>
+    [Fact]
+    public async Task ResetPasswordAsync_WhenPasswordBreaksTheRules_FailsWithThePasswordErrors()
+    {
+        // Arrange
+        var db = CreateDbContext();
+        var config = CreateTestConfiguration();
+
+        var user = await SeedUser(db, "test@example.com", "Test User", "ValidPass123");
+
+        var userManager = CreateUserManager(db);
+        var resetToken = await userManager.GeneratePasswordResetTokenAsync(user);
+
+        var authService = CreateAuthService(db, config);
+        var request = new ResetPasswordRequest
+        {
+            Email = "test@example.com",
+            Token = resetToken,
+            NewPassword = "short"
+        };
+
+        // Act
+        var result = await authService.ResetPasswordAsync(request, CancellationToken.None);
+
+        // Assert
+        Assert.False(result.Success);
+        Assert.Equal("Password must be at least 8 characters long.", result.Error);
     }
 
     [Fact]

@@ -23,6 +23,12 @@ public sealed class AuthService(
 {
     public const string SecurityStampClaim = "securityStamp";
 
+    /// <summary>
+    /// The one answer reset-password gives both an unknown email and a wrong token, so it does not reveal which emails
+    /// have an account (#81).
+    /// </summary>
+    public const string InvalidResetLinkMessage = "Invalid or expired reset link.";
+
     private const int DefaultAccessTokenLifetimeMinutes = 1440;
 
     private readonly EmailSettings _emailSettings = emailOptions.Value;
@@ -99,7 +105,14 @@ public sealed class AuthService(
         var user = await userManager.FindByEmailAsync(request.Email);
         var result = await userManager.ResetPasswordAsync(user!, request.Token, request.NewPassword);
         if (!result.Succeeded)
-            return Result<bool>.Fail(string.Join(" ", result.Errors.Select(e => e.Description)));
+        {
+            // Identity checks the token before the password, so password-rule errors are reachable only with a valid
+            // link and may be shown; a wrong token is answered like an unknown email.
+            var invalidToken = result.Errors.Any(e => e.Code == nameof(IdentityErrorDescriber.InvalidToken));
+            return Result<bool>.Fail(invalidToken
+                ? InvalidResetLinkMessage
+                : string.Join(" ", result.Errors.Select(e => e.Description)));
+        }
 
         return Result<bool>.Ok(true);
     }

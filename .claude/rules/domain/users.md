@@ -37,8 +37,10 @@ Every action is rate-limited by the `auth` policy (`[EnableRateLimiting("auth")]
     request's language (template `reset-password.<lang>.html`, default `bg`);
   - a failure to send is logged in `AuthValidationDecorator`, never shown.
 - `POST /api/auth/reset-password` (`[AllowAnonymous]`, `{ email, token, newPassword }`) sets the new password: `200`, or
-  `400` with the reason.
+  `400`:
+  - an unknown email and a wrong or expired token get the same body, `AuthService.InvalidResetLinkMessage`
+    ("Invalid or expired reset link."), so the answer does not reveal which emails have an account (#81);
+  - a valid link with a password that breaks the rules gets the password errors: Identity checks the token first, so
+    they are reachable only with a real link.
 - Frontend: `/forgot-password` (`ForgotPasswordPage`) and `/reset-password` (`ResetPasswordPage`, which reads `email`
   and `token` from the query string), both public.
-- Known gap: #81. `reset-password` answers an unknown email differently from a wrong token, so it reveals which emails
-  have an account.

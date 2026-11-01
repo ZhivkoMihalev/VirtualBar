@@ -66,7 +66,7 @@ How the repository's documentation is organised and written. It holds whenever d
 - A new feature gets a `domain/` file with `paths`, Related rules both ways, and a line in the `CLAUDE.md` index.
 - Every new rule file gets a line in the `CLAUDE.md` index, one line per folder.
 - A fact found wrong because the code is wrong is a bug: it gets a bug issue (`bug-issues.md`), not a silent fix.
-- The rule describes what the code does. Where that is a bug, the rule names the issue as a known gap (as
-  `domain/users.md` names #81) instead of describing the intended behaviour as if it worked.
+- The rule describes what the code does. Where that is a bug, the rule names the issue as a known gap ("Known gap: #N.
+  What goes wrong.") instead of describing the intended behaviour as if it worked; the fix removes that line.
 - Moving, merging, splitting or reformatting documentation must lose nothing: the skill's `compare.mjs` shows every
   name and number that disappeared, and each one is a deliberate removal named in the PR.

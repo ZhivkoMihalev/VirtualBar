@@ -26,6 +26,9 @@ internal static class AuthApi
     public static Task<HttpResponseMessage> ResendConfirmationAsync(this HttpClient client, string email) =>
         client.PostAsJsonAsync("/api/auth/resend-confirmation", new { email });
 
+    public static Task<HttpResponseMessage> ResetPasswordAsync(this HttpClient client, string email, string token, string newPassword) =>
+        client.PostAsJsonAsync("/api/auth/reset-password", new { email, token, newPassword });
+
     public static void UseToken(this HttpClient client, string token) =>
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 

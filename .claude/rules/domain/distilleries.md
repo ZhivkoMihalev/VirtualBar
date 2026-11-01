@@ -26,3 +26,8 @@ Composite PK: `(DistilleryId, Category)`. No `BaseEntity`. Cascade delete from `
 |---|---|
 | `DistilleryId` | `Guid` |
 | `Category` | `SpiritCategory` |
+
+## Related rules
+- `Bottle.DistilleryId`, `WishListItem.DistilleryId` (an exact-match criterion) and `Product.DistilleryId` point here:
+  `.claude/rules/domain/bottles.md`, `.claude/rules/domain/wish-list.md`, `.claude/rules/domain/catalog.md`.
+- A product seed row whose distillery name is unknown loses its FK (`.claude/rules/domain/catalog.md`, Seeding).

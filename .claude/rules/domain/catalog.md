@@ -35,6 +35,10 @@ Canonical catalog entry for a spirits product. Not user-owned.
 - `ProductKey` normalization is **frozen** (shared with the `PriceSnapshot` cache — changing it would orphan both).
 
 ### Seeding
+- The catalog is **hand-curated**, not generated. There was an offline import CLI (`tools/ProductImport`, slice 08); it
+  was removed because it never produced a single shipped row and re-running it would have destroyed the curated files.
+  The invariants it used to check on demand now run on every build in `ProductSeedDataTests` — see
+  `docs/features/product-catalog/08-data-import-pipeline.md`.
 - Seeded on startup by `ProductSeeder` with **top-up semantics** (the `DistillerySeeder` pattern).
 - One embedded seed file **per category** — `SeedData/products.<category>.seed.json` (`whisky`, `rum`, `cognac`,
   `brandy`, `vodka`, `gin`, `tequila`, `other`). User-curated and growing — ~3400 rows; no fabricated data — unknown
@@ -145,6 +149,13 @@ A user's request to add a missing product to the catalog.
   `{}`)
 - `PATCH /api/product-requests/{id}/reject` — admin; body `RejectProductRequestRequest` (**required** — send at least
   `{}`)
+
+## Related rules
+- A bottle is linked when it is added (`BottleService.AddBottleAsync`, `.claude/rules/domain/bottles.md`).
+- Approve and reject send `ProductRequestApproved` / `ProductRequestRejected` (`.claude/rules/domain/notifications.md`);
+  approve evaluates the requester's badges (`FirstCatalogProduct`, `.claude/rules/domain/badges.md`).
+- `CanonicalKey` is the price key of every linked bottle (`.claude/rules/domain/pricing.md`, Price key rule).
+- The `/catalog` and `/product/:id` pages: `.claude/rules/frontend/routing.md`.
 
 Design records (the specs, written before the code): `docs/features/product-catalog/` and, for the public catalog and
 the product page, `docs/features/product-page/`.

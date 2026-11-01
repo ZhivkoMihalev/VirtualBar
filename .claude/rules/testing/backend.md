@@ -5,6 +5,12 @@ paths:
 
 # Testing Conventions (`VirtualBar.Tests`)
 
+## Folders
+- `Services/`: xUnit unit tests (one file per service)
+- `Integration/`: cross-service flow tests (real service graph, no mocks)
+- `Persistence/`: EF model conventions (UTC DateTime round-trip)
+- `Api/`: API helpers (ResultExtensions: status code + error body) + controller tests
+
 ## Service tests
 - One test class per service: `<ServiceName>Tests` in `VirtualBar.Tests/Services/`.
 - Method naming: `<MethodName>_When<Condition>_<ExpectedOutcome>`.

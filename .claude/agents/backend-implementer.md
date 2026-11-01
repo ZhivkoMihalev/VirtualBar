@@ -27,7 +27,7 @@ They are where backend changes most often go wrong:
 - **CLAUDE.md → Security Rules:** the ownership check on every mutation, and `[AllowAnonymous]` only as a deliberate decision.
 - **`.claude/rules/testing/http.md`:** a new or removed `[AllowAnonymous]` endpoint changes the access matrix in the
   same change.
-- **`.claude/rules/database/app-db-context.md` → Soft delete** and **`.claude/rules/backend/naming.md`**: deletes set
+- **`.claude/rules/database/app-db-context.md` → Soft delete** and **`.claude/rules/backend/conventions.md` → Naming**: deletes set
   `IsDeleted`, every query filters `!IsDeleted`, and no name is abbreviated.
 
 ## When the task needs the user's approval

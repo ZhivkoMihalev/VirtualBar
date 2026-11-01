@@ -26,7 +26,7 @@ them and name the conflict in your report.
   - every guard and admin check is in the `XxxValidationDecorator`, which starts with
     `cancellationToken.ThrowIfCancellationRequested()`; the inner service has neither;
   - primary constructor, `sealed`, the decorator wired in `DependencyInjection.cs`, XML docs on every public action;
-  - no abbreviated names (`.claude/rules/backend/naming.md`).
+  - no abbreviated names (`.claude/rules/backend/conventions.md` → Naming).
 - **CLAUDE.md → CRITICAL RULES:** `cancellationToken` is named that way and passed to every EF call; no data-changing operation or
   destructive migration without the user's approval.
 - **`.claude/rules/database/`:** `DeleteBehavior.Restrict` unless cascade is intended; a schema change comes with its migration.

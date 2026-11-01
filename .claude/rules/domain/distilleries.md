@@ -13,7 +13,12 @@ paths:
 | `Country` | `string?` | |
 | `Region` | `string?` | |
 
-Has `ICollection<DistilleryCategory> Categories` and `ICollection<Bottle> Bottles`. Seeded on startup by `DistillerySeeder` with **top-up semantics** — inserts distilleries missing by name (case-insensitive) and missing `(DistilleryId, Category)` pairs, strictly insert-only, never updates existing rows (~950 distilleries in 963 name/category pairs, across Whisky/Rum/Vodka/Cognac/Brandy/Tequila/Gin). **No `POST /api/distilleries`** — seeder is the single source of truth. Public read via `GET /api/distilleries?category=Rum` (AllowAnonymous).
+- Has `ICollection<DistilleryCategory> Categories` and `ICollection<Bottle> Bottles`.
+- Seeded on startup by `DistillerySeeder` with **top-up semantics**: inserts distilleries missing by name
+  (case-insensitive) and missing `(DistilleryId, Category)` pairs, strictly insert-only, never updates existing rows.
+  ~950 distilleries in 963 name/category pairs, across Whisky/Rum/Vodka/Cognac/Brandy/Tequila/Gin.
+- **No `POST /api/distilleries`** — seeder is the single source of truth.
+- Public read via `GET /api/distilleries?category=Rum` (AllowAnonymous).
 
 ## DistilleryCategory
 Composite PK: `(DistilleryId, Category)`. No `BaseEntity`. Cascade delete from `Distillery`.

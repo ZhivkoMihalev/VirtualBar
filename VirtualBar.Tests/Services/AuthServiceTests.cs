@@ -978,6 +978,125 @@ public sealed class AuthServiceTests
         Assert.Equal(AuthErrorReasons.EmailNotConfirmed, result.Reason);
     }
 
+    /// <summary>
+    /// A wrong password on an unconfirmed account must answer like an unknown email, or the answer tells anyone that
+    /// the account exists (#95).
+    /// </summary>
+    [Fact]
+    public async Task LoginAsync_WhenEmailNotConfirmedAndPasswordIsWrong_FailInvalidCredentialsAndCountsTheAttempt()
+    {
+        // Arrange
+        var db = CreateDbContext();
+        var config = CreateTestConfiguration();
+
+        var user = await SeedUser(db, "unconfirmed@example.com", "Unconfirmed User", "ValidPass123", emailConfirmed: false);
+
+        var authService = CreateAuthService(db, config, identityOptions: RequireConfirmedEmailOptions());
+        var request = new LoginRequest
+        {
+            Email = "unconfirmed@example.com",
+            Password = "WrongPass123"
+        };
+
+        // Act
+        var result = await authService.LoginAsync(request, CancellationToken.None);
+
+        // Assert
+        Assert.False(result.Success);
+        Assert.Equal("Invalid email or password.", result.Error);
+        Assert.Equal(AuthErrorReasons.InvalidCredentials, result.Reason);
+        Assert.Equal(1, user.AccessFailedCount);
+    }
+
+    /// <summary>
+    /// Once a wrong password answers differently from the right one, an unconfirmed account needs the same lockout as a
+    /// confirmed one, or its password could be guessed without limit (#95).
+    /// </summary>
+    [Fact]
+    public async Task LoginAsync_WhenEmailNotConfirmedAndPasswordIsWrongFiveTimes_LockedOut()
+    {
+        // Arrange
+        var db = CreateDbContext();
+        var config = CreateTestConfiguration();
+
+        await SeedUser(db, "unconfirmed@example.com", "Unconfirmed User", "ValidPass123", emailConfirmed: false);
+
+        var authService = CreateAuthService(db, config, identityOptions: RequireConfirmedEmailOptions());
+        var wrong = new LoginRequest
+        {
+            Email = "unconfirmed@example.com",
+            Password = "WrongPass123"
+        };
+
+        for (var attempt = 1; attempt < 5; attempt++)
+        {
+            var refused = await authService.LoginAsync(wrong, CancellationToken.None);
+            Assert.Equal(AuthErrorReasons.InvalidCredentials, refused.Reason);
+        }
+
+        // Act
+        var result = await authService.LoginAsync(wrong, CancellationToken.None);
+
+        // Assert
+        Assert.False(result.Success);
+        Assert.Equal("This account is temporarily locked due to too many failed attempts. Please try again later.", result.Error);
+        Assert.Equal(AuthErrorReasons.LockedOut, result.Reason);
+    }
+
+    /// <summary>A locked unconfirmed account stays locked even for the right password, as a confirmed one does (#95).</summary>
+    [Fact]
+    public async Task LoginAsync_WhenEmailNotConfirmedAndLockedOut_LockedOutEvenWithTheRightPassword()
+    {
+        // Arrange
+        var db = CreateDbContext();
+        var config = CreateTestConfiguration();
+
+        var user = await SeedUser(db, "unconfirmed@example.com", "Unconfirmed User", "ValidPass123", emailConfirmed: false);
+        var userManager = CreateUserManager(db);
+        await userManager.SetLockoutEndDateAsync(user, DateTimeOffset.UtcNow.AddMinutes(15));
+
+        var authService = CreateAuthService(db, config, identityOptions: RequireConfirmedEmailOptions());
+        var request = new LoginRequest
+        {
+            Email = "unconfirmed@example.com",
+            Password = "ValidPass123"
+        };
+
+        // Act
+        var result = await authService.LoginAsync(request, CancellationToken.None);
+
+        // Assert
+        Assert.False(result.Success);
+        Assert.Equal(AuthErrorReasons.LockedOut, result.Reason);
+    }
+
+    [Fact]
+    public async Task LoginAsync_WhenEmailNotConfirmedAndPasswordIsRight_EmailNotConfirmedAndResetsFailedAttempts()
+    {
+        // Arrange
+        var db = CreateDbContext();
+        var config = CreateTestConfiguration();
+
+        var user = await SeedUser(db, "unconfirmed@example.com", "Unconfirmed User", "ValidPass123", emailConfirmed: false);
+
+        var authService = CreateAuthService(db, config, identityOptions: RequireConfirmedEmailOptions());
+        await authService.LoginAsync(
+            new LoginRequest { Email = "unconfirmed@example.com", Password = "WrongPass123" }, CancellationToken.None);
+        var request = new LoginRequest
+        {
+            Email = "unconfirmed@example.com",
+            Password = "ValidPass123"
+        };
+
+        // Act
+        var result = await authService.LoginAsync(request, CancellationToken.None);
+
+        // Assert
+        Assert.False(result.Success);
+        Assert.Equal(AuthErrorReasons.EmailNotConfirmed, result.Reason);
+        Assert.Equal(0, user.AccessFailedCount);
+    }
+
     [Fact]
     public async Task LoginAsync_InnerService_ThrowsNotSupported()
     {

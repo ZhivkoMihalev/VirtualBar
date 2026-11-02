@@ -34,4 +34,5 @@ Result<T>.Fail("Name is required.")       // → 400 (validation)
   `src/lib/authErrors.ts`.
 - Reason values are API contract: never rename one.
 - Login deliberately has a single `InvalidCredentials` for unknown email and wrong password, so it does not reveal
-  which accounts exist.
+  which accounts exist. That includes an unconfirmed account: `EmailNotConfirmed` comes only after the right password
+  (#95; details in `.claude/rules/domain/users.md`).

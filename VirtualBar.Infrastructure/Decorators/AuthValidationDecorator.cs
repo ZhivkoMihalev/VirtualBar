@@ -44,6 +44,9 @@ public sealed class AuthValidationDecorator(
             return Result<AuthResponse>.Fail("Invalid email or password.", AuthErrorReasons.InvalidCredentials);
 
         var result = await signInManager.CheckPasswordSignInAsync(user, request.Password, lockoutOnFailure: true);
+        if (result.IsNotAllowed)
+            result = await CheckUnconfirmedPasswordAsync(user, request.Password);
+
         if (result.IsLockedOut)
             return Result<AuthResponse>.Fail(
                 "This account is temporarily locked due to too many failed attempts. Please try again later.",
@@ -54,6 +57,25 @@ public sealed class AuthValidationDecorator(
             return Result<AuthResponse>.Fail("Invalid email or password.", AuthErrorReasons.InvalidCredentials);
 
         return inner.IssueTokenFor(user);
+    }
+
+    // SignInManager refuses an unconfirmed account before it looks at the password or the lockout, so on its own it
+    // would answer EmailNotConfirmed to any password and tell anyone that the account exists (#95). Check the password
+    // here with the same lockout a confirmed account gets: a wrong password must not be guessable without limit once
+    // it answers differently from the right one.
+    private async Task<SignInResult> CheckUnconfirmedPasswordAsync(AppUser user, string password)
+    {
+        if (await userManager.IsLockedOutAsync(user))
+            return SignInResult.LockedOut;
+
+        if (await userManager.CheckPasswordAsync(user, password))
+        {
+            await userManager.ResetAccessFailedCountAsync(user);
+            return SignInResult.NotAllowed;
+        }
+
+        await userManager.AccessFailedAsync(user);
+        return await userManager.IsLockedOutAsync(user) ? SignInResult.LockedOut : SignInResult.Failed;
     }
 
     public async Task<Result<bool>> LogoutAsync(CancellationToken cancellationToken)

@@ -24,7 +24,15 @@ Junction relations: `BottleLike` (liked), `UserFollow` (followers/following), `U
 Every action is rate-limited by the `auth` policy (`[EnableRateLimiting("auth")]` on the controller).
 - `POST /api/auth/register` — `[AllowAnonymous]`; a token, or `requiresEmailConfirmation: true` when confirmation is
   on (`.claude/rules/frontend/routing.md` → Email confirmation); `409` with `reason: EmailTaken`
-- `POST /api/auth/login` — `[AllowAnonymous]`; a token and the user; `400` with an `AuthErrorReasons` reason
+- `POST /api/auth/login` — `[AllowAnonymous]`; a token and the user, or `400` with an `AuthErrorReasons` reason
+  (`AuthValidationDecorator.LoginAsync`):
+  - `InvalidCredentials` for an unknown email and for a wrong password, on an unconfirmed account too, so login does
+    not reveal which emails have an account;
+  - `LockedOut` after 5 failed attempts, for 15 minutes (the lockout options in `Program.cs`), even for the right
+    password. Wrong passwords on an unconfirmed account count too;
+  - `EmailNotConfirmed` only after the right password on an unconfirmed account. `SignInManager` refuses such an
+    account before it looks at the password, so the decorator checks the password and the lockout itself
+    (`CheckUnconfirmedPasswordAsync`, #95).
 - `POST /api/auth/logout` — `[Authorize]`; revokes the user's existing tokens by rotating the security stamp
 - `POST /api/auth/confirm-email` — `[AllowAnonymous]`; `400` for an invalid or expired link
 - `POST /api/auth/resend-confirmation` — `[AllowAnonymous]`; always a generic answer

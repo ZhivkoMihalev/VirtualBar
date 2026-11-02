@@ -38,6 +38,22 @@ public sealed class EmailConfirmationTests(ApiHosts hosts)
         await AuthApi.AssertErrorAsync(response, HttpStatusCode.BadRequest, AuthErrorReasons.EmailNotConfirmed);
     }
 
+    /// <summary>
+    /// A wrong password on an unconfirmed account answers like an unknown email, so login does not reveal that the
+    /// account exists (#95).
+    /// </summary>
+    [SqlServerFact]
+    public async Task Login_WhenEmailIsNotConfirmedAndThePasswordIsWrong_Returns400WithInvalidCredentials()
+    {
+        var client = Api.CreateClient();
+        var email = AuthApi.NewEmail("unconfirmed-wrong-password");
+        await client.RegisterAsync(email);
+
+        var response = await client.LoginAsync(email, "Wrong-Passw0rd");
+
+        await AuthApi.AssertErrorAsync(response, HttpStatusCode.BadRequest, AuthErrorReasons.InvalidCredentials);
+    }
+
     [SqlServerFact]
     public async Task ConfirmEmail_WhenTheLinkComesFromTheEmail_LetsTheAccountLogIn()
     {

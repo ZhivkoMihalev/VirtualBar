@@ -95,5 +95,6 @@ committed:
 - Collection value counts Sealed bottles, each scaled by `Bottle.Quantity` (`.claude/rules/domain/bottles.md`).
 - A linked bottle's key is `Product.CanonicalKey` (`.claude/rules/domain/catalog.md`).
 - The internal provider reads listings and accepted offers (`.claude/rules/domain/bottles.md`, `.claude/rules/domain/offers.md`).
+- Every currency the app accepts must be convertible through `FxToBase` (`.claude/rules/domain/currencies.md`).
 
 Full slice-by-slice specs live in `docs/features/collection-value/`.

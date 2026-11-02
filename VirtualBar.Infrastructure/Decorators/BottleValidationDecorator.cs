@@ -157,6 +157,9 @@ public sealed class BottleValidationDecorator(
         if (request.Quantity < 1 || request.Quantity > bottle.Quantity)
             return Result<bool>.Fail($"For sale quantity must be between 1 and {bottle.Quantity}.");
 
+        if (!SupportedCurrencies.IsSupported(request.Currency))
+            return Result<bool>.Fail(SupportedCurrencies.NotSupportedMessage);
+
         return await inner.ListForSaleAsync(bottleId, request, cancellationToken);
     }
 

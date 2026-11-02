@@ -55,7 +55,7 @@ test.describe('Offers', () => {
     const sent = card(buyerPage, name)
     await expect(sent).toContainText(bg.offers.statusPending)
     await expect(sent).toContainText(fill(bg.offers.by, { name: seller.displayName }))
-    await expect(sent).toContainText('USD 120')
+    await expect(sent).toContainText('EUR 120')
     await expect(sent).toContainText(note)
     await expect(sent.getByRole('button', { name: bg.offers.withdraw })).toBeVisible()
 
@@ -67,7 +67,7 @@ test.describe('Offers', () => {
 
     const received = card(sellerPage, name)
     await expect(received).toContainText(fill(bg.offers.by, { name: buyer.displayName }))
-    await expect(received).toContainText('USD 120')
+    await expect(received).toContainText('EUR 120')
     await received.getByRole('button', { name: bg.offers.accept }).click()
     await expect(received).toContainText(bg.offers.statusAccepted)
     await expect(received.getByRole('button')).toHaveCount(0)

@@ -11,7 +11,7 @@ paths:
 | `BuyerId` | `Guid` | FK → AppUser |
 | `SellerId` | `Guid` | FK → AppUser |
 | `OfferedPrice` | `decimal` | `decimal(18,2)` |
-| `Currency` | `string` | ISO code e.g. "USD" |
+| `Currency` | `string` | `EUR`, `GBP` or `USD`, stored upper-case (`.claude/rules/domain/currencies.md`) |
 | `Message` | `string?` | Optional note from buyer |
 | `Status` | `OfferStatus` | Pending/Accepted/Declined/Withdrawn |
 | `RespondedAt` | `DateTime?` | Set when seller accepts or declines |
@@ -41,3 +41,4 @@ paths:
 - `OfferService` sends `OfferReceived`, `OfferAccepted` and `OfferDeclined` (`.claude/rules/domain/notifications.md`).
 - `AcceptAsync` evaluates the badges of seller and buyer (`OfferAccepted`, `.claude/rules/domain/badges.md`).
 - Accepted offers feed the internal price estimate (`.claude/rules/domain/pricing.md`).
+- `CreateAsync` accepts only the supported currencies (`.claude/rules/domain/currencies.md`).

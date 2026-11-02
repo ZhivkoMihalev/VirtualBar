@@ -1,12 +1,14 @@
 import { useState } from 'react'
 import type { ReactNode } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { useInfiniteQuery, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { isAxiosError } from 'axios'
+import { Check, Heart } from 'lucide-react'
 import { getProduct, getProductReviews } from '../api/productsApi'
 import { getProductEstimate } from '../api/pricesApi'
 import { getBottle } from '../api/bottlesApi'
+import { addWishListItem, getWishList } from '../api/wishListApi'
 import { useAuth } from '../contexts/useAuth'
 import type { ProductDetail, ProductListing, ProductOwner } from '../types'
 import { CATEGORY_COLORS } from '../lib/bottlePalette'
@@ -50,8 +52,48 @@ function Fact({ label, value }: { label: string; value: string | number }) {
   )
 }
 
+/**
+ * Puts the product on the collector's wish list, so a listing of a bottle linked to it notifies them. Rendered
+ * only for a logged-in collector: `/api/wishlist` is [Authorize], and an anonymous call would redirect to /login.
+ */
+function WantItButton({ productId }: { productId: string }) {
+  const { t } = useTranslation()
+  const queryClient = useQueryClient()
+
+  const wishListQuery = useQuery({ queryKey: ['wishlist', 'mine'], queryFn: getWishList })
+
+  const addMutation = useMutation({
+    mutationFn: () => addWishListItem({ productId }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['wishlist'] }),
+  })
+
+  // isSuccess covers the refetch after adding: the old list would otherwise offer the button a second time.
+  const wanted = addMutation.isSuccess || (wishListQuery.data?.some(w => w.productId === productId) ?? false)
+
+  if (wanted) {
+    return (
+      <div className="mt-5 flex items-center gap-2 text-sm text-primary">
+        <Check className="size-4" />
+        {t('product.wanted')}
+      </div>
+    )
+  }
+
+  return (
+    <div className="mt-5 space-y-2">
+      <Button onClick={() => addMutation.mutate()} disabled={wishListQuery.isPending || addMutation.isPending}>
+        <Heart className="size-4" />
+        {addMutation.isPending ? t('product.wantItAdding') : t('product.wantIt')}
+      </Button>
+      <p className="text-xs text-muted-foreground">{t('product.wantItHint')}</p>
+      {addMutation.isError && <p className="text-sm text-destructive">{t('product.wantItError')}</p>}
+    </div>
+  )
+}
+
 function ProductHeader({ product }: { product: ProductDetail }) {
   const { t } = useTranslation()
+  const { isAuthenticated } = useAuth()
   const cat = CATEGORY_COLORS[product.category]
   const maker = [product.brand, product.distilleryName !== product.brand ? product.distilleryName : null]
     .filter(Boolean)
@@ -84,6 +126,9 @@ function ProductHeader({ product }: { product: ProductDetail }) {
           {product.name}
         </h1>
         {maker && <div className="mt-1.5 text-lg italic text-primary/85">{maker}</div>}
+
+        {/* Keyed, so moving to another product's page does not carry over "added" from this one. */}
+        {isAuthenticated && <WantItButton key={product.id} productId={product.id} />}
 
         {(product.age != null || product.abvPercent != null || product.volumeMl != null || origin) && (
           <div className="mt-6 grid grid-cols-[repeat(auto-fit,minmax(110px,1fr))] gap-x-6 gap-y-4 rounded-md border border-primary/10 bg-primary/[0.04] p-5">

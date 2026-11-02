@@ -206,7 +206,8 @@ Curation: the seed files are hand-edited; ProductSeedDataTests guards their inva
 - ~~**Pricing convergence**~~ — **done in #50** (`docs/features/product-page/01-pricing-convergence.md`): a
   linked bottle prices under `Product.CanonicalKey` via `PriceKey.ForBottle`, researched with the
   product's fields.
-- **Wish list by product** — `WishListItem.ProductId?` as a third, precise matching criterion.
+- ~~**Wish list by product**~~ — **done in #51** (`.claude/rules/domain/wish-list.md`): `WishListItem.ProductId` is a
+  third, precise matching criterion.
 - ~~**Per-product review aggregation**~~ — **done in #50** (`docs/features/product-page/`): the product page
   aggregates the reviews of every linked bottle on read; reviews stay bottle-attached.
 - **Vintage-specific catalog entries** — revisit if requests show real demand; would add

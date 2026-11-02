@@ -36,10 +36,11 @@ public sealed class WishListController(IWishListService wishListService) : Contr
     }
 
     /// <summary>Adds an item to the current collector's wish list.</summary>
-    /// <param name="request">The wish list item details. At least one of distillery or category is required.</param>
+    /// <param name="request">The wish list item details. At least one of product, distillery or category is required.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <response code="200">Item added; returns the created item.</response>
     /// <response code="400">No matching criterion provided.</response>
+    /// <response code="404">The distillery or product does not exist.</response>
     [HttpPost]
     public async Task<IActionResult> AddItem(AddWishListItemRequest request, CancellationToken cancellationToken)
     {

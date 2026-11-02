@@ -53,3 +53,5 @@ paths:
 - Opens a listing in `BottleDetailPanel`, queried as `['bottles', ownerId, bottleId]`, so the panel's own
   `['bottles', ownerId]` invalidations refresh it.
 - Renders a "not found" state for an unknown id instead of redirecting.
+- Offers a logged-in collector a "Want it" button that adds the product to their wish list
+  (`.claude/rules/domain/wish-list.md`).

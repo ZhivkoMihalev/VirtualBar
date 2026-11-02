@@ -5,6 +5,7 @@ export interface AddWishListItemRequest {
   bottleName?: string
   distilleryId?: string | null
   category?: string
+  productId?: string | null
   imageUrl?: string
 }
 
@@ -13,6 +14,9 @@ function formDataOf(file: File): FormData {
   fd.append('file', file)
   return fd
 }
+
+export const getWishList = () =>
+  client.get<WishListItem[]>('/wishlist').then(r => r.data)
 
 export const getAllWishListItems = () =>
   client.get<PublicWishListItem[]>('/wishlist/all').then(r => r.data)

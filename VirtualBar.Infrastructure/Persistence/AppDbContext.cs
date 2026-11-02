@@ -142,6 +142,11 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
                 .HasForeignKey(w => w.DistilleryId)
                 .OnDelete(DeleteBehavior.Restrict);
 
+            e.HasOne(w => w.Product)
+                .WithMany()
+                .HasForeignKey(w => w.ProductId)
+                .OnDelete(DeleteBehavior.Restrict);
+
             e.HasIndex(w => new { w.UserId, w.IsDeleted });
         });
 

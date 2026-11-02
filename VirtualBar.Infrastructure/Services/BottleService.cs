@@ -256,7 +256,8 @@ public sealed class BottleService(
             .Where(w => !w.IsDeleted
                 && w.UserId != currentUser.UserId
                 && (w.Category == null || w.Category == bottle.Category)
-                && (w.DistilleryId == null || w.DistilleryId == bottle.DistilleryId))
+                && (w.DistilleryId == null || w.DistilleryId == bottle.DistilleryId)
+                && (w.ProductId == null || w.ProductId == bottle.ProductId))
             .Select(w => w.UserId)
             .Distinct()
             .ToListAsync(cancellationToken);

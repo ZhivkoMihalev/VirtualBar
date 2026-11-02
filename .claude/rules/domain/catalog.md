@@ -158,6 +158,8 @@ A user's request to add a missing product to the catalog.
 - The `/catalog` and `/product/:id` pages: `.claude/rules/frontend/routing.md`.
 - The home feed links a followed collector's review of a linked bottle to its product page
   (`.claude/rules/domain/news.md`).
+- A wish list item can target a product (`WishListItem.ProductId`); only a listing of a bottle linked to it matches, and
+  the product page has a "Want it" button that adds one (`.claude/rules/domain/wish-list.md`).
 
 Design records (the specs, written before the code): `docs/features/product-catalog/` and, for the public catalog and
 the product page, `docs/features/product-page/`.

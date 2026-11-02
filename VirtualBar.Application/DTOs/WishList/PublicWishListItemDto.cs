@@ -14,6 +14,10 @@ public sealed class PublicWishListItemDto
 
     public SpiritCategory? Category { get; set; }
 
+    public Guid? ProductId { get; set; }
+
+    public string? ProductName { get; set; }
+
     public string? ImageUrl { get; set; }
 
     public Guid UserId { get; set; }

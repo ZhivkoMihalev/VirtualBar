@@ -33,6 +33,8 @@ public sealed class WishListService(
                 DistilleryId = w.DistilleryId,
                 DistilleryName = w.Distillery != null && !w.Distillery.IsDeleted ? w.Distillery.Name : null,
                 Category = w.Category,
+                ProductId = w.ProductId,
+                ProductName = w.Product != null && !w.Product.IsDeleted ? w.Product.Name : null,
                 ImageUrl = w.ImageUrl,
                 CreatedAt = w.CreatedAt,
             })
@@ -53,6 +55,8 @@ public sealed class WishListService(
                 DistilleryId = w.DistilleryId,
                 DistilleryName = w.Distillery != null && !w.Distillery.IsDeleted ? w.Distillery.Name : null,
                 Category = w.Category,
+                ProductId = w.ProductId,
+                ProductName = w.Product != null && !w.Product.IsDeleted ? w.Product.Name : null,
                 ImageUrl = w.ImageUrl,
                 UserId = w.UserId,
                 UserDisplayName = w.User.DisplayName,
@@ -71,6 +75,7 @@ public sealed class WishListService(
             BottleName = request.BottleName,
             DistilleryId = request.DistilleryId,
             Category = request.Category,
+            ProductId = request.ProductId,
             ImageUrl = request.ImageUrl,
         };
 
@@ -84,6 +89,13 @@ public sealed class WishListService(
                 .Select(d => d.Name)
                 .FirstOrDefaultAsync(cancellationToken);
 
+        var productName = item.ProductId is null
+            ? null
+            : await db.Products
+                .Where(p => p.Id == item.ProductId && !p.IsDeleted)
+                .Select(p => p.Name)
+                .FirstOrDefaultAsync(cancellationToken);
+
         return Result<WishListItemDto>.Ok(new WishListItemDto
         {
             Id = item.Id,
@@ -91,6 +103,8 @@ public sealed class WishListService(
             DistilleryId = item.DistilleryId,
             DistilleryName = distilleryName,
             Category = item.Category,
+            ProductId = item.ProductId,
+            ProductName = productName,
             ImageUrl = item.ImageUrl,
             CreatedAt = item.CreatedAt,
         });

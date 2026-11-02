@@ -29,7 +29,7 @@ paths:
 | `IsLimited` | `bool` | Limited edition flag |
 | `IsForSale` | `bool` | Listed in marketplace |
 | `AskingPrice` | `decimal?` | `decimal(18,2)` |
-| `Currency` | `string?` | ISO code e.g. "USD", "EUR" |
+| `Currency` | `string?` | `EUR`, `GBP` or `USD`, stored upper-case (`.claude/rules/domain/currencies.md`) |
 | `ForSaleAt` | `DateTime?` | When the bottle was listed for sale (set by `ListForSaleAsync`, cleared by `UnlistFromSaleAsync`) |
 | `Barcode` | `string?` | Scanned/known EAN-UPC; sharpens canonical price-estimate matching (Collection Value) |
 | `ProductId` | `Guid?` | FK → Product (nullable) — catalog link; see below |
@@ -103,5 +103,6 @@ Bottle code also does work that other rule files describe:
   owners (`WishListMatch`, `.claude/rules/domain/wish-list.md`) and evaluates badges (`BottleListed`).
 - `BottleLikeService.LikeAsync` sends `BottleLiked` and evaluates the owner's badges (`LikeReceived`);
   `BottleCommentService.AddCommentAsync` sends `BottleCommented`.
+- `ListForSaleAsync` accepts only the supported currencies (`.claude/rules/domain/currencies.md`).
 - Notification types: `.claude/rules/domain/notifications.md`. Badges: `.claude/rules/domain/badges.md`. A bottle's price estimate
   and the collection value: `.claude/rules/domain/pricing.md`.

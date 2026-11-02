@@ -39,14 +39,16 @@ test.describe('Marketplace', () => {
     await expect(panel.getByRole('button', { name: bg.offers.makeOffer })).toHaveCount(0)
 
     await panel.getByPlaceholder(bg.bottle.askingPrice).fill('150')
-    await panel.getByRole('combobox').filter({ hasText: 'USD' }).click()
-    await sellerPage.getByRole('option', { name: 'EUR', exact: true }).click()
+    // Only EUR, GBP and USD, EUR first and preselected (#98).
+    await panel.getByRole('combobox').filter({ hasText: 'EUR' }).click()
+    await expect(sellerPage.getByRole('option')).toHaveText(['EUR', 'GBP', 'USD'])
+    await sellerPage.getByRole('option', { name: 'GBP', exact: true }).click()
     // A stack starts at one bottle for sale; offer two of the three.
     await panel.getByRole('button', { name: bg.bottle.forSaleIncrease }).click()
     await panel.getByRole('button', { name: bg.bottle.listForSale }).click()
 
     await expect(panel.getByText(bg.bottle.forSale, { exact: true })).toBeVisible()
-    await expect(panel).toContainText('EUR 150')
+    await expect(panel).toContainText('GBP 150')
     await expect(panel).toContainText(bg.bottle.perBottle)
     await expect(panel).toContainText(fill(bg.bottle.forSaleOfOwned, { forSale: 2, owned: 3 }))
 
@@ -55,7 +57,7 @@ test.describe('Marketplace', () => {
     await searchMarketplace(visitor, name)
     const listing = card(visitor, name)
     await expect(listing).toContainText('×2')
-    await expect(listing).toContainText('EUR 150')
+    await expect(listing).toContainText('GBP 150')
     await expect(listing).toContainText(fill(bg.marketplace.by, { name: seller.displayName }))
 
     await listing.getByRole('button', { name: bg.marketplace.viewBottle }).click()

@@ -163,7 +163,7 @@ Every other file has `paths` for the code it describes.
 - `documentation.md`: where documentation goes, `paths`, how a rule file is written; the `document-repository` skill applies it.
 - `backend/`: `result-pattern.md`, `validation-decorators.md`, `conventions.md` (ownership check, DI, registration, `CancellationToken`, naming, code style, XML docs, admin), `middleware.md`, `startup.md`.
 - `database/`: `app-db-context.md` (global delete behaviour and UTC rules, the DbSets).
-- `domain/`: one file per feature, with its entities, endpoints and design: `users.md`, `bottles.md`, `reviews.md`, `follows.md`, `messages.md`, `news.md`, `notifications.md`, `distilleries.md`, `wish-list.md`, `offers.md`, `pricing.md` (with Collection Value), `badges.md`, `catalog.md`.
+- `domain/`: one file per feature (entities, endpoints, design): `users.md`, `bottles.md`, `reviews.md`, `follows.md`, `messages.md`, `news.md`, `notifications.md`, `distilleries.md`, `wish-list.md`, `offers.md`, `pricing.md` (with Collection Value), `currencies.md`, `badges.md`, `catalog.md`.
 - `frontend/`: `conventions.md` (auth, API layer, data, types, contexts, i18n, app shell and theme), `routing.md`, `shared-components.md`.
 - `testing/`: `backend.md` (service and integration tests), `http.md`, `frontend-unit.md`, `e2e.md`.
 - `ci/`: `workflows.md`, `migration-guard.md`, `e2e.md`, `codeql-and-dependabot.md`.

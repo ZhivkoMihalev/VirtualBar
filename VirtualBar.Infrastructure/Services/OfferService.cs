@@ -29,7 +29,7 @@ public sealed class OfferService(
             BuyerId = currentUser.UserId,
             SellerId = bottle!.UserId,
             OfferedPrice = request.OfferedPrice,
-            Currency = request.Currency,
+            Currency = SupportedCurrencies.ToCode(request.Currency),
             Message = request.Message,
             Status = OfferStatus.Pending,
         };

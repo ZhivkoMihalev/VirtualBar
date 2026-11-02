@@ -29,6 +29,7 @@ import ReviewsAggregate from './reviews/ReviewsAggregate'
 import ReviewCard from './reviews/ReviewCard'
 import { BottleSvg } from './BarShelf'
 import { CATEGORY_COLORS } from '../lib/bottlePalette'
+import { CURRENCIES, DEFAULT_CURRENCY, formCurrency } from '../lib/currencies'
 import { NOTE_FIELDS, formatRelativeTime, hasAnyNote } from '../lib/reviewFormat'
 import type { NoteField } from '../lib/reviewFormat'
 import { cn } from '@/lib/utils'
@@ -72,8 +73,6 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form'
-
-const CURRENCIES = ['USD', 'EUR', 'GBP', 'BGN', 'CHF', 'JPY', 'CAD', 'AUD']
 
 const QUICK_SCORES = [70, 80, 85, 90, 95]
 
@@ -561,7 +560,7 @@ function SaleSection({ bottle, userId }: { bottle: Bottle; userId: string }) {
   const { t } = useTranslation()
   const queryClient = useQueryClient()
   const [price, setPrice] = useState(bottle.askingPrice?.toString() ?? '')
-  const [currency, setCurrency] = useState(bottle.currency ?? 'USD')
+  const [currency, setCurrency] = useState(formCurrency(bottle.currency))
   // Default to one bottle even on a stack: offering more than intended is the costlier mistake.
   const [saleQuantity, setSaleQuantity] = useState(1)
   const isStack = bottle.quantity > 1
@@ -596,7 +595,7 @@ function SaleSection({ bottle, userId }: { bottle: Bottle; userId: string }) {
         <div>
           <div className="flex flex-wrap items-center justify-between gap-3">
             <span className="font-heading text-xl font-semibold text-success">
-              {bottle.currency ?? 'USD'} {bottle.askingPrice?.toLocaleString() ?? '—'}
+              {bottle.currency ?? DEFAULT_CURRENCY} {bottle.askingPrice?.toLocaleString() ?? '—'}
               {isStack && (
                 <span className="ml-1.5 text-sm font-normal text-muted-foreground">
                   {t('bottle.perBottle')}
@@ -773,7 +772,7 @@ function MakeOfferSection({ bottle }: { bottle: Bottle }) {
     resolver: zodResolver(schema),
     defaultValues: {
       offeredPrice: bottle.askingPrice?.toString() ?? '',
-      currency: bottle.currency ?? 'USD',
+      currency: formCurrency(bottle.currency),
       message: '',
     },
   })
@@ -1031,7 +1030,7 @@ export default function BottleDetailPanel({
                       {t('bottle.askingPrice')}
                     </span>
                     <span className="font-heading text-xl font-semibold text-success">
-                      {bottle.currency ?? 'USD'} {bottle.askingPrice.toLocaleString()}
+                      {bottle.currency ?? DEFAULT_CURRENCY} {bottle.askingPrice.toLocaleString()}
                       {bottle.forSaleQuantity > 1 && (
                         <span className="ml-1.5 text-sm font-normal text-success/70">
                           {t('bottle.perBottle')}

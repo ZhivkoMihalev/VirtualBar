@@ -155,6 +155,43 @@ public sealed class OfferServiceTests
         Assert.Equal("Currency is required.", result.Error);
     }
 
+    [Theory]
+    [InlineData("BGN")]
+    [InlineData("CHF")]
+    [InlineData("AUD")]
+    public async Task CreateAsync_WhenCurrencyNotSupported_ReturnsFail(string currency)
+    {
+        var db = CreateDbContext();
+        var seller = SeedUser(db, "Seller");
+        var buyer = SeedUser(db, "Buyer");
+        var bottle = SeedBottle(db, seller.Id);
+        var service = CreateOfferService(db, buyer.Id);
+        var request = new CreateOfferRequest { BottleId = bottle.Id, OfferedPrice = 50m, Currency = currency };
+
+        var result = await service.CreateAsync(request, CancellationToken.None);
+
+        Assert.False(result.Success);
+        Assert.Equal("Currency must be EUR, GBP or USD.", result.Error);
+        Assert.Empty(db.Offers);
+    }
+
+    [Fact]
+    public async Task CreateAsync_WhenCurrencyInLowerCase_StoresTheUpperCaseCode()
+    {
+        var db = CreateDbContext();
+        var seller = SeedUser(db, "Seller");
+        var buyer = SeedUser(db, "Buyer");
+        var bottle = SeedBottle(db, seller.Id);
+        var service = CreateOfferService(db, buyer.Id);
+        var request = new CreateOfferRequest { BottleId = bottle.Id, OfferedPrice = 50m, Currency = " gbp " };
+
+        var result = await service.CreateAsync(request, CancellationToken.None);
+
+        Assert.True(result.Success);
+        Assert.Equal("GBP", result.Data!.Currency);
+        Assert.Equal("GBP", db.Offers.Single().Currency);
+    }
+
     [Fact]
     public async Task CreateAsync_WhenBottleNotFound_ReturnsNotFound()
     {

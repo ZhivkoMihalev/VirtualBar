@@ -1938,6 +1938,50 @@ public sealed class BottleServiceTests
 
     #endregion
 
+    #region Supported currencies (#98)
+
+    [Theory]
+    [InlineData("BGN")]
+    [InlineData("CHF")]
+    [InlineData("JPY")]
+    [InlineData("")]
+    [InlineData("EURO")]
+    public async Task ListForSaleAsync_WhenCurrencyNotSupported_ReturnsFail(string currency)
+    {
+        var db = CreateDbContext();
+        var user = SeedUser(db);
+        var bottle = SeedBottle(db, user.Id);
+        var service = CreateBottleService(db, user.Id);
+        var request = new ListForSaleRequest { AskingPrice = 100m, Currency = currency };
+
+        var result = await service.ListForSaleAsync(bottle.Id, request, CancellationToken.None);
+
+        Assert.False(result.Success);
+        Assert.Equal(ErrorCode.Validation, result.ErrorCode);
+        Assert.Equal("Currency must be EUR, GBP or USD.", result.Error);
+        Assert.False(db.Bottles.Single().IsForSale);
+    }
+
+    [Theory]
+    [InlineData("EUR", "EUR")]
+    [InlineData(" gbp ", "GBP")]
+    [InlineData("usd", "USD")]
+    public async Task ListForSaleAsync_WhenCurrencySupportedInAnyCase_StoresTheUpperCaseCode(string currency, string stored)
+    {
+        var db = CreateDbContext();
+        var user = SeedUser(db);
+        var bottle = SeedBottle(db, user.Id);
+        var service = CreateBottleService(db, user.Id);
+        var request = new ListForSaleRequest { AskingPrice = 100m, Currency = currency };
+
+        var result = await service.ListForSaleAsync(bottle.Id, request, CancellationToken.None);
+
+        Assert.True(result.Success);
+        Assert.Equal(stored, db.Bottles.Single().Currency);
+    }
+
+    #endregion
+
     #region For-sale quantity
 
     [Theory]

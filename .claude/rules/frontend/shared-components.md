@@ -28,6 +28,8 @@ paths:
   - `LikesSection`, `ReviewsSection` (aggregate header + one-per-user review form + review list; form
     authenticated-only), and `CommentsSection` (below reviews) for all.
   - `onDelete` prop (DashboardPage only) invalidates bottles query and closes panel.
+  - The sale and offer forms offer only `CURRENCIES` from `src/lib/currencies.ts`, EUR by default
+    (`.claude/rules/domain/currencies.md`).
   - A bottle linked to a catalog product (`productId`) shows a "View product" link (`bottle.viewProduct`, visible to
     everyone) that closes the panel and opens `/product/:id`.
 - Bottle cards (`BarShelf`, Marketplace) show a gold `★ <avg>` badge when `reviewsCount > 0`.

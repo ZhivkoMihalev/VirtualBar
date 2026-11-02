@@ -22,6 +22,9 @@ public sealed class OfferValidationDecorator(
         if (string.IsNullOrWhiteSpace(request.Currency))
             return Result<OfferDto>.Fail("Currency is required.");
 
+        if (!SupportedCurrencies.IsSupported(request.Currency))
+            return Result<OfferDto>.Fail(SupportedCurrencies.NotSupportedMessage);
+
         var bottle = await db.Bottles
             .FirstOrDefaultAsync(b => b.Id == request.BottleId && !b.IsDeleted, cancellationToken);
 

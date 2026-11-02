@@ -239,7 +239,7 @@ public sealed class BottleService(
         bottle!.IsForSale = true;
         bottle.ForSaleQuantity = request.Quantity;
         bottle.AskingPrice = request.AskingPrice;
-        bottle.Currency = request.Currency;
+        bottle.Currency = SupportedCurrencies.ToCode(request.Currency);
         bottle.ForSaleAt = DateTime.UtcNow;
         bottle.UpdatedAt = DateTime.UtcNow;
 

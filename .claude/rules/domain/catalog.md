@@ -94,7 +94,10 @@ Canonical catalog entry for a spirits product. Not user-owned.
   - The product (+ `Description`) plus, over every non-deleted linked bottle:
     - the review aggregate (`AverageScore`, `ReviewsCount`, top-3 `TopFlavors` with the same tie-break as a bottle);
     - `OwnersCount` + the top 20 `Owners` ranked by physical bottles (`Sum(Quantity)`);
-    - every for-sale `Listings` entry (newest first);
+    - `ListingsCount` (the same count as the catalog card's) for everyone, and every for-sale `Listings` entry
+      (newest first) **only for a logged-in caller**: a visitor gets `listings: []`, since the listings (seller, price)
+      are for collectors, like the marketplace (#102). `ProductCatalogService` branches on `ICurrentUser.IsAuthenticated`
+      (viewer-dependent content, like `FeedService`; not a validation, so it is not in the decorator);
     - the 5 `LatestReviews`.
   - `404` unknown/deleted product.
 - `GET /api/products/{id}/reviews?page=&pageSize=` — `[AllowAnonymous]`; the rest of the product's reviews, newest

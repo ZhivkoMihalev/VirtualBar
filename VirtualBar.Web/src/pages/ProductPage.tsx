@@ -4,6 +4,7 @@ import { Link, useParams } from 'react-router-dom'
 import { useInfiniteQuery, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { isAxiosError } from 'axios'
+import { Lock } from 'lucide-react'
 import { getProduct, getProductReviews } from '../api/productsApi'
 import { getProductEstimate } from '../api/pricesApi'
 import { getBottle } from '../api/bottlesApi'
@@ -150,6 +151,29 @@ function ListingRow({
         </Button>
       </div>
     </li>
+  )
+}
+
+/**
+ * A visitor sees only how many listings there are: sellers and prices are for logged-in collectors,
+ * as on the marketplace (its `LoginGate`), and the API sends a visitor no listings (#102).
+ */
+function ListingsLoginGate({ count }: { count: number }) {
+  const { t } = useTranslation()
+
+  return (
+    <Card className="flex-row flex-wrap items-center gap-4 px-5 py-4">
+      <Lock className="size-6 shrink-0 text-primary" aria-hidden />
+      <div className="min-w-0 flex-1">
+        <p className="font-heading text-lg font-semibold text-primary">
+          {t('product.listingsCount', { count })}
+        </p>
+        <p className="text-sm text-muted-foreground">{t('product.listingsLoginText')}</p>
+      </div>
+      <Button asChild>
+        <Link to="/login">{t('product.listingsLogin')}</Link>
+      </Button>
+    </Card>
   )
 }
 
@@ -302,8 +326,10 @@ export default function ProductPage() {
             </Section>
 
             <Section title={t('product.forSale')}>
-              {product.listings.length === 0 ? (
+              {product.listingsCount === 0 ? (
                 <p className="text-sm text-muted-foreground">{t('product.nobodySelling')}</p>
+              ) : !isAuthenticated ? (
+                <ListingsLoginGate count={product.listingsCount} />
               ) : (
                 <Card className="gap-0 p-0">
                   <ul className="divide-y divide-border">

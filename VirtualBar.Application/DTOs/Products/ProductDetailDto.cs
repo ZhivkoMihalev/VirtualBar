@@ -50,6 +50,13 @@ public sealed class ProductDetailDto
 
     public List<ProductOwnerDto> Owners { get; set; } = [];
 
+    /// <summary>
+    /// How many current listings (non-deleted linked bottles for sale) the product has, the same count as
+    /// <see cref="ProductCardDto.ListingsCount"/>. Returned to everyone, including a caller who is not logged in.
+    /// </summary>
+    public int ListingsCount { get; set; }
+
+    /// <summary>The current listings, newest first; always empty for a caller who is not logged in (#102).</summary>
     public List<ProductListingDto> Listings { get; set; } = [];
 
     /// <summary>The newest 5 reviews; the rest come from <c>GET /api/products/{id}/reviews</c>.</summary>

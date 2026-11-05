@@ -16,7 +16,7 @@ import {
 
 /**
  * The product page adds up every bottle linked to a catalog product: the community score and top flavors, the
- * collectors, the listings and the reviews, and its catalog card shows the same numbers. Each test links bottles to
+ * collectors, the listings (only their count for a visitor, #102) and the reviews, and its catalog card shows the same numbers. Each test links bottles to
  * a product nobody had linked before, so every number on the page comes from the bottles it created.
  */
 
@@ -72,10 +72,22 @@ test.describe('Product page', () => {
     await expect(owners.getByRole('link', { name: new RegExp(stacker.displayName) })).toContainText('×2')
     await expect(owners.getByRole('link', { name: new RegExp(single.displayName) })).not.toContainText('×')
 
-    const listings = section(page, bg.product.forSale).getByRole('listitem')
+    // A visitor sees only how many are for sale, and a login button instead of the sellers and prices (#102).
+    // Inside the section: the NavBar has its own "ВХОД" link, which matches the name too.
+    const forSale = section(page, bg.product.forSale)
+    await expect(forSale).toContainText(fill(bg.product.listingsCount_one, { count: 1 }))
+    await expect(forSale.getByRole('link', { name: bg.product.listingsLogin })).toHaveAttribute('href', '/login')
+    await expect(forSale.getByRole('listitem')).toHaveCount(0)
+    await expect(forSale).not.toContainText('EUR 150')
+
+    // A logged-in collector sees the listing itself.
+    const collectorPage = await openAs(single)
+    await collectorPage.goto(`/product/${product.id}`)
+    const listings = section(collectorPage, bg.product.forSale).getByRole('listitem')
     await expect(listings).toHaveCount(1)
     await expect(listings).toContainText(stacker.displayName)
     await expect(listings).toContainText('EUR 150')
+    await expect(collectorPage.getByRole('main').getByRole('link', { name: bg.product.listingsLogin })).toHaveCount(0)
 
     const reviews = section(page, bg.product.reviews)
     await expect(reviews.getByText(`${marker} A`, { exact: true })).toBeVisible()
@@ -102,7 +114,9 @@ test.describe('Product page', () => {
       en.flavors.Peaty,
     ])
     await expect(section(page, en.product.owners)).toBeVisible()
-    await expect(section(page, en.product.forSale)).toBeVisible()
+    const forSaleInEnglish = section(page, en.product.forSale)
+    await expect(forSaleInEnglish).toContainText(fill(en.product.listingsCount_one, { count: 1 }))
+    await expect(forSaleInEnglish.getByRole('link', { name: en.product.listingsLogin })).toBeVisible()
     await expect(section(page, en.product.reviews)).toBeVisible()
   })
 

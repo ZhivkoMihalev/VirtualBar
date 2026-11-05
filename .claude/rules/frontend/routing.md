@@ -53,6 +53,10 @@ paths:
 ## Product page (`/product/:id`)
 - Shows the price estimate only to logged-in users (`/api/prices` is `[Authorize]`; an anonymous call would
   401-redirect to `/login`).
+- Shows the listings ("За продан") only to logged-in collectors, as on the marketplace. A visitor sees only how many
+  there are (`product.listingsCount_one`/`_other`, from `ProductDetailDto.ListingsCount`) and a "Влез, за да ги видиш"
+  link to `/login` (`ListingsLoginGate`); with none for sale, the same empty text as a collector (#102). The API sends a
+  visitor no listings anyway.
 - Opens a listing in `BottleDetailPanel`, queried as `['bottles', ownerId, bottleId]`, so the panel's own
   `['bottles', ownerId]` invalidations refresh it.
 - Renders a "not found" state for an unknown id instead of redirecting.

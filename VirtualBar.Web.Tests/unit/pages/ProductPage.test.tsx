@@ -21,6 +21,13 @@ function renderProduct(detail: ProductDetail) {
   return renderWithProviders(<ProductPage />, { route: `/product/${detail.id}`, path: '/product/:id' })
 }
 
+/** Logs a collector in, with the NavBar's notifications and the price estimate answered. */
+function signInCollector() {
+  signIn()
+  vi.mocked(getNotifications).mockResolvedValue({ notifications: [], unreadCount: 0 })
+  vi.mocked(getProductEstimate).mockResolvedValue(null)
+}
+
 /** A section of the page, found by its heading once the product has loaded. */
 const findSection = async (title: string) =>
   (await screen.findByRole('heading', { level: 2, name: title })).closest('section')!
@@ -88,6 +95,7 @@ describe('ProductPage', () => {
   })
 
   it('lists the bottles for sale with their price, per bottle when there are several', async () => {
+    signInCollector()
     renderProduct(
       productDetail({
         listings: [
@@ -106,6 +114,34 @@ describe('ProductPage', () => {
     expect(within(stack).getByRole('button', { name: bg.product.open })).toBeEnabled()
     expect(quiet).toHaveTextContent(bg.marketplace.priceOnRequest)
     expect(quiet).not.toHaveTextContent(bg.bottle.perBottle)
+    expect(within(forSale).queryByRole('link', { name: bg.product.listingsLogin })).not.toBeInTheDocument()
+  })
+
+  it('shows a visitor only how many bottles are for sale, with a login button (#102)', async () => {
+    // The API sends a visitor the count and no listings.
+    renderProduct(productDetail({ listingsCount: 3, listings: [] }))
+
+    const forSale = await findSection(bg.product.forSale)
+    expect(forSale).toHaveTextContent(i18n.t('product.listingsCount', { count: 3 }))
+    expect(within(forSale).getByRole('link', { name: bg.product.listingsLogin })).toHaveAttribute('href', '/login')
+    expect(within(forSale).queryByRole('listitem')).not.toBeInTheDocument()
+    expect(within(forSale).queryByRole('button', { name: bg.product.open })).not.toBeInTheDocument()
+    expect(forSale).not.toHaveTextContent(bg.product.nobodySelling)
+  })
+
+  it('uses the singular for a visitor when one bottle is for sale', async () => {
+    renderProduct(productDetail({ listingsCount: 1, listings: [] }))
+
+    const forSale = await findSection(bg.product.forSale)
+    expect(forSale).toHaveTextContent(bg.product.listingsCount_one.replace('{{count}}', '1'))
+  })
+
+  it('shows a visitor the empty text and no login button when nothing is for sale', async () => {
+    renderProduct(productDetail())
+
+    const forSale = await findSection(bg.product.forSale)
+    expect(forSale).toHaveTextContent(bg.product.nobodySelling)
+    expect(within(forSale).queryByRole('link', { name: bg.product.listingsLogin })).not.toBeInTheDocument()
   })
 
   it('shows the latest reviews, and "show more" switches to the full list without repeating any', async () => {
@@ -152,9 +188,7 @@ describe('ProductPage', () => {
   })
 
   it('shows the cached price estimate to a logged-in collector', async () => {
-    signIn()
-    vi.mocked(getNotifications).mockResolvedValue({ notifications: [], unreadCount: 0 })
-    vi.mocked(getProductEstimate).mockResolvedValue(null)
+    signInCollector()
     const detail = productDetail({ name: 'Logged-in view' })
 
     renderProduct(detail)

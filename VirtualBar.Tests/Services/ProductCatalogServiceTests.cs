@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Moq;
 using VirtualBar.Application.Common;
 using VirtualBar.Application.Interfaces;
 using VirtualBar.Domain.Entities;
@@ -22,8 +23,13 @@ public sealed class ProductCatalogServiceTests
         return new AppDbContext(options);
     }
 
-    private static IProductCatalogService CreateService(AppDbContext db) =>
-        new ProductCatalogValidationDecorator(new ProductCatalogService(db), db);
+    private static IProductCatalogService CreateService(AppDbContext db, bool isAuthenticated = true)
+    {
+        var currentUser = new Mock<ICurrentUser>();
+        currentUser.Setup(u => u.IsAuthenticated).Returns(isAuthenticated);
+        currentUser.Setup(u => u.UserId).Returns(isAuthenticated ? Guid.NewGuid() : Guid.Empty);
+        return new ProductCatalogValidationDecorator(new ProductCatalogService(db, currentUser.Object), db);
+    }
 
     private static Distillery SeedDistillery(AppDbContext db, string name = "Macallan", bool isDeleted = false)
     {
@@ -970,6 +976,7 @@ public sealed class ProductCatalogServiceTests
         Assert.Empty(dto.TopFlavors);
         Assert.Equal(0, dto.OwnersCount);
         Assert.Empty(dto.Owners);
+        Assert.Equal(0, dto.ListingsCount);
         Assert.Empty(dto.Listings);
         Assert.Empty(dto.LatestReviews);
     }
@@ -1099,6 +1106,7 @@ public sealed class ProductCatalogServiceTests
         var result = await service.GetProductAsync(product.Id, CancellationToken.None);
 
         Assert.Equal(new[] { newer.Id, older.Id }, result.Data!.Listings.Select(l => l.BottleId).ToArray());
+        Assert.Equal(2, result.Data.ListingsCount);
         var listing = result.Data.Listings[1];
         Assert.Equal(seller.Id, listing.SellerId);
         Assert.Equal("Seller", listing.SellerDisplayName);
@@ -1109,6 +1117,28 @@ public sealed class ProductCatalogServiceTests
         Assert.Equal(BottleCondition.Sealed, listing.Condition);
         Assert.Equal(2008, listing.VintageYear);
         Assert.Equal(older.ForSaleAt, listing.ForSaleAt);
+    }
+
+    /// <summary>A visitor gets only the count of the listings, never the listings themselves (#102).</summary>
+    [Fact]
+    public async Task GetProductAsync_WhenNotLoggedIn_ReturnsListingsCountButNoListings()
+    {
+        var db = CreateDbContext();
+        var product = SeedProduct(db);
+        var seller = SeedUser(db, "Seller");
+        var now = DateTime.UtcNow;
+        SeedLinkedBottle(db, product.Id, seller.Id, isForSale: true, forSaleQuantity: 1, forSaleAt: now.AddDays(-2), askingPrice: 120m);
+        SeedLinkedBottle(db, product.Id, seller.Id, isForSale: true, forSaleQuantity: 1, forSaleAt: now.AddDays(-1), askingPrice: 150m);
+        SeedLinkedBottle(db, product.Id, seller.Id);
+        SeedLinkedBottle(db, product.Id, seller.Id, isForSale: true, forSaleQuantity: 1, forSaleAt: now, isDeleted: true);
+        var service = CreateService(db, isAuthenticated: false);
+
+        var result = await service.GetProductAsync(product.Id, CancellationToken.None);
+
+        Assert.True(result.Success);
+        Assert.Equal(2, result.Data!.ListingsCount);
+        Assert.Empty(result.Data.Listings);
+        Assert.Equal(1, result.Data.OwnersCount);
     }
 
     [Fact]

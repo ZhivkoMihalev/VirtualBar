@@ -346,6 +346,9 @@ export interface ProductDetail extends Product {
   /** All distinct owners; `owners` holds at most the top 20. */
   ownersCount: number
   owners: ProductOwner[]
+  /** How many current listings there are; sent to everyone, like the catalog card's `listingsCount`. */
+  listingsCount: number
+  /** The current listings, newest first; always empty for a visitor (#102). */
   listings: ProductListing[]
   /** The newest 5; the rest come from the paged product reviews endpoint. */
   latestReviews: BottleReview[]

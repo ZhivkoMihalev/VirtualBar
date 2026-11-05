@@ -12,7 +12,9 @@ paths:
 ## Routes
 - `/` is `HomePage.tsx` (public news/social feed).
 - **Public:**
-  - `/browse` (`BrowsePage`), `/bar/:userId` (`PublicBarPage`, a collector's public bar);
+  - `/browse` (`BrowsePage`), `/bar/:userId` (`PublicBarPage`, a collector's public bar). A visitor sees which bottles
+    are for sale, but not their asking price: the API sends none, and `BottleDetailPanel` shows a login link in its
+    place (#103);
   - `/marketplace` (`MarketplacePage`) is reachable by anyone, but its content is for logged-in collectors: a visitor
     sees a login gate (`LoginGate`, `marketplace.loginGate*` keys) with "log in" and "register" links, and the page sends
     no marketplace or wish list request (#100). `GET /api/bottles/marketplace` and `GET /api/wishlist/all` are

@@ -33,13 +33,13 @@ public sealed class BottleService(
             .ToListAsync(cancellationToken);
 
         return Result<List<BottleDto>>.Ok(
-            bottles.Select(b => MapToDto(
+            bottles.Select(b => ForViewer(MapToDto(
                 b,
                 b.Likes.Count,
                 b.Comments.Count,
                 b.Reviews.Any() ? Math.Round(b.Reviews.Average(r => (double)r.Score), 1) : (double?)null,
                 b.Reviews.Count,
-                b.User.DisplayName)).ToList());
+                b.User.DisplayName))).ToList());
     }
 
     public async Task<Result<BottleDto>> GetBottleByIdAsync(Guid bottleId, CancellationToken cancellationToken)
@@ -56,13 +56,13 @@ public sealed class BottleService(
         if (bottle is null)
             return Result<BottleDto>.NotFound("Bottle not found.");
 
-        return Result<BottleDto>.Ok(MapToDto(
+        return Result<BottleDto>.Ok(ForViewer(MapToDto(
             bottle,
             bottle.Likes.Count,
             bottle.Comments.Count,
             bottle.Reviews.Any() ? Math.Round(bottle.Reviews.Average(r => (double)r.Score), 1) : (double?)null,
             bottle.Reviews.Count,
-            bottle.User.DisplayName));
+            bottle.User.DisplayName)));
     }
 
     public async Task<Result<BottleDto>> AddBottleAsync(AddBottleRequest request, CancellationToken cancellationToken)
@@ -324,6 +324,21 @@ public sealed class BottleService(
                 b.Reviews.Count,
                 b.User.DisplayName))
             .ToList());
+    }
+
+    /// <summary>
+    /// The asking price is for logged-in collectors only, like the marketplace (#103). A visitor still sees that the
+    /// bottle is for sale and how many, but not its price or currency.
+    /// </summary>
+    private BottleDto ForViewer(BottleDto bottle)
+    {
+        if (!currentUser.IsAuthenticated)
+        {
+            bottle.AskingPrice = null;
+            bottle.Currency = null;
+        }
+
+        return bottle;
     }
 
     private static BottleDto MapToDto(Bottle bottle, int likesCount = 0, int commentsCount = 0, double? averageScore = null, int reviewsCount = 0, string userDisplayName = "") => new()

@@ -901,6 +901,42 @@ function DetailRow({ label, value }: { label: string; value: string | number }) 
   )
 }
 
+/**
+ * A listed bottle as another collector sees it. The asking price is for logged-in collectors only, like the
+ * marketplace: the API sends a visitor no price, so a visitor sees a login link in its place (#103).
+ */
+function ListingSection({ bottle }: { bottle: Bottle }) {
+  const { t } = useTranslation()
+  const { isAuthenticated } = useAuth()
+
+  if (isAuthenticated && bottle.askingPrice == null) return null
+
+  return (
+    <div className="mb-5 rounded-md border border-success/30 bg-success/10 px-5 py-3.5">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <span className="text-xs uppercase tracking-wide text-success">{t('bottle.askingPrice')}</span>
+        {isAuthenticated && bottle.askingPrice != null ? (
+          <span className="font-heading text-xl font-semibold text-success">
+            {bottle.currency ?? DEFAULT_CURRENCY} {bottle.askingPrice.toLocaleString()}
+            {bottle.forSaleQuantity > 1 && (
+              <span className="ml-1.5 text-sm font-normal text-success/70">{t('bottle.perBottle')}</span>
+            )}
+          </span>
+        ) : (
+          <Button asChild size="sm" variant="outline">
+            <Link to="/login">{t('bottle.loginToSeePrice')}</Link>
+          </Button>
+        )}
+      </div>
+      {bottle.forSaleQuantity > 1 && (
+        <div className="mt-1.5 text-sm text-success/90">
+          {t('bottle.availableForSale', { count: bottle.forSaleQuantity })}
+        </div>
+      )}
+    </div>
+  )
+}
+
 export default function BottleDetailPanel({
   bottle,
   userId,
@@ -1023,28 +1059,7 @@ export default function BottleDetailPanel({
             </>
           ) : (
             <>
-              {bottle.isForSale && bottle.askingPrice != null && (
-                <div className="mb-5 rounded-md border border-success/30 bg-success/10 px-5 py-3.5">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs uppercase tracking-wide text-success">
-                      {t('bottle.askingPrice')}
-                    </span>
-                    <span className="font-heading text-xl font-semibold text-success">
-                      {bottle.currency ?? DEFAULT_CURRENCY} {bottle.askingPrice.toLocaleString()}
-                      {bottle.forSaleQuantity > 1 && (
-                        <span className="ml-1.5 text-sm font-normal text-success/70">
-                          {t('bottle.perBottle')}
-                        </span>
-                      )}
-                    </span>
-                  </div>
-                  {bottle.forSaleQuantity > 1 && (
-                    <div className="mt-1.5 text-sm text-success/90">
-                      {t('bottle.availableForSale', { count: bottle.forSaleQuantity })}
-                    </div>
-                  )}
-                </div>
-              )}
+              {bottle.isForSale && <ListingSection bottle={bottle} />}
               {currentUserId && <MakeOfferSection bottle={bottle} />}
             </>
           )}

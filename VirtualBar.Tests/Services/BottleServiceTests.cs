@@ -23,11 +23,11 @@ public sealed class BottleServiceTests
         return new AppDbContext(options);
     }
 
-    private static ICurrentUser CreateCurrentUser(Guid userId)
+    private static ICurrentUser CreateCurrentUser(Guid userId, bool isAuthenticated = true)
     {
         var mock = new Mock<ICurrentUser>();
         mock.Setup(u => u.UserId).Returns(userId);
-        mock.Setup(u => u.IsAuthenticated).Returns(true);
+        mock.Setup(u => u.IsAuthenticated).Returns(isAuthenticated);
         return mock.Object;
     }
 
@@ -37,9 +37,10 @@ public sealed class BottleServiceTests
         INotificationService? notificationService = null,
         IBadgeService? badgeService = null,
         IProductRequestService? productRequestService = null,
-        ILogger<BottleService>? logger = null)
+        ILogger<BottleService>? logger = null,
+        bool isAuthenticated = true)
     {
-        var currentUser = CreateCurrentUser(currentUserId);
+        var currentUser = CreateCurrentUser(currentUserId, isAuthenticated);
         var inner = new BottleService(
             db,
             currentUser,
@@ -2132,6 +2133,76 @@ public sealed class BottleServiceTests
 
         Assert.True(result.Success);
         Assert.Equal(1, Assert.Single(result.Data!).ForSaleQuantity);
+    }
+
+    #endregion
+
+    #region Asking price for visitors (#103)
+
+    [Fact]
+    public async Task GetBottlesByUserAsync_WhenLoggedIn_ReturnsAskingPriceAndCurrency()
+    {
+        var db = CreateDbContext();
+        var seller = SeedUser(db);
+        SeedBottle(db, seller.Id, isForSale: true, askingPrice: 150m, currency: "EUR", quantity: 2, forSaleQuantity: 2);
+        var service = CreateBottleService(db, Guid.NewGuid());
+
+        var result = await service.GetBottlesByUserAsync(seller.Id, CancellationToken.None);
+
+        var bottle = Assert.Single(result.Data!);
+        Assert.Equal(150m, bottle.AskingPrice);
+        Assert.Equal("EUR", bottle.Currency);
+    }
+
+    /// <summary>A visitor sees that a bottle on a public bar is for sale, but not its price (#103).</summary>
+    [Fact]
+    public async Task GetBottlesByUserAsync_WhenNotLoggedIn_HidesAskingPriceButKeepsForSale()
+    {
+        var db = CreateDbContext();
+        var seller = SeedUser(db);
+        SeedBottle(db, seller.Id, isForSale: true, askingPrice: 150m, currency: "EUR", quantity: 2, forSaleQuantity: 2);
+        var service = CreateBottleService(db, Guid.Empty, isAuthenticated: false);
+
+        var result = await service.GetBottlesByUserAsync(seller.Id, CancellationToken.None);
+
+        Assert.True(result.Success);
+        var bottle = Assert.Single(result.Data!);
+        Assert.Null(bottle.AskingPrice);
+        Assert.Null(bottle.Currency);
+        Assert.True(bottle.IsForSale);
+        Assert.Equal(2, bottle.ForSaleQuantity);
+    }
+
+    [Fact]
+    public async Task GetBottleByIdAsync_WhenLoggedIn_ReturnsAskingPriceAndCurrency()
+    {
+        var db = CreateDbContext();
+        var seller = SeedUser(db);
+        var listed = SeedBottle(db, seller.Id, isForSale: true, askingPrice: 150m, currency: "GBP", forSaleQuantity: 1);
+        var service = CreateBottleService(db, Guid.NewGuid());
+
+        var result = await service.GetBottleByIdAsync(listed.Id, CancellationToken.None);
+
+        Assert.Equal(150m, result.Data!.AskingPrice);
+        Assert.Equal("GBP", result.Data.Currency);
+    }
+
+    /// <summary>A visitor who opens a listed bottle sees that it is for sale, but not its price (#103).</summary>
+    [Fact]
+    public async Task GetBottleByIdAsync_WhenNotLoggedIn_HidesAskingPriceButKeepsForSale()
+    {
+        var db = CreateDbContext();
+        var seller = SeedUser(db);
+        var listed = SeedBottle(db, seller.Id, isForSale: true, askingPrice: 150m, currency: "GBP", forSaleQuantity: 1);
+        var service = CreateBottleService(db, Guid.Empty, isAuthenticated: false);
+
+        var result = await service.GetBottleByIdAsync(listed.Id, CancellationToken.None);
+
+        Assert.True(result.Success);
+        Assert.Null(result.Data!.AskingPrice);
+        Assert.Null(result.Data.Currency);
+        Assert.True(result.Data.IsForSale);
+        Assert.Equal(1, result.Data.ForSaleQuantity);
     }
 
     #endregion

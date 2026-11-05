@@ -69,7 +69,8 @@ codes, JWT validation and the startup guards. They are not a place for branch co
   collectors + admins, setup calls
 - `Access/`: access matrix (anonymous list, 401 without a token), other collectors' resources, admin-only actions
 - `Auth/`: email confirmation, email failure, error reasons, JWT + logout, password reset (#81)
-- `Bottles/`: bottle routes: an image is deleted only through its own bottle's route (#72)
+- `Bottles/`: bottle routes: an image is deleted only through its own bottle's route (#72); a visitor gets a public
+  bar's bottles without `askingPrice`/`currency`, a collector with them (#103)
 - `Feed/`: the home feed on SQL Server: a followed collector's review (its query and JSON shape), the largest `skip`
 - `Products/`: the product page: a visitor gets `listingsCount` and `listings: []`, a collector the listings (#102)
 - `Uploads/`: the four multipart upload endpoints: saved + served, wrong type and oversized refused

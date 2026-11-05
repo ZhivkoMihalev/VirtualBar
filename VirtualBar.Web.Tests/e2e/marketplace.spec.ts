@@ -32,7 +32,10 @@ test.describe('Marketplace', () => {
 
     await expect(visitor.getByRole('heading', { name: bg.marketplace.loginGateTitle })).toBeVisible()
     await expect(visitor.getByRole('tab', { name: bg.marketplace.tabSearch })).toHaveCount(0)
-    await expect(visitor.getByRole('link', { name: bg.marketplace.loginGateLogin })).toHaveAttribute('href', '/login')
+    // Inside the page: the NavBar has its own "ВХОД" link, which matches the name too.
+    const gate = visitor.getByRole('main')
+    await expect(gate.getByRole('link', { name: bg.marketplace.loginGateLogin })).toHaveAttribute('href', '/login')
+    await expect(gate.getByRole('link', { name: bg.marketplace.loginGateRegister })).toHaveAttribute('href', '/register')
     await expect(visitor).toHaveURL(/\/marketplace$/)
   })
 

@@ -260,6 +260,7 @@
     "quantityOwned_other": "{{count}} bottles",
     "errorQuantity": "The quantity could not be updated. Please try again.",
     "askingPrice": "Asking price",
+    "loginToSeePrice": "Log in to see the price",
     "listForSale": "LIST FOR SALE",
     "removeFromSale": "REMOVE FROM SALE",
     "errorSale": "Something went wrong. Please try again.",

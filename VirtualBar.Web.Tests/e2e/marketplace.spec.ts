@@ -19,7 +19,8 @@ import {
 /**
  * The marketplace, for logged-in collectors only: listing a bottle for sale from one's own bar (also part of a stack),
  * finding the listing as another collector, unlisting it, the "Търсене" tab where a collector publishes a wish and is
- * notified when a matching bottle is listed, and the login gate a visitor sees instead (#100).
+ * notified when a matching bottle is listed, the login gate a visitor sees instead (#100), and the asking price on a
+ * public bar, which a visitor does not see (#103).
  */
 test.describe('Marketplace', () => {
   test.describe.configure({ timeout: FLOW_TIMEOUT })
@@ -37,6 +38,30 @@ test.describe('Marketplace', () => {
     await expect(gate.getByRole('link', { name: bg.marketplace.loginGateLogin })).toHaveAttribute('href', '/login')
     await expect(gate.getByRole('link', { name: bg.marketplace.loginGateRegister })).toHaveAttribute('href', '/register')
     await expect(visitor).toHaveURL(/\/marketplace$/)
+  })
+
+  test('on a public bar a visitor sees that a bottle is for sale but not its price; a collector sees it (#103)', async ({
+    openAs,
+  }) => {
+    const [seller, buyer] = await Promise.all([registerCollector('seller'), registerCollector('buyer')])
+    const name = uniqueName('Priced')
+    const listed = await createBottle(seller, { name, quantity: 3 })
+    await api(seller, 'POST', `/bottles/${listed.id}/list-for-sale`, { askingPrice: 175, currency: 'GBP', quantity: 2 })
+
+    const visitor = await openAs(null)
+    await visitor.goto(`/bar/${seller.id}`)
+    const visitorPanel = await openBottlePanel(visitor, name)
+    await expect(visitorPanel.getByText(bg.bottle.forSale, { exact: true })).toBeVisible()
+    await expect(visitorPanel).toContainText(fill(bg.bottle.availableForSale_other, { count: 2 }))
+    await expect(visitorPanel.getByRole('link', { name: bg.bottle.loginToSeePrice })).toHaveAttribute('href', '/login')
+    await expect(visitorPanel).not.toContainText('GBP 175')
+
+    const buyerPage = await openAs(buyer)
+    await buyerPage.goto(`/bar/${seller.id}`)
+    const buyerPanel = await openBottlePanel(buyerPage, name)
+    await expect(buyerPanel).toContainText('GBP 175')
+    await expect(buyerPanel).toContainText(bg.bottle.perBottle)
+    await expect(buyerPanel.getByRole('link', { name: bg.bottle.loginToSeePrice })).toHaveCount(0)
   })
 
   test('a seller lists part of a stack; other collectors find it in the marketplace until it is unlisted', async ({

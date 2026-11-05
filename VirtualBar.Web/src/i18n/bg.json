@@ -260,6 +260,7 @@
     "quantityOwned_other": "{{count}} бутилки",
     "errorQuantity": "Количеството не беше променено. Опитайте отново.",
     "askingPrice": "Искана цена",
+    "loginToSeePrice": "Влез, за да видиш цената",
     "listForSale": "ПУСНИ ЗА ПРОДАЖБА",
     "removeFromSale": "СПРИ ПРОДАЖБАТА",
     "errorSale": "Нещо се обърка. Моля, опитайте отново.",

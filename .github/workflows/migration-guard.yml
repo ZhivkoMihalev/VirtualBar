@@ -8,8 +8,12 @@ on:
     # labeled/unlabeled re-run the check when the approval label is added or removed.
     types: [opened, synchronize, reopened, labeled, unlabeled]
 
+# A newer run for the same PR cancels the older one. Any other label cannot change the result, yet a PR opened with
+# one gets "opened" and "labeled" at the same moment: in one group, one run cancelled the other and could leave a
+# cancelled check on the PR (#108). Concurrency is applied before the job's if, so such a run gets a group of its own,
+# and its job is skipped.
 concurrency:
-  group: migration-guard-${{ github.event.pull_request.number }}
+  group: migration-guard-${{ github.event.pull_request.number }}${{ (github.event.action == 'labeled' || github.event.action == 'unlabeled') && github.event.label.name != 'db-destructive-approved' && format('-label-{0}', github.event.label.name) || '' }}
   cancel-in-progress: true
 
 permissions:
@@ -18,6 +22,10 @@ permissions:
 jobs:
   migration-guard:
     name: Migration guard
+    # Not again for a label other than the approval label: it cannot change the result.
+    if: >-
+      (github.event.action != 'labeled' && github.event.action != 'unlabeled')
+      || github.event.label.name == 'db-destructive-approved'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:

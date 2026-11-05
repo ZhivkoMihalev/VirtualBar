@@ -45,7 +45,7 @@ public sealed class BottlesController(IBottleService bottleService) : Controller
     /// <param name="query">Optional filters: search text, category, sort order.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <response code="200">Returns the matching bottles.</response>
-    [AllowAnonymous]
+    /// <response code="401">The caller is not logged in: the marketplace is for logged-in collectors (#100).</response>
     [HttpGet("marketplace")]
     public async Task<IActionResult> GetMarketplace([FromQuery] MarketplaceQuery query, CancellationToken cancellationToken)
     {

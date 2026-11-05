@@ -16,8 +16,9 @@ paths:
 
 - At least one of `DistilleryId` or `Category` must be set (enforced by `WishListValidationDecorator`).
 - Matching in `BottleService.ListForSaleAsync` uses AND of all non-null criteria.
-- Publicly visible in Marketplace "LOOKING FOR" tab — other users can click "СЪОБЩЕНИЕ" to open a chat with the
-  searcher.
+- Visible to logged-in collectors in the Marketplace "LOOKING FOR" tab (`GET /api/wishlist/all`, `[Authorize]`): other
+  users can click "СЪОБЩЕНИЕ" to open a chat with the searcher. A visitor sees the marketplace login gate instead
+  (`.claude/rules/frontend/routing.md`, #100).
 
 ## Related rules
 - The matching runs in `BottleService.ListForSaleAsync` (`.claude/rules/domain/bottles.md`) and sends `WishListMatch`

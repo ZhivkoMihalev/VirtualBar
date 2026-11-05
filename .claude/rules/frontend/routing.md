@@ -12,8 +12,11 @@ paths:
 ## Routes
 - `/` is `HomePage.tsx` (public news/social feed).
 - **Public:**
-  - `/browse` (`BrowsePage`), `/marketplace` (`MarketplacePage`), `/bar/:userId` (`PublicBarPage`, a collector's
-    public bar);
+  - `/browse` (`BrowsePage`), `/bar/:userId` (`PublicBarPage`, a collector's public bar);
+  - `/marketplace` (`MarketplacePage`) is reachable by anyone, but its content is for logged-in collectors: a visitor
+    sees a login gate (`LoginGate`, `marketplace.loginGate*` keys) with "log in" and "register" links, and the page sends
+    no marketplace or wish list request (#100). `GET /api/bottles/marketplace` and `GET /api/wishlist/all` are
+    `[Authorize]`;
   - `/catalog` (`CatalogPage`) and `/product/:id` (`ProductPage`);
   - `/confirm-email` (`ConfirmEmailPage`);
   - `/forgot-password` and `/reset-password`, the password reset pages (`.claude/rules/domain/users.md`).

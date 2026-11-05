@@ -6,7 +6,7 @@ import { useTranslation } from 'react-i18next'
 import { useForm, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { Search, Gem, Upload, Loader2, X } from 'lucide-react'
+import { Search, Gem, Upload, Loader2, Lock, X } from 'lucide-react'
 import { useAuth } from '../contexts/useAuth'
 import { useChat } from '../contexts/useChat'
 import { getMarketplace } from '../api/bottlesApi'
@@ -666,11 +666,43 @@ function SaleTab({ onView }: { onView: (bottle: Bottle) => void }) {
   )
 }
 
+/** What a visitor sees instead of the marketplace, whose listings and wishes are for logged-in collectors (#100). */
+function LoginGate() {
+  const { t } = useTranslation()
+
+  return (
+    <Card className="mx-auto mt-6 max-w-md items-center gap-4 px-6 py-10 text-center">
+      <Lock className="size-8 text-primary" aria-hidden />
+      <h1 className="font-heading text-2xl font-bold text-primary">{t('marketplace.loginGateTitle')}</h1>
+      <p className="text-muted-foreground">{t('marketplace.loginGateText')}</p>
+      <div className="mt-2 flex gap-3">
+        <Button asChild>
+          <Link to="/login">{t('marketplace.loginGateLogin')}</Link>
+        </Button>
+        <Button asChild variant="outline">
+          <Link to="/register">{t('marketplace.loginGateRegister')}</Link>
+        </Button>
+      </div>
+    </Card>
+  )
+}
+
 export default function MarketplacePage() {
   const { t } = useTranslation()
-  const { user } = useAuth()
+  const { user, isAuthenticated } = useAuth()
   const [tab, setTab] = useState<MarketTab>('sale')
   const [selectedBottle, setSelectedBottle] = useState<Bottle | null>(null)
+
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen text-foreground">
+        <NavBar />
+        <main className="mx-auto max-w-6xl px-6 py-10">
+          <LoginGate />
+        </main>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen text-foreground">

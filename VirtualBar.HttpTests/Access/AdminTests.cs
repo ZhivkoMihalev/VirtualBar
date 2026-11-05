@@ -5,7 +5,7 @@ using VirtualBar.HttpTests.Support;
 namespace VirtualBar.HttpTests.Access;
 
 /// <summary>
-/// The admin-only actions (#68): writing news and resolving product requests. A collector is refused with 403; an
+/// The admin-only actions (#68): writing news, resolving product requests and pruning price snapshots. A collector is refused with 403; an
 /// admin, made through the app's database and logged in again (<see cref="Collector.RegisterAdminAsync"/>), succeeds.
 /// So the tests also prove that the <c>isAdmin</c> claim travels from login, through the JWT, to the decorators.
 /// </summary>
@@ -182,5 +182,31 @@ public sealed class AdminTests(ApiHosts hosts)
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.Equal("Rejected", (await response.JsonAsync()).GetProperty("status").GetString());
+    }
+
+    [SqlServerFact]
+    public async Task PrunePriceSnapshots_WhenTheCallerIsNotAnAdmin_Returns403()
+    {
+        var collector = await Collector.RegisterAsync(Api, "collector");
+
+        var response = await collector.Client.PostAsync("/api/admin/prices/prune?dryRun=false", content: null);
+
+        await CollectorApi.AssertRefusedAsync(response, HttpStatusCode.Forbidden);
+    }
+
+    /// <summary>Without <c>dryRun</c> the prune only reports: deleting has to be asked for explicitly (#58).</summary>
+    [SqlServerFact]
+    public async Task PrunePriceSnapshots_WhenTheCallerIsAnAdmin_DefaultsToADryRunThatDeletesNothing()
+    {
+        var admin = await Collector.RegisterAdminAsync(Api, "admin");
+
+        var response = await admin.Client.PostAsync("/api/admin/prices/prune", content: null);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var report = await response.JsonAsync();
+        Assert.True(report.GetProperty("dryRun").GetBoolean());
+        Assert.Equal(0, report.GetProperty("deletedCount").GetInt32());
+        Assert.True(report.GetProperty("totalCount").GetInt32() >= report.GetProperty("orphanCount").GetInt32());
+        Assert.Equal(System.Text.Json.JsonValueKind.Array, report.GetProperty("sampleKeys").ValueKind);
     }
 }

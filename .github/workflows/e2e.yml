@@ -9,7 +9,10 @@ on:
   workflow_dispatch:
   pull_request:
     branches: [master]
-    types: [opened, synchronize, reopened, labeled]
+    # No "opened": a PR opened with the "e2e" label also gets a "labeled" event at the same moment, and the two runs
+    # shared one concurrency group, so one cancelled the other and the PR kept a cancelled E2E check that greys out
+    # its merge button (#105). A PR opened without the label skips the job anyway.
+    types: [synchronize, reopened, labeled]
 
 # A newer run for the same PR cancels the older one. A "labeled" event for any label other than "e2e" starts a
 # run whose job is then skipped (see the job's if), and concurrency is applied before that if is evaluated, so

@@ -71,8 +71,22 @@ fabricated number.
 - Any other bottle keeps `ProductKey.For(bottle fields)`.
 - Never call `ProductKey.For` directly in pricing code: two paths computing the key differently means snapshots written
   by one are never read by the other.
-- Snapshots written under the old bottle keys before this rule are left in place (a cache; they are simply no longer
-  read).
+- Snapshots written under the old bottle keys before this rule are no longer read; the admin prune below removes them.
+
+### Pruning orphaned snapshots (#58)
+- `PriceSnapshotPruneService` (behind `PriceSnapshotPruneValidationDecorator`, admin only) removes the snapshots no
+  path reads any more: old bottle keys of linked bottles, and the keys of deleted bottles and products.
+- A snapshot is **kept** when its key is:
+  - the price key of a non-deleted bottle (`PriceKey.ForBottle`, loaded and computed in C# as `PreWarmWorker` does);
+  - the `CanonicalKey` of a non-deleted product: `GET /api/prices/product/{productId}` reads it whatever its age, even
+    with no bottle linked;
+  - or it is still within `SnapshotTtlDays`. A key that comes back later costs one research call, never wrong data.
+- A **one-off admin operation**, never a periodic job (owner's decision): a periodic delete would be standing data
+  removal without approval.
+- **Dry run by default:** it reports `TotalCount`, `OrphanCount` and up to 20 `SampleKeys` and deletes nothing.
+  `dryRun=false` deletes the orphans by id in batches of 500 (`ExecuteDeleteAsync`), checking the age again so a
+  snapshot refreshed meanwhile stays, and reports `DeletedCount`.
+- Run the dry run first and get its numbers approved before a real run (CRITICAL RULES). No migration is involved.
 
 ### API (`/api/prices`, `[Authorize]`)
 - `GET /api/prices/bottle/{bottleId}` → `PriceEstimateDto` — **cache-only** read (never triggers a synchronous Claude
@@ -81,6 +95,8 @@ fabricated number.
   `CanonicalKey` (the one its linked bottles share); `204` when none is cached, `404` for an unknown or deleted product.
 - `GET /api/prices/collection` → `CollectionValueDto` — Sealed-only total + per-bottle lines; owner-scoped (decorator
   enforces `userId == currentUser.UserId`).
+- `POST /api/admin/prices/prune?dryRun=true` (`AdminPricesController`, `[Authorize]`, admin only → `403` otherwise) →
+  `PriceSnapshotPruneResultDto`; `dryRun` defaults to `true`. See Pruning orphaned snapshots above.
 
 ### Config
 `appsettings.json`; `Anthropic:ApiKey` is empty there — set it in `appsettings.Development.json` / user-secrets, never

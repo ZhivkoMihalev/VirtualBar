@@ -172,6 +172,11 @@ public static class DependencyInjection
             sp.GetRequiredService<PriceEstimationService>(),
             sp.GetRequiredService<ICurrentUser>()));
 
+        services.AddScoped<PriceSnapshotPruneService>();
+        services.AddScoped<IPriceSnapshotPruneService>(sp => new PriceSnapshotPruneValidationDecorator(
+            sp.GetRequiredService<PriceSnapshotPruneService>(),
+            sp.GetRequiredService<ICurrentUser>()));
+
         // Pre-warm: a periodic hosted job researches the top-N most-owned stale bottles within budget.
         services.AddScoped<PreWarmWorker>();
         services.AddHostedService<PreWarmRefreshJob>();

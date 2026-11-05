@@ -17,17 +17,29 @@ import {
 } from './support'
 
 /**
- * The marketplace: listing a bottle for sale from one's own bar (also part of a stack), finding the listing as a
- * visitor, unlisting it, and the "Търсене" tab where a collector publishes a wish and is notified when a matching
- * bottle is listed.
+ * The marketplace, for logged-in collectors only: listing a bottle for sale from one's own bar (also part of a stack),
+ * finding the listing as another collector, unlisting it, the "Търсене" tab where a collector publishes a wish and is
+ * notified when a matching bottle is listed, and the login gate a visitor sees instead (#100).
  */
 test.describe('Marketplace', () => {
   test.describe.configure({ timeout: FLOW_TIMEOUT })
 
-  test('a seller lists part of a stack; visitors find it in the marketplace until it is unlisted', async ({
+  test('a visitor sees the login gate and stays on the marketplace, even on the "Търсене" tab (#100)', async ({
     openAs,
   }) => {
-    const seller = await registerCollector('seller')
+    const visitor = await openAs(null)
+    await visitor.goto('/marketplace')
+
+    await expect(visitor.getByRole('heading', { name: bg.marketplace.loginGateTitle })).toBeVisible()
+    await expect(visitor.getByRole('tab', { name: bg.marketplace.tabSearch })).toHaveCount(0)
+    await expect(visitor.getByRole('link', { name: bg.marketplace.loginGateLogin })).toHaveAttribute('href', '/login')
+    await expect(visitor).toHaveURL(/\/marketplace$/)
+  })
+
+  test('a seller lists part of a stack; other collectors find it in the marketplace until it is unlisted', async ({
+    openAs,
+  }) => {
+    const [seller, buyer] = await Promise.all([registerCollector('seller'), registerCollector('buyer')])
     const name = uniqueName('Stack')
     await createBottle(seller, { name, quantity: 3 })
 
@@ -50,29 +62,29 @@ test.describe('Marketplace', () => {
     await expect(panel).toContainText(bg.bottle.perBottle)
     await expect(panel).toContainText(fill(bg.bottle.forSaleOfOwned, { forSale: 2, owned: 3 }))
 
-    const visitor = await openAs(null)
-    await visitor.goto('/marketplace')
-    await searchMarketplace(visitor, name)
-    const listing = card(visitor, name)
+    const buyerPage = await openAs(buyer)
+    await buyerPage.goto('/marketplace')
+    await searchMarketplace(buyerPage, name)
+    const listing = card(buyerPage, name)
     await expect(listing).toContainText('×2')
     await expect(listing).toContainText('EUR 150')
     await expect(listing).toContainText(fill(bg.marketplace.by, { name: seller.displayName }))
 
     await listing.getByRole('button', { name: bg.marketplace.viewBottle }).click()
-    const visitorPanel = visitor.getByRole('dialog', { name })
-    await expect(visitorPanel).toContainText(bg.bottle.askingPrice)
-    await expect(visitorPanel).toContainText(fill(bg.bottle.availableForSale_other, { count: 2 }))
-    // Offers need an account.
-    await expect(visitorPanel.getByRole('button', { name: bg.offers.makeOffer })).toHaveCount(0)
+    const buyerPanel = buyerPage.getByRole('dialog', { name })
+    await expect(buyerPanel).toContainText(bg.bottle.askingPrice)
+    await expect(buyerPanel).toContainText(fill(bg.bottle.availableForSale_other, { count: 2 }))
+    // Another collector may make an offer.
+    await expect(buyerPanel.getByRole('button', { name: bg.offers.makeOffer })).toBeVisible()
 
     await panel.getByRole('button', { name: bg.bottle.removeFromSale }).click()
     await expect(panel.getByRole('button', { name: bg.bottle.listForSale })).toBeVisible()
     await expect(panel.getByText(bg.bottle.forSale, { exact: true })).toHaveCount(0)
 
-    await visitor.goto('/marketplace')
-    await searchMarketplace(visitor, name)
-    await expect(visitor.getByText(bg.marketplace.empty)).toBeVisible()
-    await expect(card(visitor, name)).toHaveCount(0)
+    await buyerPage.goto('/marketplace')
+    await searchMarketplace(buyerPage, name)
+    await expect(buyerPage.getByText(bg.marketplace.empty)).toBeVisible()
+    await expect(card(buyerPage, name)).toHaveCount(0)
   })
 
   test('a wish published under "Търсене" is matched when a bottle from that distillery is listed', async ({

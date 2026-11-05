@@ -195,7 +195,11 @@
     "empty": "No bottles for sale at the moment.",
     "priceOnRequest": "Price on request",
     "by": "by {{name}}",
-    "viewBottle": "View Bottle →"
+    "viewBottle": "View Bottle →",
+    "loginGateTitle": "The marketplace is for collectors",
+    "loginGateText": "Log in to see the bottles for sale and what other collectors are looking for.",
+    "loginGateLogin": "Log in",
+    "loginGateRegister": "Register"
   },
   "publicBar": {
     "loading": "POURING THE COLLECTION…",

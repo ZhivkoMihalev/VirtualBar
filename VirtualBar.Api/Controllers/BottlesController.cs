@@ -60,6 +60,7 @@ public sealed class BottlesController(IBottleService bottleService) : Controller
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <response code="201">Bottle created; returns the created bottle.</response>
     /// <response code="400">Validation failed.</response>
+    /// <response code="404">The distillery does not exist.</response>
     [HttpPost]
     public async Task<IActionResult> AddBottle(AddBottleRequest request, CancellationToken cancellationToken)
     {
@@ -76,7 +77,8 @@ public sealed class BottlesController(IBottleService bottleService) : Controller
     /// <response code="200">Bottle updated; returns the updated bottle.</response>
     /// <response code="400">Validation failed.</response>
     /// <response code="403">The bottle belongs to another collector.</response>
-    /// <response code="404">The bottle does not exist.</response>
+    /// <response code="404">The bottle or the distillery does not exist.</response>
+    /// <response code="409">The quantity is below the number of bottles listed for sale.</response>
     [HttpPut("{id:guid}")]
     public async Task<IActionResult> UpdateBottle(Guid id, UpdateBottleRequest request, CancellationToken cancellationToken)
     {
@@ -94,6 +96,7 @@ public sealed class BottlesController(IBottleService bottleService) : Controller
     /// <response code="400">Validation failed.</response>
     /// <response code="403">The bottle belongs to another collector.</response>
     /// <response code="404">The bottle does not exist.</response>
+    /// <response code="409">The bottle is already listed for sale.</response>
     [HttpPost("{id:guid}/list-for-sale")]
     public async Task<IActionResult> ListForSale(Guid id, ListForSaleRequest request, CancellationToken cancellationToken)
     {

@@ -42,8 +42,14 @@ paths:
   `ResendConfirmation` once email works again.
 
 ## Catalog (`/catalog`)
-- The catalog keeps its search term and category in the URL (`?q=&category=`; typing replaces the history entry, a
-  category click pushes one), so back/forward and shared links reproduce the view.
+- The catalog keeps its search term, category and order in the URL (`?q=&category=&sort=`; typing replaces the history
+  entry, a category or sort choice pushes one), so back/forward and shared links reproduce the view.
+- The sort control (#56) is a shadcn `Select` next to the search box, labelled `catalog.sortLabel`, with one
+  `catalog.sort<Value>` option per `ProductSort`.
+  - The default order for the current term (`Name`, or `Relevance` with a term) is left out of the URL; an unknown
+    `sort` value is ignored, and `Relevance` without a term reads as `Name`, as on the server.
+  - "Best match" (`Relevance`) is offered only while there is a term.
+  - The sort is part of the query key, so a new order starts again from page 1.
 - It pages with `useInfiniteQuery` and a "show more" button.
 - The search box keeps what is typed in its own state and writes it to the URL. It is **not** bound to
   `searchParams` directly.

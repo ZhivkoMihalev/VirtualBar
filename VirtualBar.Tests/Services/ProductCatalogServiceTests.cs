@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Moq;
 using VirtualBar.Application.Common;
+using VirtualBar.Application.DTOs.Products;
 using VirtualBar.Application.Interfaces;
 using VirtualBar.Domain.Entities;
 using VirtualBar.Domain.Enums;
@@ -619,7 +620,7 @@ public sealed class ProductCatalogServiceTests
         cts.Cancel();
 
         await Assert.ThrowsAsync<OperationCanceledException>(
-            () => service.BrowseAsync(null, null, 1, 24, cts.Token));
+            () => service.BrowseAsync(null, null, null, 1, 24, cts.Token));
     }
 
     [Fact]
@@ -630,7 +631,7 @@ public sealed class ProductCatalogServiceTests
         SeedProduct(db, name: "Diplomatico Reserva");
         var service = CreateService(db);
 
-        var result = await service.BrowseAsync(null, null, 1, 24, CancellationToken.None);
+        var result = await service.BrowseAsync(null, null, null, 1, 24, CancellationToken.None);
 
         Assert.True(result.Success);
         Assert.Equal(2, result.Data!.Items.Count);
@@ -644,7 +645,7 @@ public sealed class ProductCatalogServiceTests
         SeedProduct(db, name: "Diplomatico Reserva");
         var service = CreateService(db);
 
-        var result = await service.BrowseAsync("   ", null, 1, 24, CancellationToken.None);
+        var result = await service.BrowseAsync("   ", null, null, 1, 24, CancellationToken.None);
 
         Assert.True(result.Success);
         Assert.Equal(2, result.Data!.Items.Count);
@@ -655,7 +656,7 @@ public sealed class ProductCatalogServiceTests
     {
         var service = CreateService(CreateDbContext());
 
-        var result = await service.BrowseAsync(" a ", null, 1, 24, CancellationToken.None);
+        var result = await service.BrowseAsync(" a ", null, null, 1, 24, CancellationToken.None);
 
         Assert.False(result.Success);
         Assert.Equal("Search term must be at least 2 characters.", result.Error);
@@ -666,7 +667,7 @@ public sealed class ProductCatalogServiceTests
     {
         var service = CreateService(CreateDbContext());
 
-        var result = await service.BrowseAsync(new string('a', 101), null, 1, 24, CancellationToken.None);
+        var result = await service.BrowseAsync(new string('a', 101), null, null, 1, 24, CancellationToken.None);
 
         Assert.False(result.Success);
         Assert.Equal("Search term is too long.", result.Error);
@@ -680,7 +681,7 @@ public sealed class ProductCatalogServiceTests
         SeedProduct(db, name: "Glenlivet 12");
         var service = CreateService(db);
 
-        var result = await service.BrowseAsync("  av  ", null, 1, 24, CancellationToken.None);
+        var result = await service.BrowseAsync("  av  ", null, null, 1, 24, CancellationToken.None);
 
         Assert.True(result.Success);
         Assert.Equal("Lagavulin 16", Assert.Single(result.Data!.Items).Name);
@@ -693,7 +694,7 @@ public sealed class ProductCatalogServiceTests
         SeedProduct(db, name: "Glenlivet 12");
         var service = CreateService(db);
 
-        var result = await service.BrowseAsync(null, null, 0, 24, CancellationToken.None);
+        var result = await service.BrowseAsync(null, null, null, 0, 24, CancellationToken.None);
 
         Assert.True(result.Success);
         Assert.Single(result.Data!.Items);
@@ -704,7 +705,7 @@ public sealed class ProductCatalogServiceTests
     {
         var service = CreateService(CreateDbContext());
 
-        var result = await service.BrowseAsync(null, null, 1001, 24, CancellationToken.None);
+        var result = await service.BrowseAsync(null, null, null, 1001, 24, CancellationToken.None);
 
         Assert.False(result.Success);
         Assert.Equal("Page is out of range.", result.Error);
@@ -717,7 +718,7 @@ public sealed class ProductCatalogServiceTests
         SeedProduct(db, name: "Glenlivet 12");
         var service = CreateService(db);
 
-        var result = await service.BrowseAsync(null, null, 1000, 24, CancellationToken.None);
+        var result = await service.BrowseAsync(null, null, null, 1000, 24, CancellationToken.None);
 
         Assert.True(result.Success);
         Assert.Empty(result.Data!.Items);
@@ -732,7 +733,7 @@ public sealed class ProductCatalogServiceTests
             SeedProduct(db, name: $"Glen Product {i:D2}");
         var service = CreateService(db);
 
-        var result = await service.BrowseAsync(null, null, 1, 0, CancellationToken.None);
+        var result = await service.BrowseAsync(null, null, null, 1, 0, CancellationToken.None);
 
         Assert.True(result.Success);
         Assert.Equal(24, result.Data!.Items.Count);
@@ -747,7 +748,7 @@ public sealed class ProductCatalogServiceTests
             SeedProduct(db, name: $"Glen Product {i:D2}");
         var service = CreateService(db);
 
-        var result = await service.BrowseAsync(null, null, 1, 500, CancellationToken.None);
+        var result = await service.BrowseAsync(null, null, null, 1, 500, CancellationToken.None);
 
         Assert.True(result.Success);
         Assert.Equal(48, result.Data!.Items.Count);
@@ -768,7 +769,7 @@ public sealed class ProductCatalogServiceTests
         SeedProduct(db, name: "Caol Ila 12");
         var service = CreateService(db);
 
-        var result = await service.BrowseAsync(null, null, 1, 24, CancellationToken.None);
+        var result = await service.BrowseAsync(null, null, null, 1, 24, CancellationToken.None);
 
         Assert.True(result.Success);
         Assert.Equal(
@@ -789,7 +790,7 @@ public sealed class ProductCatalogServiceTests
         SeedProduct(db, name: "Lagavulin 16");
         var service = CreateService(db);
 
-        var result = await service.BrowseAsync("Glen", null, 1, 24, CancellationToken.None);
+        var result = await service.BrowseAsync("Glen", null, null, 1, 24, CancellationToken.None);
 
         Assert.True(result.Success);
         Assert.Equal(
@@ -805,7 +806,7 @@ public sealed class ProductCatalogServiceTests
         SeedProduct(db, name: "Reserva Rum", category: SpiritCategory.Rum);
         var service = CreateService(db);
 
-        var result = await service.BrowseAsync(null, SpiritCategory.Rum, 1, 24, CancellationToken.None);
+        var result = await service.BrowseAsync(null, SpiritCategory.Rum, null, 1, 24, CancellationToken.None);
 
         Assert.True(result.Success);
         Assert.Equal("Reserva Rum", Assert.Single(result.Data!.Items).Name);
@@ -820,8 +821,8 @@ public sealed class ProductCatalogServiceTests
         SeedProduct(db, name: "Bowmore 12");
         var service = CreateService(db);
 
-        var first = await service.BrowseAsync(null, null, 1, 2, CancellationToken.None);
-        var second = await service.BrowseAsync(null, null, 2, 2, CancellationToken.None);
+        var first = await service.BrowseAsync(null, null, null, 1, 2, CancellationToken.None);
+        var second = await service.BrowseAsync(null, null, null, 2, 2, CancellationToken.None);
 
         Assert.Equal(2, first.Data!.Items.Count);
         Assert.True(first.Data.HasMore);
@@ -842,7 +843,7 @@ public sealed class ProductCatalogServiceTests
         SeedProduct(db, name: "Tribute", distilleryId: deleted.Id);
         var service = CreateService(db);
 
-        var result = await service.BrowseAsync(null, null, 1, 24, CancellationToken.None);
+        var result = await service.BrowseAsync(null, null, null, 1, 24, CancellationToken.None);
 
         var sherry = result.Data!.Items.Single(p => p.Name == "Sherry Oak 12");
         Assert.Equal("Macallan", sherry.Brand);
@@ -877,7 +878,7 @@ public sealed class ProductCatalogServiceTests
         SeedReview(db, otherBottle.Id, carol.Id, score: 10);
         var service = CreateService(db);
 
-        var result = await service.BrowseAsync(null, null, 1, 24, CancellationToken.None);
+        var result = await service.BrowseAsync(null, null, null, 1, 24, CancellationToken.None);
 
         var card = result.Data!.Items.Single(p => p.Id == product.Id);
         Assert.Equal(2, card.OwnersCount);
@@ -893,13 +894,217 @@ public sealed class ProductCatalogServiceTests
         SeedProduct(db, name: "Lagavulin 16");
         var service = CreateService(db);
 
-        var result = await service.BrowseAsync(null, null, 1, 24, CancellationToken.None);
+        var result = await service.BrowseAsync(null, null, null, 1, 24, CancellationToken.None);
 
         var card = Assert.Single(result.Data!.Items);
         Assert.Equal(0, card.OwnersCount);
         Assert.Equal(0, card.ReviewsCount);
         Assert.Null(card.AverageScore);
         Assert.Equal(0, card.ListingsCount);
+    }
+
+    #endregion
+
+    #region BrowseAsync — sort (#56)
+
+    /// <summary>One review per score, each by its own collector on their own bottle of the product.</summary>
+    private static void SeedReviews(AppDbContext db, Product product, params int[] scores)
+    {
+        foreach (var score in scores)
+        {
+            var user = SeedUser(db);
+            var bottle = SeedLinkedBottle(db, product.Id, user.Id);
+            SeedReview(db, bottle.Id, user.Id, score: score);
+        }
+    }
+
+    private static string[] Names(Result<PagedResult<ProductCardDto>> result) =>
+        result.Data!.Items.Select(p => p.Name).ToArray();
+
+    [Fact]
+    public async Task BrowseAsync_WhenSortUndefined_ReturnsFail()
+    {
+        var service = CreateService(CreateDbContext());
+
+        var result = await service.BrowseAsync(null, null, (ProductSort)99, 1, 24, CancellationToken.None);
+
+        Assert.False(result.Success);
+        Assert.Equal("Unknown sort order.", result.Error);
+    }
+
+    [Fact]
+    public async Task BrowseAsync_WhenRelevanceWithoutTerm_OrdersByName()
+    {
+        var db = CreateDbContext();
+        SeedProduct(db, name: "Lagavulin 16");
+        SeedProduct(db, name: "Ardbeg 10");
+        var service = CreateService(db);
+
+        var result = await service.BrowseAsync(null, null, ProductSort.Relevance, 1, 24, CancellationToken.None);
+
+        Assert.True(result.Success);
+        Assert.Equal(new[] { "Ardbeg 10", "Lagavulin 16" }, Names(result));
+    }
+
+    [Fact]
+    public async Task BrowseAsync_WhenRelevanceWithTerm_RanksPrefixFirst()
+    {
+        var db = CreateDbContext();
+        SeedProduct(db, name: "Old Glen Reserve");
+        SeedProduct(db, name: "Glenlivet 12");
+        var service = CreateService(db);
+
+        var result = await service.BrowseAsync("Glen", null, ProductSort.Relevance, 1, 24, CancellationToken.None);
+
+        Assert.Equal(new[] { "Glenlivet 12", "Old Glen Reserve" }, Names(result));
+    }
+
+    [Fact]
+    public async Task BrowseAsync_WhenSortGivenWithTerm_KeepsTheFilterAndReplacesRelevance()
+    {
+        var db = CreateDbContext();
+        SeedProduct(db, name: "Old Glen Reserve");
+        SeedProduct(db, name: "Glenlivet 12");
+        SeedProduct(db, name: "Lagavulin 16");
+        var service = CreateService(db);
+
+        var result = await service.BrowseAsync("Glen", null, ProductSort.Name, 1, 24, CancellationToken.None);
+
+        Assert.Equal(new[] { "Glenlivet 12", "Old Glen Reserve" }, Names(result));
+
+        var byName = await service.BrowseAsync("Glen", null, ProductSort.MostReviewed, 1, 24, CancellationToken.None);
+        Assert.Equal(new[] { "Glenlivet 12", "Old Glen Reserve" }, Names(byName));
+    }
+
+    [Fact]
+    public async Task BrowseAsync_WhenTopRated_RanksEnoughReviewsFirstThenTheReviewedRestThenTheUnreviewed()
+    {
+        var db = CreateDbContext();
+        SeedReviews(db, SeedProduct(db, name: "Single Perfect"), 100);
+        SeedReviews(db, SeedProduct(db, name: "Two Reviews"), 98, 100);
+        SeedReviews(db, SeedProduct(db, name: "Three Reviews"), 95, 95, 95);
+        SeedReviews(db, SeedProduct(db, name: "Four Reviews"), 95, 95, 95, 95);
+        SeedReviews(db, SeedProduct(db, name: "Enough But Lower"), 80, 80, 80);
+        SeedProduct(db, name: "Unreviewed B");
+        SeedProduct(db, name: "Unreviewed A");
+        var service = CreateService(db);
+
+        var result = await service.BrowseAsync(null, null, ProductSort.TopRated, 1, 24, CancellationToken.None);
+
+        Assert.True(result.Success);
+        // An equal average puts the product with more reviews first; one 100/100 review stays below three 80s.
+        Assert.Equal(
+            new[]
+            {
+                "Four Reviews", "Three Reviews", "Enough But Lower",
+                "Single Perfect", "Two Reviews",
+                "Unreviewed A", "Unreviewed B"
+            },
+            Names(result));
+        Assert.Equal(100, result.Data!.Items.Single(p => p.Name == "Single Perfect").AverageScore);
+    }
+
+    [Fact]
+    public async Task BrowseAsync_WhenTopRatedWithEqualScoreAndCount_OrdersByName()
+    {
+        var db = CreateDbContext();
+        SeedReviews(db, SeedProduct(db, name: "Talisker 10"), 90, 90, 90);
+        SeedReviews(db, SeedProduct(db, name: "Ardbeg 10"), 90, 90, 90);
+        var service = CreateService(db);
+
+        var result = await service.BrowseAsync(null, null, ProductSort.TopRated, 1, 24, CancellationToken.None);
+
+        Assert.Equal(new[] { "Ardbeg 10", "Talisker 10" }, Names(result));
+    }
+
+    [Fact]
+    public async Task BrowseAsync_WhenMostReviewed_OrdersByLiveReviewCountThenName()
+    {
+        var db = CreateDbContext();
+        SeedReviews(db, SeedProduct(db, name: "Two Reviews B"), 50, 60);
+        SeedReviews(db, SeedProduct(db, name: "Two Reviews A"), 70, 80);
+        SeedReviews(db, SeedProduct(db, name: "Five Reviews"), 10, 20, 30, 40, 50);
+        var withDeleted = SeedProduct(db, name: "One Live Review");
+        SeedReviews(db, withDeleted, 90);
+        var user = SeedUser(db);
+        SeedReview(db, SeedLinkedBottle(db, withDeleted.Id, user.Id).Id, user.Id, score: 90, isDeleted: true);
+        SeedReview(db, SeedLinkedBottle(db, withDeleted.Id, user.Id, isDeleted: true).Id, user.Id, score: 90);
+        SeedProduct(db, name: "No Reviews");
+        var service = CreateService(db);
+
+        var result = await service.BrowseAsync(null, null, ProductSort.MostReviewed, 1, 24, CancellationToken.None);
+
+        Assert.Equal(
+            new[] { "Five Reviews", "Two Reviews A", "Two Reviews B", "One Live Review", "No Reviews" },
+            Names(result));
+    }
+
+    [Fact]
+    public async Task BrowseAsync_WhenPopular_OrdersByDistinctOwnersThenName()
+    {
+        var db = CreateDbContext();
+        var alice = SeedUser(db, "Alice");
+        var bob = SeedUser(db, "Bob");
+        var carol = SeedUser(db, "Carol");
+        var stacked = SeedProduct(db, name: "One Owner Two Bottles");
+        SeedLinkedBottle(db, stacked.Id, alice.Id);
+        SeedLinkedBottle(db, stacked.Id, alice.Id);
+        var shared = SeedProduct(db, name: "Two Owners");
+        SeedLinkedBottle(db, shared.Id, alice.Id);
+        SeedLinkedBottle(db, shared.Id, bob.Id);
+        SeedLinkedBottle(db, shared.Id, carol.Id, isDeleted: true);
+        var single = SeedProduct(db, name: "Another Single Owner");
+        SeedLinkedBottle(db, single.Id, carol.Id);
+        SeedProduct(db, name: "Nobody");
+        var service = CreateService(db);
+
+        var result = await service.BrowseAsync(null, null, ProductSort.Popular, 1, 24, CancellationToken.None);
+
+        Assert.Equal(
+            new[] { "Two Owners", "Another Single Owner", "One Owner Two Bottles", "Nobody" },
+            Names(result));
+    }
+
+    [Fact]
+    public async Task BrowseAsync_WhenForSale_OrdersByLiveListingsThenName()
+    {
+        var db = CreateDbContext();
+        var seller = SeedUser(db, "Seller");
+        var busy = SeedProduct(db, name: "Two Listings");
+        SeedLinkedBottle(db, busy.Id, seller.Id, isForSale: true, forSaleQuantity: 1);
+        SeedLinkedBottle(db, busy.Id, seller.Id, isForSale: true, forSaleQuantity: 1);
+        var quiet = SeedProduct(db, name: "One Listing");
+        SeedLinkedBottle(db, quiet.Id, seller.Id, isForSale: true, forSaleQuantity: 1);
+        SeedLinkedBottle(db, quiet.Id, seller.Id, isForSale: true, forSaleQuantity: 1, isDeleted: true);
+        SeedLinkedBottle(db, quiet.Id, seller.Id);
+        var also = SeedProduct(db, name: "Also One Listing");
+        SeedLinkedBottle(db, also.Id, seller.Id, isForSale: true, forSaleQuantity: 1);
+        SeedProduct(db, name: "Not For Sale");
+        var service = CreateService(db);
+
+        var result = await service.BrowseAsync(null, null, ProductSort.ForSale, 1, 24, CancellationToken.None);
+
+        Assert.Equal(
+            new[] { "Two Listings", "Also One Listing", "One Listing", "Not For Sale" },
+            Names(result));
+    }
+
+    [Fact]
+    public async Task BrowseAsync_WhenSortedByCountWithFullTies_PagesWithoutOverlap()
+    {
+        var db = CreateDbContext();
+        SeedProduct(db, name: "Ardbeg 10");
+        SeedProduct(db, name: "Ardbeg 10");
+        SeedProduct(db, name: "Ardbeg 10");
+        var service = CreateService(db);
+
+        var first = await service.BrowseAsync(null, null, ProductSort.Popular, 1, 2, CancellationToken.None);
+        var second = await service.BrowseAsync(null, null, ProductSort.Popular, 2, 2, CancellationToken.None);
+
+        Assert.True(first.Data!.HasMore);
+        Assert.False(second.Data!.HasMore);
+        // Equal counts and equal names are split by Id, so no row repeats or vanishes between the pages.
+        Assert.Equal(3, first.Data.Items.Concat(second.Data.Items).Select(p => p.Id).Distinct().Count());
     }
 
     #endregion

@@ -1,6 +1,6 @@
 import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { browseProducts } from '@/api/productsApi'
 import i18n from '@/i18n'
 import bg from '@/i18n/bg.json'
@@ -36,6 +36,7 @@ describe('CatalogPage', () => {
     expect(browseProducts).toHaveBeenCalledExactlyOnceWith({
       search: undefined,
       category: undefined,
+      sort: 'Name',
       page: 1,
       pageSize: PAGE_SIZE,
     })
@@ -97,7 +98,7 @@ describe('CatalogPage', () => {
     await userEvent.type(screen.getByRole('searchbox', { name: bg.catalog.searchLabel }), 'La')
 
     await waitFor(() =>
-      expect(browseProducts).toHaveBeenLastCalledWith({ search: 'La', category: undefined, page: 1, pageSize: PAGE_SIZE }),
+      expect(browseProducts).toHaveBeenLastCalledWith({ search: 'La', category: undefined, sort: 'Relevance', page: 1, pageSize: PAGE_SIZE }),
     )
     expect(location()).toBe('/catalog?q=La')
     expect(screen.queryByText(bg.catalog.minChars)).not.toBeInTheDocument()
@@ -112,7 +113,7 @@ describe('CatalogPage', () => {
     expect(screen.getByRole('searchbox', { name: bg.catalog.searchLabel })).toHaveValue('plan')
     expect(pill('Rum')).toHaveAttribute('aria-pressed', 'true')
     expect(pill(bg.catalog.allCategories)).toHaveAttribute('aria-pressed', 'false')
-    expect(browseProducts).toHaveBeenCalledWith({ search: 'plan', category: 'Rum', page: 1, pageSize: PAGE_SIZE })
+    expect(browseProducts).toHaveBeenCalledWith({ search: 'plan', category: 'Rum', sort: 'Relevance', page: 1, pageSize: PAGE_SIZE })
   })
 
   it('ignores a category the app does not know', async () => {
@@ -157,6 +158,7 @@ describe('CatalogPage', () => {
     expect(browseProducts).toHaveBeenLastCalledWith({
       search: undefined,
       category: undefined,
+      sort: 'Name',
       page: 2,
       pageSize: PAGE_SIZE,
     })
@@ -179,5 +181,126 @@ describe('CatalogPage', () => {
 
     expect(await screen.findByText(bg.catalog.error)).toBeInTheDocument()
     expect(cards()).toHaveLength(0)
+  })
+
+  describe('sort (#56)', () => {
+    // The sort control is a Radix select. jsdom has no pointer capture or layout, so give it what it calls; the
+    // select itself behaves as in the browser.
+    beforeEach(() => {
+      Element.prototype.scrollIntoView ??= () => {}
+      Element.prototype.hasPointerCapture ??= () => false
+      Element.prototype.releasePointerCapture ??= () => {}
+    })
+
+    const sortControl = () => screen.getByRole('combobox', { name: bg.catalog.sortLabel })
+
+    async function chooseSort(label: string) {
+      await userEvent.click(sortControl())
+      await userEvent.click(await screen.findByRole('option', { name: label }))
+    }
+
+    const lastSort = () => vi.mocked(browseProducts).mock.lastCall?.[0].sort
+
+    it('orders by name without a term, and offers every order but "best match"', async () => {
+      vi.mocked(browseProducts).mockResolvedValue(paged([productCard()]))
+      renderCatalog()
+      await screen.findByRole('link', { name: /Lagavulin/ })
+
+      expect(sortControl()).toHaveTextContent(bg.catalog.sortName)
+      await userEvent.click(sortControl())
+
+      const options = (await screen.findAllByRole('option')).map(option => option.textContent)
+      expect(options).toEqual([
+        bg.catalog.sortName,
+        bg.catalog.sortTopRated,
+        bg.catalog.sortMostReviewed,
+        bg.catalog.sortPopular,
+        bg.catalog.sortForSale,
+      ])
+    })
+
+    it('reloads from the first page in the chosen order, and keeps the order in the URL', async () => {
+      vi.mocked(browseProducts).mockResolvedValue(paged([productCard()]))
+      const { location } = renderCatalog()
+      await screen.findByRole('link', { name: /Lagavulin/ })
+
+      await chooseSort(bg.catalog.sortTopRated)
+
+      await waitFor(() =>
+        expect(browseProducts).toHaveBeenLastCalledWith({
+          search: undefined,
+          category: undefined,
+          sort: 'TopRated',
+          page: 1,
+          pageSize: PAGE_SIZE,
+        }),
+      )
+      expect(location()).toBe('/catalog?sort=TopRated')
+      expect(sortControl()).toHaveTextContent(bg.catalog.sortTopRated)
+    })
+
+    it('starts again from page 1 when the order changes after "show more"', async () => {
+      vi.mocked(browseProducts)
+        .mockResolvedValueOnce(paged([productCard({ name: 'First' })], true))
+        .mockResolvedValueOnce(paged([productCard({ name: 'Second' })], false))
+        .mockResolvedValue(paged([productCard({ name: 'Most Collected' })], false))
+      renderCatalog()
+      await userEvent.click(await screen.findByRole('button', { name: bg.catalog.loadMore }))
+      await screen.findByRole('link', { name: /Second/ })
+
+      await chooseSort(bg.catalog.sortPopular)
+
+      expect(await screen.findByRole('link', { name: /Most Collected/ })).toBeInTheDocument()
+      expect(browseProducts).toHaveBeenLastCalledWith(expect.objectContaining({ sort: 'Popular', page: 1 }))
+      expect(cards()).toHaveLength(1)
+    })
+
+    it('opens a shared link in its order', async () => {
+      vi.mocked(browseProducts).mockResolvedValue(paged([productCard()]))
+
+      renderCatalog('/catalog?category=Rum&sort=ForSale')
+
+      await screen.findByRole('link', { name: /Lagavulin/ })
+      expect(sortControl()).toHaveTextContent(bg.catalog.sortForSale)
+      expect(browseProducts).toHaveBeenCalledWith(expect.objectContaining({ category: 'Rum', sort: 'ForSale' }))
+    })
+
+    it('leaves the default order out of the URL', async () => {
+      vi.mocked(browseProducts).mockResolvedValue(paged([productCard()]))
+      const { location } = renderCatalog('/catalog?sort=MostReviewed')
+      await screen.findByRole('link', { name: /Lagavulin/ })
+
+      await chooseSort(bg.catalog.sortName)
+
+      await waitFor(() => expect(location()).toBe('/catalog'))
+      expect(lastSort()).toBe('Name')
+    })
+
+    it('ranks by best match with a term, and keeps an explicit name order in the URL', async () => {
+      vi.mocked(browseProducts).mockResolvedValue(paged([productCard()]))
+      const { location } = renderCatalog('/catalog?q=Laga')
+      await screen.findByRole('link', { name: /Lagavulin/ })
+
+      expect(sortControl()).toHaveTextContent(bg.catalog.sortRelevance)
+      expect(lastSort()).toBe('Relevance')
+
+      await chooseSort(bg.catalog.sortName)
+
+      await waitFor(() => expect(location()).toBe('/catalog?q=Laga&sort=Name'))
+      expect(lastSort()).toBe('Name')
+    })
+
+    it('ignores an order the app does not know, and "best match" without a term', async () => {
+      vi.mocked(browseProducts).mockResolvedValue(paged([productCard()]))
+
+      renderCatalog('/catalog?sort=Cheapest')
+      await screen.findByRole('link', { name: /Lagavulin/ })
+      expect(lastSort()).toBe('Name')
+
+      vi.mocked(browseProducts).mockClear()
+      renderCatalog('/catalog?sort=Relevance')
+      await waitFor(() => expect(browseProducts).toHaveBeenCalled())
+      expect(lastSort()).toBe('Name')
+    })
   })
 })

@@ -600,7 +600,14 @@
     "forSale_one": "{{count}} за продан",
     "forSale_other": "{{count}} за продан",
     "reviews_one": "{{count}} ревю",
-    "reviews_other": "{{count}} ревюта"
+    "reviews_other": "{{count}} ревюта",
+    "sortLabel": "Подреждане",
+    "sortName": "Име (А–Я)",
+    "sortRelevance": "Най-подходящи",
+    "sortTopRated": "Най-добре оценени",
+    "sortMostReviewed": "Най-много ревюта",
+    "sortPopular": "Най-много колекционери",
+    "sortForSale": "Най-много обяви"
   },
   "product": {
     "backToCatalog": "← Каталог",

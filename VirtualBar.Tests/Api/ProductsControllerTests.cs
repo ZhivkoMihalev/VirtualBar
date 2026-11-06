@@ -78,10 +78,10 @@ public sealed class ProductsControllerTests
     {
         var page = new PagedResult<ProductCardDto> { Items = [new ProductCardDto { Name = "Lagavulin 16" }], HasMore = true };
         catalog
-            .Setup(s => s.BrowseAsync("lag", SpiritCategory.Whisky, 2, 12, It.IsAny<CancellationToken>()))
+            .Setup(s => s.BrowseAsync("lag", SpiritCategory.Whisky, ProductSort.TopRated, 2, 12, It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result<PagedResult<ProductCardDto>>.Ok(page));
 
-        var result = await CreateController().Browse("lag", SpiritCategory.Whisky, 2, 12, CancellationToken.None);
+        var result = await CreateController().Browse("lag", SpiritCategory.Whisky, ProductSort.TopRated, 2, 12, CancellationToken.None);
 
         var ok = Assert.IsType<OkObjectResult>(result);
         Assert.Same(page, ok.Value);
@@ -91,10 +91,10 @@ public sealed class ProductsControllerTests
     public async Task Browse_WhenServiceFails_ReturnsBadRequest()
     {
         catalog
-            .Setup(s => s.BrowseAsync(It.IsAny<string?>(), It.IsAny<SpiritCategory?>(), It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .Setup(s => s.BrowseAsync(It.IsAny<string?>(), It.IsAny<SpiritCategory?>(), It.IsAny<ProductSort?>(), It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result<PagedResult<ProductCardDto>>.Fail("Search term must be at least 2 characters."));
 
-        var result = await CreateController().Browse("a", null, 1, 24, CancellationToken.None);
+        var result = await CreateController().Browse("a", null, null, 1, 24, CancellationToken.None);
 
         Assert.IsType<BadRequestObjectResult>(result);
     }

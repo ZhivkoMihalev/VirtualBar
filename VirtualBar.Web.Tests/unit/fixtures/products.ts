@@ -38,6 +38,9 @@ export function productCard(overrides: Partial<ProductCard> = {}): ProductCard {
 /** A product page with nobody owning, selling or reviewing it unless the test says otherwise. */
 export function productDetail(overrides: Partial<ProductDetail> = {}): ProductDetail {
   return {
+    vintageYear: null,
+    releaseYear: null,
+    otherYears: [],
     description: null,
     averageScore: null,
     reviewsCount: 0,

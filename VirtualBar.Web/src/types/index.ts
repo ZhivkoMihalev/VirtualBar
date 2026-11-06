@@ -344,7 +344,22 @@ export interface ProductListing {
 }
 
 /** The `/product/:id` page: the product plus aggregates over every non-deleted linked bottle. */
+/** Another vintage or edition of a product's line (#59), with the same kind of year as the product listing it. */
+export interface ProductYear {
+  id: string
+  name: string
+  year: number
+  averageScore: number | null
+  listingsCount: number
+}
+
 export interface ProductDetail extends Product {
+  /** The year of distillation of a vintage-dated product; never set together with `releaseYear` (#59). */
+  vintageYear: number | null
+  /** The year of a yearly edition; it links the series but is not the bottle's vintage. */
+  releaseYear: number | null
+  /** The other vintages, or the other editions, of the product's line, oldest first; empty when undated. */
+  otherYears: ProductYear[]
   description: string | null
   averageScore: number | null
   reviewsCount: number

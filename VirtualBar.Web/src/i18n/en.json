@@ -634,7 +634,12 @@
     "wantItAdding": "Adding…",
     "wantItHint": "You will be notified when a collector lists it for sale.",
     "wantItError": "Could not add it to your wish list. Please try again.",
-    "wanted": "On your wish list"
+    "wanted": "On your wish list",
+    "vintageBadge": "Vintage {{year}}",
+    "releaseBadge": "{{year}} edition",
+    "otherVintages": "Other vintages",
+    "otherReleases": "Other editions",
+    "thisYear": "this one"
   },
   "productRequests": {
     "title": "Catalog Requests",

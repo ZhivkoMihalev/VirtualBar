@@ -55,7 +55,9 @@ public sealed class ProductCatalogServiceTests
         int? age = null,
         int? volumeMl = null,
         string? barcode = null,
-        string? imageUrl = null)
+        string? imageUrl = null,
+        int? vintageYear = null,
+        int? releaseYear = null)
     {
         var product = new Product
         {
@@ -66,6 +68,8 @@ public sealed class ProductCatalogServiceTests
             Country = "Scotland",
             Region = "Speyside",
             Age = age,
+            VintageYear = vintageYear,
+            ReleaseYear = releaseYear,
             AbvPercent = 43.0,
             VolumeMl = volumeMl,
             Barcode = barcode,
@@ -1372,6 +1376,94 @@ public sealed class ProductCatalogServiceTests
         Assert.Equal("/uploads/avatars/r.webp", top.UserAvatarUrl);
         Assert.Equal("Review scored 99", top.Summary);
         Assert.Equal(new[] { FlavorTag.Smoky, FlavorTag.Oak }, top.Flavors);
+    }
+
+    #endregion
+
+    #region GetProductAsync — other years (#59)
+
+    [Fact]
+    public async Task GetProductAsync_WhenProductHasNoYear_ReturnsNoYearsAndNoOtherYears()
+    {
+        var db = CreateDbContext();
+        var product = SeedProduct(db, name: "VSOP", brand: "Frapin");
+        SeedProduct(db, name: "VSOP 1988", brand: "Frapin", vintageYear: 1988);
+        var service = CreateService(db);
+
+        var result = await service.GetProductAsync(product.Id, CancellationToken.None);
+
+        Assert.Null(result.Data!.VintageYear);
+        Assert.Null(result.Data.ReleaseYear);
+        Assert.Empty(result.Data.OtherYears);
+    }
+
+    [Fact]
+    public async Task GetProductAsync_WhenVintageProduct_ListsTheOtherVintagesOfItsLineOldestFirst()
+    {
+        var db = CreateDbContext();
+        var frapin = SeedDistillery(db, "Frapin");
+        var other = SeedDistillery(db, "Delord");
+        var product = SeedProduct(db, name: "Millésime 1988", distilleryId: frapin.Id, category: SpiritCategory.Cognac, vintageYear: 1988);
+        var older = SeedProduct(db, name: "Millésime 1976", distilleryId: frapin.Id, category: SpiritCategory.Cognac, vintageYear: 1976);
+        var newer = SeedProduct(db, name: "Millésime 1979", distilleryId: frapin.Id, category: SpiritCategory.Cognac, vintageYear: 1979);
+        // Not in the line: deleted, another category, an edition, another name, another maker, no year.
+        SeedProduct(db, name: "Millésime 1970", distilleryId: frapin.Id, category: SpiritCategory.Cognac, vintageYear: 1970, isDeleted: true);
+        SeedProduct(db, name: "Millésime 1990", distilleryId: frapin.Id, category: SpiritCategory.Brandy, vintageYear: 1990);
+        SeedProduct(db, name: "Millésime 2020", distilleryId: frapin.Id, category: SpiritCategory.Cognac, releaseYear: 2020);
+        SeedProduct(db, name: "Cuvée 1983", distilleryId: frapin.Id, category: SpiritCategory.Cognac, vintageYear: 1983);
+        SeedProduct(db, name: "Millésime 1985", distilleryId: other.Id, category: SpiritCategory.Cognac, vintageYear: 1985);
+        SeedProduct(db, name: "Millésime", distilleryId: frapin.Id, category: SpiritCategory.Cognac);
+        var collector = SeedUser(db);
+        var listed = SeedLinkedBottle(db, older.Id, collector.Id, isForSale: true, forSaleQuantity: 1);
+        SeedReview(db, listed.Id, collector.Id, score: 91);
+        SeedReview(db, SeedLinkedBottle(db, older.Id, SeedUser(db).Id).Id, collector.Id, score: 86);
+        var service = CreateService(db);
+
+        var result = await service.GetProductAsync(product.Id, CancellationToken.None);
+
+        Assert.Equal(1988, result.Data!.VintageYear);
+        Assert.Null(result.Data.ReleaseYear);
+        Assert.Equal(new[] { older.Id, newer.Id }, result.Data.OtherYears.Select(y => y.Id));
+        var first = result.Data.OtherYears[0];
+        Assert.Equal(("Millésime 1976", 1976, 88.5, 1), (first.Name, first.Year, first.AverageScore, first.ListingsCount));
+        var second = result.Data.OtherYears[1];
+        Assert.Equal(((double?)null, 0), (second.AverageScore, second.ListingsCount));
+    }
+
+    [Fact]
+    public async Task GetProductAsync_WhenEditionOfABrandWithoutDistillery_ListsTheOtherEditionsOfThatBrand()
+    {
+        var db = CreateDbContext();
+        var distillery = SeedDistillery(db, "Midleton");
+        var product = SeedProduct(db, name: "Very Rare Vintage Release 2021", brand: "Midleton", releaseYear: 2021);
+        var earlier = SeedProduct(db, name: "Very Rare Vintage Release 2019", brand: "Midleton", releaseYear: 2019);
+        var later = SeedProduct(db, name: "very rare  vintage release 2024", brand: "Midleton", releaseYear: 2024);
+        // Not in the line: another brand, the same brand under a distillery, a vintage.
+        SeedProduct(db, name: "Very Rare Vintage Release 2022", brand: "Jameson", releaseYear: 2022);
+        SeedProduct(db, name: "Very Rare Vintage Release 2023", brand: "Midleton", distilleryId: distillery.Id, releaseYear: 2023);
+        SeedProduct(db, name: "Very Rare Vintage Release 1999", brand: "Midleton", vintageYear: 1999);
+        var service = CreateService(db);
+
+        var result = await service.GetProductAsync(product.Id, CancellationToken.None);
+
+        Assert.Equal(2021, result.Data!.ReleaseYear);
+        Assert.Null(result.Data.VintageYear);
+        // The line ignores letter case and spacing; the years run oldest first.
+        Assert.Equal(new[] { (earlier.Id, 2019), (later.Id, 2024) }, result.Data.OtherYears.Select(y => (y.Id, y.Year)));
+    }
+
+    [Fact]
+    public async Task GetProductAsync_WhenDatedProductIsAloneInItsLine_ReturnsNoOtherYears()
+    {
+        var db = CreateDbContext();
+        var product = SeedProduct(db, name: "Enmore 1988", brand: "Velier", category: SpiritCategory.Rum, vintageYear: 1988);
+        SeedProduct(db, name: "Port Mourant 1975", brand: "Velier", category: SpiritCategory.Rum, vintageYear: 1975);
+        var service = CreateService(db);
+
+        var result = await service.GetProductAsync(product.Id, CancellationToken.None);
+
+        Assert.Equal(1988, result.Data!.VintageYear);
+        Assert.Empty(result.Data.OtherYears);
     }
 
     #endregion

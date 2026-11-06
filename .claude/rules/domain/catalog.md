@@ -20,6 +20,8 @@ Canonical catalog entry for a spirits product. Not user-owned.
 | `Category` | `SpiritCategory` | |
 | `Country`, `Region` | `string?` | |
 | `Age` | `int?` | |
+| `VintageYear` | `int?` | Year of distillation of a vintage-dated product — see Years below |
+| `ReleaseYear` | `int?` | Year of a yearly edition — see Years below |
 | `AbvPercent` | `double?` | |
 | `VolumeMl` | `int?` | |
 | `Barcode` | `string?` | EAN/UPC digits |
@@ -31,8 +33,26 @@ Canonical catalog entry for a spirits product. Not user-owned.
 - **`Brand` is independent of `DistilleryId`, not an alternative to it.** Every seeded row carries one, and it may differ
   from the distillery (Caorunn @ Balmenach, Meikle Toir @ GlenAllachie, The One @ Lakes Distillery). It is nullable
   only because an admin-approved product may omit it; both read paths then fall back to the non-deleted distillery name.
-- **No `VintageYear`** — vintage/batch/cask specifics stay on the bottle instance.
 - `ProductKey` normalization is **frozen** (shared with the `PriceSnapshot` cache — changing it would orphan both).
+
+### Years (#59)
+- A year in a product's name means one of three things, so a product has **one of two year fields, or neither**:
+  - `VintageYear`: the year of distillation or harvest (Frapin Millésime 1988, Velier Enmore 1988, Macallan 81 Year Old
+    1940). It is the bottle's kind of year: a bottle linked to the product takes it as its own `VintageYear`.
+  - `ReleaseYear`: the year of a yearly edition (Lagavulin 12 Year Old Special Release 2021, Macallan Classic Cut 2020
+    Edition, Midleton Very Rare Vintage Release 2019). It links a series, but is never copied to a bottle.
+  - neither: the year is part of the name (Angostura 1824, Macallan "The 1824 Series", Replica 1841, Travel Series
+    1920s, Brora Triptych 1972 1977 1982), and every product with no year in its name.
+- Never both: the check constraint `CK_Products_OneYearKind`.
+- Each vintage stays its own product with the year in the name, as the seed always had it, so prices, reviews and owners
+  are per vintage through the `CanonicalKey`, which does not change. Vintage is a property of specific products, never
+  of a category: no vodka carries a year (`ProductSeedDataTests.NoVodkaSeedRow_CarriesAYear`).
+- **The line** of a dated product: the live products with the same category, the same maker (the same `DistilleryId`,
+  or with no distillery the same `Brand`), the same kind of year, and the same name without the year
+  (`ProductYearLine.Of`, case and spacing ignored). It is computed on read, never stored; the product page lists it as
+  `OtherYears`.
+- The 285 seeded names with a year were classified by hand and approved by the owner (2026-11-06): 93 vintages, 150
+  editions, 42 without a year. The list is the seed files themselves.
 
 ### Seeding
 - The catalog is **hand-curated**, not generated. There was an offline import CLI (`tools/ProductImport`, slice 08); it
@@ -46,8 +66,14 @@ Canonical catalog entry for a spirits product. Not user-owned.
 - The csproj embeds them with the glob `Persistence\SeedData\products.*.seed.json`, and `SeedProductsAsync` reads every
   matching manifest resource in ordinal order, so adding a new category file needs no code change. Each row still
   carries its own `category` field.
-- It inserts only rows whose `CanonicalKey` is not yet present — strictly insert-only, never updates or re-inserts
-  existing rows (soft-deleted included).
+- It inserts only rows whose `CanonicalKey` is not yet present and never re-inserts existing rows (soft-deleted
+  included).
+- **The one update (#59, approved by the owner):** a seed row may carry `vintageYear` or `releaseYear`, and an existing
+  live product with neither year gets that year and nothing else (`ProductSeeder.FillYearsAsync`). Rows seeded before the
+  years existed would otherwise never get one. A product that already has a year, or is soft-deleted, is left as it is,
+  so a later change of a year in a seed file does not reach an existing product.
+- `ProductSeedDataTests.EverySeedYear_IsAYearTheNameShows_AndOnlyOneKindIsSet` pins that a seeded year is one of the
+  years in the name (1800 to next year), never both kinds.
 - Rows with unparseable categories are skipped, in-file duplicate keys collapse to the first, and distillery names
   resolve case-insensitively (miss → `Brand` fallback + null FK).
 - That fallback is a **silent data loss**: the row keeps its name but loses the FK, so it disappears from
@@ -119,7 +145,9 @@ Canonical catalog entry for a spirits product. Not user-owned.
       (newest first) **only for a logged-in caller**: a visitor gets `listings: []`, since the listings (seller, price)
       are for collectors, like the marketplace (#102). `ProductCatalogService` branches on `ICurrentUser.IsAuthenticated`
       (viewer-dependent content, like `FeedService`; not a validation, so it is not in the decorator);
-    - the 5 `LatestReviews`.
+    - the 5 `LatestReviews`;
+    - `VintageYear`, `ReleaseYear` and `OtherYears`: the other products of a dated product's line (see Years), oldest
+      first, each as a `ProductYearDto` with its year, average score and listings count; empty for an undated product.
   - `404` unknown/deleted product.
 - `GET /api/products/{id}/reviews?page=&pageSize=` — `[AllowAnonymous]`; the rest of the product's reviews, newest
   first → `PagedResult<BottleReviewDto>`; `pageSize` clamped 1–50 (default 10); `404` unknown/deleted product.

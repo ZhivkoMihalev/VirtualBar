@@ -442,4 +442,137 @@ public sealed class ProductSeederTests
     }
 
     #endregion
+
+    #region Years (#59)
+
+    /// <summary>An existing product, as seeded before the years existed: same key as the seed row, no year.</summary>
+    private static Product SeedUndatedProduct(AppDbContext db, string name, DateTime updatedAt, bool isDeleted = false)
+    {
+        var product = new Product
+        {
+            Name = name,
+            Brand = "Frapin",
+            Category = SpiritCategory.Cognac,
+            Description = "kept",
+            CanonicalKey = ProductKey.For("Frapin", name, SpiritCategory.Cognac, null, null, null),
+            Origin = ProductOrigin.Seeded,
+            UpdatedAt = updatedAt,
+            IsDeleted = isDeleted,
+            DeletedAt = isDeleted ? updatedAt : null
+        };
+        db.Products.Add(product);
+        db.SaveChanges();
+        return product;
+    }
+
+    private static readonly DateTime LongAgo = new(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+
+    [Fact]
+    public async Task SeedFromStreamAsync_WhenRowsCarryYears_InsertsThemWithTheirYears()
+    {
+        var db = CreateDbContext();
+        const string json = """
+        [
+          { "name": "Millésime 1988", "brand": "Frapin", "category": "Cognac", "vintageYear": 1988 },
+          { "name": "Classic Cut 2020 Edition", "brand": "Macallan", "category": "Whisky", "releaseYear": 2020 },
+          { "name": "VSOP", "brand": "Frapin", "category": "Cognac" }
+        ]
+        """;
+
+        await ProductSeeder.SeedFromStreamAsync(db, SeedStream(json), CancellationToken.None);
+
+        var products = await db.Products.AsNoTracking().ToDictionaryAsync(p => p.Name);
+        Assert.Equal((1988, (int?)null), (products["Millésime 1988"].VintageYear, products["Millésime 1988"].ReleaseYear));
+        Assert.Equal(((int?)null, 2020), (products["Classic Cut 2020 Edition"].VintageYear, products["Classic Cut 2020 Edition"].ReleaseYear));
+        Assert.Equal(((int?)null, (int?)null), (products["VSOP"].VintageYear, products["VSOP"].ReleaseYear));
+    }
+
+    [Fact]
+    public async Task SeedFromStreamAsync_WhenExistingProductHasNoYear_FillsOnlyItsVintageYear()
+    {
+        var db = CreateDbContext();
+        var existing = SeedUndatedProduct(db, "Millésime 1988", LongAgo);
+        const string json = """
+        [{ "name": "Millésime 1988", "brand": "Frapin", "category": "Cognac", "vintageYear": 1988, "description": "incoming" }]
+        """;
+
+        await ProductSeeder.SeedFromStreamAsync(db, SeedStream(json), CancellationToken.None);
+
+        var product = await db.Products.AsNoTracking().SingleAsync();
+        Assert.Equal(existing.Id, product.Id);
+        Assert.Equal(1988, product.VintageYear);
+        Assert.Null(product.ReleaseYear);
+        Assert.Equal("kept", product.Description);
+        Assert.Equal(ProductOrigin.Seeded, product.Origin);
+        Assert.True(product.UpdatedAt > LongAgo);
+    }
+
+    [Fact]
+    public async Task SeedFromStreamAsync_WhenExistingProductHasNoYear_FillsItsReleaseYear()
+    {
+        var db = CreateDbContext();
+        SeedUndatedProduct(db, "Cuvée 2021", LongAgo);
+        const string json = """
+        [{ "name": "Cuvée 2021", "brand": "Frapin", "category": "Cognac", "releaseYear": 2021 }]
+        """;
+
+        await ProductSeeder.SeedFromStreamAsync(db, SeedStream(json), CancellationToken.None);
+
+        var product = await db.Products.AsNoTracking().SingleAsync();
+        Assert.Null(product.VintageYear);
+        Assert.Equal(2021, product.ReleaseYear);
+    }
+
+    [Fact]
+    public async Task SeedFromStreamAsync_WhenExistingProductAlreadyHasAYear_LeavesIt()
+    {
+        var db = CreateDbContext();
+        var existing = SeedUndatedProduct(db, "Millésime 1988", LongAgo);
+        existing.ReleaseYear = 2020;
+        db.SaveChanges();
+        const string json = """
+        [{ "name": "Millésime 1988", "brand": "Frapin", "category": "Cognac", "vintageYear": 1988 }]
+        """;
+
+        await ProductSeeder.SeedFromStreamAsync(db, SeedStream(json), CancellationToken.None);
+
+        var product = await db.Products.AsNoTracking().SingleAsync();
+        Assert.Null(product.VintageYear);
+        Assert.Equal(2020, product.ReleaseYear);
+    }
+
+    [Fact]
+    public async Task SeedFromStreamAsync_WhenExistingProductSoftDeleted_LeavesItWithoutAYear()
+    {
+        var db = CreateDbContext();
+        SeedUndatedProduct(db, "Millésime 1988", LongAgo, isDeleted: true);
+        const string json = """
+        [{ "name": "Millésime 1988", "brand": "Frapin", "category": "Cognac", "vintageYear": 1988 }]
+        """;
+
+        await ProductSeeder.SeedFromStreamAsync(db, SeedStream(json), CancellationToken.None);
+
+        var product = await db.Products.AsNoTracking().SingleAsync();
+        Assert.Null(product.VintageYear);
+        Assert.Equal(LongAgo, product.UpdatedAt);
+    }
+
+    [Fact]
+    public async Task SeedFromStreamAsync_WhenSeedRowHasNoYear_LeavesTheExistingProductUntouched()
+    {
+        var db = CreateDbContext();
+        SeedUndatedProduct(db, "VSOP", LongAgo);
+        const string json = """
+        [{ "name": "VSOP", "brand": "Frapin", "category": "Cognac" }]
+        """;
+
+        await ProductSeeder.SeedFromStreamAsync(db, SeedStream(json), CancellationToken.None);
+
+        var product = await db.Products.AsNoTracking().SingleAsync();
+        Assert.Null(product.VintageYear);
+        Assert.Null(product.ReleaseYear);
+        Assert.Equal(LongAgo, product.UpdatedAt);
+    }
+
+    #endregion
 }

@@ -75,9 +75,11 @@ public static class ProductSeeder
 
     /// <summary>
     /// Tops up the catalog from an already-opened seed stream: rows whose <c>CanonicalKey</c> is not yet
-    /// present are inserted; existing rows — including soft-deleted ones — are never updated, re-inserted
-    /// or deleted. The public entry point owns the embedded resources; this overload keeps the row-level
-    /// rules (category parsing, distillery resolution, canonical-key dedupe) reachable in isolation.
+    /// present are inserted; existing rows are never re-inserted or deleted. The one update: a live existing
+    /// product with neither year gets the <c>VintageYear</c> or <c>ReleaseYear</c> its seed row carries, and no other
+    /// field (#59, approved by the owner); a product that already has a year, or is soft-deleted, is left as it is.
+    /// The public entry point owns the embedded resources; this overload keeps the row-level rules (category parsing,
+    /// distillery resolution, canonical-key dedupe) reachable in isolation.
     /// </summary>
     /// <param name="unresolvedDistilleries">
     /// Optional sink collecting every <c>distillery</c> value that did not match a seeded distillery and was
@@ -149,6 +151,8 @@ public static class ProductSeeder
                 Country = row.Country,
                 Region = row.Region,
                 Age = row.Age,
+                VintageYear = row.VintageYear,
+                ReleaseYear = row.ReleaseYear,
                 AbvPercent = row.AbvPercent,
                 VolumeMl = row.VolumeMl,
                 Barcode = row.Barcode,
@@ -175,11 +179,46 @@ public static class ProductSeeder
             .Where(p => !existingKeys.Contains(p.CanonicalKey))
             .ToList();
 
-        if (missing.Count > 0)
-        {
-            db.Products.AddRange(missing);
+        db.Products.AddRange(missing);
+
+        var filled = await FillYearsAsync(db, deduped, existingKeys, now, cancellationToken);
+
+        if (missing.Count > 0 || filled > 0)
             await db.SaveChangesAsync(cancellationToken);
+    }
+
+    /// <summary>
+    /// Gives the existing products that have no year yet the year their seed row carries (#59). Rows seeded before
+    /// the years existed would otherwise never get one, since the seed only inserts. Returns how many it filled.
+    /// </summary>
+    private static async Task<int> FillYearsAsync(
+        AppDbContext db,
+        List<Product> seeded,
+        HashSet<string> existingKeys,
+        DateTime now,
+        CancellationToken cancellationToken)
+    {
+        var yearByKey = seeded
+            .Where(p => (p.VintageYear ?? p.ReleaseYear) is not null && existingKeys.Contains(p.CanonicalKey))
+            .ToDictionary(p => p.CanonicalKey);
+
+        if (yearByKey.Count == 0)
+            return 0;
+
+        var keys = yearByKey.Keys.ToList();
+        var undated = await db.Products
+            .Where(p => !p.IsDeleted && p.VintageYear == null && p.ReleaseYear == null && keys.Contains(p.CanonicalKey))
+            .ToListAsync(cancellationToken);
+
+        foreach (var product in undated)
+        {
+            var seed = yearByKey[product.CanonicalKey];
+            product.VintageYear = seed.VintageYear;
+            product.ReleaseYear = seed.ReleaseYear;
+            product.UpdatedAt = now;
         }
+
+        return undated.Count;
     }
 
     private sealed record ProductSeedRow
@@ -197,6 +236,10 @@ public static class ProductSeeder
         public string? Region { get; init; }
 
         public int? Age { get; init; }
+
+        public int? VintageYear { get; init; }
+
+        public int? ReleaseYear { get; init; }
 
         public double? AbvPercent { get; init; }
 

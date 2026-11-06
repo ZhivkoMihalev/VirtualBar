@@ -873,8 +873,14 @@ namespace VirtualBar.Infrastructure.Migrations
                     b.Property<string>("Region")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int?>("ReleaseYear")
+                        .HasColumnType("int");
+
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("datetime2");
+
+                    b.Property<int?>("VintageYear")
+                        .HasColumnType("int");
 
                     b.Property<int?>("VolumeMl")
                         .HasColumnType("int");
@@ -891,7 +897,10 @@ namespace VirtualBar.Infrastructure.Migrations
 
                     b.HasIndex("Category", "Name");
 
-                    b.ToTable("Products");
+                    b.ToTable("Products", t =>
+                        {
+                            t.HasCheckConstraint("CK_Products_OneYearKind", "[VintageYear] IS NULL OR [ReleaseYear] IS NULL");
+                        });
                 });
 
             modelBuilder.Entity("VirtualBar.Domain.Entities.ProductRequest", b =>

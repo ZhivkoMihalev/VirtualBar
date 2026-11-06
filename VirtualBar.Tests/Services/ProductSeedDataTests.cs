@@ -217,6 +217,48 @@ public sealed class ProductSeedDataTests
             $"{offenders.Count} row(s) carry out-of-range values:\n" + string.Join("\n", offenders.Take(30)));
     }
 
+    /// <summary>
+    /// A seeded year is the vintage or the edition named on the label, never both, and never a year the name does not
+    /// show (#59): the year field is curated by hand next to the name, and a typo there would put the product in the
+    /// wrong line. The reverse does not hold: a year in a name can be a founding year (Angostura 1824), with no field.
+    /// </summary>
+    [Fact]
+    public void EverySeedYear_IsAYearTheNameShows_AndOnlyOneKindIsSet()
+    {
+        var offenders = new List<string>();
+        var latest = DateTime.UtcNow.Year + 1;
+
+        foreach (var (_, row) in LoadSeedRows())
+        {
+            if (row.VintageYear is not null && row.ReleaseYear is not null)
+                offenders.Add($"{row.Name}: both vintageYear and releaseYear");
+
+            if ((row.VintageYear ?? row.ReleaseYear) is not int year)
+                continue;
+
+            if (year < 1800 || year > latest)
+                offenders.Add($"{row.Name}: year {year} outside 1800-{latest}");
+
+            if (!System.Text.RegularExpressions.Regex.IsMatch(row.Name, $@"(?<!\d){year}(?!\d)"))
+                offenders.Add($"{row.Name}: year {year} is not in the name");
+        }
+
+        Assert.True(offenders.Count == 0,
+            $"{offenders.Count} row(s) carry a wrong year:\n" + string.Join("\n", offenders.Take(30)));
+    }
+
+    /// <summary>A vodka has no vintage and no yearly editions in the catalog (#59).</summary>
+    [Fact]
+    public void NoVodkaSeedRow_CarriesAYear()
+    {
+        var dated = LoadSeedRows()
+            .Where(r => r.Row.Category == SpiritCategory.Vodka && (r.Row.VintageYear ?? r.Row.ReleaseYear) is not null)
+            .Select(r => r.Row.Name)
+            .ToList();
+
+        Assert.True(dated.Count == 0, "Vodka rows with a year: " + string.Join(", ", dated));
+    }
+
     private sealed record SeedRow
     {
         public string Name { get; init; } = string.Empty;
@@ -228,6 +270,10 @@ public sealed class ProductSeedDataTests
         public SpiritCategory Category { get; init; }
 
         public int? Age { get; init; }
+
+        public int? VintageYear { get; init; }
+
+        public int? ReleaseYear { get; init; }
 
         public double? AbvPercent { get; init; }
 

@@ -1,5 +1,6 @@
 using System.Net;
 using System.Net.Http.Json;
+using System.Text.Json;
 using Microsoft.Extensions.DependencyInjection;
 using VirtualBar.Domain.Entities;
 using VirtualBar.Domain.Enums;
@@ -43,6 +44,43 @@ public sealed class ProductPageTests(ApiHosts hosts)
         Assert.Equal(1, product.GetProperty("listingsCount").GetInt32());
         var listing = Assert.Single(product.GetProperty("listings").EnumerateArray());
         Assert.Equal(bottleId, listing.GetProperty("bottleId").GetGuid());
+    }
+
+    /// <summary>
+    /// The seeded catalog carries the approved years (#59): a vintage-dated product has its vintage year and no other
+    /// vintage of its line, and an edition lists the other editions of its series, each with its own release year.
+    /// </summary>
+    [SqlServerFact]
+    public async Task GetProduct_WhenSeededProductIsDated_ReturnsItsYearAndTheOtherYearsOfItsLine()
+    {
+        var client = Api.CreateClient();
+
+        var millesime = await GetSeededProductAsync(client, "Millésime 1988", "Cognac");
+        Assert.Equal(1988, millesime.GetProperty("vintageYear").GetInt32());
+        Assert.Equal(JsonValueKind.Null, millesime.GetProperty("releaseYear").ValueKind);
+
+        var classicCut = await GetSeededProductAsync(client, "Classic Cut 2020 Edition", "Whisky");
+        Assert.Equal(2020, classicCut.GetProperty("releaseYear").GetInt32());
+        var years = classicCut.GetProperty("otherYears").EnumerateArray()
+            .Select(y => (Name: y.GetProperty("name").GetString()!, Year: y.GetProperty("year").GetInt32()))
+            .ToList();
+        Assert.Contains(("Classic Cut 2019 Edition", 2019), years);
+        Assert.Contains(("Classic Cut 2021 Edition", 2021), years);
+        Assert.DoesNotContain(years, y => y.Year == 2020);
+        Assert.Equal(years.OrderBy(y => y.Year).ToList(), years);
+    }
+
+    private static async Task<JsonElement> GetSeededProductAsync(HttpClient client, string name, string category)
+    {
+        var page = await (await client.GetAsync(
+            $"/api/products/browse?search={Uri.EscapeDataString(name)}&category={category}")).JsonAsync();
+        var id = page.GetProperty("items").EnumerateArray()
+            .First(p => p.GetProperty("name").GetString() == name)
+            .GetProperty("id").GetGuid();
+
+        var response = await client.GetAsync($"/api/products/{id}");
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        return await response.JsonAsync();
     }
 
     /// <summary>

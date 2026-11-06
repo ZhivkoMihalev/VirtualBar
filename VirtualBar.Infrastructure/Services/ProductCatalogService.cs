@@ -166,6 +166,8 @@ public sealed class ProductCatalogService(AppDbContext db, ICurrentUser currentU
                 Country = p.Country,
                 Region = p.Region,
                 Age = p.Age,
+                VintageYear = p.VintageYear,
+                ReleaseYear = p.ReleaseYear,
                 AbvPercent = p.AbvPercent,
                 VolumeMl = p.VolumeMl,
                 Barcode = p.Barcode,
@@ -173,6 +175,8 @@ public sealed class ProductCatalogService(AppDbContext db, ICurrentUser currentU
                 Description = p.Description
             })
             .FirstAsync(cancellationToken);
+
+        detail.OtherYears = await OtherYearsAsync(detail, cancellationToken);
 
         var reviews = LinkedReviews(productId);
 
@@ -242,6 +246,66 @@ public sealed class ProductCatalogService(AppDbContext db, ICurrentUser currentU
         detail.LatestReviews = latest.Select(ReviewMapping.ToDto).ToList();
 
         return Result<ProductDetailDto>.Ok(detail);
+    }
+
+    /// <summary>
+    /// The other vintages, or the other editions, of a dated product's line (#59), oldest first. The database narrows
+    /// to the live products with the same category, maker and kind of year; the line's name is compared in memory,
+    /// since taking the year out of a name does not translate to SQL. A dated line holds a handful of products.
+    /// </summary>
+    private async Task<List<ProductYearDto>> OtherYearsAsync(ProductDetailDto product, CancellationToken cancellationToken)
+    {
+        if ((product.VintageYear ?? product.ReleaseYear) is not int year)
+            return [];
+
+        var sameMaker = db.Products
+            .AsNoTracking()
+            .Where(p => !p.IsDeleted && p.Id != product.Id && p.Category == product.Category);
+
+        // The maker is the distillery when there is one; without one, the brand is the label's own name (no fallback).
+        sameMaker = product.DistilleryId is Guid distilleryId
+            ? sameMaker.Where(p => p.DistilleryId == distilleryId)
+            : sameMaker.Where(p => p.DistilleryId == null && p.Brand == product.Brand);
+
+        var candidates = product.VintageYear is not null
+            ? await sameMaker.Where(p => p.VintageYear != null)
+                .Select(p => new { p.Id, p.Name, Year = p.VintageYear!.Value })
+                .ToListAsync(cancellationToken)
+            : await sameMaker.Where(p => p.ReleaseYear != null)
+                .Select(p => new { p.Id, p.Name, Year = p.ReleaseYear!.Value })
+                .ToListAsync(cancellationToken);
+
+        var line = ProductYearLine.Of(product.Name, year);
+        var siblings = candidates.Where(c => ProductYearLine.Of(c.Name, c.Year) == line).ToList();
+
+        if (siblings.Count == 0)
+            return [];
+
+        var ids = siblings.Select(s => s.Id).ToList();
+        var stats = await db.Products
+            .AsNoTracking()
+            .Where(p => ids.Contains(p.Id))
+            .Select(p => new
+            {
+                p.Id,
+                AverageScore = p.Bottles.Where(b => !b.IsDeleted).SelectMany(b => b.Reviews).Where(r => !r.IsDeleted)
+                    .Average(r => (double?)r.Score),
+                ListingsCount = p.Bottles.Count(b => !b.IsDeleted && b.IsForSale)
+            })
+            .ToDictionaryAsync(s => s.Id, cancellationToken);
+
+        return siblings
+            .OrderBy(s => s.Year)
+            .ThenBy(s => s.Name)
+            .Select(s => new ProductYearDto
+            {
+                Id = s.Id,
+                Name = s.Name,
+                Year = s.Year,
+                AverageScore = RoundScore(stats[s.Id].AverageScore),
+                ListingsCount = stats[s.Id].ListingsCount
+            })
+            .ToList();
     }
 
     public async Task<Result<PagedResult<BottleReviewDto>>> GetProductReviewsAsync(Guid productId, int page, int pageSize, CancellationToken cancellationToken)

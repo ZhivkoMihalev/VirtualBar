@@ -142,7 +142,7 @@ Pricing: bottle ─▶ PriceKey.ForBottle(product?.CanonicalKey, bottle fields�
 
 ## 7. Parked (not in this feature)
 - ~~Wish list by product (`WishListItem.ProductId`)~~ — done in #51 (`.claude/rules/domain/wish-list.md`).
-- Sorting the catalog by score / popularity.
+- ~~Sorting the catalog by score / popularity~~ — done in #56 (`.claude/rules/domain/catalog.md`, the `sort` parameter).
 - Showing "X rated product Y" in the feed.
 - Deleting orphaned old-key `PriceSnapshots` (would need explicit approval — CRITICAL RULES).
 - Vintage-specific catalog entries.

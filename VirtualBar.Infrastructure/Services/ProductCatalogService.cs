@@ -52,7 +52,7 @@ public sealed class ProductCatalogService(AppDbContext db, ICurrentUser currentU
         return Result<List<ProductDto>>.Ok(products);
     }
 
-    public async Task<Result<PagedResult<ProductCardDto>>> BrowseAsync(string? search, SpiritCategory? category, int page, int pageSize, CancellationToken cancellationToken)
+    public async Task<Result<PagedResult<ProductCardDto>>> BrowseAsync(string? search, SpiritCategory? category, ProductSort? sort, int page, int pageSize, CancellationToken cancellationToken)
     {
         var q = db.Products
             .AsNoTracking()
@@ -61,41 +61,84 @@ public sealed class ProductCatalogService(AppDbContext db, ICurrentUser currentU
         if (category.HasValue)
             q = q.Where(p => p.Category == category.Value);
 
-        // Id breaks ties between equal names, so a row can never repeat or vanish between two pages.
-        q = search is null
-            ? q.OrderBy(p => p.Name).ThenBy(p => p.Id)
-            : q.Where(p => p.Name.Contains(search)
-                    || (p.Brand != null && p.Brand.Contains(search))
-                    || (p.Distillery != null && p.Distillery.Name.Contains(search)))
-                .OrderByDescending(p => p.Name.StartsWith(search))
-                .ThenBy(p => p.Name)
-                .ThenBy(p => p.Id);
+        if (search is not null)
+            q = q.Where(p => p.Name.Contains(search)
+                || (p.Brand != null && p.Brand.Contains(search))
+                || (p.Distillery != null && p.Distillery.Name.Contains(search)));
 
-        // One row over the page size tells whether another page exists, without a count query.
-        var rows = await q
+        // Every product's live reviews, aggregated in one pass over the reviews and joined to the products. Ranking by
+        // a review subquery per product took about 2.5 s over the whole catalog on SQL Server (#56).
+        var reviewStats = db.BottleReviews
+            .Where(r => !r.IsDeleted && !r.Bottle.IsDeleted && r.Bottle.ProductId != null)
+            .GroupBy(r => r.Bottle.ProductId)
+            // Nullable, so a product with no reviews reads null rather than failing on a missing row (EF InMemory).
+            .Select(g => new { ProductId = g.Key, Count = (int?)g.Count(), Average = (double?)g.Average(r => r.Score) });
+
+        // The card counts, computed once in the query so the order and the card read the same numbers.
+        var counted =
+            from p in q
+            join s in reviewStats on (Guid?)p.Id equals s.ProductId into stats
+            from s in stats.DefaultIfEmpty()
+            select new
+            {
+                Product = p,
+                OwnersCount = p.Bottles.Where(b => !b.IsDeleted).Select(b => b.UserId).Distinct().Count(),
+                // A product with no reviews has no row in the join: its columns are NULL in SQL, never a null object,
+                // and a conditional on the row would not translate inside ORDER BY.
+                ReviewsCount = s!.Count ?? 0,
+                AverageScore = s!.Average,
+                ListingsCount = p.Bottles.Count(b => !b.IsDeleted && b.IsForSale)
+            };
+
+        // The decorator has resolved the default order; null cannot reach here.
+        var ordered = sort switch
+        {
+            ProductSort.Relevance => counted
+                .OrderByDescending(x => x.Product.Name.StartsWith(search!))
+                .ThenBy(x => x.Product.Name),
+            // Few reviews must not outrank many: products with enough reviews come first, then the reviewed rest,
+            // then the unreviewed, each by score. The card still shows the plain average.
+            ProductSort.TopRated => counted
+                .OrderByDescending(x => x.ReviewsCount >= MinReviewsToRankFirst)
+                .ThenByDescending(x => x.ReviewsCount > 0)
+                .ThenByDescending(x => x.AverageScore)
+                .ThenByDescending(x => x.ReviewsCount)
+                .ThenBy(x => x.Product.Name),
+            ProductSort.MostReviewed => counted.OrderByDescending(x => x.ReviewsCount).ThenBy(x => x.Product.Name),
+            ProductSort.Popular => counted.OrderByDescending(x => x.OwnersCount).ThenBy(x => x.Product.Name),
+            ProductSort.ForSale => counted.OrderByDescending(x => x.ListingsCount).ThenBy(x => x.Product.Name),
+            _ => counted.OrderBy(x => x.Product.Name)
+        };
+
+        // One row over the page size tells whether another page exists, without a count query. Id breaks the
+        // last ties, so a row can never repeat or vanish between two pages.
+        var rows = await ordered
+            .ThenBy(x => x.Product.Id)
             .Skip((page - 1) * pageSize)
             .Take(pageSize + 1)
-            .Select(p => new ProductCardDto
+            .Select(x => new ProductCardDto
             {
-                Id = p.Id,
-                Name = p.Name,
+                Id = x.Product.Id,
+                Name = x.Product.Name,
                 // Same brand fallback as SearchAsync, so a product reads the same on every catalog path.
-                Brand = p.Brand ?? (p.Distillery != null && !p.Distillery.IsDeleted ? p.Distillery.Name : null),
-                DistilleryId = p.DistilleryId,
-                DistilleryName = p.Distillery != null && !p.Distillery.IsDeleted ? p.Distillery.Name : null,
-                Category = p.Category,
-                Country = p.Country,
-                Region = p.Region,
-                Age = p.Age,
-                AbvPercent = p.AbvPercent,
-                VolumeMl = p.VolumeMl,
-                Barcode = p.Barcode,
-                ImageUrl = p.ImageUrl,
-                OwnersCount = p.Bottles.Where(b => !b.IsDeleted).Select(b => b.UserId).Distinct().Count(),
-                ReviewsCount = p.Bottles.Where(b => !b.IsDeleted).SelectMany(b => b.Reviews).Count(r => !r.IsDeleted),
-                AverageScore = p.Bottles.Where(b => !b.IsDeleted).SelectMany(b => b.Reviews).Where(r => !r.IsDeleted)
-                    .Average(r => (double?)r.Score),
-                ListingsCount = p.Bottles.Count(b => !b.IsDeleted && b.IsForSale)
+                Brand = x.Product.Brand
+                    ?? (x.Product.Distillery != null && !x.Product.Distillery.IsDeleted ? x.Product.Distillery.Name : null),
+                DistilleryId = x.Product.DistilleryId,
+                DistilleryName = x.Product.Distillery != null && !x.Product.Distillery.IsDeleted
+                    ? x.Product.Distillery.Name
+                    : null,
+                Category = x.Product.Category,
+                Country = x.Product.Country,
+                Region = x.Product.Region,
+                Age = x.Product.Age,
+                AbvPercent = x.Product.AbvPercent,
+                VolumeMl = x.Product.VolumeMl,
+                Barcode = x.Product.Barcode,
+                ImageUrl = x.Product.ImageUrl,
+                OwnersCount = x.OwnersCount,
+                ReviewsCount = x.ReviewsCount,
+                AverageScore = x.AverageScore,
+                ListingsCount = x.ListingsCount
             })
             .ToListAsync(cancellationToken);
 
@@ -217,6 +260,9 @@ public sealed class ProductCatalogService(AppDbContext db, ICurrentUser currentU
     private const int MaxOwners = 20;
 
     private const int LatestReviewsCount = 5;
+
+    /// <summary>How many reviews a product needs to rank among the top of <see cref="ProductSort.TopRated"/> (#56).</summary>
+    private const int MinReviewsToRankFirst = 3;
 
     /// <summary>Non-deleted bottles linked to the product.</summary>
     private IQueryable<Bottle> LinkedBottles(Guid productId) => db.Bottles

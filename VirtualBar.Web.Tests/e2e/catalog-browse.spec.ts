@@ -1,9 +1,19 @@
 import type { Page } from '@playwright/test'
-import { bg, expect, FLOW_TIMEOUT, test } from './support'
+import {
+  bg,
+  createBottle,
+  expect,
+  FLOW_TIMEOUT,
+  registerCollector,
+  test,
+  uniqueName,
+  untouchedProduct,
+} from './support'
 
 /**
- * Browsing /catalog: the NavBar link, the category filter, the URL as the page's state (back/forward, shared links,
- * typing that does not pile up history entries) and "show more". Reads the seeded catalog only, so it creates no data.
+ * Browsing /catalog: the NavBar link, the category filter, the sort control (#56), the URL as the page's state
+ * (back/forward, shared links, typing that does not pile up history entries) and "show more". Reads the seeded
+ * catalog; only the sort test links one bottle to a product, so the "most collected" order has a product to put first.
  */
 
 const PAGE_SIZE = 24
@@ -14,6 +24,14 @@ const categoryPill = (page: Page, label: string) =>
   page.getByRole('group', { name: bg.catalog.categoryFilter }).getByRole('button', { name: label, exact: true })
 
 const searchBox = (page: Page) => page.getByRole('searchbox', { name: bg.catalog.searchLabel })
+
+const sortControl = (page: Page) => page.getByRole('combobox', { name: bg.catalog.sortLabel })
+
+/** The collectors count on every card, in list order; a card with no collectors shows none, which is 0. */
+async function ownersCounts(page: Page): Promise<number[]> {
+  const texts = await productCards(page).allInnerTexts()
+  return texts.map(text => Number(/(\d+) колекционер/.exec(text)?.[1] ?? 0))
+}
 
 /** At least one card is shown, and every card carries the badge of `category`. */
 async function expectOnly(page: Page, category: string) {
@@ -82,6 +100,40 @@ test.describe('Catalog browsing', () => {
     await page.goForward()
     await expect(page).toHaveURL(/\/catalog\?q=Lagavulin$/)
     await expect(searchBox(page)).toHaveValue('Lagavulin')
+  })
+
+  test('choosing an order sorts the list, keeps it in the URL, and back and forward restore it (#56)', async ({
+    openAs,
+  }) => {
+    // At least one product with a collector, so "most collected" has something to put first.
+    const [product, collector] = await Promise.all([untouchedProduct(), registerCollector('sorter')])
+    await createBottle(collector, {
+      name: `${product.name} ${uniqueName('Sort')}`,
+      category: product.category,
+      productId: product.id,
+    })
+
+    const page = await openAs(null)
+    await page.goto('/catalog')
+    await expect(productCards(page)).toHaveCount(PAGE_SIZE)
+    await expect(sortControl(page)).toHaveText(bg.catalog.sortName)
+
+    await sortControl(page).click()
+    await page.getByRole('option', { name: bg.catalog.sortPopular }).click()
+
+    await expect(page).toHaveURL(/\/catalog\?sort=Popular$/)
+    await expect(sortControl(page)).toHaveText(bg.catalog.sortPopular)
+    await expect(productCards(page).first()).toContainText(/\d+ колекционер/)
+    const counts = await ownersCounts(page)
+    expect(counts).toEqual([...counts].sort((a, b) => b - a))
+
+    await page.goBack()
+    await expect(page).toHaveURL(/\/catalog$/)
+    await expect(sortControl(page)).toHaveText(bg.catalog.sortName)
+
+    await page.goForward()
+    await expect(page).toHaveURL(/\/catalog\?sort=Popular$/)
+    await expect(sortControl(page)).toHaveText(bg.catalog.sortPopular)
   })
 
   test('"show more" appends the next page of the catalog', async ({ openAs }) => {

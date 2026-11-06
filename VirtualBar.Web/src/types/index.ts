@@ -307,6 +307,12 @@ export interface PagedResult<T> {
   hasMore: boolean
 }
 
+/**
+ * The order of `/catalog` (the API's `ProductSort`, sent by name). `Name` is the default without a search term and
+ * `Relevance` (name starts with the term first) with one; `TopRated` ranks products with 3+ reviews first (#56).
+ */
+export type ProductSort = 'Name' | 'Relevance' | 'TopRated' | 'MostReviewed' | 'Popular' | 'ForSale'
+
 /** A product on a `/catalog` card, with its community counts over every linked bottle. */
 export interface ProductCard extends Product {
   ownersCount: number

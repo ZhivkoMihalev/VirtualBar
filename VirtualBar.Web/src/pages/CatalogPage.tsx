@@ -4,7 +4,7 @@ import { keepPreviousData, useInfiniteQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { Search } from 'lucide-react'
 import { browseProducts } from '../api/productsApi'
-import type { ProductCard, SpiritCategory } from '../types'
+import type { ProductCard, ProductSort, SpiritCategory } from '../types'
 import { CATEGORY_COLORS } from '../lib/bottlePalette'
 import NavBar from '../components/NavBar'
 import CategoryPill from '../components/CategoryPill'
@@ -14,14 +14,31 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Skeleton } from '@/components/ui/skeleton'
 
 const CATEGORIES = Object.keys(CATEGORY_COLORS) as SpiritCategory[]
+
+/** The orders offered in the sort control, in the order they are listed. */
+const SORTS: ProductSort[] = ['Relevance', 'Name', 'TopRated', 'MostReviewed', 'Popular', 'ForSale']
 
 const PAGE_SIZE = 24
 
 function parseCategory(value: string | null): SpiritCategory | undefined {
   return CATEGORIES.find(c => c === value)
+}
+
+function parseSort(value: string | null): ProductSort | undefined {
+  return SORTS.find(s => s === value)
+}
+
+/**
+ * The order the list is shown in: the one in the URL, else the server's default. Relevance ranks by the term, so
+ * without one it is plain name order, as on the server.
+ */
+function effectiveSort(sort: ProductSort | undefined, term: string): ProductSort {
+  if (!term) return sort === undefined || sort === 'Relevance' ? 'Name' : sort
+  return sort ?? 'Relevance'
 }
 
 /**
@@ -133,8 +150,9 @@ export default function CatalogPage() {
   }
 
   const term = useSettledTerm(typed.trim(), 300)
+  const sort = effectiveSort(parseSort(searchParams.get('sort')), term)
 
-  const updateParam = (key: 'q' | 'category', value: string | undefined, replace: boolean) => {
+  const updateParam = (key: 'q' | 'category' | 'sort', value: string | undefined, replace: boolean) => {
     setSearchParams(
       prev => {
         const next = new URLSearchParams(prev)
@@ -156,9 +174,10 @@ export default function CatalogPage() {
     isFetchingNextPage,
     isFetchNextPageError,
   } = useInfiniteQuery({
-    queryKey: ['products', 'browse', term, category ?? 'all'],
+    // A new sort is a new query, so the list starts again from page 1.
+    queryKey: ['products', 'browse', term, category ?? 'all', sort],
     queryFn: ({ pageParam }) =>
-      browseProducts({ search: term || undefined, category, page: pageParam, pageSize: PAGE_SIZE }),
+      browseProducts({ search: term || undefined, category, sort, page: pageParam, pageSize: PAGE_SIZE }),
     initialPageParam: 1,
     getNextPageParam: (last, all) => (last.hasMore ? all.length + 1 : undefined),
     // Keeps the current cards on screen while a new term or category loads, instead of flashing skeletons.
@@ -181,25 +200,47 @@ export default function CatalogPage() {
         </div>
 
         <div className="mb-9 space-y-4">
-          <div className="max-w-md">
-            <div className="relative">
-              <Search className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                type="search"
-                value={typed}
-                // Every keystroke replaces the history entry, so Back leaves the page instead of undoing letters.
-                onChange={e => {
-                  setTyped(e.target.value)
-                  updateParam('q', e.target.value, true)
-                }}
-                placeholder={t('catalog.searchPlaceholder')}
-                aria-label={t('catalog.searchLabel')}
-                className="h-10 pl-9"
-              />
+          <div className="flex flex-wrap items-start gap-3">
+            <div className="min-w-64 max-w-md flex-1">
+              <div className="relative">
+                <Search className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  type="search"
+                  value={typed}
+                  // Every keystroke replaces the history entry, so Back leaves the page instead of undoing letters.
+                  onChange={e => {
+                    setTyped(e.target.value)
+                    updateParam('q', e.target.value, true)
+                  }}
+                  placeholder={t('catalog.searchPlaceholder')}
+                  aria-label={t('catalog.searchLabel')}
+                  className="h-10 pl-9"
+                />
+              </div>
+              {typed.trim().length === 1 && (
+                <p className="mt-1.5 text-xs text-muted-foreground">{t('catalog.minChars')}</p>
+              )}
             </div>
-            {typed.trim().length === 1 && (
-              <p className="mt-1.5 text-xs text-muted-foreground">{t('catalog.minChars')}</p>
-            )}
+
+            <Select
+              value={sort}
+              // A choice pushes a history entry, like a category. The default for the current term stays out of the URL.
+              onValueChange={value =>
+                updateParam('sort', value === effectiveSort(undefined, term) ? undefined : value, false)
+              }
+            >
+              <SelectTrigger aria-label={t('catalog.sortLabel')} className="h-10 w-auto min-w-52">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {/* Without a term "best match" is the same as name order, so it is offered only with one. */}
+                {SORTS.filter(s => s !== 'Relevance' || term).map(s => (
+                  <SelectItem key={s} value={s}>
+                    {t(`catalog.sort${s}`)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div role="group" aria-label={t('catalog.categoryFilter')} className="flex flex-wrap gap-2">

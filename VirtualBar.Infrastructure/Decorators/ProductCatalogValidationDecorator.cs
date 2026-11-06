@@ -40,7 +40,7 @@ public sealed class ProductCatalogValidationDecorator(IProductCatalogService inn
         return await inner.SearchAsync(term, category, limit, cancellationToken);
     }
 
-    public async Task<Result<PagedResult<ProductCardDto>>> BrowseAsync(string? search, SpiritCategory? category, int page, int pageSize, CancellationToken cancellationToken)
+    public async Task<Result<PagedResult<ProductCardDto>>> BrowseAsync(string? search, SpiritCategory? category, ProductSort? sort, int page, int pageSize, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
 
@@ -53,6 +53,14 @@ public sealed class ProductCatalogValidationDecorator(IProductCatalogService inn
         if (term is not null && term.Length > 100)
             return Result<PagedResult<ProductCardDto>>.Fail("Search term is too long.");
 
+        // A number in the query string binds to any int, so an undefined value can reach this far.
+        if (sort is not null && !Enum.IsDefined(sort.Value))
+            return Result<PagedResult<ProductCardDto>>.Fail("Unknown sort order.");
+
+        // Relevance ranks by the term, so without one it is plain name order.
+        if (sort is null || (sort == ProductSort.Relevance && term is null))
+            sort = term is null ? ProductSort.Name : ProductSort.Relevance;
+
         if (page < 1) page = 1;
 
         // A deep page is an expensive OFFSET and never a real reader; refuse it rather than run it.
@@ -62,7 +70,7 @@ public sealed class ProductCatalogValidationDecorator(IProductCatalogService inn
         if (pageSize < 1) pageSize = DefaultBrowsePageSize;
         if (pageSize > MaxBrowsePageSize) pageSize = MaxBrowsePageSize;
 
-        return await inner.BrowseAsync(term, category, page, pageSize, cancellationToken);
+        return await inner.BrowseAsync(term, category, sort, page, pageSize, cancellationToken);
     }
 
     public async Task<Result<ProductDetailDto>> GetProductAsync(Guid productId, CancellationToken cancellationToken)

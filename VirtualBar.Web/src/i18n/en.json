@@ -600,7 +600,14 @@
     "forSale_one": "{{count}} for sale",
     "forSale_other": "{{count}} for sale",
     "reviews_one": "{{count}} review",
-    "reviews_other": "{{count}} reviews"
+    "reviews_other": "{{count}} reviews",
+    "sortLabel": "Sort by",
+    "sortName": "Name (A–Z)",
+    "sortRelevance": "Best match",
+    "sortTopRated": "Top rated",
+    "sortMostReviewed": "Most reviewed",
+    "sortPopular": "Most collected",
+    "sortForSale": "Most for sale"
   },
   "product": {
     "backToCatalog": "← Catalog",

@@ -83,13 +83,34 @@ Canonical catalog entry for a spirits product. Not user-owned.
   - The returned `Brand` falls back to the non-deleted distillery name exactly as the barcode endpoint does, so both
     paths agree on the same product.
 - `GET /api/products/barcode/{barcode}` — `[Authorize]`; catalog L0 → external UPC fallback.
-- `GET /api/products/browse?search=&category=&page=&pageSize=` — `[AllowAnonymous]`; the public `/catalog` →
+- `GET /api/products/browse?search=&category=&sort=&page=&pageSize=` — `[AllowAnonymous]`; the public `/catalog` →
   `PagedResult<ProductCardDto> { Items, HasMore }`.
-  - `search` is optional: omitted/blank lists the whole catalog ordered `Name, Id`; a term filters and ranks exactly
-    like the search endpoint, 2–100 chars.
+  - `search` is optional: omitted/blank lists the whole catalog; a term filters exactly like the search endpoint,
+    2–100 chars.
+  - `sort` (added in #56) takes a `ProductSort` member by name, one of the six in the table below.
+  - Omitted, it is name order without a term and relevance with one; relevance without a term falls back to name
+    order. An explicit `sort` replaces the relevance order; the filter is unchanged.
+  - An undefined value → `400` (`ProductCatalogValidationDecorator`; an unknown name already fails model binding).
+
+    | Value | Order |
+    |---|---|
+    | `Name` | name A–Z |
+    | `Relevance` | name starts with the term first, then name |
+    | `TopRated` | 3+ reviews first, then 1–2, then none; within each, average score ↓, then review count ↓ |
+    | `MostReviewed` | review count ↓ |
+    | `Popular` | distinct owners ↓ |
+    | `ForSale` | current listings ↓ |
+  - Every order ends with `Name, Id`, so paging never repeats or skips a product.
+  - `TopRated`'s threshold (`MinReviewsToRankFirst`, 3) keeps one 100/100 review below a product with many reviews
+    averaging 95; the card still shows the plain average. The owner chose it over a weighted (Bayesian) score, whose
+    order would contradict the averages on the cards.
   - `page` ≥ 1 (≤ 1000, beyond → `400`); `pageSize` clamped 1–48 (default 24).
   - Each card adds `OwnersCount` (distinct users), `ReviewsCount`, `AverageScore` and `ListingsCount` over the
-    product's non-deleted linked bottles.
+    product's non-deleted linked bottles. The query computes them once and both orders and returns them, so the order
+    and the card cannot disagree.
+  - The review count and average come from one grouped pass over the live reviews, left-joined to the products. A
+    review subquery per product made `TopRated` take about 2.5 s over the ~3400 products; the join takes about 60 ms
+    (local SQL Server, every order).
 - `GET /api/products/{id}` — `[AllowAnonymous]`; the `/product/:id` page → `ProductDetailDto`.
   - The product (+ `Description`) plus, over every non-deleted linked bottle:
     - the review aggregate (`AverageScore`, `ReviewsCount`, top-3 `TopFlavors` with the same tie-break as a bottle);

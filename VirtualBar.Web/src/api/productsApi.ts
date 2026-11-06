@@ -5,6 +5,7 @@ import type {
   Product,
   ProductCard,
   ProductDetail,
+  ProductSort,
   SpiritCategory,
 } from '../types'
 
@@ -25,6 +26,8 @@ export interface BrowseProductsParams {
   /** Omitted or empty lists the whole catalog; the server rejects 1 character, so never send one. */
   search?: string
   category?: SpiritCategory
+  /** Omitted: the server's default (`Name`, or `Relevance` with a search term). */
+  sort?: ProductSort
   page: number
   pageSize?: number
 }
@@ -32,12 +35,14 @@ export interface BrowseProductsParams {
 export async function browseProducts({
   search,
   category,
+  sort,
   page,
   pageSize,
 }: BrowseProductsParams): Promise<PagedResult<ProductCard>> {
   const params: Record<string, string | number> = { page }
   if (search) params.search = search
   if (category) params.category = category
+  if (sort) params.sort = sort
   if (pageSize != null) params.pageSize = pageSize
   const { data } = await client.get<PagedResult<ProductCard>>('/products/browse', { params })
   return data

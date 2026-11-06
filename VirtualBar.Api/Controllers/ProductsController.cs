@@ -46,16 +46,17 @@ public sealed class ProductsController(
     /// <summary>One page of the public catalog, with each product's owner, review and listing counts.</summary>
     /// <param name="search">Optional search term (2-100 characters); omitted or blank lists the whole catalog by name.</param>
     /// <param name="category">Optional spirit category filter.</param>
+    /// <param name="sort">Optional order (Name, Relevance, TopRated, MostReviewed, Popular, ForSale); default Name, or Relevance with a search term.</param>
     /// <param name="page">1-based page number, at most 1000 (default 1).</param>
     /// <param name="pageSize">Products per page, clamped to 1-48 (default 24).</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <response code="200">The page, with <c>hasMore</c> set when another page exists.</response>
-    /// <response code="400">Search term too short or too long, or page out of range.</response>
+    /// <response code="400">Search term too short or too long, unknown sort, or page out of range.</response>
     [HttpGet("browse")]
     [AllowAnonymous]
-    public async Task<IActionResult> Browse([FromQuery] string? search, [FromQuery] SpiritCategory? category, [FromQuery] int page, [FromQuery] int pageSize, CancellationToken cancellationToken)
+    public async Task<IActionResult> Browse([FromQuery] string? search, [FromQuery] SpiritCategory? category, [FromQuery] ProductSort? sort, [FromQuery] int page, [FromQuery] int pageSize, CancellationToken cancellationToken)
     {
-        var result = await productCatalogService.BrowseAsync(search, category, page, pageSize, cancellationToken);
+        var result = await productCatalogService.BrowseAsync(search, category, sort, page, pageSize, cancellationToken);
         return result.Success ? Ok(result.Data) : result.ToActionResult(this);
     }
 

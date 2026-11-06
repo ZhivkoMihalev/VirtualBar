@@ -10,10 +10,11 @@ public interface IProductCatalogService
     Task<Result<List<ProductDto>>> SearchAsync(string search, SpiritCategory? category, int limit, CancellationToken cancellationToken);
 
     /// <summary>
-    /// One page of the public catalog. <paramref name="search"/> is optional: null lists the whole catalog
-    /// by name; a term filters like <see cref="SearchAsync"/> and ranks name prefixes first.
+    /// One page of the public catalog. <paramref name="search"/> is optional: a term filters like
+    /// <see cref="SearchAsync"/>. <paramref name="sort"/> orders the page; null means <see cref="ProductSort.Name"/>
+    /// without a term and <see cref="ProductSort.Relevance"/> with one.
     /// </summary>
-    Task<Result<PagedResult<ProductCardDto>>> BrowseAsync(string? search, SpiritCategory? category, int page, int pageSize, CancellationToken cancellationToken);
+    Task<Result<PagedResult<ProductCardDto>>> BrowseAsync(string? search, SpiritCategory? category, ProductSort? sort, int page, int pageSize, CancellationToken cancellationToken);
 
     /// <summary>
     /// The product page: the product plus the community score, top flavors, owners, listings and the newest

@@ -27,6 +27,18 @@ public sealed class ProductDetailDto
 
     public int? Age { get; set; }
 
+    /// <summary>The year of distillation of a vintage-dated product; null otherwise (#59).</summary>
+    public int? VintageYear { get; set; }
+
+    /// <summary>The year of a yearly edition; null otherwise. Never set together with <see cref="VintageYear"/>.</summary>
+    public int? ReleaseYear { get; set; }
+
+    /// <summary>
+    /// The other vintages, or the other editions, of the product's line, oldest first: the live products with the same
+    /// category, maker, kind of year and name without the year (<c>ProductYearLine</c>). Empty for an undated product.
+    /// </summary>
+    public List<ProductYearDto> OtherYears { get; set; } = [];
+
     public double? AbvPercent { get; set; }
 
     public int? VolumeMl { get; set; }

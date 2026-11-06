@@ -261,6 +261,10 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
             e.HasIndex(p => p.Barcode);
 
             e.HasIndex(p => new { p.Category, p.Name });
+
+            // A year is either the vintage or the edition, never both (#59).
+            e.ToTable(t => t.HasCheckConstraint(
+                "CK_Products_OneYearKind", "[VintageYear] IS NULL OR [ReleaseYear] IS NULL"));
         });
 
         builder.Entity<ProductRequest>(e =>

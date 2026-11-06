@@ -428,7 +428,7 @@
     "cancel": "Cancel",
     "remove": "Remove",
     "removeConfirm": "Are you sure?",
-    "atLeastOne": "Specify at least a distillery or category",
+    "atLeastOne": "Pick a product, a distillery or a category",
     "addFailed": "Something went wrong. Please try again.",
     "adding": "Adding...",
     "imageUrl": "Image URL",
@@ -450,7 +450,10 @@
     "contactSending": "Sending...",
     "contactCancel": "Cancel",
     "contactError": "Failed to send. Please try again.",
-    "contactBtn": "MESSAGE"
+    "contactBtn": "MESSAGE",
+    "productChip": "Exact product:",
+    "productHint": "Only listings of this exact bottle will notify you.",
+    "removeProduct": "Remove product"
   },
   "distillerySelect": {
     "placeholder": "Search distillery...",
@@ -619,7 +622,12 @@
     "andMore_one": "and {{count}} more collector",
     "andMore_other": "and {{count}} more collectors",
     "reviews": "Reviews",
-    "showMore": "Show more reviews"
+    "showMore": "Show more reviews",
+    "wantIt": "Want it",
+    "wantItAdding": "Adding…",
+    "wantItHint": "You will be notified when a collector lists it for sale.",
+    "wantItError": "Could not add it to your wish list. Please try again.",
+    "wanted": "On your wish list"
   },
   "productRequests": {
     "title": "Catalog Requests",

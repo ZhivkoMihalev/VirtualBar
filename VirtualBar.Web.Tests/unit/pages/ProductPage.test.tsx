@@ -1,31 +1,35 @@
-import { screen, within } from '@testing-library/react'
+import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 import { getNotifications } from '@/api/notificationsApi'
 import { getProductEstimate } from '@/api/pricesApi'
 import { getProduct, getProductReviews } from '@/api/productsApi'
+import { addWishListItem, getWishList } from '@/api/wishListApi'
 import i18n from '@/i18n'
 import bg from '@/i18n/bg.json'
 import ProductPage from '@/pages/ProductPage'
 import type { ProductDetail } from '@/types'
 import { listing, owner, paged, productDetail, review } from '../fixtures/products'
-import { apiError, renderWithProviders, signIn } from '../testUtils'
+import { wishListItem } from '../fixtures/wishList'
+import { apiError, deferred, renderWithProviders, signIn } from '../testUtils'
 
 vi.mock('@/api/productsApi')
 vi.mock('@/api/pricesApi')
 vi.mock('@/api/notificationsApi')
 vi.mock('@/api/bottlesApi')
+vi.mock('@/api/wishListApi')
 
 function renderProduct(detail: ProductDetail) {
   vi.mocked(getProduct).mockResolvedValue(detail)
   return renderWithProviders(<ProductPage />, { route: `/product/${detail.id}`, path: '/product/:id' })
 }
 
-/** Logs a collector in, with the NavBar's notifications and the price estimate answered. */
+/** Logs a collector in, with the NavBar's notifications, the price estimate and their own wish list answered. */
 function signInCollector() {
   signIn()
   vi.mocked(getNotifications).mockResolvedValue({ notifications: [], unreadCount: 0 })
   vi.mocked(getProductEstimate).mockResolvedValue(null)
+  vi.mocked(getWishList).mockResolvedValue([])
 }
 
 /** A section of the page, found by its heading once the product has loaded. */
@@ -195,6 +199,73 @@ describe('ProductPage', () => {
 
     expect(await screen.findByText(bg.collectionValue.estimateLabel)).toBeInTheDocument()
     expect(getProductEstimate).toHaveBeenCalledExactlyOnceWith(detail.id)
+  })
+
+  describe('"want it" (#51)', () => {
+    /** Renders the page for a logged-in collector whose own wish list holds `wishes`. */
+    function renderLoggedIn(detail: ProductDetail, wishes = [wishListItem()]) {
+      signInCollector()
+      vi.mocked(getWishList).mockResolvedValue(wishes)
+      return renderProduct(detail)
+    }
+
+    /** The button, once the wish list has loaded: until then it is disabled, so a duplicate cannot slip in. */
+    async function findWantIt() {
+      const button = await screen.findByRole('button', { name: bg.product.wantIt })
+      await waitFor(() => expect(button).toBeEnabled())
+      return button
+    }
+
+    it('is not offered to a visitor, and no wish list is read', async () => {
+      renderProduct(productDetail({ name: 'Anonymous view' }))
+
+      await screen.findByRole('heading', { level: 1, name: 'Anonymous view' })
+      expect(screen.queryByRole('button', { name: bg.product.wantIt })).not.toBeInTheDocument()
+      expect(getWishList).not.toHaveBeenCalled()
+    })
+
+    it('adds the product to the wish list, then says it is there', async () => {
+      const detail = productDetail()
+      const adding = deferred<Awaited<ReturnType<typeof addWishListItem>>>()
+      vi.mocked(addWishListItem).mockReturnValue(adding.promise)
+      renderLoggedIn(detail)
+
+      await userEvent.click(await findWantIt())
+
+      expect(addWishListItem).toHaveBeenCalledExactlyOnceWith({ productId: detail.id })
+      expect(screen.getByRole('button', { name: bg.product.wantItAdding })).toBeDisabled()
+
+      vi.mocked(getWishList).mockResolvedValue([wishListItem({ productId: detail.id, category: null })])
+      adding.resolve(wishListItem({ productId: detail.id, category: null }))
+
+      expect(await screen.findByText(bg.product.wanted)).toBeInTheDocument()
+      expect(screen.queryByRole('button', { name: bg.product.wantIt })).not.toBeInTheDocument()
+    })
+
+    it('says the product is already on the wish list instead of offering it again', async () => {
+      const detail = productDetail()
+      renderLoggedIn(detail, [wishListItem(), wishListItem({ productId: detail.id, category: null })])
+
+      expect(await screen.findByText(bg.product.wanted)).toBeInTheDocument()
+      expect(screen.queryByRole('button', { name: bg.product.wantIt })).not.toBeInTheDocument()
+    })
+
+    it('still offers it when only a wish for another product is on the list', async () => {
+      renderLoggedIn(productDetail(), [wishListItem({ productId: 'another-product', category: null })])
+
+      await findWantIt()
+      expect(screen.queryByText(bg.product.wanted)).not.toBeInTheDocument()
+    })
+
+    it('says when adding fails, and lets the collector try again', async () => {
+      vi.mocked(addWishListItem).mockRejectedValue(apiError(500))
+      renderLoggedIn(productDetail())
+
+      await userEvent.click(await findWantIt())
+
+      expect(await screen.findByText(bg.product.wantItError)).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: bg.product.wantIt })).toBeEnabled()
+    })
   })
 
   it('says the product is not found, and does not retry', async () => {

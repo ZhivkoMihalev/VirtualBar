@@ -17,7 +17,7 @@ namespace VirtualBar.Infrastructure.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "9.0.20")
+                .HasAnnotation("ProductVersion", "9.0.22")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
@@ -1050,6 +1050,9 @@ namespace VirtualBar.Infrastructure.Migrations
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
+                    b.Property<Guid?>("ProductId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("datetime2");
 
@@ -1059,6 +1062,8 @@ namespace VirtualBar.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("DistilleryId");
+
+                    b.HasIndex("ProductId");
 
                     b.HasIndex("UserId", "IsDeleted");
 
@@ -1395,6 +1400,11 @@ namespace VirtualBar.Infrastructure.Migrations
                         .HasForeignKey("DistilleryId")
                         .OnDelete(DeleteBehavior.Restrict);
 
+                    b.HasOne("VirtualBar.Domain.Entities.Product", "Product")
+                        .WithMany()
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("VirtualBar.Domain.Entities.AppUser", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
@@ -1402,6 +1412,8 @@ namespace VirtualBar.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("Distillery");
+
+                    b.Navigation("Product");
 
                     b.Navigation("User");
                 });

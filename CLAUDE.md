@@ -11,7 +11,7 @@ VirtualBar is a platform for collectors of premium spirits (whisky, rum, cognac,
 - Others can browse collections, follow collectors, like and comment on bottles, leave **structured reviews** (0–100 score + tasting notes + flavor tags), send direct messages, and buy/sell limited editions through a built-in marketplace.
 - The home page (`/`) is a social news feed showing admin-authored articles and activity from followed users.
 - Users receive **in-app notifications** when someone likes/comments their bottle, follows them, sends a message, or when someone they follow adds a bottle or lists one for sale.
-- Users can add bottles to a **wish list** and get notified when a matching bottle appears for sale.
+- Users can add bottles to a **wish list** (an exact catalog product, a distillery and/or a category) and get notified when a matching bottle appears for sale.
 - Any user can **make an offer** on any bottle in another collector's bar (regardless of whether it is listed for sale); the seller receives a notification and can accept, decline, or ignore.
 - Collectors earn **permanent achievement badges** for milestones (first bottle, 10 bottles, 5 categories, 50 likes received, first sale…) — shown with progress on the own profile and as an earned-only strip on the public bar.
 - The platform maintains an admin-curated **product catalog** of canonical spirits: adding a bottle links it to a catalog product (explicit pick or silent exact-match auto-link).

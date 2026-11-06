@@ -442,6 +442,10 @@ export interface WishListItem {
   distilleryId: string | null
   distilleryName: string | null
   category: SpiritCategory | null
+  /** A wish for this exact catalog product: only listings of bottles linked to it match. */
+  productId: string | null
+  /** Null when the product was removed from the catalog. */
+  productName: string | null
   imageUrl: string | null
   createdAt: string
 }
@@ -452,6 +456,8 @@ export interface PublicWishListItem {
   distilleryId: string | null
   distilleryName: string | null
   category: SpiritCategory | null
+  productId: string | null
+  productName: string | null
   imageUrl: string | null
   userId: string
   userDisplayName: string

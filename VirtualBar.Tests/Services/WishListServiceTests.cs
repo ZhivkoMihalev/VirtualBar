@@ -83,6 +83,23 @@ public sealed class WishListServiceTests
         return distillery;
     }
 
+    private static Product SeedProduct(AppDbContext db, string name = "Lagavulin 16", bool isDeleted = false)
+    {
+        var product = new Product
+        {
+            Name = name,
+            Brand = "Lagavulin",
+            Category = SpiritCategory.Whisky,
+            CanonicalKey = $"lagavulin|{name.ToLowerInvariant()}|whisky",
+            Origin = ProductOrigin.Seeded,
+            IsDeleted = isDeleted,
+            DeletedAt = isDeleted ? DateTime.UtcNow : null
+        };
+        db.Products.Add(product);
+        db.SaveChanges();
+        return product;
+    }
+
     private static WishListItem SeedItem(
         AppDbContext db,
         Guid userId,
@@ -90,7 +107,8 @@ public sealed class WishListServiceTests
         Guid? distilleryId = null,
         SpiritCategory? category = SpiritCategory.Whisky,
         string? imageUrl = null,
-        bool isDeleted = false)
+        bool isDeleted = false,
+        Guid? productId = null)
     {
         var item = new WishListItem
         {
@@ -98,6 +116,7 @@ public sealed class WishListServiceTests
             BottleName = bottleName,
             DistilleryId = distilleryId,
             Category = category,
+            ProductId = productId,
             ImageUrl = imageUrl,
             IsDeleted = isDeleted,
             DeletedAt = isDeleted ? DateTime.UtcNow : null
@@ -158,6 +177,56 @@ public sealed class WishListServiceTests
         Assert.True(result.Success);
         Assert.Single(result.Data!);
         Assert.Equal("Visible", result.Data![0].DistilleryName);
+    }
+
+    [Fact]
+    public async Task GetWishListAsync_WhenItemTargetsProduct_ReturnsProductIdAndName()
+    {
+        var db = CreateDbContext();
+        var user = SeedUser(db);
+        var product = SeedProduct(db, "Lagavulin 16");
+        SeedItem(db, user.Id, category: null, productId: product.Id);
+        var service = CreateService(db, user.Id);
+
+        var result = await service.GetWishListAsync(CancellationToken.None);
+
+        Assert.True(result.Success);
+        var item = Assert.Single(result.Data!);
+        Assert.Equal(product.Id, item.ProductId);
+        Assert.Equal("Lagavulin 16", item.ProductName);
+    }
+
+    [Fact]
+    public async Task GetWishListAsync_WhenItemHasNoProduct_ReturnsNullProduct()
+    {
+        var db = CreateDbContext();
+        var user = SeedUser(db);
+        SeedItem(db, user.Id, category: SpiritCategory.Rum);
+        var service = CreateService(db, user.Id);
+
+        var result = await service.GetWishListAsync(CancellationToken.None);
+
+        Assert.True(result.Success);
+        var item = Assert.Single(result.Data!);
+        Assert.Null(item.ProductId);
+        Assert.Null(item.ProductName);
+    }
+
+    [Fact]
+    public async Task GetWishListAsync_WhenProductIsDeleted_KeepsIdButHidesName()
+    {
+        var db = CreateDbContext();
+        var user = SeedUser(db);
+        var product = SeedProduct(db, "Withdrawn product", isDeleted: true);
+        SeedItem(db, user.Id, category: null, productId: product.Id);
+        var service = CreateService(db, user.Id);
+
+        var result = await service.GetWishListAsync(CancellationToken.None);
+
+        Assert.True(result.Success);
+        var item = Assert.Single(result.Data!);
+        Assert.Equal(product.Id, item.ProductId);
+        Assert.Null(item.ProductName);
     }
 
     [Fact]
@@ -236,6 +305,40 @@ public sealed class WishListServiceTests
     }
 
     [Fact]
+    public async Task GetAllAsync_WhenItemTargetsProduct_ReturnsProductIdAndName()
+    {
+        var db = CreateDbContext();
+        var user = SeedUser(db);
+        var product = SeedProduct(db, "Lagavulin 16");
+        SeedItem(db, user.Id, category: null, productId: product.Id);
+        var service = CreateService(db, user.Id);
+
+        var result = await service.GetAllAsync(CancellationToken.None);
+
+        Assert.True(result.Success);
+        var item = Assert.Single(result.Data!);
+        Assert.Equal(product.Id, item.ProductId);
+        Assert.Equal("Lagavulin 16", item.ProductName);
+    }
+
+    [Fact]
+    public async Task GetAllAsync_WhenProductIsDeleted_KeepsIdButHidesName()
+    {
+        var db = CreateDbContext();
+        var user = SeedUser(db);
+        var product = SeedProduct(db, "Withdrawn product", isDeleted: true);
+        SeedItem(db, user.Id, category: null, productId: product.Id);
+        var service = CreateService(db, user.Id);
+
+        var result = await service.GetAllAsync(CancellationToken.None);
+
+        Assert.True(result.Success);
+        var item = Assert.Single(result.Data!);
+        Assert.Equal(product.Id, item.ProductId);
+        Assert.Null(item.ProductName);
+    }
+
+    [Fact]
     public async Task GetAllAsync_WithCancelledToken_Throws()
     {
         var db = CreateDbContext();
@@ -295,7 +398,7 @@ public sealed class WishListServiceTests
         var result = await service.AddItemAsync(request, CancellationToken.None);
 
         Assert.False(result.Success);
-        Assert.Equal("At least one matching criterion (distillery or category) is required.", result.Error);
+        Assert.Equal("At least one matching criterion (product, distillery or category) is required.", result.Error);
     }
 
     [Fact]
@@ -393,6 +496,75 @@ public sealed class WishListServiceTests
 
         var stored = await db.WishListItems.SingleAsync();
         Assert.Equal(user.Id, stored.UserId);
+    }
+
+    [Fact]
+    public async Task AddItemAsync_WhenProductIdNotFound_ReturnsNotFound()
+    {
+        var db = CreateDbContext();
+        var user = SeedUser(db);
+        var service = CreateService(db, user.Id);
+        var request = new AddWishListItemRequest { ProductId = Guid.NewGuid() };
+
+        var result = await service.AddItemAsync(request, CancellationToken.None);
+
+        Assert.False(result.Success);
+        Assert.Equal("Product not found.", result.Error);
+        Assert.Empty(db.WishListItems);
+    }
+
+    [Fact]
+    public async Task AddItemAsync_WhenProductIsDeleted_ReturnsNotFound()
+    {
+        var db = CreateDbContext();
+        var user = SeedUser(db);
+        var product = SeedProduct(db, isDeleted: true);
+        var service = CreateService(db, user.Id);
+        var request = new AddWishListItemRequest { ProductId = product.Id };
+
+        var result = await service.AddItemAsync(request, CancellationToken.None);
+
+        Assert.False(result.Success);
+        Assert.Equal("Product not found.", result.Error);
+        Assert.Empty(db.WishListItems);
+    }
+
+    [Fact]
+    public async Task AddItemAsync_WhenOnlyProduct_Succeeds()
+    {
+        var db = CreateDbContext();
+        var user = SeedUser(db);
+        var product = SeedProduct(db, "Lagavulin 16");
+        var service = CreateService(db, user.Id);
+        var request = new AddWishListItemRequest { ProductId = product.Id };
+
+        var result = await service.AddItemAsync(request, CancellationToken.None);
+
+        Assert.True(result.Success);
+        Assert.NotNull(result.Data);
+        Assert.Equal(product.Id, result.Data.ProductId);
+        Assert.Equal("Lagavulin 16", result.Data.ProductName);
+        Assert.Null(result.Data.DistilleryId);
+        Assert.Null(result.Data.Category);
+
+        var stored = await db.WishListItems.SingleAsync();
+        Assert.Equal(product.Id, stored.ProductId);
+        Assert.Equal(user.Id, stored.UserId);
+    }
+
+    [Fact]
+    public async Task AddItemAsync_WhenNoProduct_ReturnsNullProduct()
+    {
+        var db = CreateDbContext();
+        var user = SeedUser(db);
+        var service = CreateService(db, user.Id);
+        var request = new AddWishListItemRequest { Category = SpiritCategory.Gin };
+
+        var result = await service.AddItemAsync(request, CancellationToken.None);
+
+        Assert.True(result.Success);
+        Assert.Null(result.Data!.ProductId);
+        Assert.Null(result.Data.ProductName);
     }
 
     [Fact]

@@ -23,6 +23,7 @@ import { BottleSvg } from '../components/BarShelf'
 import { CATEGORY_COLORS } from '../lib/bottlePalette'
 import BottleDetailPanel from '../components/BottleDetailPanel'
 import DistillerySelect from '../components/DistillerySelect'
+import ProductSelect from '../components/ProductSelect'
 import CategoryPill from '../components/CategoryPill'
 import NavBar from '../components/NavBar'
 import { Button } from '@/components/ui/button'
@@ -257,8 +258,13 @@ function WishCard({
 
   const removeMutation = useMutation({
     mutationFn: () => removeWishListItem(item.id),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['wishlist', 'all'] }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['wishlist'] }),
   })
+
+  // A product wish without a label of its own is titled by the product. The name is null once the product
+  // has left the catalog, and then there is no page to link to either.
+  const productPath = item.productId && item.productName ? `/product/${item.productId}` : null
+  const title = item.bottleName || item.productName
 
   return (
     <Card className="flex flex-row items-center justify-between gap-4 p-4">
@@ -266,10 +272,23 @@ function WishCard({
         <div className="mb-1.5 text-xs uppercase tracking-wide text-muted-foreground">
           {item.userDisplayName}
         </div>
-        {item.bottleName && (
-          <div className="font-heading text-lg font-semibold text-foreground">{item.bottleName}</div>
+        {title && (
+          <div className="font-heading text-lg font-semibold text-foreground">
+            {productPath && !item.bottleName ? (
+              <Link to={productPath} className="transition-colors hover:text-primary">
+                {title}
+              </Link>
+            ) : (
+              title
+            )}
+          </div>
         )}
         <div className="mt-1.5 flex flex-wrap items-center gap-2">
+          {productPath && item.bottleName && (
+            <Badge asChild variant="outline" className="border-primary/40 text-primary">
+              <Link to={productPath}>{item.productName}</Link>
+            </Badge>
+          )}
           {item.distilleryName && <Badge variant="outline">{item.distilleryName}</Badge>}
           {item.category && <Badge variant="secondary">{CATEGORY_COLORS[item.category].label}</Badge>}
         </div>
@@ -279,7 +298,7 @@ function WishCard({
       {item.imageUrl && (
         <img
           src={item.imageUrl}
-          alt={item.bottleName ?? ''}
+          alt={title ?? ''}
           className="size-16 shrink-0 rounded-md border border-border object-cover"
         />
       )}
@@ -329,11 +348,12 @@ const makePublishSchema = (t: TFn) =>
   z
     .object({
       bottleName: z.string(),
+      product: z.object({ id: z.string(), name: z.string() }).nullable(),
       distilleryId: z.string().nullable(),
       category: z.string(),
       imageUrl: z.string(),
     })
-    .refine(v => Boolean(v.distilleryId) || v.category !== ANY, {
+    .refine(v => Boolean(v.product) || Boolean(v.distilleryId) || v.category !== ANY, {
       path: ['category'],
       message: t('wishList.atLeastOne'),
     })
@@ -347,11 +367,12 @@ function PublishDialogBody({ onPosted }: { onPosted: () => void }) {
 
   const form = useForm<PublishValues>({
     resolver: zodResolver(schema),
-    defaultValues: { bottleName: '', distilleryId: null, category: ANY, imageUrl: '' },
+    defaultValues: { bottleName: '', product: null, distilleryId: null, category: ANY, imageUrl: '' },
   })
 
   const [uploadMode, setUploadMode] = useState(false)
   const categoryValue = useWatch({ control: form.control, name: 'category' })
+  const productValue = useWatch({ control: form.control, name: 'product' })
 
   const uploadMutation = useMutation({
     mutationFn: (file: File) => uploadWishListImage(file),
@@ -361,7 +382,7 @@ function PublishDialogBody({ onPosted }: { onPosted: () => void }) {
   const addMutation = useMutation({
     mutationFn: (payload: AddWishListItemRequest) => addWishListItem(payload),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['wishlist', 'all'] })
+      queryClient.invalidateQueries({ queryKey: ['wishlist'] })
       onPosted()
     },
   })
@@ -375,6 +396,7 @@ function PublishDialogBody({ onPosted }: { onPosted: () => void }) {
   const onSubmit = (v: PublishValues) => {
     addMutation.mutate({
       bottleName: v.bottleName.trim() || undefined,
+      productId: v.product?.id,
       distilleryId: v.distilleryId,
       category: v.category === ANY ? undefined : v.category,
       imageUrl: v.imageUrl || undefined,
@@ -384,7 +406,49 @@ function PublishDialogBody({ onPosted }: { onPosted: () => void }) {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-        <div className="grid gap-3.5 sm:grid-cols-3">
+        <FormField
+          control={form.control}
+          name="product"
+          render={({ field }) => (
+            <FormItem>
+              {/* ProductSelect renders its own label — it owns the trigger id that htmlFor needs. */}
+              <ProductSelect
+                category={categoryValue === ANY ? undefined : (categoryValue as SpiritCategory)}
+                onSelect={picked => {
+                  field.onChange({ id: picked.id, name: picked.name })
+                  // The product is the whole criterion. A distillery or category next to it could only rule
+                  // out listings of the very bottle that was asked for, so both are cleared and hidden.
+                  form.setValue('distilleryId', null)
+                  form.setValue('category', ANY)
+                  form.clearErrors('category')
+                }}
+              />
+              {field.value && (
+                <div className="flex items-start gap-2 rounded-md border border-primary/50 bg-primary/5 px-3 py-2 text-sm text-primary">
+                  <div className="min-w-0 flex-1">
+                    <div className="truncate">
+                      <span className="text-xs uppercase tracking-wide opacity-80">
+                        {t('wishList.productChip')}
+                      </span>{' '}
+                      {field.value.name}
+                    </div>
+                    <div className="mt-0.5 text-xs text-muted-foreground">{t('wishList.productHint')}</div>
+                  </div>
+                  <button
+                    type="button"
+                    aria-label={t('wishList.removeProduct')}
+                    onClick={() => field.onChange(null)}
+                    className="shrink-0 rounded-sm text-primary/70 transition-colors hover:text-primary"
+                  >
+                    <X className="size-3.5" />
+                  </button>
+                </div>
+              )}
+            </FormItem>
+          )}
+        />
+
+        <div className={productValue ? 'grid gap-3.5' : 'grid gap-3.5 sm:grid-cols-3'}>
           <FormField
             control={form.control}
             name="bottleName"
@@ -398,53 +462,57 @@ function PublishDialogBody({ onPosted }: { onPosted: () => void }) {
               </FormItem>
             )}
           />
-          <FormField
-            control={form.control}
-            name="distilleryId"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>{t('wishList.distillery')}</FormLabel>
-                <DistillerySelect
-                  value={field.value}
-                  onChange={field.onChange}
-                  category={categoryValue === ANY ? undefined : categoryValue}
-                  placeholder={t('wishList.distilleryPlaceholder')}
-                />
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="category"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>{t('wishList.category')}</FormLabel>
-                <Select
-                  value={field.value}
-                  onValueChange={v => {
-                    field.onChange(v)
-                    form.setValue('distilleryId', null)
-                  }}
-                >
-                  <FormControl>
-                    <SelectTrigger className="h-9 w-full">
-                      <SelectValue />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value={ANY}>{t('wishList.categoryAny')}</SelectItem>
-                    {CATEGORIES.map(cat => (
-                      <SelectItem key={cat} value={cat}>
-                        {CATEGORY_COLORS[cat].label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+          {!productValue && (
+            <>
+              <FormField
+                control={form.control}
+                name="distilleryId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t('wishList.distillery')}</FormLabel>
+                    <DistillerySelect
+                      value={field.value}
+                      onChange={field.onChange}
+                      category={categoryValue === ANY ? undefined : categoryValue}
+                      placeholder={t('wishList.distilleryPlaceholder')}
+                    />
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="category"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t('wishList.category')}</FormLabel>
+                    <Select
+                      value={field.value}
+                      onValueChange={v => {
+                        field.onChange(v)
+                        form.setValue('distilleryId', null)
+                      }}
+                    >
+                      <FormControl>
+                        <SelectTrigger className="h-9 w-full">
+                          <SelectValue />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value={ANY}>{t('wishList.categoryAny')}</SelectItem>
+                        {CATEGORIES.map(cat => (
+                          <SelectItem key={cat} value={cat}>
+                            {CATEGORY_COLORS[cat].label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </>
+          )}
         </div>
 
         <FormField

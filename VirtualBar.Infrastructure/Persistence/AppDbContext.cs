@@ -273,6 +273,10 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
                 .IsUnique()
                 .HasFilter("[Status] = 0 AND [IsDeleted] = 0");
 
+            // The same rule as a product's years (#59).
+            e.ToTable(t => t.HasCheckConstraint(
+                "CK_ProductRequests_OneYearKind", "[VintageYear] IS NULL OR [ReleaseYear] IS NULL"));
+
             e.HasIndex(r => new { r.UserId, r.IsDeleted });
 
             e.HasIndex(r => new { r.Status, r.IsDeleted, r.CreatedAt });

@@ -953,6 +953,9 @@ namespace VirtualBar.Infrastructure.Migrations
                     b.Property<string>("Region")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int?>("ReleaseYear")
+                        .HasColumnType("int");
+
                     b.Property<Guid?>("ResolvedProductId")
                         .HasColumnType("uniqueidentifier");
 
@@ -974,6 +977,9 @@ namespace VirtualBar.Infrastructure.Migrations
                     b.Property<string>("UserNote")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int?>("VintageYear")
+                        .HasColumnType("int");
+
                     b.Property<int?>("VolumeMl")
                         .HasColumnType("int");
 
@@ -993,7 +999,10 @@ namespace VirtualBar.Infrastructure.Migrations
 
                     b.HasIndex("Status", "IsDeleted", "CreatedAt");
 
-                    b.ToTable("ProductRequests");
+                    b.ToTable("ProductRequests", t =>
+                        {
+                            t.HasCheckConstraint("CK_ProductRequests_OneYearKind", "[VintageYear] IS NULL OR [ReleaseYear] IS NULL");
+                        });
                 });
 
             modelBuilder.Entity("VirtualBar.Domain.Entities.UserBadge", b =>

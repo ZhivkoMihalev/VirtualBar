@@ -32,6 +32,8 @@ public sealed class ProductRequestService(
             Distillery = distillery,
             Category = request.Category,
             Age = request.Age,
+            VintageYear = request.VintageYear,
+            ReleaseYear = request.ReleaseYear,
             AbvPercent = request.AbvPercent,
             VolumeMl = request.VolumeMl,
             Barcode = Trimmed(request.Barcode),
@@ -221,6 +223,8 @@ public sealed class ProductRequestService(
         var category = request.Category ?? entity.Category;
         var age = request.Age ?? entity.Age;
         var volumeMl = request.VolumeMl ?? entity.VolumeMl;
+        var (vintageYear, releaseYear) = ProductYears.Effective(
+            request.VintageYear, request.ReleaseYear, entity.VintageYear, entity.ReleaseYear);
 
         var distilleryName = distilleryId is Guid id
             ? await db.Distilleries
@@ -238,6 +242,8 @@ public sealed class ProductRequestService(
             Country = Trimmed(request.Country) ?? entity.Country,
             Region = Trimmed(request.Region) ?? entity.Region,
             Age = age,
+            VintageYear = vintageYear,
+            ReleaseYear = releaseYear,
             AbvPercent = request.AbvPercent ?? entity.AbvPercent,
             VolumeMl = volumeMl,
             Barcode = Trimmed(request.Barcode) ?? entity.Barcode,
@@ -278,6 +284,8 @@ public sealed class ProductRequestService(
         DistilleryName = request.Distillery is { IsDeleted: false } ? request.Distillery.Name : null,
         Category = request.Category,
         Age = request.Age,
+        VintageYear = request.VintageYear,
+        ReleaseYear = request.ReleaseYear,
         AbvPercent = request.AbvPercent,
         VolumeMl = request.VolumeMl,
         Barcode = request.Barcode,

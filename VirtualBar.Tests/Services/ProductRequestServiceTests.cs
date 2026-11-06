@@ -199,7 +199,9 @@ public sealed class ProductRequestServiceTests
         Guid? sourceBottleId = null,
         bool isDeleted = false,
         DateTime? createdAt = null,
-        string? canonicalKey = null)
+        string? canonicalKey = null,
+        int? vintageYear = null,
+        int? releaseYear = null)
     {
         var request = new ProductRequest
         {
@@ -209,6 +211,8 @@ public sealed class ProductRequestServiceTests
             DistilleryId = distilleryId,
             Category = category,
             Age = age,
+            VintageYear = vintageYear,
+            ReleaseYear = releaseYear,
             AbvPercent = abvPercent,
             VolumeMl = volumeMl,
             Barcode = barcode,
@@ -2049,6 +2053,96 @@ public sealed class ProductRequestServiceTests
 
         badgeMock.Verify(b => b.EvaluateAsync(
             It.IsAny<Guid>(), It.IsAny<BadgeTrigger>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    #endregion
+
+    #region Years (#59)
+
+    [Fact]
+    public async Task CreateAsync_WhenTheYearIsNotInTheName_ReturnsFail()
+    {
+        var db = CreateDbContext();
+        var collector = SeedUser(db);
+        var service = CreateService(db, collector.Id);
+        var request = ValidCreateRequest(name: "Millésime", category: SpiritCategory.Cognac);
+        request.VintageYear = 1983;
+
+        var result = await service.CreateAsync(request, CancellationToken.None);
+
+        Assert.False(result.Success);
+        Assert.Equal("The name must contain the year.", result.Error);
+        Assert.Equal(0, await db.ProductRequests.CountAsync());
+    }
+
+    [Fact]
+    public async Task CreateAsync_WhenTheVintageIsInTheName_StoresItAndReturnsIt()
+    {
+        var db = CreateDbContext();
+        var collector = SeedUser(db);
+        var service = CreateService(db, collector.Id);
+        var request = ValidCreateRequest(name: "Millésime 1983", category: SpiritCategory.Cognac);
+        request.VintageYear = 1983;
+
+        var result = await service.CreateAsync(request, CancellationToken.None);
+
+        Assert.True(result.Success);
+        Assert.Equal((1983, (int?)null), (result.Data!.VintageYear, result.Data.ReleaseYear));
+        var stored = await db.ProductRequests.AsNoTracking().SingleAsync();
+        Assert.Equal((1983, (int?)null), (stored.VintageYear, stored.ReleaseYear));
+    }
+
+    [Fact]
+    public async Task ApproveAsync_WhenTheRequestHasAVintage_CreatesTheProductWithIt()
+    {
+        var db = CreateDbContext();
+        var admin = SeedUser(db, "Admin");
+        var collector = SeedUser(db, "Collector");
+        var request = SeedRequest(db, collector.Id, name: "Millésime 1983", brand: "Frapin",
+            category: SpiritCategory.Cognac, age: null, vintageYear: 1983);
+        var service = CreateService(db, admin.Id, isAdmin: true);
+
+        var result = await service.ApproveAsync(request.Id, new ResolveProductRequestRequest(), CancellationToken.None);
+
+        Assert.True(result.Success);
+        var product = await db.Products.AsNoTracking().SingleAsync();
+        Assert.Equal((1983, (int?)null), (product.VintageYear, product.ReleaseYear));
+    }
+
+    [Fact]
+    public async Task ApproveAsync_WhenTheAdminSetsAReleaseYear_ItReplacesTheRequestedVintage()
+    {
+        var db = CreateDbContext();
+        var admin = SeedUser(db, "Admin");
+        var collector = SeedUser(db, "Collector");
+        var request = SeedRequest(db, collector.Id, name: "Edition 2021", brand: "Frapin",
+            category: SpiritCategory.Cognac, age: null, vintageYear: 2021);
+        var service = CreateService(db, admin.Id, isAdmin: true);
+
+        var result = await service.ApproveAsync(
+            request.Id, new ResolveProductRequestRequest { ReleaseYear = 2021 }, CancellationToken.None);
+
+        Assert.True(result.Success);
+        var product = await db.Products.AsNoTracking().SingleAsync();
+        Assert.Equal(((int?)null, 2021), (product.VintageYear, product.ReleaseYear));
+    }
+
+    [Fact]
+    public async Task ApproveAsync_WhenTheNewNameDropsTheRequestedYear_ReturnsFail()
+    {
+        var db = CreateDbContext();
+        var admin = SeedUser(db, "Admin");
+        var collector = SeedUser(db, "Collector");
+        var request = SeedRequest(db, collector.Id, name: "Millésime 1983", brand: "Frapin",
+            category: SpiritCategory.Cognac, age: null, vintageYear: 1983);
+        var service = CreateService(db, admin.Id, isAdmin: true);
+
+        var result = await service.ApproveAsync(
+            request.Id, new ResolveProductRequestRequest { Name = "Millésime" }, CancellationToken.None);
+
+        Assert.False(result.Success);
+        Assert.Equal("The name must contain the year.", result.Error);
+        Assert.Equal(0, await db.Products.CountAsync());
     }
 
     #endregion

@@ -159,7 +159,14 @@
     "descriptionPlaceholder": "Tasting notes, provenance…",
     "error": "Something went wrong. Please try again.",
     "submit": "Add to Collection",
-    "submitting": "Adding…"
+    "submitting": "Adding…",
+    "vintage": "Vintage",
+    "vintageRange": "The year must be between 1800 and {{max}}.",
+    "vintageMismatch": "The chosen product is the {{productYear}} vintage, but this bottle is {{year}}.",
+    "vintageMismatchHint": "You can still save it as it is.",
+    "linkVintage": "Link to {{name}}",
+    "requestVintage": "Request vintage {{year}}",
+    "vintageRequested": "When you save, we will ask for “{{name}}” to be added to the catalog."
   },
   "browse": {
     "discover": "DISCOVER",

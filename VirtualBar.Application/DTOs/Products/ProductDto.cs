@@ -22,6 +22,12 @@ public sealed class ProductDto
 
     public int? Age { get; set; }
 
+    /// <summary>The year of distillation of a vintage-dated product (#59); a bottle linked to it takes it as its vintage.</summary>
+    public int? VintageYear { get; set; }
+
+    /// <summary>The year of a yearly edition (#59); never set together with <see cref="VintageYear"/>.</summary>
+    public int? ReleaseYear { get; set; }
+
     public double? AbvPercent { get; set; }
 
     public int? VolumeMl { get; set; }

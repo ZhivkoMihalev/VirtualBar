@@ -55,6 +55,8 @@ function MyRequestRow({ request }: { request: ProductRequest }) {
     CATEGORY_COLORS[request.category]?.label ?? request.category,
     request.distilleryName ?? request.brand ?? null,
     request.age != null ? t('products.ageSuffix', { age: request.age }) : null,
+    request.vintageYear != null ? t('product.vintageBadge', { year: request.vintageYear }) : null,
+    request.releaseYear != null ? t('product.releaseBadge', { year: request.releaseYear }) : null,
     request.volumeMl != null ? t('products.volumeSuffix', { volume: request.volumeMl }) : null,
   ]
     .filter(Boolean)

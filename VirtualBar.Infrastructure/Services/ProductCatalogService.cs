@@ -42,6 +42,8 @@ public sealed class ProductCatalogService(AppDbContext db, ICurrentUser currentU
                 Country = p.Country,
                 Region = p.Region,
                 Age = p.Age,
+                VintageYear = p.VintageYear,
+                ReleaseYear = p.ReleaseYear,
                 AbvPercent = p.AbvPercent,
                 VolumeMl = p.VolumeMl,
                 Barcode = p.Barcode,

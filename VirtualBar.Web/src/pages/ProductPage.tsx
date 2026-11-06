@@ -116,12 +116,24 @@ function ProductHeader({ product }: { product: ProductDetail }) {
       </div>
 
       <div>
-        <Badge
-          variant="outline"
-          style={{ backgroundColor: `${cat.glass}22`, borderColor: `${cat.glass}66`, color: cat.glass }}
-        >
-          {cat.label}
-        </Badge>
+        <div className="flex flex-wrap items-center gap-2">
+          <Badge
+            variant="outline"
+            style={{ backgroundColor: `${cat.glass}22`, borderColor: `${cat.glass}66`, color: cat.glass }}
+          >
+            {cat.label}
+          </Badge>
+          {product.vintageYear != null && (
+            <Badge variant="outline" className="border-primary/40 text-primary">
+              {t('product.vintageBadge', { year: product.vintageYear })}
+            </Badge>
+          )}
+          {product.releaseYear != null && (
+            <Badge variant="outline" className="border-primary/40 text-primary">
+              {t('product.releaseBadge', { year: product.releaseYear })}
+            </Badge>
+          )}
+        </div>
         <h1 className="mt-3 font-heading text-3xl font-bold leading-tight text-primary sm:text-4xl">
           {product.name}
         </h1>
@@ -146,6 +158,63 @@ function ProductHeader({ product }: { product: ProductDetail }) {
         )}
       </div>
     </div>
+  )
+}
+
+/**
+ * The vintages, or the editions, of the product's line (#59), oldest first, with this product in its place among them
+ * and the others linked to their own pages. Rendered only when the line has other years.
+ */
+function LineYears({ product }: { product: ProductDetail }) {
+  const { t } = useTranslation()
+  const year = product.vintageYear ?? product.releaseYear
+  if (year == null || product.otherYears.length === 0) return null
+
+  const years = [
+    ...product.otherYears.map(y => ({ ...y, current: false })),
+    { id: product.id, name: product.name, year, averageScore: product.averageScore, listingsCount: product.listingsCount, current: true },
+  ].sort((a, b) => a.year - b.year)
+
+  return (
+    <Section title={product.vintageYear != null ? t('product.otherVintages') : t('product.otherReleases')}>
+      <ul className="flex flex-wrap gap-2.5">
+        {years.map(y => {
+          const content = (
+            <>
+              <span className="font-heading text-lg font-semibold tabular-nums leading-none">{y.year}</span>
+              <span className="text-xs text-muted-foreground">
+                {y.current
+                  ? t('product.thisYear')
+                  : [
+                      y.averageScore != null ? `★ ${y.averageScore}` : null,
+                      y.listingsCount > 0 ? t('catalog.forSale', { count: y.listingsCount }) : null,
+                    ]
+                      .filter(Boolean)
+                      .join(' · ')}
+              </span>
+            </>
+          )
+          const box = 'flex min-w-24 flex-col gap-1 rounded-lg border px-3.5 py-2.5'
+          return (
+            <li key={y.id}>
+              {y.current ? (
+                <span aria-current="page" className={`${box} border-primary bg-primary/10 text-primary`}>
+                  {content}
+                </span>
+              ) : (
+                <Link
+                  to={`/product/${y.id}`}
+                  aria-label={y.name}
+                  className={`${box} border-border text-foreground transition-colors hover:border-primary/60 hover:text-primary`}
+                >
+                  {content}
+                </Link>
+              )}
+            </li>
+          )
+        })}
+      </ul>
+    </Section>
   )
 }
 
@@ -356,6 +425,8 @@ export default function ProductPage() {
         {product && (
           <>
             <ProductHeader product={product} />
+
+            <LineYears product={product} />
 
             <Section title={t('product.community')}>
               <ReviewsAggregate

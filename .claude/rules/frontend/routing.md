@@ -70,3 +70,9 @@ paths:
 - Renders a "not found" state for an unknown id instead of redirecting.
 - Offers a logged-in collector a "Want it" button that adds the product to their wish list
   (`.claude/rules/domain/wish-list.md`).
+- A dated product (#59) shows its year as a badge next to its category: `product.vintageBadge` ("Реколта 1988") for a
+  `vintageYear`, `product.releaseBadge` ("Издание 2021") for a `releaseYear`.
+- When its line has other years, `LineYears` lists them under the header as "Други реколти" / "Други издания"
+  (`product.otherVintages` / `product.otherReleases`): every year of the line oldest first, this one in its place marked
+  `aria-current="page"` and "тази" (`product.thisYear`), the others linked to their pages with their score and listings
+  count. The line itself comes from the API (`.claude/rules/domain/catalog.md`, Years).

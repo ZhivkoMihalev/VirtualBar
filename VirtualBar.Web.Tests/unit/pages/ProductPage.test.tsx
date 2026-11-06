@@ -201,6 +201,72 @@ describe('ProductPage', () => {
     expect(getProductEstimate).toHaveBeenCalledExactlyOnceWith(detail.id)
   })
 
+  describe('years (#59)', () => {
+    const yearBoxes = (section: HTMLElement) =>
+      within(section)
+        .getAllByRole('listitem')
+        .map(item => item.querySelector('.font-heading')?.textContent)
+
+    it("shows a vintage's badge and the other vintages of its line, oldest first, with this one in its place", async () => {
+      renderProduct(
+        productDetail({
+          name: 'Millésime 1988',
+          vintageYear: 1988,
+          averageScore: 90,
+          otherYears: [
+            { id: 'vintage-1976', name: 'Millésime 1976', year: 1976, averageScore: 88.5, listingsCount: 2 },
+            { id: 'vintage-1990', name: 'Millésime 1990', year: 1990, averageScore: null, listingsCount: 0 },
+          ],
+        }),
+      )
+
+      expect(await screen.findByText(i18n.t('product.vintageBadge', { year: 1988 }))).toBeInTheDocument()
+      const line = await findSection(bg.product.otherVintages)
+      expect(yearBoxes(line)).toEqual(['1976', '1988', '1990'])
+
+      const older = within(line).getByRole('link', { name: 'Millésime 1976' })
+      expect(older).toHaveAttribute('href', '/product/vintage-1976')
+      expect(older).toHaveTextContent('★ 88.5')
+      expect(older).toHaveTextContent(i18n.t('catalog.forSale', { count: 2 }))
+      expect(within(line).getByRole('link', { name: 'Millésime 1990' })).not.toHaveTextContent('★')
+
+      const current = line.querySelector('[aria-current="page"]')!
+      expect(current).toHaveTextContent('1988')
+      expect(current).toHaveTextContent(bg.product.thisYear)
+      expect(within(line).queryByRole('link', { name: 'Millésime 1988' })).not.toBeInTheDocument()
+    })
+
+    it('calls the line of an edition its other editions', async () => {
+      renderProduct(
+        productDetail({
+          name: 'Classic Cut 2020 Edition',
+          releaseYear: 2020,
+          otherYears: [{ id: 'cut-2021', name: 'Classic Cut 2021 Edition', year: 2021, averageScore: null, listingsCount: 0 }],
+        }),
+      )
+
+      expect(await screen.findByText(i18n.t('product.releaseBadge', { year: 2020 }))).toBeInTheDocument()
+      expect(await findSection(bg.product.otherReleases)).toBeInTheDocument()
+      expect(screen.queryByText(i18n.t('product.vintageBadge', { year: 2020 }))).not.toBeInTheDocument()
+    })
+
+    it('shows the year but no line for a dated product alone in its line', async () => {
+      renderProduct(productDetail({ name: 'Enmore 1988', vintageYear: 1988 }))
+
+      expect(await screen.findByText(i18n.t('product.vintageBadge', { year: 1988 }))).toBeInTheDocument()
+      expect(screen.queryByRole('heading', { name: bg.product.otherVintages })).not.toBeInTheDocument()
+    })
+
+    it('shows no year and no line for an undated product', async () => {
+      renderProduct(productDetail({ name: 'VSOP' }))
+
+      await screen.findByRole('heading', { level: 1, name: 'VSOP' })
+      expect(screen.queryByText(/^(Реколта|Издание) \d{4}$/)).not.toBeInTheDocument()
+      expect(screen.queryByRole('heading', { name: bg.product.otherVintages })).not.toBeInTheDocument()
+      expect(screen.queryByRole('heading', { name: bg.product.otherReleases })).not.toBeInTheDocument()
+    })
+  })
+
   describe('"want it" (#51)', () => {
     /** Renders the page for a logged-in collector whose own wish list holds `wishes`. */
     function renderLoggedIn(detail: ProductDetail, wishes = [wishListItem()]) {

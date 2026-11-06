@@ -151,4 +151,27 @@ test.describe('Product page', () => {
     await expect(summaries).toHaveText(newestFirst(7))
     await expect(showMore).toHaveCount(0)
   })
+
+  test("an edition's page shows its year and leads to the other editions of its series (#59)", async ({ openAs }) => {
+    // A seeded series with a release year on every edition; it only reads the catalog, so it creates no data.
+    const query = new URLSearchParams({ search: 'Classic Cut 2020 Edition', category: 'Whisky' })
+    const { items }: { items: { id: string; name: string }[] } = await (
+      await fetch(`http://localhost:5000/api/products/browse?${query}`)
+    ).json()
+    const edition = items.find(p => p.name === 'Classic Cut 2020 Edition')!
+
+    const page = await openAs(null)
+    await page.goto(`/product/${edition.id}`)
+
+    await expect(page.getByText(fill(bg.product.releaseBadge, { year: 2020 }), { exact: true })).toBeVisible()
+    const line = section(page, bg.product.otherReleases)
+    await expect(line.locator('[aria-current="page"]')).toContainText('2020')
+
+    await line.getByRole('link', { name: 'Classic Cut 2019 Edition' }).click()
+
+    await expect(page.getByRole('heading', { level: 1, name: 'Classic Cut 2019 Edition' })).toBeVisible()
+    await expect(page.getByText(fill(bg.product.releaseBadge, { year: 2019 }), { exact: true })).toBeVisible()
+    await expect(section(page, bg.product.otherReleases).locator('[aria-current="page"]')).toContainText('2019')
+    await expect(section(page, bg.product.otherReleases).getByRole('link', { name: 'Classic Cut 2020 Edition' })).toBeVisible()
+  })
 })

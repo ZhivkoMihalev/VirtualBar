@@ -44,6 +44,8 @@ export function productDetail(overrides: Partial<ProductDetail> = {}): ProductDe
     topFlavors: [],
     ownersCount: 0,
     owners: [],
+    // The API counts the listings for everyone; the count follows the given listings unless set apart.
+    listingsCount: overrides.listings?.length ?? 0,
     listings: [],
     latestReviews: [],
     ...product(),

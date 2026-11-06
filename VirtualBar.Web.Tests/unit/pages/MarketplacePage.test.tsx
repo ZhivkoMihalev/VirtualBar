@@ -32,13 +32,49 @@ beforeEach(() => {
   Element.prototype.hasPointerCapture ??= () => false
 })
 
-/** Opens the marketplace on its "Looking for" tab, listing `wishes`. */
+/** Logs a collector in, with the NavBar's notifications answered: the marketplace is for logged-in collectors. */
+function signInCollector() {
+  signIn()
+  vi.mocked(getNotifications).mockResolvedValue({ notifications: [], unreadCount: 0 })
+}
+
+/** Opens the marketplace as a logged-in collector on its "Looking for" tab, listing `wishes`. */
 async function openLookingFor(wishes: PublicWishListItem[]) {
+  signInCollector()
   vi.mocked(getMarketplace).mockResolvedValue([])
   vi.mocked(getAllWishListItems).mockResolvedValue(wishes)
   renderWithProviders(<MarketplacePage />, { route: '/marketplace' })
   await userEvent.click(screen.getByRole('tab', { name: bg.marketplace.tabSearch }))
 }
+
+describe('MarketplacePage', () => {
+  /**
+   * A visitor opening the "Търсене" tab was sent to /login by the 401 of the wish list request (#100). The marketplace
+   * is for logged-in collectors: a visitor sees a login gate, and the page sends none of the requests that answer 401.
+   */
+  it('shows a visitor the login gate and loads neither listings nor wishes (#100)', () => {
+    renderWithProviders(<MarketplacePage />, { route: '/marketplace' })
+
+    expect(screen.getByRole('heading', { name: bg.marketplace.loginGateTitle })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: bg.marketplace.loginGateLogin })).toHaveAttribute('href', '/login')
+    expect(screen.getByRole('link', { name: bg.marketplace.loginGateRegister })).toHaveAttribute('href', '/register')
+    expect(screen.queryByRole('tab', { name: bg.marketplace.tabSearch })).not.toBeInTheDocument()
+    expect(getMarketplace).not.toHaveBeenCalled()
+    expect(getAllWishListItems).not.toHaveBeenCalled()
+  })
+
+  it('shows a logged-in collector the tabs and the listings, and no login gate', async () => {
+    signInCollector()
+    vi.mocked(getMarketplace).mockResolvedValue([])
+
+    renderWithProviders(<MarketplacePage />, { route: '/marketplace' })
+
+    expect(await screen.findByText(bg.marketplace.empty)).toBeInTheDocument()
+    expect(screen.getByRole('tab', { name: bg.marketplace.tabSearch })).toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: bg.marketplace.loginGateTitle })).not.toBeInTheDocument()
+    expect(getMarketplace).toHaveBeenCalled()
+  })
+})
 
 describe('MarketplacePage — wish list by product (#51)', () => {
   describe('the "Looking for" tab', () => {
@@ -84,8 +120,6 @@ describe('MarketplacePage — wish list by product (#51)', () => {
 
     /** Opens the "post a search" dialog as a logged-in collector and returns it. */
     async function openPublishDialog() {
-      signIn()
-      vi.mocked(getNotifications).mockResolvedValue({ notifications: [], unreadCount: 0 })
       vi.mocked(getDistilleries).mockResolvedValue([])
       vi.mocked(searchProducts).mockResolvedValue([lagavulin])
       vi.mocked(addWishListItem).mockResolvedValue(wishListItem({ productId: lagavulin.id }))

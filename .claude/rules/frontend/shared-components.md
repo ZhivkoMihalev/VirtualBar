@@ -23,6 +23,9 @@ paths:
 - `src/components/BottleDetailPanel.tsx` — full-screen overlay for bottle details.
   - Shows `SaleSection` + `DeleteSection` for the owner.
   - Shows `MakeOfferSection` for non-owners (any authenticated user, regardless of `IsForSale`).
+  - Shows a listed bottle to non-owners in `ListingSection`: the asking price (per bottle when several are offered) and
+    the available count. A visitor gets no price from the API, so the section shows a "Влез, за да видиш цената" link
+    to `/login` (`bottle.loginToSeePrice`) in its place, with the count still visible (#103).
   - `EstimateSection` (price estimate) for authenticated users only — the `/api/prices` endpoint is `[Authorize]`, so
     rendering it anonymously would 401-redirect to `/login`.
   - `LikesSection`, `ReviewsSection` (aggregate header + one-per-user review form + review list; form

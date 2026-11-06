@@ -16,6 +16,10 @@ against the real stack:
 ## When it runs
 - It is too slow for every PR, so it runs nightly on `master` (02:17 UTC), on demand (Actions → E2E → Run workflow),
   and on PRs labelled **`e2e`**.
+- On a PR it starts when the `e2e` label is added, on a push and on a reopen, never on `opened`. A PR opened with the
+  label gets a `labeled` event at the same moment, and an `opened` run would cancel it or be cancelled by it in the
+  shared concurrency group, leaving a cancelled E2E check that greys out the merge button (#105).
+- Adding any other label starts a run in a concurrency group of its own, whose job is skipped.
 - It is therefore not a required check.
 
 ## CI-only config overrides

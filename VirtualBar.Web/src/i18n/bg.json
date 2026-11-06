@@ -195,7 +195,11 @@
     "empty": "Няма бутилки за продажба в момента.",
     "priceOnRequest": "Цена при запитване",
     "by": "от {{name}}",
-    "viewBottle": "Виж Бутилката →"
+    "viewBottle": "Виж Бутилката →",
+    "loginGateTitle": "Пазарът е за колекционери",
+    "loginGateText": "Влезте, за да видите бутилките за продажба и какво търсят другите колекционери.",
+    "loginGateLogin": "Вход",
+    "loginGateRegister": "Регистрация"
   },
   "publicBar": {
     "loading": "ЗАРЕЖДАНЕ НА КОЛЕКЦИЯТА…",
@@ -256,6 +260,7 @@
     "quantityOwned_other": "{{count}} бутилки",
     "errorQuantity": "Количеството не беше променено. Опитайте отново.",
     "askingPrice": "Искана цена",
+    "loginToSeePrice": "Влез, за да видиш цената",
     "listForSale": "ПУСНИ ЗА ПРОДАЖБА",
     "removeFromSale": "СПРИ ПРОДАЖБАТА",
     "errorSale": "Нещо се обърка. Моля, опитайте отново.",
@@ -606,6 +611,10 @@
     "noReviews": "Още няма ревюта за този продукт.",
     "forSale": "За продан",
     "nobodySelling": "В момента никой не го продава.",
+    "listingsCount_one": "{{count}} обява за продан",
+    "listingsCount_other": "{{count}} обяви за продан",
+    "listingsLoginText": "Продавачите и цените виждат само влезлите колекционери.",
+    "listingsLogin": "Влез, за да ги видиш",
     "open": "Отвори",
     "opening": "Отваряне…",
     "owners": "Колекционери",

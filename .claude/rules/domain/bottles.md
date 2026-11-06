@@ -72,6 +72,15 @@ paths:
 - `BottleDto` additionally carries `AverageScore` (1 decimal, null when no reviews) + `ReviewsCount` — **computed in
   queries, never denormalized** (projected the same way `LikesCount`/`CommentsCount` are in `BottleService`).
 
+### Asking price for visitors
+- The asking price is for logged-in collectors only, like the marketplace (#103).
+- `GET /api/bottles?userId=` and `GET /api/bottles/{id}` stay `[AllowAnonymous]` (public bars), but for a caller who is
+  not logged in `BottleService.ForViewer` sets `AskingPrice` and `Currency` to null.
+- A visitor still gets `IsForSale` and `ForSaleQuantity`: the owner decided a visitor may see **that** a bottle is for
+  sale, only not its price.
+- The other endpoints that return a price need no such step: the marketplace is `[Authorize]`, the home feed sends
+  for-sale items only to a logged-in user, and the product page sends a visitor no listings (`.claude/rules/domain/catalog.md`).
+
 ## BottleImage
 | Property | Type | Notes |
 |---|---|---|

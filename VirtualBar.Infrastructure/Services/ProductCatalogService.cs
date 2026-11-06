@@ -9,7 +9,7 @@ using VirtualBar.Infrastructure.Persistence;
 
 namespace VirtualBar.Infrastructure.Services;
 
-public sealed class ProductCatalogService(AppDbContext db) : IProductCatalogService
+public sealed class ProductCatalogService(AppDbContext db, ICurrentUser currentUser) : IProductCatalogService
 {
     public async Task<Result<List<ProductDto>>> SearchAsync(string search, SpiritCategory? category, int limit, CancellationToken cancellationToken)
     {
@@ -167,24 +167,30 @@ public sealed class ProductCatalogService(AppDbContext db) : IProductCatalogServ
             .Take(MaxOwners)
             .ToListAsync(cancellationToken);
 
-        detail.Listings = await bottles
-            .Where(b => b.IsForSale)
-            .OrderByDescending(b => b.ForSaleAt)
-            .ThenBy(b => b.Id)
-            .Select(b => new ProductListingDto
-            {
-                BottleId = b.Id,
-                SellerId = b.UserId,
-                SellerDisplayName = b.User.DisplayName,
-                SellerAvatarUrl = b.User.AvatarUrl,
-                ForSaleQuantity = b.ForSaleQuantity,
-                AskingPrice = b.AskingPrice,
-                Currency = b.Currency,
-                Condition = b.Condition,
-                VintageYear = b.VintageYear,
-                ForSaleAt = b.ForSaleAt
-            })
-            .ToListAsync(cancellationToken);
+        var listings = bottles.Where(b => b.IsForSale);
+
+        // The same count as ProductCardDto.ListingsCount, returned to everyone.
+        detail.ListingsCount = await listings.CountAsync(cancellationToken);
+
+        // The listings themselves (seller, price) are for logged-in collectors only, like the marketplace (#102).
+        if (currentUser.IsAuthenticated)
+            detail.Listings = await listings
+                .OrderByDescending(b => b.ForSaleAt)
+                .ThenBy(b => b.Id)
+                .Select(b => new ProductListingDto
+                {
+                    BottleId = b.Id,
+                    SellerId = b.UserId,
+                    SellerDisplayName = b.User.DisplayName,
+                    SellerAvatarUrl = b.User.AvatarUrl,
+                    ForSaleQuantity = b.ForSaleQuantity,
+                    AskingPrice = b.AskingPrice,
+                    Currency = b.Currency,
+                    Condition = b.Condition,
+                    VintageYear = b.VintageYear,
+                    ForSaleAt = b.ForSaleAt
+                })
+                .ToListAsync(cancellationToken);
 
         var latest = await NewestFirst(reviews)
             .Take(LatestReviewsCount)

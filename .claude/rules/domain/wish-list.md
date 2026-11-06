@@ -40,10 +40,9 @@ paths:
 - `DELETE /api/wishlist/{id}` — soft-delete an own item; `403` another collector's, `404` missing.
 
 ## Frontend
-- Publicly visible in the Marketplace "LOOKING FOR" tab — other users can click "СЪОБЩЕНИЕ" to open a chat with the
-  searcher.
-  - Known gap: #100. `GET /api/wishlist/all` is not `[AllowAnonymous]`, so a visitor who opens the tab gets a `401`
-    and the client sends them to `/login`.
+- Visible to logged-in collectors in the Marketplace "LOOKING FOR" tab (`GET /api/wishlist/all`, `[Authorize]`): other
+  users can click "СЪОБЩЕНИЕ" to open a chat with the searcher. A visitor sees the marketplace login gate instead
+  (`.claude/rules/frontend/routing.md`, #100).
   - A product wish with no `BottleName` is titled by the product name, linked to `/product/:id`; with a label of its
     own, the product shows as a linked badge next to it. A deleted product (`ProductName` null) gets no link.
 - The "post a search" form on `MarketplacePage` offers `ProductSelect` above the other fields.

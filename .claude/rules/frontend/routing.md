@@ -12,8 +12,13 @@ paths:
 ## Routes
 - `/` is `HomePage.tsx` (public news/social feed).
 - **Public:**
-  - `/browse` (`BrowsePage`), `/marketplace` (`MarketplacePage`), `/bar/:userId` (`PublicBarPage`, a collector's
-    public bar);
+  - `/browse` (`BrowsePage`), `/bar/:userId` (`PublicBarPage`, a collector's public bar). A visitor sees which bottles
+    are for sale, but not their asking price: the API sends none, and `BottleDetailPanel` shows a login link in its
+    place (#103);
+  - `/marketplace` (`MarketplacePage`) is reachable by anyone, but its content is for logged-in collectors: a visitor
+    sees a login gate (`LoginGate`, `marketplace.loginGate*` keys) with "log in" and "register" links, and the page sends
+    no marketplace or wish list request (#100). `GET /api/bottles/marketplace` and `GET /api/wishlist/all` are
+    `[Authorize]`;
   - `/catalog` (`CatalogPage`) and `/product/:id` (`ProductPage`);
   - `/confirm-email` (`ConfirmEmailPage`);
   - `/forgot-password` and `/reset-password`, the password reset pages (`.claude/rules/domain/users.md`).
@@ -50,6 +55,10 @@ paths:
 ## Product page (`/product/:id`)
 - Shows the price estimate only to logged-in users (`/api/prices` is `[Authorize]`; an anonymous call would
   401-redirect to `/login`).
+- Shows the listings ("За продан") only to logged-in collectors, as on the marketplace. A visitor sees only how many
+  there are (`product.listingsCount_one`/`_other`, from `ProductDetailDto.ListingsCount`) and a "Влез, за да ги видиш"
+  link to `/login` (`ListingsLoginGate`); with none for sale, the same empty text as a collector (#102). The API sends a
+  visitor no listings anyway.
 - Opens a listing in `BottleDetailPanel`, queried as `['bottles', ownerId, bottleId]`, so the panel's own
   `['bottles', ownerId]` invalidations refresh it.
 - Renders a "not found" state for an unknown id instead of redirecting.

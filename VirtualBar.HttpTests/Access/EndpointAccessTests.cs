@@ -38,7 +38,6 @@ public sealed partial class EndpointAccessTests(ApiHosts hosts)
         "GET api/badges/user/{userId:guid}",
         "GET api/Bottles",
         "GET api/Bottles/{id:guid}",
-        "GET api/Bottles/marketplace",
         "GET api/bottles/{bottleId:guid}/comments",
         "GET api/bottles/{bottleId:guid}/reviews",
 

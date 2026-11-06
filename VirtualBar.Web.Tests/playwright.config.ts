@@ -4,11 +4,18 @@ import { defineConfig, devices } from '@playwright/test'
 // The app under test lives in the sibling workspace; its dev server is started from there.
 const webDir = fileURLToPath(new URL('../VirtualBar.Web', import.meta.url))
 
+// The tests tagged @confirmation-on need the API with Identity:RequireConfirmedEmail=true, every other test needs it
+// off (#47). E2E_CONFIRMATION=on runs only the tagged ones; otherwise they are skipped.
+const CONFIRMATION_ON = /@confirmation-on/
+const confirmationOn = process.env.E2E_CONFIRMATION === 'on'
+
 /**
  * See https://playwright.dev/docs/test-configuration.
  */
 export default defineConfig({
   testDir: './e2e',
+  grep: confirmationOn ? CONFIRMATION_ON : undefined,
+  grepInvert: confirmationOn ? undefined : CONFIRMATION_ON,
   /* Run tests in files in parallel */
   fullyParallel: true,
   /* Fail the build on CI if you accidentally left test.only in the source code. */

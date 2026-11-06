@@ -3,6 +3,9 @@ name: E2E
 # Runs the Playwright tests in VirtualBar.Web.Tests/e2e against the real stack: SQL Server in a container,
 # the API on a fresh database, and the Vite dev server of VirtualBar.Web (started by playwright.config.ts).
 # Too slow for every PR, so it runs nightly on master, on demand, and on PRs labelled "e2e".
+# Two runs, each with its own SQL Server, API and Vite (#47): "confirmation off" runs the whole suite, which registers
+# collectors and logs them straight in; "confirmation on" starts the API with email confirmation on, as production
+# runs it, and runs only the tests tagged @confirmation-on (E2E_CONFIRMATION, see playwright.config.ts).
 on:
   schedule:
     - cron: '17 2 * * *' # every night at 02:17 UTC
@@ -26,7 +29,7 @@ permissions:
 
 jobs:
   e2e:
-    name: E2E
+    name: E2E (confirmation ${{ matrix.confirmation }})
     # On PRs: only when the "e2e" label is on the PR, and not again whenever some other label is added.
     if: >-
       github.event_name != 'pull_request'
@@ -34,6 +37,11 @@ jobs:
           && (github.event.action != 'labeled' || github.event.label.name == 'e2e'))
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    strategy:
+      # One run failing must not cancel the other: each tests a different configuration.
+      fail-fast: false
+      matrix:
+        confirmation: ['off', 'on']
     env:
       # Throwaway database that exists only for this job; not a secret.
       DB_PASSWORD: CiOnly-Passw0rd
@@ -90,16 +98,16 @@ jobs:
 
       # Startup applies the migrations and seeds the distilleries and the product catalog, so the
       # first successful GET /api/distilleries means the API is ready for the tests.
-      # CI-only overrides: no email confirmation (the tests log new users straight in), emails written to
-      # files instead of sent (email-confirmation.spec.ts follows the links in them; E2E_MAIL_DIR below is the
-      # same directory), a higher limit on the auth endpoints (the suite registers many users from one IP),
-      # and no Claude price research.
+      # CI-only overrides: email confirmation off in the "off" run (its tests log new users straight in) and on in
+      # the "on" run, emails written to files instead of sent (the confirmation specs follow the links in them;
+      # E2E_MAIL_DIR below is the same directory), a higher limit on the auth endpoints (the suite registers many
+      # users from one IP), and no Claude price research.
       - name: Start the API
         working-directory: VirtualBar.Api
         env:
           ASPNETCORE_ENVIRONMENT: Development
           ConnectionStrings__Default: Server=localhost,1433;Database=VirtualBar;User Id=sa;Password=${{ env.DB_PASSWORD }};TrustServerCertificate=True
-          Identity__RequireConfirmedEmail: 'false'
+          Identity__RequireConfirmedEmail: ${{ matrix.confirmation == 'on' && 'true' || 'false' }}
           Email__PickupDirectory: ${{ runner.temp }}/mail
           RateLimiting__AuthPermitLimit: '10000'
           Anthropic__UseProviderStats: 'false'
@@ -132,13 +140,15 @@ jobs:
         working-directory: VirtualBar.Web.Tests
         env:
           E2E_MAIL_DIR: ${{ runner.temp }}/mail
+          # "on" runs only the tests tagged @confirmation-on, "off" every other test.
+          E2E_CONFIRMATION: ${{ matrix.confirmation }}
         run: npx playwright test --project=chromium --reporter=list,github,html
 
       - name: Upload Playwright report
         if: always()
         uses: actions/upload-artifact@v7
         with:
-          name: playwright-report
+          name: playwright-report-confirmation-${{ matrix.confirmation }}
           path: |
             VirtualBar.Web.Tests/playwright-report/
             VirtualBar.Web.Tests/test-results/
@@ -149,7 +159,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v7
         with:
-          name: api-log
+          name: api-log-confirmation-${{ matrix.confirmation }}
           path: ${{ runner.temp }}/api.log
           retention-days: 14
           if-no-files-found: ignore

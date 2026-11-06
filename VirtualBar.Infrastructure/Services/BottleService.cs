@@ -90,6 +90,10 @@ public sealed class BottleService(
         if (request.ProductId is Guid productId)
         {
             bottle.ProductId = productId;
+            bottle.VintageYear ??= await db.Products
+                .Where(p => p.Id == productId)
+                .Select(p => p.VintageYear)
+                .FirstOrDefaultAsync(cancellationToken);
         }
         else
         {
@@ -107,9 +111,14 @@ public sealed class BottleService(
                 .FirstOrDefaultAsync(p => p.CanonicalKey == canonicalKey && !p.IsDeleted, cancellationToken);
 
             if (match is not null)
+            {
                 bottle.ProductId = match.Id;
+                bottle.VintageYear ??= match.VintageYear;
+            }
             else
+            {
                 catalogMiss = true;
+            }
         }
 
         db.Bottles.Add(bottle);
@@ -138,6 +147,11 @@ public sealed class BottleService(
                     VolumeMl = request.VolumeMl,
                     Country = request.Country,
                     Region = request.Region,
+                    // A vintage named in the bottle's name is the product's vintage (a missing vintage of a line,
+                    // #59); one the name does not show would fail the request's year rule and lose the request.
+                    VintageYear = bottle.VintageYear is int vintage && ProductYears.InName(request.Name, vintage)
+                        ? vintage
+                        : null,
                     SourceBottleId = bottle.Id,
                 }, cancellationToken);
             }

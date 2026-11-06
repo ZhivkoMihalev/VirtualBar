@@ -18,6 +18,12 @@ public sealed class ProductRequestDto
 
     public int? Age { get; set; }
 
+    /// <summary>The requested year of distillation (#59).</summary>
+    public int? VintageYear { get; set; }
+
+    /// <summary>The requested year of a yearly edition (#59).</summary>
+    public int? ReleaseYear { get; set; }
+
     public double? AbvPercent { get; set; }
 
     public int? VolumeMl { get; set; }

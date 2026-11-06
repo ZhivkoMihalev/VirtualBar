@@ -122,7 +122,8 @@ public sealed class BottleServiceTests
         string? producerName = null,
         int? age = null,
         int? volumeMl = null,
-        bool isDeleted = false)
+        bool isDeleted = false,
+        int? vintageYear = null)
     {
         var product = new Product
         {
@@ -130,6 +131,7 @@ public sealed class BottleServiceTests
             Brand = producerName,
             Category = category,
             Age = age,
+            VintageYear = vintageYear,
             VolumeMl = volumeMl,
             CanonicalKey = ProductKey.For(producerName, name, category, age, null, volumeMl),
             Origin = ProductOrigin.Seeded,
@@ -2308,6 +2310,120 @@ public sealed class BottleServiceTests
         Assert.Null(result.Data.Currency);
         Assert.True(result.Data.IsForSale);
         Assert.Equal(1, result.Data.ForSaleQuantity);
+    }
+
+    #endregion
+
+    #region AddBottleAsync — vintage (#59)
+
+    /// <summary>A request-service mock that records what an unknown bottle files.</summary>
+    private static (Mock<IProductRequestService> Mock, Func<CreateProductRequestRequest?> Captured) CapturingRequestService()
+    {
+        CreateProductRequestRequest? captured = null;
+        var mock = new Mock<IProductRequestService>();
+        mock.Setup(s => s.CreateAsync(It.IsAny<CreateProductRequestRequest>(), It.IsAny<CancellationToken>()))
+            .Callback<CreateProductRequestRequest, CancellationToken>((r, _) => captured = r)
+            .ReturnsAsync(Result<ProductRequestDto>.Ok(new ProductRequestDto()));
+        return (mock, () => captured);
+    }
+
+    [Fact]
+    public async Task AddBottleAsync_WhenThePickedProductHasAVintage_TheBottleTakesIt()
+    {
+        var db = CreateDbContext();
+        var user = SeedUser(db);
+        var product = SeedProduct(db, name: "Millésime 1988", category: SpiritCategory.Cognac, vintageYear: 1988);
+        var service = CreateBottleService(db, user.Id);
+
+        var result = await service.AddBottleAsync(
+            new AddBottleRequest { Name = "Millésime 1988", Category = SpiritCategory.Cognac, ProductId = product.Id },
+            CancellationToken.None);
+
+        Assert.Equal(1988, result.Data!.VintageYear);
+        Assert.Equal(1988, (await db.Bottles.AsNoTracking().SingleAsync()).VintageYear);
+    }
+
+    [Fact]
+    public async Task AddBottleAsync_WhenTheCollectorGaveAnotherVintage_KeepsTheirs()
+    {
+        var db = CreateDbContext();
+        var user = SeedUser(db);
+        var product = SeedProduct(db, name: "Millésime 1988", category: SpiritCategory.Cognac, vintageYear: 1988);
+        var service = CreateBottleService(db, user.Id);
+
+        var result = await service.AddBottleAsync(
+            new AddBottleRequest
+            {
+                Name = "Millésime 1988", Category = SpiritCategory.Cognac, ProductId = product.Id, VintageYear = 1983
+            },
+            CancellationToken.None);
+
+        Assert.Equal(1983, result.Data!.VintageYear);
+        Assert.Equal(product.Id, result.Data.ProductId);
+    }
+
+    [Fact]
+    public async Task AddBottleAsync_WhenThePickedProductHasNoVintage_LeavesTheBottleWithout()
+    {
+        var db = CreateDbContext();
+        var user = SeedUser(db);
+        var product = SeedProduct(db, name: "Sherry Oak 12", age: 12);
+        var service = CreateBottleService(db, user.Id);
+
+        var result = await service.AddBottleAsync(
+            new AddBottleRequest { Name = "Sherry Oak 12", Category = SpiritCategory.Whisky, ProductId = product.Id },
+            CancellationToken.None);
+
+        Assert.Null(result.Data!.VintageYear);
+    }
+
+    [Fact]
+    public async Task AddBottleAsync_WhenTheAutoLinkedProductHasAVintage_TheBottleTakesIt()
+    {
+        var db = CreateDbContext();
+        var user = SeedUser(db);
+        var product = SeedProduct(db, name: "Millésime 1988", category: SpiritCategory.Cognac, producerName: "Frapin",
+            vintageYear: 1988);
+        var distillery = SeedDistillery(db, "Frapin");
+        var service = CreateBottleService(db, user.Id);
+
+        var result = await service.AddBottleAsync(
+            new AddBottleRequest { Name = "Millésime 1988", Category = SpiritCategory.Cognac, DistilleryId = distillery.Id },
+            CancellationToken.None);
+
+        Assert.Equal(product.Id, result.Data!.ProductId);
+        Assert.Equal(1988, result.Data.VintageYear);
+    }
+
+    [Fact]
+    public async Task AddBottleAsync_WhenAnUnknownBottleNamesItsVintage_TheRequestCarriesIt()
+    {
+        var db = CreateDbContext();
+        var user = SeedUser(db);
+        var (requests, captured) = CapturingRequestService();
+        var service = CreateBottleService(db, user.Id, productRequestService: requests.Object);
+
+        await service.AddBottleAsync(
+            new AddBottleRequest { Name = "Millésime 1983", Category = SpiritCategory.Cognac, VintageYear = 1983 },
+            CancellationToken.None);
+
+        Assert.Equal(1983, captured()!.VintageYear);
+        Assert.Null(captured()!.ReleaseYear);
+    }
+
+    [Fact]
+    public async Task AddBottleAsync_WhenAnUnknownBottlesVintageIsNotInItsName_TheRequestHasNoYear()
+    {
+        var db = CreateDbContext();
+        var user = SeedUser(db);
+        var (requests, captured) = CapturingRequestService();
+        var service = CreateBottleService(db, user.Id, productRequestService: requests.Object);
+
+        await service.AddBottleAsync(
+            new AddBottleRequest { Name = "Single Cask", Category = SpiritCategory.Rum, VintageYear = 2005 },
+            CancellationToken.None);
+
+        Assert.Null(captured()!.VintageYear);
     }
 
     #endregion

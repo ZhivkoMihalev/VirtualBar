@@ -19,6 +19,12 @@ public sealed class ResolveProductRequestRequest
 
     public int? Age { get; set; }
 
+    /// <summary>Overrides the year (#59): when this or <see cref="ReleaseYear"/> is set, the two replace the request's years together.</summary>
+    public int? VintageYear { get; set; }
+
+    /// <summary>Overrides the year (#59), together with <see cref="VintageYear"/>.</summary>
+    public int? ReleaseYear { get; set; }
+
     public double? AbvPercent { get; set; }
 
     public int? VolumeMl { get; set; }

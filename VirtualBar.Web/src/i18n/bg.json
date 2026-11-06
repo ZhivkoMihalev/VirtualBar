@@ -159,7 +159,14 @@
     "descriptionPlaceholder": "Вкусови бележки, произход…",
     "error": "Нещо се обърка. Моля, опитайте отново.",
     "submit": "Добави към Колекцията",
-    "submitting": "Добавяне…"
+    "submitting": "Добавяне…",
+    "vintage": "Реколта",
+    "vintageRange": "Годината трябва да е между 1800 и {{max}}.",
+    "vintageMismatch": "Избраният продукт е реколта {{productYear}}, а тази бутилка е реколта {{year}}.",
+    "vintageMismatchHint": "Можете да я запазите и така.",
+    "linkVintage": "Свържи с {{name}}",
+    "requestVintage": "Заяви реколта {{year}}",
+    "vintageRequested": "При запазване ще поискаме „{{name}}“ да бъде добавен в каталога."
   },
   "browse": {
     "discover": "ОТКРИЙ",

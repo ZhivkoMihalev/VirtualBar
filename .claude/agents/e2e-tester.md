@@ -46,7 +46,8 @@ npx playwright test e2e/<name>.spec.ts --project=chromium   # one spec
 npx playwright test --ui                  # interactive (for debugging)
 npx playwright show-report                # HTML report after a run
 ```
-- `E2E_MAIL_DIR` is the folder the `api-e2e` configuration writes emails to (`VirtualBar.Web.Tests/.e2e-mail/`); `email-confirmation.spec.ts` reads the links from it.
+- `E2E_MAIL_DIR` is the folder the `api-e2e` configuration writes emails to (`VirtualBar.Web.Tests/.e2e-mail/`); the confirmation specs read the links from it (`e2e/mail.ts`).
+- The tests tagged `@confirmation-on` are skipped in that run. They need the API started with `api-e2e-confirmation-on` and `E2E_CONFIRMATION=on` (`.claude/rules/ci/e2e.md`).
 - `--workers=1` reproduces CI. At the default parallelism the older specs' 5 s assertions can time out from CPU load alone.
 
 ## Output

@@ -81,6 +81,31 @@ paths:
 - The other endpoints that return a price need no such step: the marketplace is `[Authorize]`, the home feed sends
   for-sale items only to a logged-in user, and the product page sends a visitor no listings (`.claude/rules/domain/catalog.md`).
 
+## API endpoints (`/api/bottles`)
+`BottlesController` is `[Authorize]`, except the two public-bar reads. Every refusal below comes from
+`BottleValidationDecorator`; a change to another collector's bottle answers `403` (pinned in `OwnershipTests`).
+- `GET /api/bottles?userId=` — `[AllowAnonymous]`; a collector's bar: the non-deleted bottles by `DisplayOrder`, then
+  newest. `400` empty `userId`. A visitor gets no price (see above).
+- `GET /api/bottles/{id}` — `[AllowAnonymous]`; one bottle. `404` missing or deleted. A visitor gets no price.
+- `GET /api/bottles/marketplace?search=&category=&sort=` — `[Authorize]` (#100); every listed bottle (`MarketplaceQuery`).
+  - `search` (trimmed, blank = none) matches the bottle name or its distillery's name; `category` filters.
+  - `sort` is `price_asc`, `price_desc` or `newest`; any other value, or none, is `newest` (`CreatedAt` ↓).
+- `POST /api/bottles` — add (`AddBottleRequest`) → `201` with the bottle.
+  - `400` blank name, quantity outside 1–99, or an unknown or deleted product (`Selected product does not exist.`).
+  - `404` unknown or deleted distillery.
+- `PUT /api/bottles/{id}` — update (`UpdateBottleRequest`, every field echoed, see ProductId above).
+  - `400` blank name, quantity outside 1–99, or an unknown product; `404` missing bottle or unknown distillery;
+    `403` another collector's.
+  - `409` a quantity below `ForSaleQuantity`.
+- `POST /api/bottles/{id}/list-for-sale` — list (`ListForSaleRequest`: price, currency, quantity).
+  - `404` missing; `403` another collector's; `409` already listed.
+  - `400` a quantity outside 1..`Quantity`, or an unsupported currency (`.claude/rules/domain/currencies.md`).
+- `POST /api/bottles/{id}/unlist` — `404` missing; `403` another collector's; `400` not listed.
+- `PUT /api/bottles/reorder` — set `DisplayOrder` from the ids sent (`ReorderBottlesRequest`).
+  - `400` no ids or duplicate ids; `404` any id that is not one of the caller's own bottles.
+  - The caller's bottles missing from the request keep their relative order after the ones sent.
+- `DELETE /api/bottles/{id}` — soft delete. `404` missing; `403` another collector's.
+
 ## BottleImage
 | Property | Type | Notes |
 |---|---|---|

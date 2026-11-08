@@ -76,6 +76,14 @@ paths:
 - A linked bottle with a barcode records it for its product (`ProductBarcode`, `.claude/rules/domain/catalog.md`), and
   an unlinked one's product request carries it.
 - Pricing uses it when the bottle's product has none (`.claude/rules/domain/pricing.md`).
+- **The add form** (`DashboardPage`): a barcode typed or scanned (`BarcodeScannerDialog`) is looked up at once.
+  - A hit fills every field from the product, like a catalog pick, and links it (#120); the link is a barcode link,
+    so editing the name keeps it, while changing the barcode or a later miss drops it.
+  - A miss (`404`) asks to pick the bottle from the catalog (`addBottle.barcodeNotFound`); the barcode stays in the
+    field and is saved with the picked product, which records it (`ProductBarcode`). `400` and other failures have
+    their own messages.
+- **The bottle panel** (`BarcodeSection`, owner only): the owner types or scans the barcode of a bottle already added,
+  which is the only way an older bottle gets one; an empty field clears it.
 
 ### DisplayOrder
 - A user's bottles are listed in this order.

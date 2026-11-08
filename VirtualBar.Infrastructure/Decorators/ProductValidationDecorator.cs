@@ -10,15 +10,15 @@ public sealed class ProductValidationDecorator(
     ProductLookupService inner,
     ILogger<ProductValidationDecorator> logger) : IProductLookupService
 {
-    public async Task<Result<BarcodeProductDto>> LookupByBarcodeAsync(string barcode, CancellationToken cancellationToken)
+    public async Task<Result<ProductDto>> LookupByBarcodeAsync(string barcode, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
 
         if (string.IsNullOrWhiteSpace(barcode))
-            return Result<BarcodeProductDto>.Fail("Barcode is required.");
+            return Result<ProductDto>.Fail("Barcode is required.");
 
         if (!BarcodeFormat.IsValid(barcode))
-            return Result<BarcodeProductDto>.Fail("Barcode must be 8 to 14 digits.");
+            return Result<ProductDto>.Fail("Barcode must be 8 to 14 digits.");
 
         var normalized = barcode.Trim();
 
@@ -33,7 +33,7 @@ public sealed class ProductValidationDecorator(
         catch (Exception ex)
         {
             logger.LogError(ex, "Barcode lookup failed for {Barcode}.", normalized);
-            return Result<BarcodeProductDto>.Fail("Barcode lookup failed. Please try again.");
+            return Result<ProductDto>.Fail("Barcode lookup failed. Please try again.");
         }
     }
 }

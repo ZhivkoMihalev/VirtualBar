@@ -203,12 +203,44 @@ public sealed class ProductLookupServiceTests
         var result = await service.LookupByBarcodeAsync($"  {Barcode}  ", CancellationToken.None);
 
         Assert.True(result.Success);
-        Assert.Equal(product.Id, result.Data!.ProductId);
+        Assert.Equal(product.Id, result.Data!.Id);
     }
 
     #endregion
 
     #region The product's own barcode
+
+    /// <summary>
+    /// A hit is the whole catalog product, so the add form fills the bottle from it like a catalog pick: it used to
+    /// carry only the name, brand, image, volume and ABV, and the bottle kept the form's category (#120).
+    /// </summary>
+    [Fact]
+    public async Task LookupByBarcodeAsync_ReturnsEveryFieldTheAddFormFillsFromAProduct()
+    {
+        var db = CreateDbContext();
+        var distillery = SeedDistillery(db, "Foursquare");
+        var product = SeedProduct(db, name: "Foursquare 2005 Vintage", brand: "Foursquare", distilleryId: distillery.Id);
+        product.Category = SpiritCategory.Rum;
+        product.Country = "Barbados";
+        product.Region = "Caribbean";
+        product.Age = 12;
+        product.VintageYear = 2005;
+        db.SaveChanges();
+        var service = CreateService(db);
+
+        var result = await service.LookupByBarcodeAsync(Barcode, CancellationToken.None);
+
+        Assert.True(result.Success);
+        Assert.Equal(product.Id, result.Data!.Id);
+        Assert.Equal(SpiritCategory.Rum, result.Data.Category);
+        Assert.Equal(distillery.Id, result.Data.DistilleryId);
+        Assert.Equal("Foursquare", result.Data.DistilleryName);
+        Assert.Equal("Barbados", result.Data.Country);
+        Assert.Equal("Caribbean", result.Data.Region);
+        Assert.Equal(12, result.Data.Age);
+        Assert.Equal(2005, result.Data.VintageYear);
+        Assert.Equal(Barcode, result.Data.Barcode);
+    }
 
     [Fact]
     public async Task LookupByBarcodeAsync_WhenBarcodeIsTheProductsOwn_ReturnsTheProduct()
@@ -220,7 +252,7 @@ public sealed class ProductLookupServiceTests
         var result = await service.LookupByBarcodeAsync(Barcode, CancellationToken.None);
 
         Assert.True(result.Success);
-        Assert.Equal(product.Id, result.Data!.ProductId);
+        Assert.Equal(product.Id, result.Data!.Id);
         Assert.Equal("Sherry Oak 12", result.Data.Name);
         Assert.Equal("Macallan", result.Data.Brand);
         Assert.Equal("/uploads/products/macallan.webp", result.Data.ImageUrl);
@@ -281,7 +313,7 @@ public sealed class ProductLookupServiceTests
         var result = await service.LookupByBarcodeAsync(Barcode, CancellationToken.None);
 
         Assert.True(result.Success);
-        Assert.Equal(oldest.Id, result.Data!.ProductId);
+        Assert.Equal(oldest.Id, result.Data!.Id);
         Assert.Equal("Older Row", result.Data.Name);
     }
 
@@ -309,14 +341,18 @@ public sealed class ProductLookupServiceTests
         var distillery = SeedDistillery(db, "Macallan");
         var product = SeedProduct(db, barcode: null, name: "Sherry Oak 12", brand: null, distilleryId: distillery.Id,
             imageUrl: "/uploads/products/macallan.webp");
+        product.Category = SpiritCategory.Rum;
+        db.SaveChanges();
         SeedLink(db, product);
         var service = CreateService(db);
 
         var result = await service.LookupByBarcodeAsync(Barcode, CancellationToken.None);
 
         Assert.True(result.Success);
-        Assert.Equal(product.Id, result.Data!.ProductId);
+        Assert.Equal(product.Id, result.Data!.Id);
         Assert.Equal("Sherry Oak 12", result.Data.Name);
+        Assert.Equal(SpiritCategory.Rum, result.Data.Category);
+        Assert.Equal(distillery.Id, result.Data.DistilleryId);
         Assert.Equal("Macallan", result.Data.Brand);
         Assert.Equal("/uploads/products/macallan.webp", result.Data.ImageUrl);
         Assert.Equal(700, result.Data.VolumeMl);
@@ -335,7 +371,7 @@ public sealed class ProductLookupServiceTests
         var result = await service.LookupByBarcodeAsync(Barcode, CancellationToken.None);
 
         Assert.True(result.Success);
-        Assert.Equal(own.Id, result.Data!.ProductId);
+        Assert.Equal(own.Id, result.Data!.Id);
     }
 
     [Fact]
@@ -352,7 +388,7 @@ public sealed class ProductLookupServiceTests
         var result = await service.LookupByBarcodeAsync(Barcode, CancellationToken.None);
 
         Assert.True(result.Success);
-        Assert.Equal(first.Id, result.Data!.ProductId);
+        Assert.Equal(first.Id, result.Data!.Id);
     }
 
     [Fact]
@@ -383,7 +419,7 @@ public sealed class ProductLookupServiceTests
         var result = await service.LookupByBarcodeAsync(Barcode, CancellationToken.None);
 
         Assert.True(result.Success);
-        Assert.Equal(live.Id, result.Data!.ProductId);
+        Assert.Equal(live.Id, result.Data!.Id);
     }
 
     [Fact]

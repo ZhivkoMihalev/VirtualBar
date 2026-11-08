@@ -24,10 +24,10 @@ public sealed class ProductsControllerTests
     [Fact]
     public async Task LookupBarcode_WhenFound_ReturnsOkWithProduct()
     {
-        var product = new BarcodeProductDto();
+        var product = new ProductDto();
         lookup
             .Setup(s => s.LookupByBarcodeAsync("5000281005409", It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Result<BarcodeProductDto>.Ok(product));
+            .ReturnsAsync(Result<ProductDto>.Ok(product));
 
         var result = await CreateController().LookupBarcode("5000281005409", CancellationToken.None);
 
@@ -40,7 +40,7 @@ public sealed class ProductsControllerTests
     {
         lookup
             .Setup(s => s.LookupByBarcodeAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Result<BarcodeProductDto>.NotFound("Product not found."));
+            .ReturnsAsync(Result<ProductDto>.NotFound("Product not found."));
 
         var result = await CreateController().LookupBarcode("00000000", CancellationToken.None);
 

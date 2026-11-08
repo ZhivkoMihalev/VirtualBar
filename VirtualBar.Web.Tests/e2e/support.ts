@@ -85,7 +85,14 @@ export async function api<T = unknown>(who: Collector, method: string, path: str
 
 export async function createBottle(
   owner: Collector,
-  fields: { name: string; category?: SpiritCategory; quantity?: number; distilleryId?: string; productId?: string },
+  fields: {
+    name: string
+    category?: SpiritCategory
+    quantity?: number
+    distilleryId?: string
+    productId?: string
+    barcode?: string
+  },
 ): Promise<{ id: string; name: string }> {
   return api(owner, 'POST', '/bottles', {
     category: 'Whisky',
@@ -143,6 +150,17 @@ export async function firstDistillery(category: SpiritCategory): Promise<{ id: s
   return distilleries[0]
 }
 
+/** Every page of `context` opens signed in as `who` (anonymous for null), in Bulgarian, as on a first visit. */
+export async function signInContext(context: BrowserContext, who: Collector | null): Promise<void> {
+  await context.addInitScript(auth => {
+    localStorage.setItem('vbar_lang', 'bg')
+    if (auth) {
+      localStorage.setItem('vbar_token', auth.token)
+      localStorage.setItem('vbar_user', JSON.stringify(auth.user))
+    }
+  }, who ? { token: who.token, user: who.user } : null)
+}
+
 /**
  * `test` with an `openAs(who)` fixture: a page signed in as `who` (anonymous for null), in a browser context of its
  * own, so several collectors can act in one test without sharing a session. The UI starts in Bulgarian, as on a first
@@ -155,13 +173,7 @@ export const test = baseTest.extend<{ openAs: (who: Collector | null) => Promise
     await use(async who => {
       const context = await browser.newContext({ baseURL })
       contexts.push(context)
-      await context.addInitScript(auth => {
-        localStorage.setItem('vbar_lang', 'bg')
-        if (auth) {
-          localStorage.setItem('vbar_token', auth.token)
-          localStorage.setItem('vbar_user', JSON.stringify(auth.user))
-        }
-      }, who ? { token: who.token, user: who.user } : null)
+      await signInContext(context, who)
       return context.newPage()
     })
     await Promise.all(contexts.map(context => context.close()))

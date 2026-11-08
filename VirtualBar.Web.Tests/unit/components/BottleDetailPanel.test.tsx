@@ -9,6 +9,7 @@ import BottleDetailPanel from '@/components/BottleDetailPanel'
 import i18n from '@/i18n'
 import bg from '@/i18n/bg.json'
 import type { Bottle } from '@/types'
+import { cameraReads, setCameraSupported } from '../fakeCamera'
 import { bottle, noReviews } from '../fixtures/bottles'
 import { renderWithProviders, signedInUser, signIn } from '../testUtils'
 
@@ -17,6 +18,7 @@ vi.mock('@/api/notificationsApi')
 vi.mock('@/api/offersApi')
 vi.mock('@/api/pricesApi')
 vi.mock('@/api/reviewsApi')
+vi.mock('@zxing/browser', async () => (await import('../fakeCamera')).zxingBrowserMock())
 
 /** Opens the panel on another collector's bottle, as a public bar does. */
 function renderPanel(shown: Bottle, currentUserId = '') {
@@ -83,5 +85,70 @@ describe('BottleDetailPanel', () => {
       owned.id,
       expect.objectContaining({ quantity: 3, barcode: '5000267014203' }),
     )
+  })
+
+  describe('barcode (#49)', () => {
+    const BARCODE = '5000267014203'
+
+    /** Opens the panel on the collector's own bottle, with the update answered. */
+    function openOwnBottle(overrides: Partial<Bottle> = {}) {
+      signInCollector()
+      const owned = bottle({ userId: signedInUser.id, quantity: 2, productId: 'product-1', ...overrides })
+      vi.mocked(updateBottle).mockImplementation(async (_id, payload) => ({ ...owned, ...payload }) as Bottle)
+      renderPanel(owned, signedInUser.id)
+      return owned
+    }
+
+    it('saves a typed barcode and echoes the rest of the bottle', async () => {
+      const owned = openOwnBottle()
+
+      expect(await screen.findByText(bg.bottle.noBarcode)).toBeInTheDocument()
+      await userEvent.type(screen.getByLabelText(bg.bottle.barcode), ` ${BARCODE} `)
+      await userEvent.click(screen.getByRole('button', { name: bg.bottle.saveBarcode }))
+
+      expect(await screen.findByText(bg.bottle.barcodeSaved)).toBeInTheDocument()
+      expect(updateBottle).toHaveBeenCalledWith(
+        owned.id,
+        expect.objectContaining({ barcode: BARCODE, quantity: 2, productId: 'product-1', name: owned.name }),
+      )
+    })
+
+    it('saves the barcode the camera reads', async () => {
+      setCameraSupported(true)
+      cameraReads(BARCODE)
+      const owned = openOwnBottle()
+
+      await userEvent.click(await screen.findByRole('button', { name: bg.addBottle.scanBarcode }))
+
+      expect(await screen.findByText(bg.bottle.barcodeSaved)).toBeInTheDocument()
+      expect(updateBottle).toHaveBeenCalledWith(owned.id, expect.objectContaining({ barcode: BARCODE }))
+      expect(screen.getByLabelText(bg.bottle.barcode)).toHaveValue(BARCODE)
+    })
+
+    it('refuses a barcode that is not 8 to 14 digits without sending it', async () => {
+      openOwnBottle()
+
+      await userEvent.type(await screen.findByLabelText(bg.bottle.barcode), '50002670142AB')
+      await userEvent.click(screen.getByRole('button', { name: bg.bottle.saveBarcode }))
+
+      expect(await screen.findByText(bg.addBottle.barcodeInvalid)).toBeInTheDocument()
+      expect(updateBottle).not.toHaveBeenCalled()
+    })
+
+    it('clears the barcode when the field is emptied', async () => {
+      const owned = openOwnBottle({ barcode: BARCODE })
+
+      await userEvent.clear(await screen.findByLabelText(bg.bottle.barcode))
+      await userEvent.click(screen.getByRole('button', { name: bg.bottle.saveBarcode }))
+
+      await vi.waitFor(() => expect(updateBottle).toHaveBeenCalledWith(owned.id, expect.objectContaining({ barcode: null })))
+    })
+
+    it('shows the barcode section only to the owner', async () => {
+      renderPanel(bottle({ barcode: BARCODE }))
+
+      expect(await screen.findByRole('heading', { name: 'Lagavulin 16' })).toBeInTheDocument()
+      expect(screen.queryByLabelText(bg.bottle.barcode)).not.toBeInTheDocument()
+    })
   })
 })

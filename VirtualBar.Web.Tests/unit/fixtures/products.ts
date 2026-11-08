@@ -30,6 +30,11 @@ function product(overrides: Partial<Product> = {}): Product {
   }
 }
 
+/** A catalog product, as the search and the barcode lookup return it. */
+export function catalogProduct(overrides: Partial<Product> = {}): Product {
+  return product(overrides)
+}
+
 /** A catalog card with no community activity unless the test gives it some. */
 export function productCard(overrides: Partial<ProductCard> = {}): ProductCard {
   return { ownersCount: 0, averageScore: null, reviewsCount: 0, listingsCount: 0, ...product(), ...overrides }

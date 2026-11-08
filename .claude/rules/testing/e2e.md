@@ -15,6 +15,10 @@ paths:
   - `api` / `createBottle` set up data through the API;
   - `untouchedProduct` picks a catalog product no bottle is linked to yet, so a product page or card shows only what the test created;
   - `card`, `openBottlePanel`, `notification`, `chatToggle`, `chatMessage` and `searchMarketplace` locate the UI, and `switchToEnglish` uses the NavBar's language switcher.
+- **The camera** (`barcode-scan.spec.ts`, Chromium only): `e2e/barcodeVideo.ts` draws a real EAN-13 into a `.y4m`
+  video (`writeBarcodeVideo`, `testBarcode` in the GS1 shop range 200–299, random per run), and the test launches a
+  Chromium of its own with `--use-file-for-fake-video-capture`, since a launch option cannot change per test. It signs
+  in with `signInContext`, which `openAs` uses too.
 - **Set up through the API, assert through the UI**: a spec drives only the flow it is about, and creates everything else directly.
 - Expected text comes from the app's `bg.json` / `en.json` (exported by `support.ts` as `bg` and `en`), never copied into the spec. The older specs predate this and keep their own string constants.
 - A multi-user flow uses `FLOW_TIMEOUT` and the `expect` exported by `support.ts`, which waits up to 15 s. Each step crosses browser contexts and page loads.

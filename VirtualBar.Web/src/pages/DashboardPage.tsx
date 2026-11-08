@@ -1,10 +1,11 @@
 import { useMemo, useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { isAxiosError } from 'axios'
 import { useTranslation } from 'react-i18next'
 import { useForm, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { ImagePlus, Loader2, Check, X, Minus, Plus } from 'lucide-react'
+import { Camera, ImagePlus, Loader2, Check, X, Minus, Plus } from 'lucide-react'
 import { useAuth } from '../contexts/useAuth'
 import NavBar from '../components/NavBar'
 import {
@@ -16,9 +17,10 @@ import {
   reorderBottles,
 } from '../api/bottlesApi'
 import { getCollectionValue } from '../api/pricesApi'
-import type { Bottle, SpiritCategory, AddBottlePayload, Product, LinkedProduct } from '../types'
+import type { Bottle, SpiritCategory, AddBottlePayload, Product } from '../types'
 import { BottleSvg, VirtualBarScene } from '../components/BarShelf'
 import { CATEGORY_COLORS } from '../lib/bottlePalette'
+import BarcodeScannerDialog from '../components/BarcodeScannerDialog'
 import BottleDetailPanel from '../components/BottleDetailPanel'
 import DistillerySelect from '../components/DistillerySelect'
 import ProductSelect from '../components/ProductSelect'
@@ -126,21 +128,20 @@ function AddBottlePanel({ onSuccess }: { onSuccess: () => void }) {
 
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [imagePreview, setImagePreview] = useState<string | null>(null)
-  const [barcodeImageUrl, setBarcodeImageUrl] = useState<string | null>(null)
   const [productImageUrl, setProductImageUrl] = useState<string | null>(null)
-  const [linkedProduct, setLinkedProduct] = useState<LinkedProduct | null>(null)
+  const [linkedProduct, setLinkedProduct] = useState<Product | null>(null)
   const [linkedIdentity, setLinkedIdentity] = useState<string | null>(null)
   const [linkSource, setLinkSource] = useState<'pick' | 'barcode' | null>(null)
   const [dropHover, setDropHover] = useState(false)
   const [barcode, setBarcode] = useState('')
   const [barcodeLoading, setBarcodeLoading] = useState(false)
-  const [barcodeStatus, setBarcodeStatus] = useState<'idle' | 'found' | 'error'>('idle')
+  const [barcodeStatus, setBarcodeStatus] = useState<'idle' | 'found' | 'notFound' | 'invalid' | 'error'>('idle')
+  const [scannerOpen, setScannerOpen] = useState(false)
 
   // A picked link survives only while the identity fields still match the picked product —
   // editing name / category / age / volume drops it (derived, so programmatic edits count too).
   // A barcode link is an exact match on the code itself: it has no identity snapshot to drift
-  // from (the lookup carries no category/age), so only the chip X, a new pick or a new lookup
-  // clears it.
+  // from, so only the chip X, a new pick, a new lookup or a change of the barcode clears it.
   const linkIsStale =
     linkSource === 'pick' &&
     linkedIdentity !== null &&
@@ -163,12 +164,15 @@ function AddBottlePanel({ onSuccess }: { onSuccess: () => void }) {
   const handleImageChange = (file: File | null) => {
     if (!file) return
     setImageFile(file)
-    setBarcodeImageUrl(null)
     setProductImageUrl(null)
     setImagePreview(URL.createObjectURL(file))
   }
 
-  const handleProductPick = (product: Product) => {
+  /**
+   * Fills the form from a catalog product and links the bottle to it: a pick from the catalog, or the product a barcode
+   * belongs to, which fills every field exactly like a pick (#120).
+   */
+  const applyProduct = (product: Product, source: 'pick' | 'barcode') => {
     const pickedAge = product.age != null ? String(product.age) : ''
     const pickedVolume = product.volumeMl != null ? String(product.volumeMl) : ''
     const pickImageUrl = product.imageUrl ?? null
@@ -183,56 +187,45 @@ function AddBottlePanel({ onSuccess }: { onSuccess: () => void }) {
     if (product.vintageYear != null) form.setValue('vintage', String(product.vintageYear), { shouldValidate: true })
 
     setLinkedProduct(product)
-    setLinkedIdentity(identityKey(product.name, product.category, pickedAge, pickedVolume))
-    setLinkSource('pick')
+    setLinkedIdentity(source === 'pick' ? identityKey(product.name, product.category, pickedAge, pickedVolume) : null)
+    setLinkSource(source)
 
-    // Every pick replaces the previous identification wholesale — no image of an earlier
+    // Every identification replaces the previous one wholesale — no image of an earlier
     // pick or barcode hit may survive. Only the collector's own upload outranks it.
     setProductImageUrl(pickImageUrl)
-    setBarcodeImageUrl(null)
     if (!imageFile) setImagePreview(pickImageUrl)
   }
 
-  const handleBarcodeSearch = async () => {
-    const code = barcode.trim()
+  const handleProductPick = (product: Product) => applyProduct(product, 'pick')
+
+  // The barcode in the field is saved with the bottle, so a link that came from another barcode must not survive it.
+  const handleBarcodeChange = (value: string) => {
+    setBarcode(value)
+    setBarcodeStatus('idle')
+    if (linkSource === 'barcode') clearProductLink()
+  }
+
+  const handleBarcodeSearch = async (code = barcode.trim()) => {
     if (!code) return
     setBarcodeLoading(true)
     setBarcodeStatus('idle')
     try {
-      const product = await lookupBarcode(code)
-      const lookupImageUrl = product.imageUrl ?? null
-      if (product.name) form.setValue('name', product.name)
-      if (product.volumeMl) form.setValue('volume', String(product.volumeMl))
-      if (product.abvPercent) form.setValue('abv', String(product.abvPercent))
-
-      // Same rule as a catalog pick: the new lookup owns the image state end to end, so
-      // nothing from an earlier lookup or pick can linger.
-      setBarcodeImageUrl(lookupImageUrl)
-      setProductImageUrl(null)
-      if (lookupImageUrl) {
-        setImageFile(null)
-        setImagePreview(lookupImageUrl)
-      } else if (!imageFile) {
-        setImagePreview(null)
-      }
-
-      const values = form.getValues()
-      // A barcode hit proves the product id, nothing more — the name and category here are the
-      // form's own values, not the catalog's, so this is a LinkedProduct rather than a Product.
-      setLinkedProduct({
-        id: product.productId,
-        name: values.name,
-        category: values.category,
-        imageUrl: lookupImageUrl,
-      })
-      setLinkedIdentity(null)
-      setLinkSource('barcode')
+      applyProduct(await lookupBarcode(code), 'barcode')
       setBarcodeStatus('found')
-    } catch {
-      setBarcodeStatus('error')
+    } catch (error) {
+      // A miss drops a link an earlier barcode made: saving would give this barcode to that product.
+      if (linkSource === 'barcode') clearProductLink()
+      const status = isAxiosError(error) ? error.response?.status : undefined
+      setBarcodeStatus(status === 404 ? 'notFound' : status === 400 ? 'invalid' : 'error')
     } finally {
       setBarcodeLoading(false)
     }
+  }
+
+  const handleScanned = (code: string) => {
+    setScannerOpen(false)
+    setBarcode(code)
+    handleBarcodeSearch(code)
   }
 
   const mutation = useMutation({
@@ -240,8 +233,6 @@ function AddBottlePanel({ onSuccess }: { onSuccess: () => void }) {
       const bottle = await addBottle(payload)
       if (imageFile) {
         await uploadBottleImage(bottle.id, imageFile)
-      } else if (barcodeImageUrl) {
-        await linkBottleImage(bottle.id, barcodeImageUrl)
       } else if (activeProductImageUrl) {
         await linkBottleImage(bottle.id, activeProductImageUrl)
       }
@@ -356,7 +347,7 @@ function AddBottlePanel({ onSuccess }: { onSuccess: () => void }) {
           <Input
             id="barcode-input"
             value={barcode}
-            onChange={e => setBarcode(e.target.value)}
+            onChange={e => handleBarcodeChange(e.target.value)}
             onKeyDown={e => {
               if (e.key === 'Enter') {
                 e.preventDefault()
@@ -369,22 +360,38 @@ function AddBottlePanel({ onSuccess }: { onSuccess: () => void }) {
           <Button
             type="button"
             variant="secondary"
-            onClick={handleBarcodeSearch}
+            onClick={() => handleBarcodeSearch()}
             disabled={!barcode.trim() || barcodeLoading}
             className="h-9 shrink-0"
           >
             {barcodeLoading ? <Loader2 className="size-3.5 animate-spin" /> : t('addBottle.barcodeFind')}
           </Button>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => setScannerOpen(true)}
+            disabled={barcodeLoading}
+            className="h-9 shrink-0"
+          >
+            <Camera className="size-3.5" />
+            {t('addBottle.scanBarcode')}
+          </Button>
         </div>
+        <BarcodeScannerDialog open={scannerOpen} onOpenChange={setScannerOpen} onDetected={handleScanned} />
         {barcodeStatus === 'found' && (
           <div className="flex items-center gap-1.5 rounded-md border border-success/40 bg-success/10 px-3 py-2 text-sm text-success">
             <Check className="size-3.5" />
             {t('addBottle.barcodeSuccess')}
           </div>
         )}
-        {barcodeStatus === 'error' && (
-          <div className="rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+        {barcodeStatus === 'notFound' && (
+          <p role="status" className="rounded-md border border-primary/30 bg-primary/5 px-3 py-2 text-sm text-primary">
             {t('addBottle.barcodeNotFound')}
+          </p>
+        )}
+        {(barcodeStatus === 'invalid' || barcodeStatus === 'error') && (
+          <div className="rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+            {t(barcodeStatus === 'invalid' ? 'addBottle.barcodeInvalid' : 'addBottle.barcodeError')}
           </div>
         )}
       </div>

@@ -15,6 +15,8 @@ VirtualBar is a platform for collectors of premium spirits (whisky, rum, cognac,
 - Any user can **make an offer** on any bottle in another collector's bar (regardless of whether it is listed for sale); the seller receives a notification and can accept, decline, or ignore.
 - Collectors earn **permanent achievement badges** for milestones (first bottle, 10 bottles, 5 categories, 50 likes received, first sale…) — shown with progress on the own profile and as an earned-only strip on the public bar.
 - The platform maintains an admin-curated **product catalog** of canonical spirits: adding a bottle links it to a catalog product (explicit pick or silent exact-match auto-link).
+- A bottle can be added from its **barcode**, scanned with the camera or typed: the platform answers from barcodes its
+  collectors saved, and learns a barcode it does not know when the collector picks the bottle from the catalog.
 - An unknown bottle silently files a **product request** the admin approves (creating the product and retro-linking identical bottles) or rejects — the add flow is never blocked.
 - Anyone, logged in or not, can browse that catalog at **`/catalog`** and open a **product page** (`/product/:id`) that gathers every collector's bottle of it: the community score and top flavors, the owners, the current listings and all the reviews, computed on read.
 - Direct messaging is handled via a **floating chat widget** (Facebook Messenger style) accessible from every page.

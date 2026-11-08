@@ -103,8 +103,10 @@ Canonical catalog entry for a spirits product. Not user-owned.
 - `ProductLookupService.LookupByBarcodeAsync` answers from the platform's own data only:
   1. a non-deleted product whose own `Barcode` matches, `OrderBy(CreatedAt).ThenBy(Id)` (oldest wins);
   2. else the oldest non-deleted `ProductBarcode` of the barcode whose product is not deleted.
-  - Both return the product as `BarcodeProductDto` (`ProductId` always set; `Brand` falls back to the non-deleted
-    distillery name); neither → `NotFound`.
+  - Both return the whole product as a `ProductDto`, the shape of the catalog search (#120): the add form fills a hit
+    exactly like a pick. Neither → `NotFound`.
+  - Search and lookup project through the one `ProductMapping.ToDto`, so they cannot disagree about a product
+    (`Brand` falls back to the non-deleted distillery name in both).
 - There is **no external barcode database**: the UPCitemdb lookup was removed (owner, 2026-11-08) because its data
   could not fill the add form. Its settings section and its image download went with it.
 - `ProductValidationDecorator`: blank → `Fail("Barcode is required.")`, not 8–14 digits → `Fail`, then the barcode is
@@ -120,10 +122,9 @@ Canonical catalog entry for a spirits product. Not user-owned.
     decide whether to show its "refine your search" hint.
   - Matches `Name`/`Brand`/`Distillery.Name` (contains; case-insensitivity comes from the SQL Server collation, not the
     code); starts-with ranked first.
-  - The returned `Brand` falls back to the non-deleted distillery name exactly as the barcode endpoint does, so both
-    paths agree on the same product.
-- `GET /api/products/barcode/{barcode}` — `[Authorize]`; the product's own barcode, then the collectors' (see Barcodes).
-  `400` blank or not 8–14 digits, or a failed lookup; `404` no product has it.
+  - It projects through `ProductMapping.ToDto`, as the barcode endpoint does, so both paths agree on the same product.
+- `GET /api/products/barcode/{barcode}` — `[Authorize]`; the product's own barcode, then the collectors' (see Barcodes),
+  as a `ProductDto`. `400` blank or not 8–14 digits, or a failed lookup; `404` no product has it.
 - `GET /api/products/browse?search=&category=&sort=&page=&pageSize=` — `[AllowAnonymous]`; the public `/catalog` →
   `PagedResult<ProductCardDto> { Items, HasMore }`.
   - `search` is optional: omitted/blank lists the whole catalog; a term filters exactly like the search endpoint,

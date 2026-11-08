@@ -24,7 +24,7 @@ Canonical catalog entry for a spirits product. Not user-owned.
 | `ReleaseYear` | `int?` | Year of a yearly edition — see Years below |
 | `AbvPercent` | `double?` | |
 | `VolumeMl` | `int?` | |
-| `Barcode` | `string?` | EAN/UPC digits |
+| `Barcode` | `string?` | The product's own EAN/UPC (seed or approved request); a barcode lookup tries it first |
 | `ImageUrl` | `string?` | |
 | `Description` | `string?` | |
 | `CanonicalKey` | `string` | `ProductKey.For(distilleryName ?? brand, name, category, age, null, volumeMl)` — **filtered unique index** `WHERE [IsDeleted] = 0` |
@@ -91,12 +91,26 @@ Canonical catalog entry for a spirits product. Not user-owned.
 2. Else exact `CanonicalKey` match → **auto-link silently**.
 3. Else auto-file a `ProductRequest` with `SourceBottleId` — wrapped `try/catch → LogError`, non-success `Result`
    ignored (the badge-engine philosophy: a request bug never fails adding a bottle).
+   - The request carries the bottle's `Barcode`, so the approved product gets it (#49).
+- A bottle linked by 1 or 2 with a `Barcode` records that barcode for its product (`ProductBarcode`, see Barcodes below);
+  so does an update of a linked bottle (`BottleService.RecordBarcodeAsync`).
 
-### Barcode L0
-- `ProductLookupService.LookupByBarcodeAsync` answers from `Products` **before** the external UPC API: non-deleted match
-  by `Barcode`, `OrderBy(CreatedAt).ThenBy(Id)` — oldest wins; `Brand` falls back to the non-deleted distillery name.
-- Hit → `BarcodeProductDto.ProductId` set, zero external calls; miss → external path unchanged.
-- The lookup decorator trims the barcode once and logs swallowed exceptions.
+### Barcodes (#49)
+- The platform builds its own barcode database: the catalog has no barcodes yet (no seed row carries one), so they come
+  from collectors.
+- A barcode is 8 to 14 ASCII digits once trimmed (`BarcodeFormat`: EAN-8, UPC-A, EAN-13, ITF-14), for bottles,
+  product requests and the lookup alike.
+- `ProductLookupService.LookupByBarcodeAsync` answers from the platform's own data only:
+  1. a non-deleted product whose own `Barcode` matches, `OrderBy(CreatedAt).ThenBy(Id)` (oldest wins);
+  2. else the oldest non-deleted `ProductBarcode` of the barcode whose product is not deleted.
+  - Both return the product as `BarcodeProductDto` (`ProductId` always set; `Brand` falls back to the non-deleted
+    distillery name); neither → `NotFound`.
+- There is **no external barcode database**: the UPCitemdb lookup was removed (owner, 2026-11-08) because its data
+  could not fill the add form. Its settings section and its image download went with it.
+- `ProductValidationDecorator`: blank → `Fail("Barcode is required.")`, not 8–14 digits → `Fail`, then the barcode is
+  trimmed once; a swallowed exception is logged and answers `Fail`.
+- One product can have several barcodes (with or without a gift box, other markets, a new label); a collector's pick
+  after a missed lookup is how the platform learns one.
 
 ### API endpoints (`/api/products`)
 - `GET /api/products?search=&category=&limit=` — `[AllowAnonymous]` catalog search.
@@ -108,7 +122,8 @@ Canonical catalog entry for a spirits product. Not user-owned.
     code); starts-with ranked first.
   - The returned `Brand` falls back to the non-deleted distillery name exactly as the barcode endpoint does, so both
     paths agree on the same product.
-- `GET /api/products/barcode/{barcode}` — `[Authorize]`; catalog L0 → external UPC fallback.
+- `GET /api/products/barcode/{barcode}` — `[Authorize]`; the product's own barcode, then the collectors' (see Barcodes).
+  `400` blank or not 8–14 digits, or a failed lookup; `404` no product has it.
 - `GET /api/products/browse?search=&category=&sort=&page=&pageSize=` — `[AllowAnonymous]`; the public `/catalog` →
   `PagedResult<ProductCardDto> { Items, HasMore }`.
   - `search` is optional: omitted/blank lists the whole catalog; a term filters exactly like the search endpoint,
@@ -156,6 +171,22 @@ All three are **computed on read** (no stored aggregates, no migration) and use 
 a count query. Reviews on the product page are mapped through the same `ReviewMapping.ToDto` as the bottle reviews, so
 the two cannot drift.
 
+## ProductBarcode
+A barcode a collector gave a catalog product (#49): they saved a bottle with that barcode linked to that product.
+
+| Property | Type | Notes |
+|---|---|---|
+| `ProductId` | `Guid` | FK → Product (`Restrict`) |
+| `Barcode` | `string` | 8–14 digits, trimmed; `nvarchar(14)` |
+| `AddedByUserId` | `Guid` | FK → AppUser (`Restrict`) — the collector who first linked the pair |
+
+- Recorded by `BottleService.RecordBarcodeAsync` on add and update when the bottle has both a `Barcode` and a
+  `ProductId`, unless a non-deleted row of the same pair exists. It is added to the context only, so it is saved with
+  the bottle in one transaction.
+- Index `(Barcode, ProductId)`, **not unique**: two collectors linking the same new pair at once both get a row, which
+  the lookup tolerates (oldest wins); a unique index would fail one of the two bottle saves.
+- Never removed with the bottle: a deleted bottle's barcode stays known.
+
 ## ProductRequest
 A user's request to add a missing product to the catalog.
 
@@ -177,7 +208,11 @@ A user's request to add a missing product to the catalog.
   same key) are a friendly fast path; `ProductRequestService` maps the `DbUpdateException` race loser to `Conflict` (on
   create AND on the approve-time product insert).
 - Per-user cap: **25 open requests**.
-- **Years (#59):** create and approve check the effective years with `ProductYears.Problem`. An approval override of either year replaces the request's two together (`ProductYears.Effective`), and the new product gets them. A bottle added unlinked files its request with its `VintageYear` when its name shows that year.
+- **Years (#59):**
+  - create and approve check the effective years with `ProductYears.Problem`;
+  - an approval override of either year replaces the request's two together (`ProductYears.Effective`), and the new
+    product gets them;
+  - a bottle added unlinked files its request with its `VintageYear` when its name shows that year.
 - Sanity bounds (create + approve effective values): barcode digits-only 8–14, age 1–100, ABV 1–96, volume 20–6000.
   Approve additionally validates the effective `Category` (enum-defined) and effective `DistilleryId` (exists
   non-deleted).
@@ -215,5 +250,5 @@ A user's request to add a missing product to the catalog.
 - A wish list item can target a product (`WishListItem.ProductId`); only a listing of a bottle linked to it matches, and
   the product page has a "Want it" button that adds one (`.claude/rules/domain/wish-list.md`).
 
-Design records (the specs, written before the code): `docs/features/product-catalog/` and, for the public catalog and
-the product page, `docs/features/product-page/`.
+Design records (the specs, written before the code): `docs/features/product-catalog/`; for the public catalog and
+the product page, `docs/features/product-page/`; for barcodes, `docs/features/barcode-scanning/`.

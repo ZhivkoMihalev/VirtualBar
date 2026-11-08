@@ -24,6 +24,7 @@ import DistillerySelect from '../components/DistillerySelect'
 import ProductSelect from '../components/ProductSelect'
 import VintageMismatch from '../components/VintageMismatch'
 import { isYear, latestYear } from '../lib/productYears'
+import { toBarcode } from '@/lib/barcode'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -218,18 +219,14 @@ function AddBottlePanel({ onSuccess }: { onSuccess: () => void }) {
       const values = form.getValues()
       // A barcode hit proves the product id, nothing more — the name and category here are the
       // form's own values, not the catalog's, so this is a LinkedProduct rather than a Product.
-      setLinkedProduct(
-        product.productId
-          ? {
-              id: product.productId,
-              name: values.name,
-              category: values.category,
-              imageUrl: lookupImageUrl,
-            }
-          : null,
-      )
+      setLinkedProduct({
+        id: product.productId,
+        name: values.name,
+        category: values.category,
+        imageUrl: lookupImageUrl,
+      })
       setLinkedIdentity(null)
-      setLinkSource(product.productId ? 'barcode' : null)
+      setLinkSource('barcode')
       setBarcodeStatus('found')
     } catch {
       setBarcodeStatus('error')
@@ -269,6 +266,9 @@ function AddBottlePanel({ onSuccess }: { onSuccess: () => void }) {
       vintageYear: v.vintage.trim() ? Number(v.vintage.trim()) : undefined,
       abvPercent: v.abv ? Number(v.abv) : undefined,
       volumeMl: v.volume ? Number(v.volume) : undefined,
+      // The bottle keeps the barcode in the field, found or not: picking the product after a miss teaches the
+      // platform that barcode (#49).
+      barcode: toBarcode(barcode),
       description: v.description.trim() || undefined,
     }
     mutation.mutate(payload)

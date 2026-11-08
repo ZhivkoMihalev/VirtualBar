@@ -79,6 +79,7 @@ public sealed class BottleService(
             VintageYear = request.VintageYear,
             AbvPercent = request.AbvPercent,
             VolumeMl = request.VolumeMl,
+            Barcode = BarcodeFormat.Normalize(request.Barcode),
             Condition = request.Condition,
             Quantity = request.Quantity,
             Description = request.Description,
@@ -122,6 +123,7 @@ public sealed class BottleService(
         }
 
         db.Bottles.Add(bottle);
+        await RecordBarcodeAsync(bottle, cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
 
         var followerIds = await db.UserFollows
@@ -145,6 +147,8 @@ public sealed class BottleService(
                     Age = request.Age,
                     AbvPercent = request.AbvPercent,
                     VolumeMl = request.VolumeMl,
+                    // The approved product gets it, so the next scan of this barcode finds the product (#49).
+                    Barcode = bottle.Barcode,
                     Country = request.Country,
                     Region = request.Region,
                     // A vintage named in the bottle's name is the product's vintage (a missing vintage of a line,
@@ -179,12 +183,14 @@ public sealed class BottleService(
         bottle.VintageYear = request.VintageYear;
         bottle.AbvPercent = request.AbvPercent;
         bottle.VolumeMl = request.VolumeMl;
+        bottle.Barcode = BarcodeFormat.Normalize(request.Barcode);
         bottle.Condition = request.Condition;
         bottle.Quantity = request.Quantity;
         bottle.Description = request.Description;
         bottle.IsLimited = request.IsLimited;
         bottle.UpdatedAt = DateTime.UtcNow;
 
+        await RecordBarcodeAsync(bottle, cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
 
         var likesCount = await db.BottleLikes.CountAsync(l => l.BottleId == bottleId, cancellationToken);
@@ -356,6 +362,29 @@ public sealed class BottleService(
         return bottle;
     }
 
+    /// <summary>
+    /// Records the bottle's barcode as a barcode of its catalog product (#49), unless that pair is already known. The
+    /// record is only added to the context, so it is saved with the bottle, in the same transaction.
+    /// </summary>
+    private async Task RecordBarcodeAsync(Bottle bottle, CancellationToken cancellationToken)
+    {
+        if (bottle.Barcode is not string barcode || bottle.ProductId is not Guid productId)
+            return;
+
+        var known = await db.ProductBarcodes
+            .AnyAsync(b => b.Barcode == barcode && b.ProductId == productId && !b.IsDeleted, cancellationToken);
+
+        if (known)
+            return;
+
+        db.ProductBarcodes.Add(new ProductBarcode
+        {
+            ProductId = productId,
+            Barcode = barcode,
+            AddedByUserId = currentUser.UserId,
+        });
+    }
+
     private static BottleDto MapToDto(Bottle bottle, int likesCount = 0, int commentsCount = 0, double? averageScore = null, int reviewsCount = 0, string userDisplayName = "") => new()
     {
         Id = bottle.Id,
@@ -372,6 +401,7 @@ public sealed class BottleService(
         VintageYear = bottle.VintageYear,
         AbvPercent = bottle.AbvPercent,
         VolumeMl = bottle.VolumeMl,
+        Barcode = bottle.Barcode,
         Condition = bottle.Condition,
         Quantity = bottle.Quantity,
         Description = bottle.Description,

@@ -30,6 +30,12 @@ public sealed class AddBottleRequest
 
     public int? VolumeMl { get; set; }
 
+    /// <summary>
+    /// The EAN/UPC on the bottle (#49), scanned or typed: 8 to 14 digits, or null. It is kept on the bottle and, when
+    /// the bottle is linked to a catalog product, recorded as a barcode of that product.
+    /// </summary>
+    public string? Barcode { get; set; }
+
     public BottleCondition Condition { get; set; } = BottleCondition.Sealed;
 
     /// <summary>

@@ -495,6 +495,7 @@ function QuantitySection({ bottle, userId }: { bottle: Bottle; userId: string })
         vintageYear: bottle.vintageYear,
         abvPercent: bottle.abvPercent,
         volumeMl: bottle.volumeMl,
+        barcode: bottle.barcode ?? null,
         condition: bottle.condition,
         quantity,
         description: bottle.description,

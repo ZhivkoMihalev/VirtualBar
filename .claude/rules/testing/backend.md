@@ -26,6 +26,9 @@ paths:
   - what lies outside the process: `IEmailService`, `IWebHostEnvironment` and `IFormFile` for uploads, and the Identity
     plumbing `AuthServiceTests` needs to build its managers.
 - Never mock `AppDbContext`.
+  - A test of what a decorator does when EF itself throws makes EF throw instead: an `IQueryExpressionInterceptor`
+    that throws on query compilation, with `EnableServiceProviderCaching(false)` so the context compiles its own
+    queries (`ProductLookupServiceTests.CreateFailingDbContext`).
 - Services that depend on `INotificationService` / `IBadgeService` / `IProductRequestService` receive `Mock.Of<T>()` in
   their `CreateXxxService` helper (optional parameters with defaults).
 - Pass `CancellationToken.None` as the `cancellationToken` argument.

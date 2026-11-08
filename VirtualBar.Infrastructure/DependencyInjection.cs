@@ -8,7 +8,6 @@ using VirtualBar.Application.Interfaces;
 using VirtualBar.Domain.Entities;
 using VirtualBar.Application.Options;
 using VirtualBar.Infrastructure.Decorators;
-using VirtualBar.Infrastructure.Options;
 using VirtualBar.Infrastructure.Persistence;
 using VirtualBar.Infrastructure.Services;
 using VirtualBar.Infrastructure.Services.Pricing;
@@ -76,10 +75,7 @@ public static class DependencyInjection
             sp.GetRequiredService<AppDbContext>(),
             sp.GetRequiredService<ICurrentUser>()));
 
-        services.Configure<ProductLookupOptions>(
-            configuration.GetSection(ProductLookupOptions.SectionName));
-
-        services.AddHttpClient<ProductLookupService>();
+        services.AddScoped<ProductLookupService>();
         services.AddScoped<IProductLookupService>(sp =>
             new ProductValidationDecorator(
                 sp.GetRequiredService<ProductLookupService>(),

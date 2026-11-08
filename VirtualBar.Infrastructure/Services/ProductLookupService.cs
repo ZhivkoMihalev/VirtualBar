@@ -1,24 +1,30 @@
-using System.Globalization;
-using System.Text.Json;
-using System.Text.RegularExpressions;
-using Microsoft.AspNetCore.Hosting;
+using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
 using VirtualBar.Application.Common;
 using VirtualBar.Application.DTOs.Products;
 using VirtualBar.Application.Interfaces;
-using VirtualBar.Infrastructure.Options;
+using VirtualBar.Domain.Entities;
 using VirtualBar.Infrastructure.Persistence;
 
 namespace VirtualBar.Infrastructure.Services;
 
-public sealed class ProductLookupService(
-    AppDbContext db,
-    HttpClient http,
-    IWebHostEnvironment env,
-    IOptions<ProductLookupOptions> options) : IProductLookupService
+/// <summary>
+/// Answers a barcode from the platform's own data only (#49): the catalog product's own barcode first, then the
+/// barcodes collectors gave a product. There is no external barcode database any more: UPCitemdb answered with data
+/// unfit to fill the add form (the owner dropped it on 2026-11-08).
+/// </summary>
+public sealed class ProductLookupService(AppDbContext db) : IProductLookupService
 {
-    private static readonly JsonSerializerOptions JsonOpts = new() { PropertyNameCaseInsensitive = true };
+    // Brand falls back to the non-deleted distillery name, exactly as the catalog search does.
+    private static readonly Expression<Func<Product, BarcodeProductDto>> ToDto = p => new BarcodeProductDto
+    {
+        ProductId = p.Id,
+        Name = p.Name,
+        Brand = p.Brand ?? (p.Distillery != null && !p.Distillery.IsDeleted ? p.Distillery.Name : null),
+        ImageUrl = p.ImageUrl,
+        VolumeMl = p.VolumeMl,
+        AbvPercent = p.AbvPercent,
+    };
 
     public async Task<Result<BarcodeProductDto>> LookupByBarcodeAsync(string barcode, CancellationToken cancellationToken)
     {
@@ -27,115 +33,25 @@ public sealed class ProductLookupService(
             .Where(p => !p.IsDeleted && p.Barcode == barcode)
             .OrderBy(p => p.CreatedAt)
             .ThenBy(p => p.Id)
-            .Select(p => new BarcodeProductDto
-            {
-                ProductId = p.Id,
-                Name = p.Name,
-                Brand = p.Brand ?? (p.Distillery != null && !p.Distillery.IsDeleted ? p.Distillery.Name : null),
-                ImageUrl = p.ImageUrl,
-                VolumeMl = p.VolumeMl,
-                AbvPercent = p.AbvPercent,
-            })
+            .Select(ToDto)
             .FirstOrDefaultAsync(cancellationToken);
 
         if (product is not null)
             return Result<BarcodeProductDto>.Ok(product);
 
-        var url = $"{options.Value.LookupUrl}?upc={Uri.EscapeDataString(barcode)}";
-        var response = await http.GetAsync(url, cancellationToken);
+        // The first collector's link wins; several products for one barcode are rare (a mistaken scan).
+        var linked = await db.ProductBarcodes
+            .AsNoTracking()
+            .Where(b => !b.IsDeleted && b.Barcode == barcode && !b.Product.IsDeleted)
+            .OrderBy(b => b.CreatedAt)
+            .ThenBy(b => b.Id)
+            .Select(b => b.Product)
+            .Select(ToDto)
+            .FirstOrDefaultAsync(cancellationToken);
 
-        if (!response.IsSuccessStatusCode)
-            return Result<BarcodeProductDto>.NotFound("Product not found.");
+        if (linked is not null)
+            return Result<BarcodeProductDto>.Ok(linked);
 
-        var json = await response.Content.ReadAsStringAsync(cancellationToken);
-        var data = JsonSerializer.Deserialize<UpcResponse>(json, JsonOpts);
-
-        if (data?.Items is null || data.Items.Length == 0)
-            return Result<BarcodeProductDto>.NotFound("Product not found.");
-
-        var item = data.Items[0];
-        string? localImageUrl = null;
-
-        if (item.Images?.Length > 0)
-        {
-            try
-            {
-                var remoteUrl = item.Images[0];
-                var imageBytes = await http.GetByteArrayAsync(remoteUrl, cancellationToken);
-
-                var uploadsDir = Path.Combine(
-                    env.WebRootPath ?? Path.Combine(env.ContentRootPath, "wwwroot"),
-                    "uploads", "bottles");
-                Directory.CreateDirectory(uploadsDir);
-
-                var ext = Path.GetExtension(new Uri(remoteUrl).LocalPath).ToLowerInvariant();
-                if (string.IsNullOrWhiteSpace(ext) || ext.Length > 5) ext = ".jpg";
-
-                var filename = $"{Guid.NewGuid()}{ext}";
-                await File.WriteAllBytesAsync(Path.Combine(uploadsDir, filename), imageBytes, cancellationToken);
-                localImageUrl = $"/uploads/bottles/{filename}";
-            }
-            catch
-            {
-                // Image download failed — proceed without image
-            }
-        }
-
-        return Result<BarcodeProductDto>.Ok(new BarcodeProductDto
-        {
-            Name = item.Title ?? string.Empty,
-            Brand = item.Brand,
-            ImageUrl = localImageUrl,
-            VolumeMl = ParseVolumeMl(item.Size),
-            AbvPercent = ParseAbv(item.Title, item.Description),
-        });
+        return Result<BarcodeProductDto>.NotFound("Product not found.");
     }
-
-    private static int? ParseVolumeMl(string? size)
-    {
-        if (string.IsNullOrWhiteSpace(size)) return null;
-
-        var m = Regex.Match(size.Trim(), @"(\d+(?:[.,]\d+)?)\s*(ml|cl|l)\b", RegexOptions.IgnoreCase);
-
-        if (!m.Success) 
-            return null;
-
-        var raw = m.Groups[1].Value.Replace(',', '.');
-
-        if (!double.TryParse(raw, NumberStyles.Float, CultureInfo.InvariantCulture, out var value))
-            return null;
-
-        return m.Groups[2].Value.ToLowerInvariant() switch
-        {
-            "ml" => (int)Math.Round(value),
-            "cl" => (int)Math.Round(value * 10),
-            "l"  => (int)Math.Round(value * 1000),
-            _    => null,
-        };
-    }
-
-    private static double? ParseAbv(string? title, string? description)
-    {
-        var text = $"{title} {description}";
-        // Matches: "40%", "40% ABV", "40.5% vol", "40% alc/vol"
-        var m = Regex.Match(text, @"(\d+(?:[.,]\d+)?)\s*%\s*(?:abv|vol|alc)?", RegexOptions.IgnoreCase);
-        if (!m.Success) return null;
-
-        var raw = m.Groups[1].Value.Replace(',', '.');
-        if (!double.TryParse(raw, NumberStyles.Float, CultureInfo.InvariantCulture, out var value))
-            return null;
-
-        // Sanity check: spirits are 5–96% ABV
-        if (value < 5 || value > 96) return null;
-        return Math.Round(value, 1);
-    }
-
-    private sealed record UpcResponse(string Code, UpcItem[] Items);
-
-    private sealed record UpcItem(
-        string? Title,
-        string? Brand,
-        string? Description,
-        string? Size,
-        string[]? Images);
 }

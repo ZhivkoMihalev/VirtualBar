@@ -3,9 +3,9 @@ namespace VirtualBar.Application.DTOs.Products;
 public sealed class BarcodeProductDto
 {
     /// <summary>
-    /// Set only when the barcode resolved against the local catalog (L0), so the add form can link the product.
+    /// The catalog product the barcode belongs to, so the add form can link it. Every answer is a catalog product (#49).
     /// </summary>
-    public Guid? ProductId { get; set; }
+    public Guid ProductId { get; set; }
 
     public string Name { get; set; } = string.Empty;
 

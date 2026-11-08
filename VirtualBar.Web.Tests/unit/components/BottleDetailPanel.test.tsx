@@ -1,6 +1,7 @@
 import { screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { getBottleComments } from '@/api/bottlesApi'
+import { getBottleComments, updateBottle } from '@/api/bottlesApi'
 import { getNotifications } from '@/api/notificationsApi'
 import { getBottleEstimate } from '@/api/pricesApi'
 import { getReviews } from '@/api/reviewsApi'
@@ -67,5 +68,20 @@ describe('BottleDetailPanel', () => {
     expect(await screen.findByRole('heading', { name: 'Lagavulin 16' })).toBeInTheDocument()
     expect(screen.queryByText(bg.bottle.askingPrice)).not.toBeInTheDocument()
     expect(screen.queryByRole('link', { name: bg.bottle.loginToSeePrice })).not.toBeInTheDocument()
+  })
+
+  /** A quantity-only change echoes the whole bottle, its barcode too, or the update would clear it (#49). */
+  it('keeps the barcode when the owner changes the quantity', async () => {
+    signInCollector()
+    const owned = bottle({ userId: signedInUser.id, quantity: 2, barcode: '5000267014203' })
+    vi.mocked(updateBottle).mockResolvedValue({ ...owned, quantity: 3 })
+    renderPanel(owned, signedInUser.id)
+
+    await userEvent.click(await screen.findByRole('button', { name: bg.addBottle.quantityIncrease }))
+
+    expect(updateBottle).toHaveBeenCalledWith(
+      owned.id,
+      expect.objectContaining({ quantity: 3, barcode: '5000267014203' }),
+    )
   })
 })

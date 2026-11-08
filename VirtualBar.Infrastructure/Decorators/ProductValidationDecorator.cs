@@ -17,6 +17,9 @@ public sealed class ProductValidationDecorator(
         if (string.IsNullOrWhiteSpace(barcode))
             return Result<BarcodeProductDto>.Fail("Barcode is required.");
 
+        if (!BarcodeFormat.IsValid(barcode))
+            return Result<BarcodeProductDto>.Fail("Barcode must be 8 to 14 digits.");
+
         var normalized = barcode.Trim();
 
         try

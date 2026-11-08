@@ -30,6 +30,8 @@ public sealed class BottleDto
 
     public int? VolumeMl { get; set; }
 
+    public string? Barcode { get; set; }
+
     public BottleCondition Condition { get; set; }
 
     public int Quantity { get; set; } = 1;

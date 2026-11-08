@@ -1,6 +1,33 @@
 # Barcode / Label Scanning (Баркод и етикет сканиране) — OVERVIEW & SHARED CONTEXT
 
-> **Status:** planned, not built yet (#49). The barcode lookup that exists today (the catalog first, then the UPC API) is described in `.claude/rules/domain/catalog.md`.
+> **Status:** in progress (#49). Slice 1 of the new order below is built; the code is described in
+> `.claude/rules/domain/catalog.md` (Barcodes, `ProductBarcode`) and `.claude/rules/domain/bottles.md` (Barcode). Where
+> this spec and those rules differ, the rules win. Read the owner decisions below first: they replace parts of the spec.
+
+## Owner decisions, 2026-11-08 (they replace the sections below where they differ)
+- **No external barcode database.** A test of UPCitemdb with a real EAN (Johnnie Walker Red Label 70 cl,
+  5000267014203) answered with a listing of an *empty* bottle as the name, no volume, no ABV, a generic category and an
+  image from 2016. Its free plan also allows about 100 requests a day for the whole server. The lookup, its settings and
+  its image download were removed, so L2 is gone. Another external source may be considered later, on its own.
+- **Harvesting barcodes in bulk** from an external API (searching each catalog product by name) was rejected: name
+  search returns store listings that pair the wrong products, and the data is not fit to keep.
+- **The platform's own barcode database:** a `ProductBarcodes` table (product, barcode, the collector who added it).
+  A product can have several barcodes (with or without a gift box, other markets, a new label). It fills when a
+  collector saves a bottle linked to a product with a barcode.
+- **The flow:** scan → our own data (the product's own barcode, then the collectors') → on a miss the collector picks
+  the bottle from the catalog, and saving records the pair → if the catalog lacks it too, the product request carries
+  the barcode and the approved product gets it.
+- **Existing bottles** get a barcode only from their owner (scanning an added bottle, slice 2): it cannot be derived
+  from a name, and no bulk update of existing rows is made.
+- **No cache:** the lookup is one indexed query, and its data changes every time a collector saves.
+- **New slice order, one PR each:**
+  1. Data: `ProductBarcodes`, the bottle keeps its barcode (spec 01), the request carries it, the lookup answers from
+     our own data only, UPCitemdb removed. **Built.**
+  2. Camera: scanning in the add form (spec 04, barcode part); on a miss, pick the product from the catalog; scanning a
+     bottle already added.
+  3. Quality: the lookup also over other collectors' bottles (spec 02 without its external leg), a pair confirmed by
+     two collectors, an admin removes a wrong pair; the index on the bottles' barcode, its only reader.
+  4. Label photo (spec 03), later.
 
 > **Read this first, before any slice.** Single source of truth for the decisions, the architecture,
 > the conventions, and the risks. Each `NN-*.md` slice assumes you read this. Format mirrors

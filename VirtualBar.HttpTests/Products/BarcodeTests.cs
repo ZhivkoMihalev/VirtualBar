@@ -22,8 +22,8 @@ public sealed class BarcodeTests(ApiHosts hosts)
     {
         var barcode = NewBarcode();
         var productId = await SeedProductAsync(CollectorApi.UniqueName("barcode product"));
-        var owner = await Collector.RegisterAsync(Api, "barcode owner");
-        var other = await Collector.RegisterAsync(Api, "barcode lookup");
+        var owner = await Collector.RegisterAsync(Api, "barcode-owner");
+        var other = await Collector.RegisterAsync(Api, "barcode-lookup");
 
         var added = await owner.Client.PostAsJsonAsync("/api/bottles", new
         {
@@ -45,7 +45,7 @@ public sealed class BarcodeTests(ApiHosts hosts)
     [SqlServerFact]
     public async Task AddBottle_WhenBarcodeIsNotEightToFourteenDigits_Returns400()
     {
-        var collector = await Collector.RegisterAsync(Api, "bad barcode");
+        var collector = await Collector.RegisterAsync(Api, "bad-barcode");
 
         var response = await collector.Client.PostAsJsonAsync("/api/bottles", new
         {
@@ -60,7 +60,7 @@ public sealed class BarcodeTests(ApiHosts hosts)
     [SqlServerFact]
     public async Task LookupBarcode_WhenNobodyHasTheBarcode_Returns404()
     {
-        var collector = await Collector.RegisterAsync(Api, "unknown barcode");
+        var collector = await Collector.RegisterAsync(Api, "unknown-barcode");
 
         var response = await collector.Client.GetAsync($"/api/products/barcode/{NewBarcode()}");
 
@@ -70,7 +70,7 @@ public sealed class BarcodeTests(ApiHosts hosts)
     [SqlServerFact]
     public async Task LookupBarcode_WhenNotEightToFourteenDigits_Returns400()
     {
-        var collector = await Collector.RegisterAsync(Api, "invalid barcode");
+        var collector = await Collector.RegisterAsync(Api, "invalid-barcode");
 
         var response = await collector.Client.GetAsync("/api/products/barcode/1234567");
 

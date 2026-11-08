@@ -8,6 +8,7 @@ import {
   bg,
   createBottle,
   expect,
+  fill,
   FLOW_TIMEOUT,
   registerCollector,
   signInContext,
@@ -83,7 +84,8 @@ test.describe('Barcode scan', () => {
     await withCameraShowing(playwright, baseURL, scanner, barcode, async page => {
       await openAddFormAndScan(page)
 
-      await expect(page.getByText(bg.addBottle.barcodeSuccess)).toBeVisible()
+      // The owner gave the barcode to the product, so one collector backs the answer (#49, slice 3).
+      await expect(page.getByText(fill(bg.addBottle.barcodeFromCollectors_one, { count: 1 }))).toBeVisible()
       await expect(page.getByLabel(bg.addBottle.barcodeLookup)).toHaveValue(barcode)
       await expect(page.getByText(bg.products.linkedChip)).toBeVisible()
       await expect(page.getByLabel(bg.addBottle.name, { exact: true })).toHaveValue(product.name)

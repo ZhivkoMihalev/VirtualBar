@@ -61,6 +61,7 @@ paths:
 - Set by explicit pick or exact-`CanonicalKey` auto-link in `AddBottleAsync`.
 - `UpdateBottleAsync` assigns it blindly from the request (null = unlink — clients must echo the current value).
 - The bottle's own fields remain the display truth.
+- On add, a bottle linked to a vintage-dated product (explicit pick or auto-link) takes the product's `VintageYear` when the request gives none; a different year from the collector is kept (#59). The add form shows a warning then (`VintageMismatch`), offering the matching vintage of the line or "Request vintage <year>", which unlinks the bottle and renames it so saving files the request.
 
 ### DisplayOrder
 - A user's bottles are listed in this order.

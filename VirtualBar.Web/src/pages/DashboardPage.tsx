@@ -22,6 +22,8 @@ import { CATEGORY_COLORS } from '../lib/bottlePalette'
 import BottleDetailPanel from '../components/BottleDetailPanel'
 import DistillerySelect from '../components/DistillerySelect'
 import ProductSelect from '../components/ProductSelect'
+import VintageMismatch from '../components/VintageMismatch'
+import { isYear, latestYear } from '../lib/productYears'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -57,6 +59,7 @@ const makeSchema = (t: TFn) =>
     age: z.string(),
     abv: z.string(),
     volume: z.string(),
+    vintage: z.string().refine(v => v.trim() === '' || isYear(v.trim()), t('addBottle.vintageRange', { max: latestYear() })),
     isLimited: z.boolean(),
     description: z.string(),
   })
@@ -105,6 +108,7 @@ function AddBottlePanel({ onSuccess }: { onSuccess: () => void }) {
       age: '',
       abv: '',
       volume: '',
+      vintage: '',
       isLimited: false,
       description: '',
     },
@@ -115,6 +119,9 @@ function AddBottlePanel({ onSuccess }: { onSuccess: () => void }) {
   const condition = useWatch({ control: form.control, name: 'condition' })
   const age = useWatch({ control: form.control, name: 'age' })
   const volume = useWatch({ control: form.control, name: 'volume' })
+  const vintage = useWatch({ control: form.control, name: 'vintage' })
+  // The name a "request vintage" gave the bottle (#59): saving it unlinked files the request.
+  const [requestedName, setRequestedName] = useState<string | null>(null)
 
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [imagePreview, setImagePreview] = useState<string | null>(null)
@@ -171,6 +178,8 @@ function AddBottlePanel({ onSuccess }: { onSuccess: () => void }) {
     form.setValue('age', pickedAge)
     form.setValue('abv', product.abvPercent != null ? String(product.abvPercent) : '')
     form.setValue('volume', pickedVolume)
+    // A vintage product is one year of distillation (#59); a product without one leaves the field as it is.
+    if (product.vintageYear != null) form.setValue('vintage', String(product.vintageYear), { shouldValidate: true })
 
     setLinkedProduct(product)
     setLinkedIdentity(identityKey(product.name, product.category, pickedAge, pickedVolume))
@@ -257,6 +266,7 @@ function AddBottlePanel({ onSuccess }: { onSuccess: () => void }) {
       quantity: v.quantity,
       isLimited: v.isLimited,
       age: v.age ? Number(v.age) : undefined,
+      vintageYear: v.vintage.trim() ? Number(v.vintage.trim()) : undefined,
       abvPercent: v.abv ? Number(v.abv) : undefined,
       volumeMl: v.volume ? Number(v.volume) : undefined,
       description: v.description.trim() || undefined,
@@ -446,7 +456,7 @@ function AddBottlePanel({ onSuccess }: { onSuccess: () => void }) {
             )}
           />
 
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-2 gap-3">
             <FormField
               control={form.control}
               name="age"
@@ -486,7 +496,38 @@ function AddBottlePanel({ onSuccess }: { onSuccess: () => void }) {
                 </FormItem>
               )}
             />
+            <FormField
+              control={form.control}
+              name="vintage"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{t('addBottle.vintage')}</FormLabel>
+                  <FormControl>
+                    <Input inputMode="numeric" maxLength={4} placeholder="1988" className="h-9" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
           </div>
+
+          {activeProduct?.vintageYear != null && isYear(vintage.trim()) && Number(vintage.trim()) !== activeProduct.vintageYear && (
+            <VintageMismatch
+              product={{ id: activeProduct.id, name: activeProduct.name, vintageYear: activeProduct.vintageYear }}
+              year={Number(vintage.trim())}
+              onLink={handleProductPick}
+              onRequest={newName => {
+                clearProductLink()
+                form.setValue('name', newName, { shouldValidate: true })
+                setRequestedName(newName)
+              }}
+            />
+          )}
+          {requestedName !== null && !activeProduct && name.trim() === requestedName && (
+            <p role="status" className="rounded-md border border-border bg-muted/40 px-3 py-2 text-sm text-muted-foreground">
+              {t('addBottle.vintageRequested', { name: requestedName })}
+            </p>
+          )}
 
           <FormField
             control={form.control}

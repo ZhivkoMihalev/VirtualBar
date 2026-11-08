@@ -16,6 +16,12 @@ public sealed class CreateProductRequestRequest
 
     public int? Age { get; set; }
 
+    /// <summary>The year of distillation, for a vintage-dated product (#59). 1800 to next year, in the name, not with <see cref="ReleaseYear"/>.</summary>
+    public int? VintageYear { get; set; }
+
+    /// <summary>The year of a yearly edition (#59). 1800 to next year, in the name, not with <see cref="VintageYear"/>.</summary>
+    public int? ReleaseYear { get; set; }
+
     public double? AbvPercent { get; set; }
 
     public int? VolumeMl { get; set; }

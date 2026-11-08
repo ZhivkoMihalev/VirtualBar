@@ -163,6 +163,7 @@ A user's request to add a missing product to the catalog.
 |---|---|---|
 | `UserId` | `Guid` | FK → AppUser (requester, `DeleteBehavior.Restrict`) |
 | `Name`, `Brand?`, `DistilleryId?`, `Category`, `Age?`, `AbvPercent?`, `VolumeMl?`, `Barcode?`, `Country?`, `Region?` | | Proposed fields mirroring `Product` |
+| `VintageYear`, `ReleaseYear` | `int?` | Requested year (#59): at most one, 1800 to next year, shown in the name (`ProductYears.Problem`); check constraint `CK_ProductRequests_OneYearKind` |
 | `UserNote` | `string?` | ≤ 500 chars (`Brand` ≤ 200) |
 | `CanonicalKey` | `string` | **Filtered unique index** `WHERE [Status] = 0 AND [IsDeleted] = 0` — one pending request per key, globally |
 | `Status` | `ProductRequestStatus` | `Pending` / `Approved` / `Rejected` (append-only — withdraw is a soft-delete, no `Withdrawn` member) |
@@ -176,6 +177,7 @@ A user's request to add a missing product to the catalog.
   same key) are a friendly fast path; `ProductRequestService` maps the `DbUpdateException` race loser to `Conflict` (on
   create AND on the approve-time product insert).
 - Per-user cap: **25 open requests**.
+- **Years (#59):** create and approve check the effective years with `ProductYears.Problem`. An approval override of either year replaces the request's two together (`ProductYears.Effective`), and the new product gets them. A bottle added unlinked files its request with its `VintageYear` when its name shows that year.
 - Sanity bounds (create + approve effective values): barcode digits-only 8–14, age 1–100, ABV 1–96, volume 20–6000.
   Approve additionally validates the effective `Category` (enum-defined) and effective `DistilleryId` (exists
   non-deleted).

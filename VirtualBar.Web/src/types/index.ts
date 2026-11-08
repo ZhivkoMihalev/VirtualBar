@@ -295,6 +295,10 @@ export interface Product {
   country: string | null
   region: string | null
   age: number | null
+  /** The year of distillation of a vintage-dated product (#59); sent by the search and the product page. */
+  vintageYear?: number | null
+  /** The year of a yearly edition (#59); never set together with `vintageYear`. */
+  releaseYear?: number | null
   abvPercent: number | null
   volumeMl: number | null
   barcode: string | null
@@ -387,6 +391,8 @@ export interface LinkedProduct {
   imageUrl: string | null
   country?: string | null
   region?: string | null
+  /** A catalog pick's vintage (#59); a barcode hit does not know it (the API still fills the bottle's from it). */
+  vintageYear?: number | null
 }
 
 export type ProductRequestStatus = 'Pending' | 'Approved' | 'Rejected'
@@ -399,6 +405,10 @@ export interface ProductRequest {
   distilleryName?: string | null
   category: SpiritCategory
   age?: number | null
+  /** The requested year of distillation (#59). */
+  vintageYear?: number | null
+  /** The requested year of a yearly edition (#59). */
+  releaseYear?: number | null
   abvPercent?: number | null
   volumeMl?: number | null
   barcode?: string | null

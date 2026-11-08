@@ -614,6 +614,23 @@ public sealed class ProductCatalogServiceTests
 
     #endregion
 
+    [Fact]
+    public async Task SearchAsync_ReturnsEachProductsYears()
+    {
+        var db = CreateDbContext();
+        SeedProduct(db, name: "Millésime 1988", vintageYear: 1988);
+        SeedProduct(db, name: "Millésime Edition 2021", releaseYear: 2021);
+        SeedProduct(db, name: "Millésime VSOP");
+        var service = CreateService(db);
+
+        var result = await service.SearchAsync("Millésime", null, 20, CancellationToken.None);
+
+        var years = result.Data!.ToDictionary(p => p.Name, p => (p.VintageYear, p.ReleaseYear));
+        Assert.Equal((1988, (int?)null), years["Millésime 1988"]);
+        Assert.Equal(((int?)null, 2021), years["Millésime Edition 2021"]);
+        Assert.Equal(((int?)null, (int?)null), years["Millésime VSOP"]);
+    }
+
     #region BrowseAsync — decorator guards
 
     [Fact]

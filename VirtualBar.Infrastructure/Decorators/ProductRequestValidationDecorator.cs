@@ -43,6 +43,9 @@ public sealed class ProductRequestValidationDecorator(
         if (request.UserNote is { Length: > 500 })
             return Result<ProductRequestDto>.Fail("Note must be 500 characters or fewer.");
 
+        if (ProductYears.Problem(request.Name, request.VintageYear, request.ReleaseYear) is string yearProblem)
+            return Result<ProductRequestDto>.Fail(yearProblem);
+
         string? distilleryName = null;
 
         if (request.DistilleryId is Guid distilleryId)
@@ -189,6 +192,12 @@ public sealed class ProductRequestValidationDecorator(
 
             if (volumeMl is < 20 or > 6000)
                 return Result<ProductRequestDto>.Fail("Volume must be between 20 and 6000 millilitres.");
+
+            var (vintageYear, releaseYear) = ProductYears.Effective(
+                request.VintageYear, request.ReleaseYear, entity.VintageYear, entity.ReleaseYear);
+
+            if (ProductYears.Problem(name, vintageYear, releaseYear) is string yearProblem)
+                return Result<ProductRequestDto>.Fail(yearProblem);
 
             if (distilleryId is Guid effectiveDistilleryId)
             {

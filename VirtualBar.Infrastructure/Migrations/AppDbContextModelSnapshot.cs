@@ -903,6 +903,46 @@ namespace VirtualBar.Infrastructure.Migrations
                         });
                 });
 
+            modelBuilder.Entity("VirtualBar.Domain.Entities.ProductBarcode", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("AddedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Barcode")
+                        .IsRequired()
+                        .HasMaxLength(14)
+                        .HasColumnType("nvarchar(14)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<Guid>("ProductId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AddedByUserId");
+
+                    b.HasIndex("ProductId");
+
+                    b.HasIndex("Barcode", "ProductId");
+
+                    b.ToTable("ProductBarcodes");
+                });
+
             modelBuilder.Entity("VirtualBar.Domain.Entities.ProductRequest", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1349,6 +1389,25 @@ namespace VirtualBar.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("Distillery");
+                });
+
+            modelBuilder.Entity("VirtualBar.Domain.Entities.ProductBarcode", b =>
+                {
+                    b.HasOne("VirtualBar.Domain.Entities.AppUser", "AddedByUser")
+                        .WithMany()
+                        .HasForeignKey("AddedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("VirtualBar.Domain.Entities.Product", "Product")
+                        .WithMany()
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("AddedByUser");
+
+                    b.Navigation("Product");
                 });
 
             modelBuilder.Entity("VirtualBar.Domain.Entities.ProductRequest", b =>

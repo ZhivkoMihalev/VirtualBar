@@ -31,7 +31,7 @@ paths:
 | `AskingPrice` | `decimal?` | `decimal(18,2)` |
 | `Currency` | `string?` | `EUR`, `GBP` or `USD`, stored upper-case (`.claude/rules/domain/currencies.md`) |
 | `ForSaleAt` | `DateTime?` | When the bottle was listed for sale (set by `ListForSaleAsync`, cleared by `UnlistFromSaleAsync`) |
-| `Barcode` | `string?` | Scanned/known EAN-UPC; sharpens canonical price-estimate matching (Collection Value) |
+| `Barcode` | `string?` | The EAN/UPC on the bottle, 8–14 digits — see below |
 | `ProductId` | `Guid?` | FK → Product (nullable) — catalog link; see below |
 | `DisplayOrder` | `int` | The bottle's place on its owner's shelf — see below |
 
@@ -61,7 +61,21 @@ paths:
 - Set by explicit pick or exact-`CanonicalKey` auto-link in `AddBottleAsync`.
 - `UpdateBottleAsync` assigns it blindly from the request (null = unlink — clients must echo the current value).
 - The bottle's own fields remain the display truth.
-- On add, a bottle linked to a vintage-dated product (explicit pick or auto-link) takes the product's `VintageYear` when the request gives none; a different year from the collector is kept (#59). The add form shows a warning then (`VintageMismatch`), offering the matching vintage of the line or "Request vintage <year>", which unlinks the bottle and renames it so saving files the request.
+- On add, a bottle linked to a vintage-dated product (explicit pick or auto-link) takes the product's `VintageYear` when
+  the request gives none; a different year from the collector is kept (#59).
+  - The add form shows a warning then (`VintageMismatch`), offering the matching vintage of the line or
+    "Request vintage <year>", which unlinks the bottle and renames it so saving files the request.
+
+### Barcode (#49)
+- Set on add and assigned on update from the request (`AddBottleRequest`/`UpdateBottleRequest.Barcode`), trimmed, blank
+  → null (`BarcodeFormat.Normalize`); `BottleDto` returns it.
+- Update assigns it like every other field: null clears it, so a client echoes the current value (the bottle panel's
+  quantity change does).
+- Not 8–14 digits → `400` from `BottleValidationDecorator` (`BarcodeFormat.IsValid`). The add form therefore sends only
+  a valid one (`toBarcode` in `src/lib/barcode.ts`): a mistyped barcode never blocks adding the bottle.
+- A linked bottle with a barcode records it for its product (`ProductBarcode`, `.claude/rules/domain/catalog.md`), and
+  an unlinked one's product request carries it.
+- Pricing uses it when the bottle's product has none (`.claude/rules/domain/pricing.md`).
 
 ### DisplayOrder
 - A user's bottles are listed in this order.
@@ -92,11 +106,12 @@ paths:
   - `search` (trimmed, blank = none) matches the bottle name or its distillery's name; `category` filters.
   - `sort` is `price_asc`, `price_desc` or `newest`; any other value, or none, is `newest` (`CreatedAt` ↓).
 - `POST /api/bottles` — add (`AddBottleRequest`) → `201` with the bottle.
-  - `400` blank name, quantity outside 1–99, or an unknown or deleted product (`Selected product does not exist.`).
+  - `400` blank name, quantity outside 1–99, a barcode that is not 8–14 digits, or an unknown or deleted product
+    (`Selected product does not exist.`).
   - `404` unknown or deleted distillery.
 - `PUT /api/bottles/{id}` — update (`UpdateBottleRequest`, every field echoed, see ProductId above).
-  - `400` blank name, quantity outside 1–99, or an unknown product; `404` missing bottle or unknown distillery;
-    `403` another collector's.
+  - `400` blank name, quantity outside 1–99, a barcode that is not 8–14 digits, or an unknown product; `404` missing
+    bottle or unknown distillery; `403` another collector's.
   - `409` a quantity below `ForSaleQuantity`.
 - `POST /api/bottles/{id}/list-for-sale` — list (`ListForSaleRequest`: price, currency, quantity).
   - `404` missing; `403` another collector's; `409` already listed.
@@ -134,6 +149,8 @@ Composite PK: `(BottleId, UserId)`. No `BaseEntity`.
 Bottle code also does work that other rule files describe:
 - `BottleService.AddBottleAsync` links the bottle to the catalog (`.claude/rules/domain/catalog.md`, Add-bottle resolution
   order), notifies followers (`NewBottleFromFollowing`) and evaluates badges (`BottleAdded`).
+- `AddBottleAsync` and `UpdateBottleAsync` record a linked bottle's barcode for its product (`ProductBarcode`,
+  `.claude/rules/domain/catalog.md`).
 - `BottleService.ListForSaleAsync` notifies followers (`BottleListedForSale`), matches wish lists and notifies their
   owners (`WishListMatch`, `.claude/rules/domain/wish-list.md`) and evaluates badges (`BottleListed`).
 - `BottleLikeService.LikeAsync` sends `BottleLiked` and evaluates the owner's badges (`LikeReceived`);

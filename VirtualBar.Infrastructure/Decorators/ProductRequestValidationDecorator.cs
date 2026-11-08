@@ -25,7 +25,7 @@ public sealed class ProductRequestValidationDecorator(
         if (!Enum.IsDefined(request.Category))
             return Result<ProductRequestDto>.Fail("Category is invalid.");
 
-        if (!string.IsNullOrWhiteSpace(request.Barcode) && !IsValidBarcode(request.Barcode))
+        if (!string.IsNullOrWhiteSpace(request.Barcode) && !BarcodeFormat.IsValid(request.Barcode))
             return Result<ProductRequestDto>.Fail("Invalid barcode.");
 
         if (request.Age is < 1 or > 100)
@@ -181,7 +181,7 @@ public sealed class ProductRequestValidationDecorator(
             if (!Enum.IsDefined(category))
                 return Result<ProductRequestDto>.Fail("Category is invalid.");
 
-            if (!string.IsNullOrWhiteSpace(barcode) && !IsValidBarcode(barcode))
+            if (!string.IsNullOrWhiteSpace(barcode) && !BarcodeFormat.IsValid(barcode))
                 return Result<ProductRequestDto>.Fail("Invalid barcode.");
 
             if (age is < 1 or > 100)
@@ -229,12 +229,5 @@ public sealed class ProductRequestValidationDecorator(
             return Result<ProductRequestDto>.Conflict("Request already resolved.");
 
         return await inner.RejectAsync(requestId, request, cancellationToken);
-    }
-
-    private static bool IsValidBarcode(string barcode)
-    {
-        var trimmed = barcode.Trim();
-
-        return trimmed.Length is >= 8 and <= 14 && trimmed.All(char.IsAsciiDigit);
     }
 }

@@ -42,6 +42,8 @@ export interface Bottle {
   vintageYear?: number
   abvPercent?: number
   volumeMl?: number
+  /** The EAN/UPC on the bottle (#49), 8 to 14 digits. */
+  barcode?: string | null
   condition: BottleCondition
   quantity: number
   description?: string
@@ -255,6 +257,8 @@ export interface AddBottlePayload {
   vintageYear?: number
   abvPercent?: number
   volumeMl?: number
+  /** 8 to 14 digits (#49); anything else is refused, so the form sends only a valid one (`toBarcode`). */
+  barcode?: string | null
   condition: BottleCondition
   quantity: number
   description?: string
@@ -271,8 +275,9 @@ export interface MarketplaceFilters {
   sort?: 'price_asc' | 'price_desc' | 'newest'
 }
 
+/** The catalog product of a barcode (#49): the API answers only from the platform's own data, so always a product. */
 export interface BarcodeProduct {
-  productId?: string | null
+  productId: string
   name: string
   brand?: string
   imageUrl?: string

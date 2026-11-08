@@ -14,6 +14,8 @@ public sealed class BottleValidationDecorator(
 {
     private const int MaxQuantity = 99;
 
+    private const string InvalidBarcode = "Barcode must be 8 to 14 digits.";
+
     public async Task<Result<List<BottleDto>>> GetBottlesByUserAsync(Guid userId, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
@@ -40,6 +42,9 @@ public sealed class BottleValidationDecorator(
 
         if (request.Quantity is < 1 or > MaxQuantity)
             return Result<BottleDto>.Fail($"Quantity must be between 1 and {MaxQuantity}.");
+
+        if (!string.IsNullOrWhiteSpace(request.Barcode) && !BarcodeFormat.IsValid(request.Barcode))
+            return Result<BottleDto>.Fail(InvalidBarcode);
 
         if (request.DistilleryId is Guid distilleryId)
         {
@@ -69,6 +74,9 @@ public sealed class BottleValidationDecorator(
 
         if (request.Quantity is < 1 or > MaxQuantity)
             return Result<BottleDto>.Fail($"Quantity must be between 1 and {MaxQuantity}.");
+
+        if (!string.IsNullOrWhiteSpace(request.Barcode) && !BarcodeFormat.IsValid(request.Barcode))
+            return Result<BottleDto>.Fail(InvalidBarcode);
 
         var bottle = await db.Bottles.FirstOrDefaultAsync(b => b.Id == bottleId && !b.IsDeleted, cancellationToken);
         if (bottle is null)

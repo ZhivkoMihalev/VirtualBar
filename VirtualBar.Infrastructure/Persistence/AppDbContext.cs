@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using VirtualBar.Application.Common;
 using VirtualBar.Domain.Entities;
 using VirtualBar.Infrastructure.Persistence.Conversions;
 
@@ -28,6 +29,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
     public DbSet<UserBadge> UserBadges => Set<UserBadge>();
     public DbSet<Product> Products => Set<Product>();
     public DbSet<ProductRequest> ProductRequests => Set<ProductRequest>();
+    public DbSet<ProductBarcode> ProductBarcodes => Set<ProductBarcode>();
 
     protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
     {
@@ -265,6 +267,26 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
             // A year is either the vintage or the edition, never both (#59).
             e.ToTable(t => t.HasCheckConstraint(
                 "CK_Products_OneYearKind", "[VintageYear] IS NULL OR [ReleaseYear] IS NULL"));
+        });
+
+        builder.Entity<ProductBarcode>(e =>
+        {
+            e.Property(b => b.Barcode)
+                .HasMaxLength(BarcodeFormat.MaxLength);
+
+            // Not unique: two collectors linking the same new pair at the same moment both get a row, which a lookup
+            // tolerates (the oldest wins), while a unique index would fail one of the two bottle saves.
+            e.HasIndex(b => new { b.Barcode, b.ProductId });
+
+            e.HasOne(b => b.Product)
+                .WithMany()
+                .HasForeignKey(b => b.ProductId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            e.HasOne(b => b.AddedByUser)
+                .WithMany()
+                .HasForeignKey(b => b.AddedByUserId)
+                .OnDelete(DeleteBehavior.Restrict);
         });
 
         builder.Entity<ProductRequest>(e =>

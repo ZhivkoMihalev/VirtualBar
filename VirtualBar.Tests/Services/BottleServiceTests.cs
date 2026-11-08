@@ -2427,4 +2427,309 @@ public sealed class BottleServiceTests
     }
 
     #endregion
+
+    #region Barcode (#49)
+
+    private const string Barcode = "5000267014203";
+
+    private static void SeedProductBarcode(AppDbContext db, Product product, string barcode = Barcode)
+    {
+        db.ProductBarcodes.Add(new ProductBarcode { ProductId = product.Id, Barcode = barcode, AddedByUserId = Guid.NewGuid() });
+        db.SaveChanges();
+    }
+
+    [Fact]
+    public async Task AddBottleAsync_WhenBarcodeGiven_KeepsItTrimmed()
+    {
+        var db = CreateDbContext();
+        var user = SeedUser(db);
+        var service = CreateBottleService(db, user.Id);
+
+        var result = await service.AddBottleAsync(
+            new AddBottleRequest { Name = "Red Label", Barcode = $"  {Barcode}  " }, CancellationToken.None);
+
+        Assert.True(result.Success);
+        Assert.Equal(Barcode, result.Data!.Barcode);
+        Assert.Equal(Barcode, (await db.Bottles.SingleAsync()).Barcode);
+    }
+
+    [Fact]
+    public async Task AddBottleAsync_WhenBarcodeBlank_StoresNone()
+    {
+        var db = CreateDbContext();
+        var user = SeedUser(db);
+        var service = CreateBottleService(db, user.Id);
+
+        var result = await service.AddBottleAsync(
+            new AddBottleRequest { Name = "Red Label", Barcode = "   " }, CancellationToken.None);
+
+        Assert.True(result.Success);
+        Assert.Null(result.Data!.Barcode);
+        Assert.Null((await db.Bottles.SingleAsync()).Barcode);
+    }
+
+    [Theory]
+    [InlineData("50103140")]
+    [InlineData("082184090466")]
+    [InlineData("5000267014203")]
+    [InlineData("15000267014200")]
+    public async Task AddBottleAsync_WhenBarcodeIsEightToFourteenDigits_Succeeds(string barcode)
+    {
+        var db = CreateDbContext();
+        var user = SeedUser(db);
+        var service = CreateBottleService(db, user.Id);
+
+        var result = await service.AddBottleAsync(
+            new AddBottleRequest { Name = "Red Label", Barcode = barcode }, CancellationToken.None);
+
+        Assert.True(result.Success);
+        Assert.Equal(barcode, result.Data!.Barcode);
+    }
+
+    [Theory]
+    [InlineData("1234567")]
+    [InlineData("123456789012345")]
+    [InlineData("50002670142AB")]
+    public async Task AddBottleAsync_WhenBarcodeNotEightToFourteenDigits_ReturnsFail(string barcode)
+    {
+        var db = CreateDbContext();
+        var user = SeedUser(db);
+        var service = CreateBottleService(db, user.Id);
+
+        var result = await service.AddBottleAsync(
+            new AddBottleRequest { Name = "Red Label", Barcode = barcode }, CancellationToken.None);
+
+        Assert.False(result.Success);
+        Assert.Equal(ErrorCode.Validation, result.ErrorCode);
+        Assert.Equal("Barcode must be 8 to 14 digits.", result.Error);
+        Assert.Equal(0, await db.Bottles.CountAsync());
+    }
+
+    [Fact]
+    public async Task AddBottleAsync_WhenPickedProductAndBarcode_RecordsTheBarcodeForTheProduct()
+    {
+        var db = CreateDbContext();
+        var user = SeedUser(db);
+        var product = SeedProduct(db, name: "Red Label", producerName: "Johnnie Walker");
+        var service = CreateBottleService(db, user.Id);
+
+        var result = await service.AddBottleAsync(
+            new AddBottleRequest { Name = "Red Label", ProductId = product.Id, Barcode = Barcode }, CancellationToken.None);
+
+        Assert.True(result.Success);
+        var link = await db.ProductBarcodes.SingleAsync();
+        Assert.Equal(product.Id, link.ProductId);
+        Assert.Equal(Barcode, link.Barcode);
+        Assert.Equal(user.Id, link.AddedByUserId);
+    }
+
+    [Fact]
+    public async Task AddBottleAsync_WhenAutoLinkedAndBarcode_RecordsTheBarcodeForTheProduct()
+    {
+        var db = CreateDbContext();
+        var user = SeedUser(db);
+        var product = SeedProduct(db, name: "Red Label");
+        var service = CreateBottleService(db, user.Id);
+
+        var result = await service.AddBottleAsync(
+            new AddBottleRequest { Name = "Red Label", Category = SpiritCategory.Whisky, Barcode = Barcode },
+            CancellationToken.None);
+
+        Assert.True(result.Success);
+        Assert.Equal(product.Id, result.Data!.ProductId);
+        Assert.Equal(product.Id, (await db.ProductBarcodes.SingleAsync()).ProductId);
+    }
+
+    [Fact]
+    public async Task AddBottleAsync_WhenTheProductAlreadyHasThatBarcodeFromACollector_RecordsNothingNew()
+    {
+        var db = CreateDbContext();
+        var user = SeedUser(db);
+        var product = SeedProduct(db, name: "Red Label");
+        SeedProductBarcode(db, product);
+        var service = CreateBottleService(db, user.Id);
+
+        var result = await service.AddBottleAsync(
+            new AddBottleRequest { Name = "Red Label", ProductId = product.Id, Barcode = Barcode }, CancellationToken.None);
+
+        Assert.True(result.Success);
+        Assert.Equal(1, await db.ProductBarcodes.CountAsync());
+    }
+
+    [Fact]
+    public async Task AddBottleAsync_WhenAnotherProductHasThatBarcodeFromACollector_RecordsItForThisOneToo()
+    {
+        var db = CreateDbContext();
+        var user = SeedUser(db);
+        var other = SeedProduct(db, name: "Black Label");
+        var product = SeedProduct(db, name: "Red Label");
+        SeedProductBarcode(db, other);
+        var service = CreateBottleService(db, user.Id);
+
+        var result = await service.AddBottleAsync(
+            new AddBottleRequest { Name = "Red Label", ProductId = product.Id, Barcode = Barcode }, CancellationToken.None);
+
+        Assert.True(result.Success);
+        Assert.Equal(2, await db.ProductBarcodes.CountAsync());
+        Assert.True(await db.ProductBarcodes.AnyAsync(b => b.ProductId == product.Id && b.Barcode == Barcode));
+    }
+
+    [Fact]
+    public async Task AddBottleAsync_WhenProductButNoBarcode_RecordsNothing()
+    {
+        var db = CreateDbContext();
+        var user = SeedUser(db);
+        var product = SeedProduct(db, name: "Red Label");
+        var service = CreateBottleService(db, user.Id);
+
+        var result = await service.AddBottleAsync(
+            new AddBottleRequest { Name = "Red Label", ProductId = product.Id }, CancellationToken.None);
+
+        Assert.True(result.Success);
+        Assert.Equal(0, await db.ProductBarcodes.CountAsync());
+    }
+
+    [Fact]
+    public async Task AddBottleAsync_WhenBarcodeButNotInTheCatalog_RecordsNothing_AndTheRequestCarriesTheBarcode()
+    {
+        var db = CreateDbContext();
+        var user = SeedUser(db);
+        var (requestService, captured) = CapturingRequestService();
+        var service = CreateBottleService(db, user.Id, productRequestService: requestService.Object);
+
+        var result = await service.AddBottleAsync(
+            new AddBottleRequest { Name = "Unknown Single Cask", Barcode = $" {Barcode} " }, CancellationToken.None);
+
+        Assert.True(result.Success);
+        Assert.Null(result.Data!.ProductId);
+        Assert.Equal(0, await db.ProductBarcodes.CountAsync());
+        Assert.Equal(Barcode, captured()!.Barcode);
+    }
+
+    [Fact]
+    public async Task UpdateBottleAsync_WhenBarcodeGiven_KeepsItTrimmed()
+    {
+        var db = CreateDbContext();
+        var user = SeedUser(db);
+        var bottle = SeedBottle(db, user.Id);
+        var service = CreateBottleService(db, user.Id);
+
+        var result = await service.UpdateBottleAsync(
+            bottle.Id, new UpdateBottleRequest { Name = bottle.Name, Barcode = $" {Barcode} " }, CancellationToken.None);
+
+        Assert.True(result.Success);
+        Assert.Equal(Barcode, result.Data!.Barcode);
+        Assert.Equal(Barcode, (await db.Bottles.SingleAsync()).Barcode);
+    }
+
+    [Fact]
+    public async Task UpdateBottleAsync_WhenBarcodeNull_ClearsIt()
+    {
+        var db = CreateDbContext();
+        var user = SeedUser(db);
+        var bottle = SeedBottle(db, user.Id);
+        bottle.Barcode = Barcode;
+        db.SaveChanges();
+        var service = CreateBottleService(db, user.Id);
+
+        var result = await service.UpdateBottleAsync(
+            bottle.Id, new UpdateBottleRequest { Name = bottle.Name, Barcode = null }, CancellationToken.None);
+
+        Assert.True(result.Success);
+        Assert.Null(result.Data!.Barcode);
+        Assert.Null((await db.Bottles.SingleAsync()).Barcode);
+    }
+
+    [Theory]
+    [InlineData("1234567")]
+    [InlineData("123456789012345")]
+    [InlineData("50002670142AB")]
+    public async Task UpdateBottleAsync_WhenBarcodeNotEightToFourteenDigits_ReturnsFail(string barcode)
+    {
+        var db = CreateDbContext();
+        var user = SeedUser(db);
+        var bottle = SeedBottle(db, user.Id);
+        var service = CreateBottleService(db, user.Id);
+
+        var result = await service.UpdateBottleAsync(
+            bottle.Id, new UpdateBottleRequest { Name = bottle.Name, Barcode = barcode }, CancellationToken.None);
+
+        Assert.False(result.Success);
+        Assert.Equal(ErrorCode.Validation, result.ErrorCode);
+        Assert.Equal("Barcode must be 8 to 14 digits.", result.Error);
+        Assert.Null((await db.Bottles.SingleAsync()).Barcode);
+    }
+
+    [Fact]
+    public async Task UpdateBottleAsync_WhenLinkedAndBarcode_RecordsTheBarcodeForTheProduct()
+    {
+        var db = CreateDbContext();
+        var user = SeedUser(db);
+        var product = SeedProduct(db, name: "Red Label");
+        var bottle = SeedBottle(db, user.Id, name: "Red Label", productId: product.Id);
+        var service = CreateBottleService(db, user.Id);
+
+        var result = await service.UpdateBottleAsync(
+            bottle.Id,
+            new UpdateBottleRequest { Name = bottle.Name, ProductId = product.Id, Barcode = Barcode },
+            CancellationToken.None);
+
+        Assert.True(result.Success);
+        var link = await db.ProductBarcodes.SingleAsync();
+        Assert.Equal(product.Id, link.ProductId);
+        Assert.Equal(Barcode, link.Barcode);
+        Assert.Equal(user.Id, link.AddedByUserId);
+    }
+
+    [Fact]
+    public async Task UpdateBottleAsync_WhenThePairIsAlreadyKnown_RecordsNothingNew()
+    {
+        var db = CreateDbContext();
+        var user = SeedUser(db);
+        var product = SeedProduct(db, name: "Red Label");
+        SeedProductBarcode(db, product);
+        var bottle = SeedBottle(db, user.Id, name: "Red Label", productId: product.Id);
+        var service = CreateBottleService(db, user.Id);
+
+        var result = await service.UpdateBottleAsync(
+            bottle.Id,
+            new UpdateBottleRequest { Name = bottle.Name, ProductId = product.Id, Barcode = Barcode },
+            CancellationToken.None);
+
+        Assert.True(result.Success);
+        Assert.Equal(1, await db.ProductBarcodes.CountAsync());
+    }
+
+    [Fact]
+    public async Task UpdateBottleAsync_WhenBarcodeButUnlinked_RecordsNothing()
+    {
+        var db = CreateDbContext();
+        var user = SeedUser(db);
+        var bottle = SeedBottle(db, user.Id);
+        var service = CreateBottleService(db, user.Id);
+
+        var result = await service.UpdateBottleAsync(
+            bottle.Id, new UpdateBottleRequest { Name = bottle.Name, Barcode = Barcode }, CancellationToken.None);
+
+        Assert.True(result.Success);
+        Assert.Equal(0, await db.ProductBarcodes.CountAsync());
+    }
+
+    [Fact]
+    public async Task GetBottleByIdAsync_ReturnsTheBarcode()
+    {
+        var db = CreateDbContext();
+        var user = SeedUser(db);
+        var bottle = SeedBottle(db, user.Id);
+        bottle.Barcode = Barcode;
+        db.SaveChanges();
+        var service = CreateBottleService(db, user.Id);
+
+        var result = await service.GetBottleByIdAsync(bottle.Id, CancellationToken.None);
+
+        Assert.True(result.Success);
+        Assert.Equal(Barcode, result.Data!.Barcode);
+    }
+
+    #endregion
 }

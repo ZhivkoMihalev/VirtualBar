@@ -29,6 +29,12 @@ public sealed class UpdateBottleRequest
 
     public int? VolumeMl { get; set; }
 
+    /// <summary>
+    /// The EAN/UPC on the bottle (#49): 8 to 14 digits. Assigned like every other field, so null clears it and a client
+    /// must echo the current value.
+    /// </summary>
+    public string? Barcode { get; set; }
+
     public BottleCondition Condition { get; set; } = BottleCondition.Sealed;
 
     /// <summary>

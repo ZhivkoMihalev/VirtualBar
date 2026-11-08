@@ -135,7 +135,7 @@
     "barcodePlaceholder": "EAN / UPC barcode…",
     "barcodeFind": "FIND",
     "barcodeSuccess": "✓ Product found – fields auto-filled",
-    "barcodeNotFound": "Product not found. Try a different barcode or fill in manually.",
+    "barcodeNotFound": "We do not know this barcode yet. Pick the bottle from the catalog above and the barcode will be saved with it.",
     "category": "Category",
     "name": "Name *",
     "namePlaceholder": "e.g. Glenfiddich 18",
@@ -166,7 +166,21 @@
     "vintageMismatchHint": "You can still save it as it is.",
     "linkVintage": "Link to {{name}}",
     "requestVintage": "Request vintage {{year}}",
-    "vintageRequested": "When you save, we will ask for “{{name}}” to be added to the catalog."
+    "vintageRequested": "When you save, we will ask for “{{name}}” to be added to the catalog.",
+    "barcodeInvalid": "A barcode is 8 to 14 digits.",
+    "barcodeError": "The barcode lookup failed. Please try again.",
+    "scanBarcode": "Scan"
+  },
+  "barcodeScanner": {
+    "title": "Scan a barcode",
+    "hint": "Point the camera at the bottle's barcode and hold it inside the frame.",
+    "video": "Camera view",
+    "starting": "Starting the camera…",
+    "close": "Close",
+    "denied": "We have no access to the camera. Allow it in the browser settings, or type the barcode.",
+    "noCamera": "No camera was found on this device. Type the barcode instead.",
+    "insecure": "The camera is not available here: browsers offer it only on a secure (HTTPS) page. Type the barcode instead.",
+    "unavailable": "The camera cannot be started in this browser. Open the page in Chrome or Safari, or type the barcode instead."
   },
   "browse": {
     "discover": "DISCOVER",
@@ -283,7 +297,12 @@
     "monthsAgo_one": "{{count}} month ago",
     "monthsAgo_other": "{{count}} months ago",
     "yearsAgo_one": "{{count}} year ago",
-    "yearsAgo_other": "{{count}} years ago"
+    "yearsAgo_other": "{{count}} years ago",
+    "barcode": "Barcode",
+    "noBarcode": "This bottle has no barcode yet. Scan it so other collectors' bottles of it are recognised too.",
+    "saveBarcode": "Save barcode",
+    "barcodeSaved": "Barcode saved.",
+    "errorBarcode": "The barcode could not be saved. Please try again."
   },
   "collectionValue": {
     "title": "Collection value",

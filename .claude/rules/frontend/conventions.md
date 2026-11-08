@@ -58,6 +58,8 @@ Current translation namespaces:
 - `nav`, `lang`, `login`, `register`, `dashboard`, `addBottle`, `browse`, `marketplace`, `publicBar`, `bottle`,
   `messages`, `profile`, `footer`, `hero`, `home`, `barShelf`, `notifications`, `wishList`, `distillerySelect`,
   `offers`, `collectionValue`, `reviews`
+- `barcodeScanner`: the camera dialog (`BarcodeScannerDialog`) and why it cannot scan (`denied`, `noCamera`,
+  `insecure`, `unavailable`)
 - `flavors`: 28 keys = `FlavorTag` enum member names
 - `badges`: `title`/`progressTitle`/`earnedOn` + 19 × `<EnumName>.{name,description}`, keys = `BadgeType` enum member
   names

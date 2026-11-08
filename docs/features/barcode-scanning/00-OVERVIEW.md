@@ -1,8 +1,9 @@
 # Barcode / Label Scanning (Баркод и етикет сканиране) — OVERVIEW & SHARED CONTEXT
 
-> **Status:** in progress (#49). Slice 1 of the new order below is built; the code is described in
-> `.claude/rules/domain/catalog.md` (Barcodes, `ProductBarcode`) and `.claude/rules/domain/bottles.md` (Barcode). Where
-> this spec and those rules differ, the rules win. Read the owner decisions below first: they replace parts of the spec.
+> **Status:** in progress (#49). Slices 1 and 2 of the new order below are built; the code is described in
+> `.claude/rules/domain/catalog.md` (Barcodes, `ProductBarcode`), `.claude/rules/domain/bottles.md` (Barcode) and
+> `.claude/rules/frontend/shared-components.md` (`BarcodeScannerDialog`). Where this spec and those rules differ, the
+> rules win. Read the owner decisions below first: they replace parts of the spec.
 
 ## Owner decisions, 2026-11-08 (they replace the sections below where they differ)
 - **No external barcode database.** A test of UPCitemdb with a real EAN (Johnnie Walker Red Label 70 cl,
@@ -24,7 +25,7 @@
   1. Data: `ProductBarcodes`, the bottle keeps its barcode (spec 01), the request carries it, the lookup answers from
      our own data only, UPCitemdb removed. **Built.**
   2. Camera: scanning in the add form (spec 04, barcode part); on a miss, pick the product from the catalog; scanning a
-     bottle already added.
+     bottle already added. A hit fills the form like a catalog pick (#120). **Built.**
   3. Quality: the lookup also over other collectors' bottles (spec 02 without its external leg), a pair confirmed by
      two collectors, an admin removes a wrong pair; the index on the bottles' barcode, its only reader.
   4. Label photo (spec 03), later.

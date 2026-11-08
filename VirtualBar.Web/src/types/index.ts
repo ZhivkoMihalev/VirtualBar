@@ -275,16 +275,6 @@ export interface MarketplaceFilters {
   sort?: 'price_asc' | 'price_desc' | 'newest'
 }
 
-/** The catalog product of a barcode (#49): the API answers only from the platform's own data, so always a product. */
-export interface BarcodeProduct {
-  productId: string
-  name: string
-  brand?: string
-  imageUrl?: string
-  volumeMl?: number
-  abvPercent?: number
-}
-
 /**
  * Mirrors ProductDto one-for-one. The API always serialises every field and uses null for "unknown",
  * so the properties are required-but-nullable rather than optional — optional would let a caller
@@ -382,22 +372,6 @@ export interface ProductDetail extends Product {
   listings: ProductListing[]
   /** The newest 5; the rest come from the paged product reviews endpoint. */
   latestReviews: BottleReview[]
-}
-
-/**
- * What the add-bottle form knows about the catalog entry it is linking to. A catalog pick supplies a
- * whole {@link Product}; a barcode hit only proves the id and an image, so the rest is genuinely
- * absent instead of being faked from the form's own inputs.
- */
-export interface LinkedProduct {
-  id: string
-  name: string
-  category: SpiritCategory
-  imageUrl: string | null
-  country?: string | null
-  region?: string | null
-  /** A catalog pick's vintage (#59); a barcode hit does not know it (the API still fills the bottle's from it). */
-  vintageYear?: number | null
 }
 
 export type ProductRequestStatus = 'Pending' | 'Approved' | 'Rejected'

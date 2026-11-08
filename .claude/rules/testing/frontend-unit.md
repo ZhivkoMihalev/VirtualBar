@@ -15,6 +15,9 @@ paths:
   - `signIn()` before rendering saves a session, so the page renders logged in. A logged-in NavBar polls `@/api/notificationsApi`, so mock that too.
   - `apiError(status, body)` / `networkError()` build real `AxiosError`s, so `isAxiosError` and the `reason` handling run as in production; `deferred()` holds a request pending to check loading states.
   - Test data comes from builders in `unit/fixtures/` (`productCard`, `productDetail`, `review`, …): a valid default, and the test overrides only what it is about.
+- The one other mock is the camera, which jsdom lacks: `unit/fakeCamera.ts` stands in for `@zxing/browser`
+  (`vi.mock('@zxing/browser', async () => (await import('../fakeCamera')).zxingBrowserMock())`), and a test decides what
+  it does with `cameraReads`, `cameraSeesNothing`, `cameraFails` and `setCameraSupported`.
 - Assert translated text from the translation files (`bg.confirmEmail.invalidLink`, or `i18n.t(...)` for interpolated text), never a hard-coded string.
 - Query by role and accessible name first (`getByRole('button', { name: … })`), then text.
 - `unit/setup.ts` unmounts after every test and clears `localStorage`; mocks are reset between tests (`mockReset`, `restoreMocks`).

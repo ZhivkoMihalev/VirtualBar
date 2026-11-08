@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useId, useMemo, useState } from 'react'
 import type { FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
@@ -8,7 +8,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import type { AxiosError } from 'axios'
-import { Heart, X, ChevronDown, ChevronUp, Minus, Plus } from 'lucide-react'
+import { Camera, Heart, X, ChevronDown, ChevronUp, Minus, Plus } from 'lucide-react'
 import {
   toggleBottleLike,
   getBottleComments,
@@ -23,7 +23,8 @@ import { createOffer } from '../api/offersApi'
 import { getBottleEstimate } from '../api/pricesApi'
 import { getReviews, addReview, updateReview, deleteReview } from '../api/reviewsApi'
 import { useAuth } from '../contexts/useAuth'
-import type { Bottle, BottleReview, FlavorTag, ReviewPayload } from '../types'
+import type { Bottle, BottleReview, FlavorTag, ReviewPayload, UpdateBottlePayload } from '../types'
+import BarcodeScannerDialog from './BarcodeScannerDialog'
 import PriceEstimateView from './PriceEstimateView'
 import ReviewsAggregate from './reviews/ReviewsAggregate'
 import ReviewCard from './reviews/ReviewCard'
@@ -32,6 +33,7 @@ import { CATEGORY_COLORS } from '../lib/bottlePalette'
 import { CURRENCIES, DEFAULT_CURRENCY, formCurrency } from '../lib/currencies'
 import { NOTE_FIELDS, formatRelativeTime, hasAnyNote } from '../lib/reviewFormat'
 import type { NoteField } from '../lib/reviewFormat'
+import { toBarcode } from '@/lib/barcode'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -475,32 +477,37 @@ function ReviewsSection({ bottle }: { bottle: Bottle }) {
   )
 }
 
+/**
+ * The bottle as an update must send it. UpdateBottleAsync assigns every field from the request, so a change of one
+ * field still has to echo the bottle back in full: anything omitted would be wiped, a null productId would silently
+ * unlink it from the catalog, and a null barcode would clear it.
+ */
+function echoBottle(bottle: Bottle): UpdateBottlePayload {
+  return {
+    name: bottle.name,
+    distilleryId: bottle.distilleryId,
+    productId: bottle.productId ?? null,
+    region: bottle.region,
+    country: bottle.country,
+    category: bottle.category,
+    age: bottle.age,
+    vintageYear: bottle.vintageYear,
+    abvPercent: bottle.abvPercent,
+    volumeMl: bottle.volumeMl,
+    barcode: bottle.barcode ?? null,
+    condition: bottle.condition,
+    quantity: bottle.quantity,
+    description: bottle.description,
+    isLimited: bottle.isLimited,
+  }
+}
+
 function QuantitySection({ bottle, userId }: { bottle: Bottle; userId: string }) {
   const { t } = useTranslation()
   const queryClient = useQueryClient()
 
   const mutation = useMutation({
-    // UpdateBottleAsync assigns every field from the request, so a quantity-only change still has
-    // to echo the bottle back in full — anything omitted here would be wiped, and a null
-    // productId would silently unlink it from the catalog.
-    mutationFn: (quantity: number) =>
-      updateBottle(bottle.id, {
-        name: bottle.name,
-        distilleryId: bottle.distilleryId,
-        productId: bottle.productId ?? null,
-        region: bottle.region,
-        country: bottle.country,
-        category: bottle.category,
-        age: bottle.age,
-        vintageYear: bottle.vintageYear,
-        abvPercent: bottle.abvPercent,
-        volumeMl: bottle.volumeMl,
-        barcode: bottle.barcode ?? null,
-        condition: bottle.condition,
-        quantity,
-        description: bottle.description,
-        isLimited: bottle.isLimited,
-      }),
+    mutationFn: (quantity: number) => updateBottle(bottle.id, { ...echoBottle(bottle), quantity }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['bottles', userId] })
       queryClient.invalidateQueries({ queryKey: ['collectionValue', userId] })
@@ -552,6 +559,110 @@ function QuantitySection({ bottle, userId }: { bottle: Bottle; userId: string })
 
       {mutation.isError && (
         <div className="mt-2.5 text-sm text-destructive">{t('bottle.errorQuantity')}</div>
+      )}
+    </div>
+  )
+}
+
+/**
+ * The owner's barcode of the bottle (#49): typed or scanned. A bottle added before barcodes were kept gets one only
+ * this way, from the bottle itself; saving it on a bottle linked to the catalog also teaches the platform the
+ * barcode of that product.
+ */
+function BarcodeSection({ bottle, userId }: { bottle: Bottle; userId: string }) {
+  const { t } = useTranslation()
+  const queryClient = useQueryClient()
+  const inputId = useId()
+  const [value, setValue] = useState(bottle.barcode ?? '')
+  const [invalid, setInvalid] = useState(false)
+  const [scannerOpen, setScannerOpen] = useState(false)
+
+  const mutation = useMutation({
+    mutationFn: (barcode: string | null) => updateBottle(bottle.id, { ...echoBottle(bottle), barcode }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['bottles', userId] })
+      queryClient.invalidateQueries({ queryKey: ['collectionValue', userId] })
+    },
+  })
+
+  // An empty field clears the barcode; anything else must be 8 to 14 digits, or the API refuses it.
+  const save = (raw: string) => {
+    const trimmed = raw.trim()
+    const barcode = toBarcode(trimmed)
+    if (trimmed && !barcode) {
+      setInvalid(true)
+      return
+    }
+    setInvalid(false)
+    mutation.mutate(barcode ?? null)
+  }
+
+  const unchanged = value.trim() === (bottle.barcode ?? '')
+
+  return (
+    <div className="mb-5 rounded-md border border-primary/15 bg-primary/[0.04] p-4">
+      <label htmlFor={inputId} className="mb-3 block text-xs font-medium uppercase tracking-wide text-muted-foreground">
+        {t('bottle.barcode')}
+      </label>
+      {!bottle.barcode && <p className="mb-2.5 text-sm text-muted-foreground">{t('bottle.noBarcode')}</p>}
+
+      <form
+        className="flex flex-wrap gap-2"
+        onSubmit={e => {
+          e.preventDefault()
+          save(value)
+        }}
+      >
+        <Input
+          id={inputId}
+          value={value}
+          inputMode="numeric"
+          placeholder={t('addBottle.barcodePlaceholder')}
+          className="h-9 min-w-0 flex-1"
+          onChange={e => {
+            setValue(e.target.value)
+            setInvalid(false)
+            mutation.reset()
+          }}
+        />
+        <Button type="submit" variant="secondary" className="h-9" disabled={mutation.isPending || unchanged}>
+          {t('bottle.saveBarcode')}
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          className="h-9"
+          disabled={mutation.isPending}
+          onClick={() => setScannerOpen(true)}
+        >
+          <Camera className="size-3.5" />
+          {t('addBottle.scanBarcode')}
+        </Button>
+      </form>
+      <BarcodeScannerDialog
+        open={scannerOpen}
+        onOpenChange={setScannerOpen}
+        onDetected={barcode => {
+          setScannerOpen(false)
+          setValue(barcode)
+          save(barcode)
+        }}
+      />
+
+      {invalid && (
+        <p role="alert" className="mt-2.5 text-sm text-destructive">
+          {t('addBottle.barcodeInvalid')}
+        </p>
+      )}
+      {mutation.isSuccess && (
+        <p role="status" className="mt-2.5 text-sm text-success">
+          {t('bottle.barcodeSaved')}
+        </p>
+      )}
+      {mutation.isError && (
+        <p role="alert" className="mt-2.5 text-sm text-destructive">
+          {t('bottle.errorBarcode')}
+        </p>
       )}
     </div>
   )
@@ -1055,6 +1166,7 @@ export default function BottleDetailPanel({
           {bottle.userId === currentUserId ? (
             <>
               <QuantitySection bottle={bottle} userId={userId} />
+              <BarcodeSection bottle={bottle} userId={userId} />
               <SaleSection bottle={bottle} userId={userId} />
               <DeleteSection bottle={bottle} onDelete={onDelete ?? onClose} />
             </>

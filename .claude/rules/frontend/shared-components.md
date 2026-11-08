@@ -33,6 +33,8 @@ paths:
   - `onDelete` prop (DashboardPage only) invalidates bottles query and closes panel.
   - The sale and offer forms offer only `CURRENCIES` from `src/lib/currencies.ts`, EUR by default
     (`.claude/rules/domain/currencies.md`).
+  - The owner gets `BarcodeSection`: the bottle's barcode, typed or scanned, saved through an update that echoes the
+    whole bottle (`echoBottle`, which `QuantitySection` uses too) (#49).
   - A bottle linked to a catalog product (`productId`) shows a "View product" link (`bottle.viewProduct`, visible to
     everyone) that closes the panel and opens `/product/:id`.
 - Bottle cards (`BarShelf`, Marketplace) show a gold `★ <avg>` badge when `reviewsCount > 0`.
@@ -49,6 +51,16 @@ paths:
   - Layout right-to-left: gold circular toggle button (52px, unread badge) → inbox panel (300×480px) → active
     conversation window (320×480px).
   - Polls inbox every 30 s. Mark-as-read runs automatically when a thread is viewed.
+- `src/components/BarcodeScannerDialog.tsx` — reads a bottle's barcode with the camera (#49); used by the add form and
+  the bottle panel's `BarcodeSection`.
+  - `@zxing/browser` over `getUserMedia`, the rear camera (`facingMode: environment`), EAN-13, EAN-8, UPC-A and UPC-E
+    only; the library verifies the check digit. It is loaded with a dynamic `import()` when a scan starts, so it is a
+    chunk of its own, not part of the main bundle.
+  - It hands the first barcode read to `onDetected`; the caller closes it. The camera is stopped on that read and on
+    every close.
+  - It says why it cannot scan: `insecure` (no `navigator.mediaDevices`: the page is not HTTPS), `denied`
+    (`NotAllowedError`, `SecurityError`), `noCamera` (`NotFoundError`, `OverconstrainedError`), `unavailable` (any
+    other, e.g. an in-app browser's `NotSupportedError`). The caller's barcode field stays the way in.
 - `src/components/DistillerySelect.tsx` — autocomplete dropdown for selecting a distillery.
   - Props: `value`, `onChange`, `category?`.
   - ARIA roles (`combobox`/`listbox`/`option`), keyboard navigation (ArrowUp/Down/Enter/Escape), scroll-into-view.

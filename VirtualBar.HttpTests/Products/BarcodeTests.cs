@@ -10,7 +10,8 @@ namespace VirtualBar.HttpTests.Products;
 
 /// <summary>
 /// The platform's own barcode database (#49) on SQL Server: a barcode saved with a bottle of a catalog product is
-/// recorded for that product in the same save, and the next collector's lookup of the barcode finds the product.
+/// recorded for that product in the same save, and the next collector's lookup of the barcode finds the product, in the
+/// shape of the catalog search.
 /// </summary>
 [Collection(ApiCollection.Name)]
 public sealed class BarcodeTests(ApiHosts hosts)
@@ -39,7 +40,10 @@ public sealed class BarcodeTests(ApiHosts hosts)
         var lookup = await other.Client.GetAsync($"/api/products/barcode/{barcode}");
 
         Assert.Equal(HttpStatusCode.OK, lookup.StatusCode);
-        Assert.Equal(productId, (await lookup.JsonAsync()).GetProperty("productId").GetGuid());
+        var found = await lookup.JsonAsync();
+        Assert.Equal(productId, found.GetProperty("id").GetGuid());
+        // The whole catalog product, as the search returns it, so the form can fill every field (#120).
+        Assert.Equal("Rum", found.GetProperty("category").GetString());
     }
 
     [SqlServerFact]

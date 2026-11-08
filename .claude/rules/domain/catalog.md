@@ -93,20 +93,34 @@ Canonical catalog entry for a spirits product. Not user-owned.
    ignored (the badge-engine philosophy: a request bug never fails adding a bottle).
    - The request carries the bottle's `Barcode`, so the approved product gets it (#49).
 - A bottle linked by 1 or 2 with a `Barcode` records that barcode for its product (`ProductBarcode`, see Barcodes below);
-  so does an update of a linked bottle (`BottleService.RecordBarcodeAsync`).
+  so does an update of a linked bottle (`BottleService.RecordBarcodeAsync`) and an approval that links it (see
+  ProductRequest → Design).
 
 ### Barcodes (#49)
 - The platform builds its own barcode database: the catalog has no barcodes yet (no seed row carries one), so they come
   from collectors.
 - A barcode is 8 to 14 ASCII digits once trimmed (`BarcodeFormat`: EAN-8, UPC-A, EAN-13, ITF-14), for bottles,
   product requests and the lookup alike.
-- `ProductLookupService.LookupByBarcodeAsync` answers from the platform's own data only:
-  1. a non-deleted product whose own `Barcode` matches, `OrderBy(CreatedAt).ThenBy(Id)` (oldest wins);
-  2. else the oldest non-deleted `ProductBarcode` of the barcode whose product is not deleted.
-  - Both return the whole product as a `ProductDto`, the shape of the catalog search (#120): the add form fills a hit
-    exactly like a pick. Neither → `NotFound`.
-  - Search and lookup project through the one `ProductMapping.ToDto`, so they cannot disagree about a product
-    (`Brand` falls back to the non-deleted distillery name in both).
+- **One number, several forms:** a GTIN keeps its value with zeros added in front, so the UPC-A 082184090466 is also
+  the EAN-13 0082184090466 and the GTIN-14 00082184090466. `BarcodeFormat.Equivalents` gives every form (the barcode as
+  given, then 8, 12, 13 and 14 digits where they fit); the lookup, the pair check and the admin list match on all of
+  them. Barcodes are stored as given, never rewritten.
+- `ProductLookupService.LookupByBarcodeAsync` answers from the platform's own data only, as a `BarcodeLookupDto`
+  (`Source`, `Product` or `Suggestion`, `Collectors`):
+  1. `Catalog`: a non-deleted product whose own `Barcode` matches, `OrderBy(CreatedAt).ThenBy(Id)` (oldest wins);
+     `Collectors` is 0.
+  2. `Collectors`: else the products collectors gave the barcode (live `ProductBarcode` rows of a live product). The one
+     most collectors back wins (the distinct collectors who recorded the pair or whose live linked bottles carry the
+     barcode), then the oldest pair; `Collectors` is that count. A product with a removed pair is ruled out, whatever
+     the bottles say.
+  3. `Bottles`: else the live bottles with the barcode that are not linked (products waiting for an admin): a
+     `BarcodeSuggestionDto` with, per field, the value most of them carry (blank text ignored, a deleted distillery
+     ignored), a tie going to the most recent bottle's; `Collectors` is their distinct owners. It has no id: nothing
+     is linked.
+  - Neither → `NotFound`.
+  - A product is returned whole as a `ProductDto`, the shape of the catalog search (#120): the add form fills it
+    exactly like a pick. Search and lookup project through the one `ProductMapping.ToDto`, so they cannot disagree
+    about a product (`Brand` falls back to the non-deleted distillery name in both).
 - There is **no external barcode database**: the UPCitemdb lookup was removed (owner, 2026-11-08) because its data
   could not fill the add form. Its settings section and its image download went with it.
 - `ProductValidationDecorator`: blank → `Fail("Barcode is required.")`, not 8–14 digits → `Fail`, then the barcode is
@@ -123,8 +137,8 @@ Canonical catalog entry for a spirits product. Not user-owned.
   - Matches `Name`/`Brand`/`Distillery.Name` (contains; case-insensitivity comes from the SQL Server collation, not the
     code); starts-with ranked first.
   - It projects through `ProductMapping.ToDto`, as the barcode endpoint does, so both paths agree on the same product.
-- `GET /api/products/barcode/{barcode}` — `[Authorize]`; the product's own barcode, then the collectors' (see Barcodes),
-  as a `ProductDto`. `400` blank or not 8–14 digits, or a failed lookup; `404` no product has it.
+- `GET /api/products/barcode/{barcode}` — `[Authorize]`; the catalog, the collectors, then their bottles (see
+  Barcodes) → `BarcodeLookupDto`. `400` blank or not 8–14 digits, or a failed lookup; `404` nobody has it.
 - `GET /api/products/browse?search=&category=&sort=&page=&pageSize=` — `[AllowAnonymous]`; the public `/catalog` →
   `PagedResult<ProductCardDto> { Items, HasMore }`.
   - `search` is optional: omitted/blank lists the whole catalog; a term filters exactly like the search endpoint,
@@ -181,12 +195,28 @@ A barcode a collector gave a catalog product (#49): they saved a bottle with tha
 | `Barcode` | `string` | 8–14 digits, trimmed; `nvarchar(14)` |
 | `AddedByUserId` | `Guid` | FK → AppUser (`Restrict`) — the collector who first linked the pair |
 
-- Recorded by `BottleService.RecordBarcodeAsync` on add and update when the bottle has both a `Barcode` and a
-  `ProductId`, unless a non-deleted row of the same pair exists. It is added to the context only, so it is saved with
-  the bottle in one transaction.
+- Recorded by `ProductBarcodeRecorder.RecordAsync` whenever a bottle with a `Barcode` gets a `ProductId`: added or
+  updated (`BottleService`), or linked by an approval (`ProductRequestService`), with the bottle's owner as
+  `AddedByUserId`. It is added to the context only, so it is saved with the bottle in one transaction.
+- Skipped when the pair is known in any form of the barcode: a row already saved, one waiting in the same save, or a
+  **removed** one. A removed pair is an admin's decision that the barcode is not this product, so it never comes back.
 - Index `(Barcode, ProductId)`, **not unique**: two collectors linking the same new pair at once both get a row, which
-  the lookup tolerates (oldest wins); a unique index would fail one of the two bottle saves.
-- Never removed with the bottle: a deleted bottle's barcode stays known.
+  the lookup tolerates; a unique index would fail one of the two bottle saves.
+- Never removed with the bottle: a deleted bottle's barcode stays known. Only an admin removes a pair (soft delete).
+
+### Admin (`ProductBarcodeService`, `ProductBarcodeValidationDecorator`)
+- The list: live pairs of live products, newest first, optionally matching a part of the barcode or of the product's
+  name or brand. Each row carries the product (brand falling back to the live distillery), who added it, `Collectors`
+  (as the lookup counts them) and `Conflict`: the barcode, in any form, also belongs to another live product, through a
+  pair or as that product's own.
+- Removing a pair soft-deletes every live row of that product in every form of its barcode.
+
+### API endpoints (`/api/product-barcodes`, `[Authorize]`, admin only)
+- `GET /api/product-barcodes?search=&page=&pageSize=` → `PagedResult<ProductBarcodeDto>`.
+  - `search` trimmed, blank = all, at most 100 chars (`400` beyond); `page` ≥ 1 (≤ 1000, beyond → `400`); `pageSize`
+    clamped 1–50 (default 30).
+- `DELETE /api/product-barcodes/{id}` → `204`; `404` no live pair has the id.
+- Both `403` for a collector who is not an admin.
 
 ## ProductRequest
 A user's request to add a missing product to the catalog.
@@ -225,6 +255,8 @@ A user's request to add a missing product to the catalog.
     the source bottle if still unlinked;
   - then **retro-links** identical unlinked bottles (SQL pre-filter on `Category`/`Age`/`VolumeMl`, in-memory exact
     `ProductKey` comparison without vintage — silent, no owner notifications);
+  - records the barcode of every bottle it linked, the source bottle and the twins, for its own owner
+    (`ProductBarcodeRecorder`, #49);
   - finally evaluates the **requester's** badges (`BadgeTrigger.ProductRequestApproved` → `FirstCatalogProduct`).
 - **Reject** sets `AdminNote` + `RespondedAt` — no badge evaluation.
 - **Withdraw** = the requester soft-deletes an own **pending** request.

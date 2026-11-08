@@ -122,8 +122,9 @@ test.describe('Barcode scan', () => {
 
       // The platform learned the barcode: the next collector's lookup finds the product the bottle was linked to.
       const next = await registerCollector('barcode-next')
-      const found = await api<{ id: string }>(next, 'GET', `/products/barcode/${barcode}`)
-      expect(found.id).toBe(saved.productId)
+      const found = await api<{ source: string; product: { id: string } | null }>(next, 'GET', `/products/barcode/${barcode}`)
+      expect(found.source).toBe('Collectors')
+      expect(found.product?.id).toBe(saved.productId)
     })
   })
 })

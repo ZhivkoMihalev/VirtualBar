@@ -1,11 +1,15 @@
 using System.Net;
 using System.Net.Http.Json;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using VirtualBar.HttpTests.Support;
+using VirtualBar.Infrastructure.Persistence;
 
 namespace VirtualBar.HttpTests.Access;
 
 /// <summary>
-/// The admin-only actions (#68): writing news, resolving product requests and pruning price snapshots. A collector is refused with 403; an
+/// The admin-only actions (#68): writing news, resolving product requests, pruning price snapshots and correcting the
+/// barcodes collectors gave products (#49). A collector is refused with 403; an
 /// admin, made through the app's database and logged in again (<see cref="Collector.RegisterAdminAsync"/>), succeeds.
 /// So the tests also prove that the <c>isAdmin</c> claim travels from login, through the JWT, to the decorators.
 /// </summary>
@@ -107,6 +111,78 @@ public sealed class AdminTests(ApiHosts hosts)
         var url = (await response.JsonAsync()).GetProperty("url").GetString()!;
         Assert.StartsWith("/uploads/news/", url);
         Assert.Equal(CollectorApi.Png, await File.ReadAllBytesAsync(Path.Combine(Api.WebRoot, url.TrimStart('/'))));
+    }
+
+    [SqlServerFact]
+    public async Task ProductBarcodes_WhenTheCallerIsNotAnAdmin_Returns403()
+    {
+        var collector = await Collector.RegisterAsync(Api, "collector");
+
+        var response = await collector.Client.GetAsync("/api/product-barcodes");
+
+        await CollectorApi.AssertRefusedAsync(response, HttpStatusCode.Forbidden);
+    }
+
+    [SqlServerFact]
+    public async Task ProductBarcodes_WhenTheCallerIsAnAdmin_ListsAPairACollectorGave()
+    {
+        var barcode = CollectorApi.NewBarcode();
+        var productId = await AnyProductIdAsync();
+        await (await Collector.RegisterAsync(Api, "barcode-giver")).GiveBarcodeAsync(productId, barcode);
+        var admin = await Collector.RegisterAdminAsync(Api, "admin");
+
+        var response = await admin.Client.GetAsync($"/api/product-barcodes?search={barcode}");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var pair = Assert.Single((await response.JsonAsync()).GetProperty("items").EnumerateArray());
+        Assert.Equal(barcode, pair.GetProperty("barcode").GetString());
+        Assert.Equal(productId, pair.GetProperty("productId").GetGuid());
+        Assert.Equal(1, pair.GetProperty("collectors").GetInt32());
+        Assert.False(pair.GetProperty("conflict").GetBoolean());
+    }
+
+    [SqlServerFact]
+    public async Task RemoveProductBarcode_WhenTheCallerIsNotAnAdmin_Returns403()
+    {
+        var giver = await Collector.RegisterAsync(Api, "barcode-giver");
+        var barcode = CollectorApi.NewBarcode();
+        await giver.GiveBarcodeAsync(await AnyProductIdAsync(), barcode);
+
+        // The collector who gave the pair removing it is the case that matters most.
+        var response = await giver.Client.DeleteAsync($"/api/product-barcodes/{await PairIdAsync(barcode)}");
+
+        await CollectorApi.AssertRefusedAsync(response, HttpStatusCode.Forbidden);
+    }
+
+    [SqlServerFact]
+    public async Task RemoveProductBarcode_WhenTheCallerIsAnAdmin_Returns204AndTheLookupNoLongerGivesIt()
+    {
+        var giver = await Collector.RegisterAsync(Api, "barcode-giver");
+        var barcode = CollectorApi.NewBarcode();
+        await giver.GiveBarcodeAsync(await AnyProductIdAsync(), barcode);
+        var admin = await Collector.RegisterAdminAsync(Api, "admin");
+
+        var response = await admin.Client.DeleteAsync($"/api/product-barcodes/{await PairIdAsync(barcode)}");
+
+        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+        var lookup = await giver.Client.GetAsync($"/api/products/barcode/{barcode}");
+        Assert.Equal(HttpStatusCode.NotFound, lookup.StatusCode);
+    }
+
+    /// <summary>A live seeded catalog product, for a collector to give a barcode to.</summary>
+    private async Task<Guid> AnyProductIdAsync()
+    {
+        await using var scope = Api.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        return await db.Products.Where(p => !p.IsDeleted).OrderBy(p => p.Name).Select(p => p.Id).FirstAsync();
+    }
+
+    /// <summary>The id of the pair a collector recorded for <paramref name="barcode"/>.</summary>
+    private async Task<Guid> PairIdAsync(string barcode)
+    {
+        await using var scope = Api.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        return await db.ProductBarcodes.Where(b => b.Barcode == barcode).Select(b => b.Id).SingleAsync();
     }
 
     [SqlServerFact]

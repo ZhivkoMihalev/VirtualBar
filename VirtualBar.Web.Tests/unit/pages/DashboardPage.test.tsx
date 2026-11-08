@@ -5,8 +5,10 @@ import { addBottle, getBottlesByUser, lookupBarcode } from '@/api/bottlesApi'
 import { getDistilleries } from '@/api/distilleriesApi'
 import { getNotifications } from '@/api/notificationsApi'
 import { getCollectionValue } from '@/api/pricesApi'
+import i18n from '@/i18n'
 import bg from '@/i18n/bg.json'
 import DashboardPage from '@/pages/DashboardPage'
+import type { BarcodeLookup, BarcodeSuggestion, Product } from '@/types'
 import { cameraReads, setCameraSupported } from '../fakeCamera'
 import { bottle } from '../fixtures/bottles'
 import { catalogProduct } from '../fixtures/products'
@@ -48,6 +50,9 @@ async function openAddForm() {
   await userEvent.click(await screen.findByRole('button', { name: bg.dashboard.addBottle }))
 }
 
+/** The lookup's answer when the catalog product itself has the barcode. */
+const fromCatalog = (product: Product): BarcodeLookup => ({ source: 'Catalog', product, suggestion: null, collectors: 0 })
+
 async function findByBarcode(barcode: string) {
   await userEvent.type(screen.getByLabelText(bg.addBottle.barcodeLookup), barcode)
   await userEvent.click(screen.getByRole('button', { name: bg.addBottle.barcodeFind }))
@@ -72,7 +77,7 @@ describe('DashboardPage: add a bottle by barcode', () => {
       volumeMl: 700,
       barcode: BARCODE,
     })
-    vi.mocked(lookupBarcode).mockResolvedValue(rum)
+    vi.mocked(lookupBarcode).mockResolvedValue(fromCatalog(rum))
     await openAddForm()
 
     await findByBarcode(BARCODE)
@@ -114,7 +119,7 @@ describe('DashboardPage: add a bottle by barcode', () => {
     setCameraSupported(true)
     cameraReads(BARCODE)
     const rum = catalogProduct({ name: 'Foursquare 2005 Vintage', category: 'Rum' })
-    vi.mocked(lookupBarcode).mockResolvedValue(rum)
+    vi.mocked(lookupBarcode).mockResolvedValue(fromCatalog(rum))
     await openAddForm()
 
     await userEvent.click(screen.getByRole('button', { name: bg.addBottle.scanBarcode }))
@@ -130,7 +135,7 @@ describe('DashboardPage: add a bottle by barcode', () => {
 
   it('drops the link a barcode made when another barcode is not found, so it is not given to that product', async () => {
     vi.mocked(lookupBarcode)
-      .mockResolvedValueOnce(catalogProduct({ name: 'Foursquare 2005 Vintage', category: 'Rum' }))
+      .mockResolvedValueOnce(fromCatalog(catalogProduct({ name: 'Foursquare 2005 Vintage', category: 'Rum' })))
       .mockRejectedValueOnce(apiError(404, { error: 'Product not found.' }))
     await openAddForm()
     await findByBarcode(BARCODE)
@@ -144,7 +149,7 @@ describe('DashboardPage: add a bottle by barcode', () => {
   })
 
   it('drops the link a barcode made when the barcode is changed', async () => {
-    vi.mocked(lookupBarcode).mockResolvedValue(catalogProduct({ name: 'Foursquare 2005 Vintage', category: 'Rum' }))
+    vi.mocked(lookupBarcode).mockResolvedValue(fromCatalog(catalogProduct({ name: 'Foursquare 2005 Vintage', category: 'Rum' })))
     await openAddForm()
     await findByBarcode(BARCODE)
     expect(await screen.findByText(bg.products.linkedChip)).toBeInTheDocument()
@@ -166,5 +171,89 @@ describe('DashboardPage: add a bottle by barcode', () => {
 
     expect(await screen.findByText(message)).toBeInTheDocument()
     expect(screen.queryByText(bg.addBottle.barcodeNotFound)).not.toBeInTheDocument()
+  })
+
+  it.each([1, 3])('says how many collectors gave the barcode to the product (%i)', async collectors => {
+    const rum = catalogProduct({ name: 'Foursquare 2005 Vintage', category: 'Rum' })
+    vi.mocked(lookupBarcode).mockResolvedValue({ source: 'Collectors', product: rum, suggestion: null, collectors })
+    await openAddForm()
+
+    await findByBarcode(BARCODE)
+
+    expect(await screen.findByText(i18n.t('addBottle.barcodeFromCollectors', { count: collectors }))).toBeInTheDocument()
+    expect(screen.getByText(bg.products.linkedChip)).toBeInTheDocument()
+  })
+
+  it('fills the form from other collectors\' bottles of a barcode the catalog lacks, without linking anything', async () => {
+    const suggestion: BarcodeSuggestion = {
+      name: 'Foursquare Exceptional Cask',
+      category: 'Rum',
+      distilleryId: DISTILLERY.id,
+      distilleryName: DISTILLERY.name,
+      age: 12,
+      vintageYear: 2008,
+      abvPercent: 62,
+      volumeMl: 700,
+      country: 'Barbados',
+      region: 'Caribbean',
+    }
+    vi.mocked(lookupBarcode).mockResolvedValue({ source: 'Bottles', product: null, suggestion, collectors: 2 })
+    await openAddForm()
+
+    await findByBarcode(BARCODE)
+
+    expect(await screen.findByText(i18n.t('addBottle.barcodeSuggested', { count: 2 }))).toBeInTheDocument()
+    expect(screen.queryByText(bg.products.linkedChip)).not.toBeInTheDocument()
+    expect(screen.getByLabelText(bg.addBottle.name)).toHaveValue('Foursquare Exceptional Cask')
+    await userEvent.click(screen.getByRole('button', { name: bg.addBottle.submit }))
+
+    await vi.waitFor(() => expect(addBottle).toHaveBeenCalled())
+    expect(addBottle).toHaveBeenCalledWith(
+      expect.objectContaining({
+        name: 'Foursquare Exceptional Cask',
+        productId: null,
+        category: 'Rum',
+        distilleryId: DISTILLERY.id,
+        age: 12,
+        vintageYear: 2008,
+        abvPercent: 62,
+        volumeMl: 700,
+        country: 'Barbados',
+        region: 'Caribbean',
+        barcode: BARCODE,
+      }),
+    )
+  })
+
+  it('drops the link of an earlier barcode when the next one only has a suggestion', async () => {
+    vi.mocked(lookupBarcode)
+      .mockResolvedValueOnce(fromCatalog(catalogProduct({ name: 'Foursquare 2005 Vintage', category: 'Rum' })))
+      .mockResolvedValueOnce({
+        source: 'Bottles',
+        product: null,
+        suggestion: {
+          name: 'Unknown Cask',
+          category: 'Rum',
+          distilleryId: null,
+          distilleryName: null,
+          age: null,
+          vintageYear: null,
+          abvPercent: null,
+          volumeMl: null,
+          country: null,
+          region: null,
+        },
+        collectors: 1,
+      })
+    await openAddForm()
+    await findByBarcode(BARCODE)
+    expect(await screen.findByText(bg.products.linkedChip)).toBeInTheDocument()
+
+    await userEvent.clear(screen.getByLabelText(bg.addBottle.barcodeLookup))
+    await findByBarcode('5000267014210')
+
+    expect(await screen.findByText(i18n.t('addBottle.barcodeSuggested', { count: 1 }))).toBeInTheDocument()
+    expect(screen.queryByText(bg.products.linkedChip)).not.toBeInTheDocument()
+    expect(screen.getByLabelText(bg.addBottle.name)).toHaveValue('Unknown Cask')
   })
 })

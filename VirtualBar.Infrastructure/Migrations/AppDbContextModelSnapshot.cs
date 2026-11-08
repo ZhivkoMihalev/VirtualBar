@@ -259,7 +259,8 @@ namespace VirtualBar.Infrastructure.Migrations
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("Barcode")
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(14)
+                        .HasColumnType("nvarchar(14)");
 
                     b.Property<int>("Category")
                         .HasColumnType("int");
@@ -331,6 +332,8 @@ namespace VirtualBar.Infrastructure.Migrations
                         .HasColumnType("int");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("Barcode");
 
                     b.HasIndex("DistilleryId");
 

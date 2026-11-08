@@ -31,4 +31,28 @@ public sealed class BarcodeFormatTests
     [InlineData(" 5000267014203 ", "5000267014203")]
     public void Normalize_TrimsAndTurnsBlankIntoNull(string? barcode, string? expected) =>
         Assert.Equal(expected, BarcodeFormat.Normalize(barcode));
+
+    [Fact]
+    public void Equivalents_OfAUpcA_AreItsEan13AndGtin14Forms() =>
+        Assert.Equal(
+            ["082184090466", "0082184090466", "00082184090466"],
+            BarcodeFormat.Equivalents("082184090466"));
+
+    [Fact]
+    public void Equivalents_OfAnEan13WithALeadingZero_IncludeTheUpcA() =>
+        Assert.Contains("082184090466", BarcodeFormat.Equivalents("0082184090466"));
+
+    [Fact]
+    public void Equivalents_OfAnEan13_AreItAndItsGtin14Form() =>
+        Assert.Equal(["5000267014203", "05000267014203"], BarcodeFormat.Equivalents("5000267014203"));
+
+    [Fact]
+    public void Equivalents_OfAnEan8_ReachEveryLongerForm() =>
+        Assert.Equal(
+            ["50103140", "000050103140", "0000050103140", "00000050103140"],
+            BarcodeFormat.Equivalents("50103140"));
+
+    [Fact]
+    public void Equivalents_KeepALengthNoGtinHas_AsGiven() =>
+        Assert.Equal("123456789", BarcodeFormat.Equivalents(" 123456789 ")[0]);
 }

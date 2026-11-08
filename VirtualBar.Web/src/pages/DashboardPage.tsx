@@ -17,7 +17,7 @@ import {
   reorderBottles,
 } from '../api/bottlesApi'
 import { getCollectionValue } from '../api/pricesApi'
-import type { Bottle, SpiritCategory, AddBottlePayload, Product } from '../types'
+import type { Bottle, SpiritCategory, AddBottlePayload, BarcodeLookup, BarcodeSuggestion, Product } from '../types'
 import { BottleSvg, VirtualBarScene } from '../components/BarShelf'
 import { CATEGORY_COLORS } from '../lib/bottlePalette'
 import BarcodeScannerDialog from '../components/BarcodeScannerDialog'
@@ -136,6 +136,8 @@ function AddBottlePanel({ onSuccess }: { onSuccess: () => void }) {
   const [barcode, setBarcode] = useState('')
   const [barcodeLoading, setBarcodeLoading] = useState(false)
   const [barcodeStatus, setBarcodeStatus] = useState<'idle' | 'found' | 'notFound' | 'invalid' | 'error'>('idle')
+  // What the last barcode lookup answered: where from, how many collectors back it, and a suggestion's own fields.
+  const [barcodeAnswer, setBarcodeAnswer] = useState<BarcodeLookup | null>(null)
   const [scannerOpen, setScannerOpen] = useState(false)
 
   // A picked link survives only while the identity fields still match the picked product —
@@ -199,9 +201,25 @@ function AddBottlePanel({ onSuccess }: { onSuccess: () => void }) {
   const handleProductPick = (product: Product) => applyProduct(product, 'pick')
 
   // The barcode in the field is saved with the bottle, so a link that came from another barcode must not survive it.
+  /**
+   * Fills the form from other collectors' bottles of a barcode no catalog product has (#49). Nothing is linked: saving
+   * files a product request, as for any bottle the catalog lacks.
+   */
+  const applySuggestion = (suggestion: BarcodeSuggestion) => {
+    if (linkSource === 'barcode') clearProductLink()
+    form.setValue('name', suggestion.name, { shouldValidate: true })
+    form.setValue('category', suggestion.category)
+    form.setValue('distilleryId', suggestion.distilleryId)
+    form.setValue('age', suggestion.age != null ? String(suggestion.age) : '')
+    form.setValue('abv', suggestion.abvPercent != null ? String(suggestion.abvPercent) : '')
+    form.setValue('volume', suggestion.volumeMl != null ? String(suggestion.volumeMl) : '')
+    form.setValue('vintage', suggestion.vintageYear != null ? String(suggestion.vintageYear) : '', { shouldValidate: true })
+  }
+
   const handleBarcodeChange = (value: string) => {
     setBarcode(value)
     setBarcodeStatus('idle')
+    setBarcodeAnswer(null)
     if (linkSource === 'barcode') clearProductLink()
   }
 
@@ -209,8 +227,12 @@ function AddBottlePanel({ onSuccess }: { onSuccess: () => void }) {
     if (!code) return
     setBarcodeLoading(true)
     setBarcodeStatus('idle')
+    setBarcodeAnswer(null)
     try {
-      applyProduct(await lookupBarcode(code), 'barcode')
+      const answer = await lookupBarcode(code)
+      if (answer.product) applyProduct(answer.product, 'barcode')
+      else if (answer.suggestion) applySuggestion(answer.suggestion)
+      setBarcodeAnswer(answer)
       setBarcodeStatus('found')
     } catch (error) {
       // A miss drops a link an earlier barcode made: saving would give this barcode to that product.
@@ -247,8 +269,9 @@ function AddBottlePanel({ onSuccess }: { onSuccess: () => void }) {
       name: v.name.trim(),
       distilleryId: v.distilleryId,
       productId: activeProduct?.id ?? null,
-      country: activeProduct?.country ?? undefined,
-      region: activeProduct?.region ?? undefined,
+      // The form has no origin fields: a linked product gives them, or else a barcode's suggestion.
+      country: activeProduct?.country ?? barcodeAnswer?.suggestion?.country ?? undefined,
+      region: activeProduct?.region ?? barcodeAnswer?.suggestion?.region ?? undefined,
       category: v.category,
       condition: v.condition,
       quantity: v.quantity,
@@ -378,10 +401,22 @@ function AddBottlePanel({ onSuccess }: { onSuccess: () => void }) {
           </Button>
         </div>
         <BarcodeScannerDialog open={scannerOpen} onOpenChange={setScannerOpen} onDetected={handleScanned} />
-        {barcodeStatus === 'found' && (
-          <div className="flex items-center gap-1.5 rounded-md border border-success/40 bg-success/10 px-3 py-2 text-sm text-success">
-            <Check className="size-3.5" />
-            {t('addBottle.barcodeSuccess')}
+        {barcodeStatus === 'found' && barcodeAnswer && (
+          <div
+            role="status"
+            className={cn(
+              'flex items-start gap-1.5 rounded-md border px-3 py-2 text-sm',
+              barcodeAnswer.source === 'Bottles'
+                ? 'border-primary/30 bg-primary/5 text-primary'
+                : 'border-success/40 bg-success/10 text-success',
+            )}
+          >
+            {barcodeAnswer.source !== 'Bottles' && <Check className="mt-0.5 size-3.5 shrink-0" />}
+            {barcodeAnswer.source === 'Catalog'
+              ? t('addBottle.barcodeSuccess')
+              : barcodeAnswer.source === 'Collectors'
+                ? t('addBottle.barcodeFromCollectors', { count: barcodeAnswer.collectors })
+                : t('addBottle.barcodeSuggested', { count: barcodeAnswer.collectors })}
           </div>
         )}
         {barcodeStatus === 'notFound' && (

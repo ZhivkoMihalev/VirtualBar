@@ -2557,6 +2557,47 @@ public sealed class BottleServiceTests
     }
 
     [Fact]
+    public async Task AddBottleAsync_WhenThePairIsKnownInAnotherForm_RecordsNothingNew()
+    {
+        var db = CreateDbContext();
+        var user = SeedUser(db);
+        var product = SeedProduct(db, name: "Red Label");
+        SeedProductBarcode(db, product, barcode: "0082184090466");
+        db.ChangeTracker.Clear();
+        var service = CreateBottleService(db, user.Id);
+
+        var result = await service.AddBottleAsync(
+            new AddBottleRequest { Name = "Red Label", ProductId = product.Id, Barcode = "082184090466" },
+            CancellationToken.None);
+
+        Assert.True(result.Success);
+        Assert.Equal(1, await db.ProductBarcodes.CountAsync());
+    }
+
+    /// <summary>An admin removed this pair (#49): a collector saving the same bottle again must not bring it back.</summary>
+    [Fact]
+    public async Task AddBottleAsync_WhenAnAdminRemovedThePair_DoesNotRecordItAgain()
+    {
+        var db = CreateDbContext();
+        var user = SeedUser(db);
+        var product = SeedProduct(db, name: "Red Label");
+        db.ProductBarcodes.Add(new ProductBarcode
+        {
+            ProductId = product.Id, Barcode = Barcode, AddedByUserId = Guid.NewGuid(), IsDeleted = true,
+            DeletedAt = DateTime.UtcNow
+        });
+        db.SaveChanges();
+        db.ChangeTracker.Clear();
+        var service = CreateBottleService(db, user.Id);
+
+        var result = await service.AddBottleAsync(
+            new AddBottleRequest { Name = "Red Label", ProductId = product.Id, Barcode = Barcode }, CancellationToken.None);
+
+        Assert.True(result.Success);
+        Assert.True((await db.ProductBarcodes.AsNoTracking().SingleAsync()).IsDeleted);
+    }
+
+    [Fact]
     public async Task AddBottleAsync_WhenAnotherProductHasThatBarcodeFromACollector_RecordsItForThisOneToo()
     {
         var db = CreateDbContext();

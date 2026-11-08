@@ -14,7 +14,8 @@
     "register": "REGISTER",
     "logout": "SIGN OUT",
     "backToMyBar": "← MY BAR",
-    "browseCollectors": "← COLLECTORS"
+    "browseCollectors": "← COLLECTORS",
+    "productBarcodes": "BARCODES"
   },
   "lang": {
     "bg": "Български",
@@ -169,7 +170,11 @@
     "vintageRequested": "When you save, we will ask for “{{name}}” to be added to the catalog.",
     "barcodeInvalid": "A barcode is 8 to 14 digits.",
     "barcodeError": "The barcode lookup failed. Please try again.",
-    "scanBarcode": "Scan"
+    "scanBarcode": "Scan",
+    "barcodeFromCollectors_one": "✓ Found: {{count}} collector linked this barcode to this bottle – check that it is the same one.",
+    "barcodeFromCollectors_other": "✓ Found: {{count}} collectors linked this barcode to this bottle.",
+    "barcodeSuggested_one": "This bottle is not in the catalog yet. We filled the fields from {{count}} collector's bottle – check them.",
+    "barcodeSuggested_other": "This bottle is not in the catalog yet. We filled the fields from {{count}} collectors' bottles – check them."
   },
   "barcodeScanner": {
     "title": "Scan a barcode",
@@ -702,5 +707,25 @@
     "imageUrl": "Image URL",
     "cancel": "Cancel",
     "saving": "Saving…"
+  },
+  "productBarcodes": {
+    "title": "Barcodes from collectors",
+    "subtitle": "The barcodes collectors linked to catalog products. Remove a wrong pair and it will not come back.",
+    "searchLabel": "Search a barcode or a product",
+    "searchPlaceholder": "Barcode, name or brand…",
+    "search": "Search",
+    "loading": "Loading…",
+    "error": "Something went wrong. Please try again.",
+    "empty": "No barcodes.",
+    "conflict": "Conflict",
+    "addedBy": "Added by {{name}} on {{date}}",
+    "collectors_one": "{{count}} collector",
+    "collectors_other": "{{count}} collectors",
+    "remove": "Remove",
+    "removeTitle": "Remove {{barcode}}",
+    "removeText": "The barcode will no longer lead to “{{product}}” and will not be recorded for this product again.",
+    "removed": "Barcode {{barcode}} removed.",
+    "cancel": "Cancel",
+    "showMore": "Show more"
   }
 }

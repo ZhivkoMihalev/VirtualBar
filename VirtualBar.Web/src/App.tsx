@@ -25,6 +25,7 @@ const MarketplacePage = lazy(() => import('./pages/MarketplacePage'))
 const OffersPage = lazy(() => import('./pages/OffersPage'))
 const ProfilePage = lazy(() => import('./pages/ProfilePage'))
 const ProductRequestsAdminPage = lazy(() => import('./pages/ProductRequestsAdminPage'))
+const ProductBarcodesAdminPage = lazy(() => import('./pages/ProductBarcodesAdminPage'))
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { staleTime: 30_000 } },
@@ -94,6 +95,14 @@ function AppRoutes() {
           <ProtectedRoute>
             <ProfilePage />
           </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/barcodes"
+        element={
+          <AdminRoute>
+            <ProductBarcodesAdminPage />
+          </AdminRoute>
         }
       />
       <Route

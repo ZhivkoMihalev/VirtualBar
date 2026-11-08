@@ -5,7 +5,7 @@ import type {
   AddBottlePayload,
   UpdateBottlePayload,
   MarketplaceFilters,
-  Product,
+  BarcodeLookup,
 } from '../types'
 
 export async function getMarketplace(filters: MarketplaceFilters): Promise<Bottle[]> {
@@ -57,9 +57,9 @@ export async function linkBottleImage(bottleId: string, url: string): Promise<vo
   await client.post(`/bottles/${bottleId}/images/link`, { url })
 }
 
-/** The catalog product a barcode belongs to (#49), as the catalog search returns it (#120); 404 when nobody has it. */
-export async function lookupBarcode(barcode: string): Promise<Product> {
-  const res = await client.get<Product>(`/products/barcode/${encodeURIComponent(barcode)}`)
+/** What the platform knows about a barcode (#49): a catalog product or a suggestion; 404 when nobody has it. */
+export async function lookupBarcode(barcode: string): Promise<BarcodeLookup> {
+  const res = await client.get<BarcodeLookup>(`/products/barcode/${encodeURIComponent(barcode)}`)
   return res.data
 }
 

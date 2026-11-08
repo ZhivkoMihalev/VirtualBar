@@ -183,6 +183,12 @@ public sealed class ProductRequestService(
             bottle.UpdatedAt = respondedAt;
         }
 
+        // Every bottle this approval linked teaches the platform its barcode, as a bottle linked when added does (#49).
+        var linked = candidates.Where(b => b.ProductId == product.Id).Prepend(sourceBottle).OfType<Bottle>();
+
+        foreach (var bottle in linked.Where(b => b.Barcode is not null))
+            await ProductBarcodeRecorder.RecordAsync(db, product.Id, bottle.Barcode!, bottle.UserId, cancellationToken);
+
         await db.SaveChangesAsync(cancellationToken);
 
         await notificationService.CreateAsync(

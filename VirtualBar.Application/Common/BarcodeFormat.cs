@@ -21,4 +21,26 @@ public static class BarcodeFormat
     /// <summary>The barcode as it is stored: trimmed, and null when nothing is left.</summary>
     public static string? Normalize(string? barcode) =>
         string.IsNullOrWhiteSpace(barcode) ? null : barcode.Trim();
+
+    // The lengths a GS1 number is written in: GTIN-8, GTIN-12 (UPC-A), GTIN-13 (EAN-13), GTIN-14.
+    private static readonly int[] GtinLengths = [8, 12, 13, 14];
+
+    /// <summary>
+    /// Every way the same number can be written (#49): a GTIN keeps its value when zeros are added in front, so the UPC-A
+    /// 082184090466 printed on a bottle is also the EAN-13 0082184090466 and the GTIN-14 00082184090466. A lookup and
+    /// the pair check match on all of them, so a barcode stored in one form is found from another. The barcode as given
+    /// (trimmed) is always one of them.
+    /// </summary>
+    public static IReadOnlyList<string> Equivalents(string barcode)
+    {
+        var trimmed = barcode.Trim();
+        var digits = trimmed.TrimStart('0');
+
+        return GtinLengths
+            .Where(length => digits.Length <= length)
+            .Select(length => digits.PadLeft(length, '0'))
+            .Prepend(trimmed)
+            .Distinct()
+            .ToList();
+    }
 }

@@ -4,6 +4,8 @@
 > `.claude/rules/domain/catalog.md` (Barcodes, `ProductBarcode`), `.claude/rules/domain/bottles.md` (Barcode) and
 > `.claude/rules/frontend/shared-components.md` (`BarcodeScannerDialog`). Where this spec and those rules differ, the
 > rules win. Read the owner decisions below first: they replace parts of the spec.
+> The label photo (slice 4, `03-label-scan.md`) was **rejected** (owner, 2026-11-09, #123): no call to Claude reads a
+> label. It is kept below as a record only and is not to be built.
 
 ## Owner decisions, 2026-11-08 (they replace the sections below where they differ)
 - **No external barcode database.** A test of UPCitemdb with a real EAN (Johnnie Walker Red Label 70 cl,
@@ -31,7 +33,8 @@
      lookup matches every form of a barcode (UPC-A, EAN-13, GTIN-14), ranks products by the collectors who back them,
      suggests from unlinked bottles, and an approval records the barcodes of the bottles it links; a removed pair never
      comes back.
-  4. Label photo (spec 03), later.
+  4. Label photo (spec 03). **Rejected** (owner, 2026-11-09, #123): an unknown barcode is already handled by slice 2,
+     where the collector picks the bottle from the catalog and saving teaches the platform the barcode.
 
 > **Read this first, before any slice.** Single source of truth for the decisions, the architecture,
 > the conventions, and the risks. Each `NN-*.md` slice assumes you read this. Format mirrors

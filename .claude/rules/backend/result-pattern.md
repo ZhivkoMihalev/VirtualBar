@@ -32,6 +32,8 @@ Result<T>.Fail("Name is required.")       // → 400 (validation)
 - The auth endpoints use it: `AuthErrorReasons` in `VirtualBar.Application/Common` (`InvalidCredentials`, `LockedOut`,
   `EmailNotConfirmed`, `EmailTaken`). The frontend translates them in the `authErrors` i18n namespace via
   `src/lib/authErrors.ts`.
+- The offer endpoints send `OfferErrorReasons.NoBottleLeft` with the `409` for a bottle whose every bottle is reserved
+  for buyers (#130); the offers page shows `offers.errorNoBottleLeft` for it.
 - Reason values are API contract: never rename one.
 - Login deliberately has a single `InvalidCredentials` for unknown email and wrong password, so it does not reveal
   which accounts exist. That includes an unconfirmed account: `EmailNotConfirmed` comes only after the right password

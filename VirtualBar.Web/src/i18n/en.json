@@ -307,7 +307,12 @@
     "noBarcode": "This bottle has no barcode yet. Scan it so other collectors' bottles of it are recognised too.",
     "saveBarcode": "Save barcode",
     "barcodeSaved": "Barcode saved.",
-    "errorBarcode": "The barcode could not be saved. Please try again."
+    "errorBarcode": "The barcode could not be saved. Please try again.",
+    "acquiredFrom": "Bought from",
+    "quantityReserved_one": "{{count}} is reserved for a buyer until the deal is confirmed.",
+    "quantityReserved_other": "{{count}} are reserved for buyers until the deals are confirmed.",
+    "allReserved": "Every bottle is reserved for buyers.",
+    "removeReserved": "The bottle is reserved for a buyer. Cancel the deal before removing it."
   },
   "collectionValue": {
     "title": "Collection value",
@@ -429,8 +434,8 @@
     "wishListMatchNoName": "A bottle from your wish list is now available",
     "offerReceived": "made an offer on {{bottle}}",
     "offerReceivedNoName": "made an offer on your bottle",
-    "offerAccepted": "accepted your offer on {{bottle}}",
-    "offerAcceptedNoName": "accepted your offer",
+    "offerAccepted": "accepted your offer for {{bottle}}. Confirm when you receive it.",
+    "offerAcceptedNoName": "accepted your offer. Confirm when you receive the bottle.",
     "offerDeclined": "declined your offer on {{bottle}}",
     "offerDeclinedNoName": "declined your offer",
     "badgeEarned": "You earned a badge:",
@@ -441,7 +446,11 @@
     "justNow": "now",
     "minutesAgo": "{{count}}m",
     "hoursAgo": "{{count}}h",
-    "daysAgo": "{{count}}d"
+    "daysAgo": "{{count}}d",
+    "saleCompleted": "confirmed receiving {{bottle}}",
+    "saleCompletedNoName": "confirmed receiving the bottle",
+    "dealCancelled": "cancelled the deal for {{bottle}}",
+    "dealCancelledNoName": "cancelled the deal"
   },
   "wishList": {
     "title": "Wish List",
@@ -510,7 +519,7 @@
     "decline": "Decline",
     "withdraw": "Withdraw",
     "statusPending": "Pending",
-    "statusAccepted": "Accepted",
+    "statusAccepted": "Completed",
     "statusDeclined": "Declined",
     "statusWithdrawn": "Withdrawn",
     "by": "by {{name}}",
@@ -518,7 +527,20 @@
     "loading": "LOADING…",
     "errorCreate": "Failed to send offer. Please try again.",
     "priceInvalid": "Enter a valid price.",
-    "errorRespond": "Operation failed. Please try again."
+    "errorRespond": "Operation failed. Please try again.",
+    "statusAwaitingReceipt": "Awaiting receipt",
+    "statusCancelled": "Deal cancelled",
+    "acceptHint": "Accepting reserves the bottle for the buyer until they confirm receiving it.",
+    "awaitingSeller": "The bottle is reserved. Waiting for the buyer to confirm they received it.",
+    "awaitingBuyer": "Confirm when the bottle arrives. It then joins your bar.",
+    "confirmReceipt": "I received the bottle",
+    "cancelDeal": "Cancel the deal",
+    "errorNoBottleLeft": "No bottle is left to sell.",
+    "reminderTitle": "Did the bottle arrive?",
+    "reminderText": "Confirm when the bottle arrives. It then joins your bar and leaves the seller's.",
+    "reminderFrom": "from {{name}} · accepted on {{date}}",
+    "reminderLater": "Not yet",
+    "reminderAll": "Go to offers"
   },
   "reviews": {
     "title": "Reviews",

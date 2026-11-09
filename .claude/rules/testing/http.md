@@ -60,8 +60,10 @@ codes, JWT validation and the startup guards. They are not a place for branch co
   bottle images and news covers, 5 MB for avatars and wishes), answers 400 and leaves no file behind. A new upload
   endpoint joins the `Endpoint` enum.
 - **Flows** (`Flows/`): a chain across users and services end to end over HTTP, one token per collector, like
-  `VirtualBar.Tests/Integration` at service level. `MarketplaceFlowTests` lists a bottle, makes an offer and accepts it,
-  then checks both collectors' notifications and their `FirstSale` / `FirstPurchase` badges.
+  `VirtualBar.Tests/Integration` at service level. `MarketplaceFlowTests` lists a bottle, makes an offer, accepts it
+  (the bottle is reserved and off sale) and has the buyer confirm receipt: the bottle moves to the buyer's bar, and both
+  collectors get their notifications and their `FirstSale` / `FirstPurchase` badges. It also cancels a deal, and checks
+  that a sold-out bottle declines the other offers and refuses new ones (#130).
 - Method naming as in the service tests: `<Endpoint>_When<Condition>_<ExpectedOutcome>`.
 
 ## Folders
@@ -78,5 +80,5 @@ codes, JWT validation and the startup guards. They are not a place for branch co
   suggestion, and a barcode that is not 8–14 digits answers 400 on add and on lookup. The admin barcode list and
   removal are in `Access/AdminTests.cs`.
 - `Uploads/`: the four multipart upload endpoints: saved + served, wrong type and oversized refused
-- `Flows/`: cross-user flows end to end (offer → accept → notifications + badges)
+- `Flows/`: cross-user flows end to end (offer → accept → confirm receipt or cancel → notifications + badges)
 - `Startup/`: configuration Program.cs refuses to start with

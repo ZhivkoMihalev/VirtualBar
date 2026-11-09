@@ -31,6 +31,10 @@ paths:
   - `LikesSection`, `ReviewsSection` (aggregate header + one-per-user review form + review list; form
     authenticated-only), and `CommentsSection` (below reviews) for all.
   - `onDelete` prop (DashboardPage only) invalidates bottles query and closes panel.
+  - Bottles reserved for buyers (#130, `reservedQuantity`): `QuantitySection` cannot go below the listed plus reserved
+    count and says how many are reserved; `SaleSection` offers only the free bottles (`bottle.allReserved` when none);
+    `DeleteSection` shows `bottle.removeReserved` instead of the remove button.
+  - A bottle that came through a deal shows "Купена от" (`bottle.acquiredFrom`) with the seller linked to their bar.
   - The sale and offer forms offer only `CURRENCIES` from `src/lib/currencies.ts`, EUR by default
     (`.claude/rules/domain/currencies.md`).
   - The owner gets `BarcodeSection`: the bottle's barcode, typed or scanned, saved through an update that echoes the
@@ -46,6 +50,12 @@ paths:
   - The caller owns the query (`EstimateSection` in the panel for a bottle, `ProductPage` for a product).
 - `src/components/CategoryPill.tsx` — the round category filter button (`aria-pressed`) used by Marketplace and the
   catalog.
+- `src/components/ReceiptReminder.tsx` — mounted once in `App.tsx` (#130). For a logged-in buyer with offers
+  `AwaitingReceipt` (it reads `GET /api/offers/sent`, query key `['offers', 'sent']`) it opens a dialog "Получи ли
+  бутилката?" with "Получих бутилката" per purchase and "Още не".
+  - "Още не" stores the session's token in `sessionStorage` (`vbar_receipt_reminder_dismissed`), so it asks again after
+    the next login and in a new tab or browser session; storage errors are ignored.
+  - It renders nothing for a visitor or when no purchase waits.
 - `src/components/ChatWidget.tsx` — floating Facebook Messenger-style chat.
   - `position: fixed; bottom: 0; right: 20px; zIndex: 1000`. Renders only for authenticated users.
   - Layout right-to-left: gold circular toggle button (52px, unread badge) → inbox panel (300×480px) → active

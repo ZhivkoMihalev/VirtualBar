@@ -529,7 +529,7 @@ function QuantitySection({ bottle, userId }: { bottle: Bottle; userId: string })
             variant="outline"
             size="icon"
             className="size-8"
-            disabled={mutation.isPending || bottle.quantity <= Math.max(1, bottle.forSaleQuantity)}
+            disabled={mutation.isPending || bottle.quantity <= Math.max(1, bottle.forSaleQuantity + bottle.reservedQuantity)}
             aria-label={t('addBottle.quantityDecrease')}
             onClick={() => mutation.mutate(bottle.quantity - 1)}
           >
@@ -554,6 +554,12 @@ function QuantitySection({ bottle, userId }: { bottle: Bottle; userId: string })
       {bottle.forSaleQuantity > 0 && (
         <div className="mt-2.5 text-xs text-muted-foreground">
           {t('bottle.quantityLockedByListing', { forSale: bottle.forSaleQuantity })}
+        </div>
+      )}
+
+      {bottle.reservedQuantity > 0 && (
+        <div className="mt-2.5 text-xs text-muted-foreground">
+          {t('bottle.quantityReserved', { count: bottle.reservedQuantity })}
         </div>
       )}
 
@@ -676,6 +682,8 @@ function SaleSection({ bottle, userId }: { bottle: Bottle; userId: string }) {
   // Default to one bottle even on a stack: offering more than intended is the costlier mistake.
   const [saleQuantity, setSaleQuantity] = useState(1)
   const isStack = bottle.quantity > 1
+  // Bottles reserved for buyers (#130) cannot go on sale again.
+  const freeQuantity = bottle.quantity - bottle.reservedQuantity
 
   const invalidate = () => {
     queryClient.invalidateQueries({ queryKey: ['bottles', userId] })
@@ -730,6 +738,8 @@ function SaleSection({ bottle, userId }: { bottle: Bottle; userId: string }) {
             </div>
           )}
         </div>
+      ) : freeQuantity < 1 ? (
+        <p className="text-sm text-muted-foreground">{t('bottle.allReserved')}</p>
       ) : (
         <div className="flex flex-wrap items-center gap-2">
           <Input
@@ -762,7 +772,7 @@ function SaleSection({ bottle, userId }: { bottle: Bottle; userId: string }) {
             {listMutation.isPending ? '···' : t('bottle.listForSale')}
           </Button>
 
-          {isStack && (
+          {freeQuantity > 1 && (
             <div className="mt-1 flex w-full flex-wrap items-center justify-between gap-3 border-t border-primary/10 pt-3">
               <div className="space-y-0.5">
                 <div className="text-sm text-foreground">{t('bottle.howManyForSale')}</div>
@@ -788,9 +798,9 @@ function SaleSection({ bottle, userId }: { bottle: Bottle; userId: string }) {
                   variant="outline"
                   size="icon"
                   className="size-8"
-                  disabled={saleQuantity >= bottle.quantity}
+                  disabled={saleQuantity >= freeQuantity}
                   aria-label={t('bottle.forSaleIncrease')}
-                  onClick={() => setSaleQuantity(q => Math.min(bottle.quantity, q + 1))}
+                  onClick={() => setSaleQuantity(q => Math.min(freeQuantity, q + 1))}
                 >
                   <Plus className="size-3.5" />
                 </Button>
@@ -818,6 +828,11 @@ function DeleteSection({ bottle, onDelete }: { bottle: Bottle; onDelete?: () => 
       onDelete?.()
     },
   })
+
+  // A bottle reserved for a buyer leaves the bar when they confirm receipt (#130); the deal ends before it is removed.
+  if (bottle.reservedQuantity > 0) {
+    return <p className="mb-5 text-sm text-muted-foreground">{t('bottle.removeReserved')}</p>
+  }
 
   return (
     <div className="mb-5">
@@ -1131,6 +1146,19 @@ export default function BottleDetailPanel({
         </div>
 
         <div className="px-7 pb-10 pt-6">
+          {bottle.acquiredFromUserId && bottle.acquiredFromDisplayName && (
+            <p className="mb-3 text-sm text-muted-foreground">
+              {t('bottle.acquiredFrom')}{' '}
+              <Link
+                to={`/bar/${bottle.acquiredFromUserId}`}
+                onClick={onClose}
+                className="font-medium text-primary underline-offset-4 hover:underline"
+              >
+                {bottle.acquiredFromDisplayName}
+              </Link>
+            </p>
+          )}
+
           {bottle.productId && (
             <Link
               to={`/product/${bottle.productId}`}

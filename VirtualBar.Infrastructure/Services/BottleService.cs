@@ -28,6 +28,7 @@ public sealed class BottleService(
             .Include(b => b.Reviews.Where(r => !r.IsDeleted))
             .Include(b => b.User)
             .Include(b => b.Distillery)
+            .Include(b => b.AcquiredFromOffer!).ThenInclude(o => o.Seller)
             .OrderBy(b => b.DisplayOrder)
             .ThenByDescending(b => b.CreatedAt)
             .ToListAsync(cancellationToken);
@@ -51,6 +52,7 @@ public sealed class BottleService(
             .Include(b => b.Reviews.Where(r => !r.IsDeleted))
             .Include(b => b.User)
             .Include(b => b.Distillery)
+            .Include(b => b.AcquiredFromOffer!).ThenInclude(o => o.Seller)
             .FirstOrDefaultAsync(b => b.Id == bottleId && !b.IsDeleted, cancellationToken);
 
         if (bottle is null)
@@ -171,6 +173,7 @@ public sealed class BottleService(
     public async Task<Result<BottleDto>> UpdateBottleAsync(Guid bottleId, UpdateBottleRequest request, CancellationToken cancellationToken)
     {
         var bottle = await db.Bottles
+            .Include(b => b.AcquiredFromOffer!).ThenInclude(o => o.Seller)
             .FirstOrDefaultAsync(b => b.Id == bottleId && !b.IsDeleted, cancellationToken);
 
         bottle!.Name = request.Name;
@@ -316,6 +319,7 @@ public sealed class BottleService(
             .Include(b => b.Reviews.Where(r => !r.IsDeleted))
             .Include(b => b.User)
             .Include(b => b.Distillery)
+            .Include(b => b.AcquiredFromOffer!).ThenInclude(o => o.Seller)
             .AsQueryable();
 
         if (query.Search != null)
@@ -391,6 +395,7 @@ public sealed class BottleService(
         IsLimited = bottle.IsLimited,
         IsForSale = bottle.IsForSale,
         ForSaleQuantity = bottle.ForSaleQuantity,
+        ReservedQuantity = bottle.ReservedQuantity,
         AskingPrice = bottle.AskingPrice,
         Currency = bottle.Currency,
         LikesCount = likesCount,
@@ -404,6 +409,8 @@ public sealed class BottleService(
             Url = i.Url,
             IsPrimary = i.IsPrimary,
             SortOrder = i.SortOrder
-        }).ToList()
+        }).ToList(),
+        AcquiredFromUserId = bottle.AcquiredFromOffer?.SellerId,
+        AcquiredFromDisplayName = bottle.AcquiredFromOffer?.Seller.DisplayName
     };
 }

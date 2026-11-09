@@ -7,6 +7,7 @@ import { useAuth } from './contexts/useAuth'
 import { ChatProvider } from './contexts/ChatContext'
 import Footer from './components/Footer'
 import ChatWidget from './components/ChatWidget'
+import ReceiptReminder from './components/ReceiptReminder'
 import { Toaster } from '@/components/ui/sonner'
 import { TooltipProvider } from '@/components/ui/tooltip'
 
@@ -153,6 +154,7 @@ function App() {
                 </Suspense>
               </div>
               <ChatWidget />
+              <ReceiptReminder />
               <Footer />
               <Toaster />
             </TooltipProvider>

@@ -19,6 +19,7 @@ export function bottle(overrides: Partial<Bottle> = {}): Bottle {
     isLimited: false,
     isForSale: false,
     forSaleQuantity: 0,
+    reservedQuantity: 0,
     images: [],
     likesCount: 0,
     commentsCount: 0,

@@ -28,5 +28,9 @@ public sealed class OfferDto
 
     public DateTime? RespondedAt { get; set; }
 
+    public DateTime? CompletedAt { get; set; }
+
+    public DateTime? CancelledAt { get; set; }
+
     public DateTime CreatedAt { get; set; }
 }

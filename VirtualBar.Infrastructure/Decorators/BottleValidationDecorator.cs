@@ -90,6 +90,11 @@ public sealed class BottleValidationDecorator(
         if (request.Quantity < bottle.ForSaleQuantity)
             return Result<BottleDto>.Conflict($"Quantity cannot drop below the {bottle.ForSaleQuantity} bottles listed for sale.");
 
+        // A bottle reserved for a buyer leaves the entry when they confirm receipt (#130), so it must still be there.
+        if (request.Quantity < bottle.ForSaleQuantity + bottle.ReservedQuantity)
+            return Result<BottleDto>.Conflict(
+                $"Quantity cannot drop below the {bottle.ForSaleQuantity + bottle.ReservedQuantity} bottles listed for sale or reserved for buyers.");
+
         if (request.DistilleryId is Guid distilleryId)
         {
             var distilleryExists = await db.Distilleries
@@ -120,6 +125,10 @@ public sealed class BottleValidationDecorator(
 
         if (bottle.UserId != currentUser.UserId)
             return Result<bool>.Forbidden("Forbidden.");
+
+        // The buyer's confirmation takes the reserved bottle out of this entry (#130); the deal ends first.
+        if (bottle.ReservedQuantity > 0)
+            return Result<bool>.Conflict("This bottle is reserved for a buyer. Cancel the deal before removing it.");
 
         return await inner.RemoveBottleAsync(bottleId, cancellationToken);
     }
@@ -161,9 +170,14 @@ public sealed class BottleValidationDecorator(
         if (bottle.IsForSale)
             return Result<bool>.Conflict("Bottle is already listed for sale.");
 
-        // A stack can go on sale in part, so the offered count is bounded by what the owner holds.
-        if (request.Quantity < 1 || request.Quantity > bottle.Quantity)
-            return Result<bool>.Fail($"For sale quantity must be between 1 and {bottle.Quantity}.");
+        // A stack can go on sale in part, so the offered count is bounded by what the owner holds and has not
+        // reserved for a buyer (#130).
+        var freeQuantity = bottle.Quantity - bottle.ReservedQuantity;
+        if (freeQuantity < 1)
+            return Result<bool>.Conflict("Every bottle of this entry is reserved for a buyer.");
+
+        if (request.Quantity < 1 || request.Quantity > freeQuantity)
+            return Result<bool>.Fail($"For sale quantity must be between 1 and {freeQuantity}.");
 
         if (!SupportedCurrencies.IsSupported(request.Currency))
             return Result<bool>.Fail(SupportedCurrencies.NotSupportedMessage);

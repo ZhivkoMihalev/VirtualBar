@@ -151,4 +151,49 @@ describe('BottleDetailPanel', () => {
       expect(screen.queryByLabelText(bg.bottle.barcode)).not.toBeInTheDocument()
     })
   })
+  describe('deals (#130)', () => {
+    it('shows who the bottle was bought from, linked to their bar', async () => {
+      signInCollector()
+      renderPanel(
+        bottle({ userId: signedInUser.id, acquiredFromUserId: 'seller-1', acquiredFromDisplayName: 'Ivan' }),
+        signedInUser.id,
+      )
+
+      expect(await screen.findByText(bg.bottle.acquiredFrom, { exact: false })).toBeInTheDocument()
+      expect(screen.getByRole('link', { name: 'Ivan' })).toHaveAttribute('href', '/bar/seller-1')
+    })
+
+    it('shows nothing about a deal on a bottle added by hand', async () => {
+      signInCollector()
+      renderPanel(bottle({ userId: signedInUser.id }), signedInUser.id)
+
+      expect(await screen.findByRole('heading', { name: 'Lagavulin 16' })).toBeInTheDocument()
+      expect(screen.queryByText(bg.bottle.acquiredFrom, { exact: false })).not.toBeInTheDocument()
+    })
+
+    /** A reserved bottle leaves the bar when the buyer confirms receipt, so the owner can neither remove nor resell it. */
+    it('tells the owner a reserved bottle can be neither removed nor sold again', async () => {
+      signInCollector()
+      renderPanel(bottle({ userId: signedInUser.id, quantity: 1, reservedQuantity: 1 }), signedInUser.id)
+
+      expect(await screen.findByText(i18n.t('bottle.quantityReserved', { count: 1 }))).toBeInTheDocument()
+      expect(screen.getByText(bg.bottle.removeReserved)).toBeInTheDocument()
+      expect(screen.getByText(bg.bottle.allReserved)).toBeInTheDocument()
+      expect(screen.queryByRole('button', { name: bg.bottle.remove })).not.toBeInTheDocument()
+      expect(screen.queryByRole('button', { name: bg.bottle.listForSale })).not.toBeInTheDocument()
+      expect(screen.getByRole('button', { name: bg.addBottle.quantityDecrease })).toBeDisabled()
+    })
+
+    it('offers only the free bottles of a stack for sale', async () => {
+      signInCollector()
+      renderPanel(bottle({ userId: signedInUser.id, quantity: 3, reservedQuantity: 1 }), signedInUser.id)
+
+      const increase = await screen.findByRole('button', { name: bg.bottle.forSaleIncrease })
+      await userEvent.click(increase)
+
+      // Two of the three are free: the count stops there, and the stack stays in the bar while one is reserved.
+      expect(increase).toBeDisabled()
+      expect(screen.getByText(bg.bottle.removeReserved)).toBeInTheDocument()
+    })
+  })
 })

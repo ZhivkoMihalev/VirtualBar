@@ -33,7 +33,7 @@ Every bottle count below sums `Bottle.Quantity`, so one ×5 entry counts as five
 - `FirstFollower`/`Popular10`/`Influencer50` (followers 1/10/50)
 - `FirstListing` (bottles currently on offer ≥ 1 — sums `ForSaleQuantity`, so a partly-listed stack counts only what is
   actually for sale)
-- `FirstSale`/`FirstPurchase` (accepted offers as seller/buyer)
+- `FirstSale`/`FirstPurchase` (completed deals as seller/buyer: offers `Accepted` once the buyer confirmed receipt, #130)
 - `FirstCatalogProduct` (own product requests approved by an admin ≥ 1 — counts `Status = Approved`, so linking to an
   existing catalog product counts exactly like creating a new one)
 
@@ -43,12 +43,14 @@ Every bottle count below sums `Bottle.Quantity`, so one ×5 entry counts as five
   missed** (lazy catch-up).
 - Returns `Task` (not `Result<T>`), not controller-exposed; the entire body is `try/catch` → `LogError` — a badge bug
   never breaks the host operation.
-- Called as one awaited line **after** the operation's own `SaveChangesAsync` + notification, at **seven hook sites**:
+- Called as one awaited line **after** the operation's own `SaveChangesAsync` + notification, at these hook sites:
   - `AddBottleAsync` (`BottleAdded`);
   - `ListForSaleAsync` (`BottleListed`);
   - `LikeAsync` (`LikeReceived` → the bottle **owner**);
   - `FollowAsync` (`FollowerGained` → the **followed** user);
-  - `AcceptAsync` (`OfferAccepted` ×2 — seller and buyer, winning path only);
+  - `OfferService.ConfirmReceiptAsync` (`OfferAccepted` ×2 — seller and buyer — and `BottleAdded` for the buyer's new
+    bottle; winning path only). A deal counts once the buyer confirms receiving the bottle, not when the seller accepts
+    (#130, `.claude/rules/domain/offers.md`);
   - `ProductRequestService.ApproveAsync` (`ProductRequestApproved` → the **requester**, never the admin; the
     `Conflict` race path returns before it).
 - Idempotency: awards go **one at a time** (`Add` → `SaveChangesAsync` → notification); a concurrent duplicate loses on

@@ -73,6 +73,11 @@ export default function NavBar() {
               <Link to="/admin/product-requests">{t('nav.productRequests')}</Link>
             </Button>
           )}
+          {user?.isAdmin && (
+            <Button asChild variant="ghost" size="sm">
+              <Link to="/admin/barcodes">{t('nav.productBarcodes')}</Link>
+            </Button>
+          )}
         </div>
 
         {/* Desktop right slot */}
@@ -168,6 +173,13 @@ export default function NavBar() {
                 <SheetClose asChild>
                   <Button asChild variant="ghost" className="justify-start">
                     <Link to="/admin/product-requests">{t('nav.productRequests')}</Link>
+                  </Button>
+                </SheetClose>
+              )}
+              {user?.isAdmin && (
+                <SheetClose asChild>
+                  <Button asChild variant="ghost" className="justify-start">
+                    <Link to="/admin/barcodes">{t('nav.productBarcodes')}</Link>
                   </Button>
                 </SheetClose>
               )}

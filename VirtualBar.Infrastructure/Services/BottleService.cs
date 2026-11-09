@@ -362,28 +362,11 @@ public sealed class BottleService(
         return bottle;
     }
 
-    /// <summary>
-    /// Records the bottle's barcode as a barcode of its catalog product (#49), unless that pair is already known. The
-    /// record is only added to the context, so it is saved with the bottle, in the same transaction.
-    /// </summary>
-    private async Task RecordBarcodeAsync(Bottle bottle, CancellationToken cancellationToken)
-    {
-        if (bottle.Barcode is not string barcode || bottle.ProductId is not Guid productId)
-            return;
-
-        var known = await db.ProductBarcodes
-            .AnyAsync(b => b.Barcode == barcode && b.ProductId == productId && !b.IsDeleted, cancellationToken);
-
-        if (known)
-            return;
-
-        db.ProductBarcodes.Add(new ProductBarcode
-        {
-            ProductId = productId,
-            Barcode = barcode,
-            AddedByUserId = currentUser.UserId,
-        });
-    }
+    /// <summary>Records the barcode of a linked bottle for its catalog product (#49), in the same save as the bottle.</summary>
+    private Task RecordBarcodeAsync(Bottle bottle, CancellationToken cancellationToken) =>
+        bottle.Barcode is string barcode && bottle.ProductId is Guid productId
+            ? ProductBarcodeRecorder.RecordAsync(db, productId, barcode, bottle.UserId, cancellationToken)
+            : Task.CompletedTask;
 
     private static BottleDto MapToDto(Bottle bottle, int likesCount = 0, int commentsCount = 0, double? averageScore = null, int reviewsCount = 0, string userDisplayName = "") => new()
     {

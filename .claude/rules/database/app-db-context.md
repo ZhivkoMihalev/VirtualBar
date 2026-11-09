@@ -48,7 +48,7 @@ paths:
 | `UserBadges` | Junction: user → earned achievement badge (composite PK; awards are permanent) |
 | `Products` | Canonical spirits catalog (seeded via `ProductSeeder` + admin-approved requests) — powers add-form autocomplete, auto-linking, the barcode lookup |
 | `ProductRequests` | User-filed requests to add a missing catalog product — admin approves/rejects; one pending per canonical key |
-| `ProductBarcodes` | Barcodes collectors gave a catalog product by saving a linked bottle with one (#49) — the barcode lookup's second source |
+| `ProductBarcodes` | Barcodes collectors gave a catalog product by saving a linked bottle with one (#49) — the barcode lookup's second source; a removed row is an admin's rejection |
 
 ## BaseEntity and soft delete
 - All entities extend `BaseEntity` which adds `Id (Guid)`, `CreatedAt`, `UpdatedAt`, `IsDeleted`, `DeletedAt`.

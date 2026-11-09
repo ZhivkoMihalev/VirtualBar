@@ -31,7 +31,7 @@ paths:
 | `AskingPrice` | `decimal?` | `decimal(18,2)` |
 | `Currency` | `string?` | `EUR`, `GBP` or `USD`, stored upper-case (`.claude/rules/domain/currencies.md`) |
 | `ForSaleAt` | `DateTime?` | When the bottle was listed for sale (set by `ListForSaleAsync`, cleared by `UnlistFromSaleAsync`) |
-| `Barcode` | `string?` | The EAN/UPC on the bottle, 8–14 digits — see below |
+| `Barcode` | `string?` | The EAN/UPC on the bottle, 8–14 digits; `nvarchar(14)`, indexed — see below |
 | `ProductId` | `Guid?` | FK → Product (nullable) — catalog link; see below |
 | `DisplayOrder` | `int` | The bottle's place on its owner's shelf — see below |
 
@@ -77,8 +77,11 @@ paths:
   an unlinked one's product request carries it.
 - Pricing uses it when the bottle's product has none (`.claude/rules/domain/pricing.md`).
 - **The add form** (`DashboardPage`): a barcode typed or scanned (`BarcodeScannerDialog`) is looked up at once.
-  - A hit fills every field from the product, like a catalog pick, and links it (#120); the link is a barcode link,
-    so editing the name keeps it, while changing the barcode or a later miss drops it.
+  - A product (`Catalog` or `Collectors`) fills every field from it, like a catalog pick, and links it (#120); the link
+    is a barcode link, so editing the name keeps it, while changing the barcode or a later miss drops it. For
+    `Collectors` the message says how many collectors back it (`addBottle.barcodeFromCollectors`).
+  - A suggestion (`Bottles`) fills the fields from other collectors' bottles, links nothing, and sends its country and
+    region with the bottle (`addBottle.barcodeSuggested`): saving files a product request, as for any unknown bottle.
   - A miss (`404`) asks to pick the bottle from the catalog (`addBottle.barcodeNotFound`); the barcode stays in the
     field and is saved with the picked product, which records it (`ProductBarcode`). `400` and other failures have
     their own messages.

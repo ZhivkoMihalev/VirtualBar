@@ -374,6 +374,49 @@ export interface ProductDetail extends Product {
   latestReviews: BottleReview[]
 }
 
+/** Where a barcode lookup found its answer (#49). */
+export type BarcodeSource = 'Catalog' | 'Collectors' | 'Bottles'
+
+/** What other collectors' bottles say about a barcode no catalog product has (#49): each field is what most of them carry. */
+export interface BarcodeSuggestion {
+  name: string
+  category: SpiritCategory
+  distilleryId: string | null
+  distilleryName: string | null
+  age: number | null
+  vintageYear: number | null
+  abvPercent: number | null
+  volumeMl: number | null
+  country: string | null
+  region: string | null
+}
+
+/**
+ * The answer to a barcode (#49): a catalog product (`Catalog`, `Collectors`), or a suggestion from collectors' bottles
+ * not yet in the catalog (`Bottles`). `collectors` is how many collectors back it (0 for the catalog's own barcode).
+ */
+export interface BarcodeLookup {
+  source: BarcodeSource
+  product: Product | null
+  suggestion: BarcodeSuggestion | null
+  collectors: number
+}
+
+/** A barcode collectors gave a catalog product, as the admin list shows it (#49). */
+export interface ProductBarcode {
+  id: string
+  barcode: string
+  productId: string
+  productName: string
+  productBrand: string | null
+  addedByUserId: string
+  addedByDisplayName: string
+  collectors: number
+  /** The barcode, in any form, also belongs to another live product. */
+  conflict: boolean
+  createdAt: string
+}
+
 export type ProductRequestStatus = 'Pending' | 'Approved' | 'Rejected'
 
 export interface ProductRequest {

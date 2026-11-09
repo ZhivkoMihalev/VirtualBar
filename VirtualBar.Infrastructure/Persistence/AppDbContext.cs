@@ -96,6 +96,14 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
         builder.Entity<Bottle>()
             .HasIndex(b => new { b.UserId, b.IsDeleted });
 
+        // The barcode lookup reads other collectors' bottles by barcode (#49); a GTIN is at most 14 digits.
+        builder.Entity<Bottle>()
+            .Property(b => b.Barcode)
+            .HasMaxLength(BarcodeFormat.MaxLength);
+
+        builder.Entity<Bottle>()
+            .HasIndex(b => b.Barcode);
+
         builder.Entity<UserFollow>()
             .HasIndex(f => f.FollowedId);
 

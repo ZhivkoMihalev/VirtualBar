@@ -73,8 +73,10 @@ codes, JWT validation and the startup guards. They are not a place for branch co
   bar's bottles without `askingPrice`/`currency`, a collector with them (#103)
 - `Feed/`: the home feed on SQL Server: a followed collector's review (its query and JSON shape), the largest `skip`
 - `Products/`: the product page: a visitor gets `listingsCount` and `listings: []`, a collector the listings (#102); the
-  barcode database (#49): a bottle saved linked with a barcode makes another collector's lookup find the product, in the
-  catalog search's shape (#120), and a barcode that is not 8–14 digits answers 400 on add and on lookup
+  barcode database (#49): a bottle saved linked with a barcode makes another collector's lookup find the product
+  (`source`, `collectors`, the product in the catalog search's shape, #120), an unlinked bottle's barcode answers a
+  suggestion, and a barcode that is not 8–14 digits answers 400 on add and on lookup. The admin barcode list and
+  removal are in `Access/AdminTests.cs`.
 - `Uploads/`: the four multipart upload endpoints: saved + served, wrong type and oversized refused
 - `Flows/`: cross-user flows end to end (offer → accept → notifications + badges)
 - `Startup/`: configuration Program.cs refuses to start with

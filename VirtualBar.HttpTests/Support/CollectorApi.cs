@@ -34,6 +34,20 @@ internal static class CollectorApi
             category = "Rum",
         }));
 
+    /// <summary>A random 13-digit barcode, so no other test and no seeded product has it.</summary>
+    public static string NewBarcode() =>
+        string.Concat(Enumerable.Range(0, 13).Select(_ => (char)('0' + Random.Shared.Next(10))));
+
+    /// <summary>Saves a bottle of <paramref name="productId"/> with <paramref name="barcode"/>, which records the pair (#49).</summary>
+    public static async Task<Guid> GiveBarcodeAsync(this Collector collector, Guid productId, string barcode) =>
+        await IdAsync(await collector.Client.PostAsJsonAsync("/api/bottles", new
+        {
+            name = UniqueName("barcode bottle"),
+            category = "Rum",
+            productId,
+            barcode,
+        }));
+
     public static async Task ListForSaleAsync(this Collector collector, Guid bottleId) =>
         await AssertSucceededAsync(await collector.Client.PostAsJsonAsync(
             $"/api/bottles/{bottleId}/list-for-sale", new { askingPrice = 120m, currency = "EUR" }));

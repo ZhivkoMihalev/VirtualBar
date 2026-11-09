@@ -14,12 +14,13 @@ public sealed class ProductsController(
     IProductCatalogService productCatalogService) : ControllerBase
 {
     /// <summary>
-    /// Finds the catalog product of an EAN/UPC barcode: the product's own barcode first, then the barcodes collectors
-    /// gave a product. Nothing outside the platform is asked.
+    /// Answers an EAN/UPC barcode from the platform's own data, in any of its equivalent forms: the catalog product's own
+    /// barcode, then the barcode collectors gave a product (the product most of them back), then a suggestion from
+    /// collectors' bottles not yet in the catalog. Nothing outside the platform is asked.
     /// </summary>
     /// <param name="barcode">The EAN or UPC barcode, 8 to 14 digits.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
-    /// <response code="200">The catalog product of the barcode.</response>
+    /// <response code="200">The product, or the suggestion, and where it came from.</response>
     /// <response code="400">Barcode is empty or not 8 to 14 digits, or the lookup failed.</response>
     /// <response code="404">No catalog product has this barcode.</response>
     [HttpGet("barcode/{barcode}")]

@@ -69,6 +69,7 @@ Current translation namespaces:
 - `product`: the `/product/:id` page
 - `products`: the product picker `ProductSelect` and product links
 - `productRequests`: the admin queue at `/admin/product-requests` and a collector's own requests on the profile
+- `productBarcodes`: the admin list at `/admin/barcodes`; `collectors` is a `_one`/`_other` plural
 - `forgotPassword`, `resetPassword`: the password reset pages
 
 ## App shell and visual theme

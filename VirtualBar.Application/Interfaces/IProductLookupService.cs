@@ -5,5 +5,5 @@ namespace VirtualBar.Application.Interfaces;
 
 public interface IProductLookupService
 {
-    Task<Result<ProductDto>> LookupByBarcodeAsync(string barcode, CancellationToken cancellationToken);
+    Task<Result<BarcodeLookupDto>> LookupByBarcodeAsync(string barcode, CancellationToken cancellationToken);
 }

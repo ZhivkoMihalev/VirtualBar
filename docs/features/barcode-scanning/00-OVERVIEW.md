@@ -1,6 +1,6 @@
 # Barcode / Label Scanning (Баркод и етикет сканиране) — OVERVIEW & SHARED CONTEXT
 
-> **Status:** in progress (#49). Slices 1 and 2 of the new order below are built; the code is described in
+> **Status:** in progress (#49). Slices 1, 2 and 3 of the new order below are built; the code is described in
 > `.claude/rules/domain/catalog.md` (Barcodes, `ProductBarcode`), `.claude/rules/domain/bottles.md` (Barcode) and
 > `.claude/rules/frontend/shared-components.md` (`BarcodeScannerDialog`). Where this spec and those rules differ, the
 > rules win. Read the owner decisions below first: they replace parts of the spec.
@@ -27,7 +27,10 @@
   2. Camera: scanning in the add form (spec 04, barcode part); on a miss, pick the product from the catalog; scanning a
      bottle already added. A hit fills the form like a catalog pick (#120). **Built.**
   3. Quality: the lookup also over other collectors' bottles (spec 02 without its external leg), a pair confirmed by
-     two collectors, an admin removes a wrong pair; the index on the bottles' barcode, its only reader.
+     two collectors, an admin removes a wrong pair; the index on the bottles' barcode, its only reader. **Built**: the
+     lookup matches every form of a barcode (UPC-A, EAN-13, GTIN-14), ranks products by the collectors who back them,
+     suggests from unlinked bottles, and an approval records the barcodes of the bottles it links; a removed pair never
+     comes back.
   4. Label photo (spec 03), later.
 
 > **Read this first, before any slice.** Single source of truth for the decisions, the architecture,

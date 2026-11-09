@@ -108,7 +108,8 @@ public sealed class ProductRequestServiceTests
         int? volumeMl = 700,
         Guid? distilleryId = null,
         Guid? productId = null,
-        bool isDeleted = false)
+        bool isDeleted = false,
+        string? barcode = null)
     {
         var bottle = new Bottle
         {
@@ -120,6 +121,7 @@ public sealed class ProductRequestServiceTests
             VolumeMl = volumeMl,
             DistilleryId = distilleryId,
             ProductId = productId,
+            Barcode = barcode,
             IsDeleted = isDeleted,
             DeletedAt = isDeleted ? DateTime.UtcNow : null
         };
@@ -1673,6 +1675,89 @@ public sealed class ProductRequestServiceTests
 
         var product = await db.Products.AsNoTracking().SingleAsync();
         Assert.Equal("/uploads/products/official.webp", product.ImageUrl);
+    }
+
+    #endregion
+
+    #region ApproveAsync barcodes (#49)
+
+    /// <summary>
+    /// Every bottle an approval links teaches the platform its barcode, as a bottle linked when it is added does: the
+    /// source bottle and each retro-linked twin, recorded for its own owner, once per barcode.
+    /// </summary>
+    [Fact]
+    public async Task ApproveAsync_RecordsTheBarcodeOfEveryBottleItLinks()
+    {
+        var db = CreateDbContext();
+        var admin = SeedUser(db, "Admin");
+        var collector = SeedUser(db, "Collector");
+        var stranger = SeedUser(db, "Stranger");
+        var third = SeedUser(db, "Third");
+        var distillery = SeedDistillery(db, "Macallan");
+        var source = SeedBottle(db, collector.Id, name: "Sherry Oak 12", distilleryId: distillery.Id, barcode: "5010314000011");
+        SeedBottle(db, stranger.Id, name: "The Sherry Oak 12", distilleryId: distillery.Id, barcode: "5010314000028");
+        SeedBottle(db, third.Id, name: "Sherry Oak 12", distilleryId: distillery.Id, barcode: "5010314000011");
+        SeedBottle(db, third.Id, name: "Sherry Oak 12", distilleryId: distillery.Id);
+        SeedBottle(db, third.Id, name: "Sherry Oak 18", distilleryId: distillery.Id, barcode: "5010314000035");
+        var request = SeedRequest(db, collector.Id, name: "Sherry Oak 12", distilleryId: distillery.Id,
+            distilleryName: distillery.Name, sourceBottleId: source.Id);
+        var service = CreateService(db, admin.Id, isAdmin: true);
+
+        var result = await service.ApproveAsync(request.Id, new ResolveProductRequestRequest(), CancellationToken.None);
+
+        Assert.True(result.Success);
+        var product = await db.Products.AsNoTracking().SingleAsync();
+        var pairs = await db.ProductBarcodes.AsNoTracking().OrderBy(b => b.Barcode).ToListAsync();
+        Assert.Equal(2, pairs.Count);
+        Assert.All(pairs, p => Assert.Equal(product.Id, p.ProductId));
+        Assert.Equal(("5010314000011", collector.Id), (pairs[0].Barcode, pairs[0].AddedByUserId));
+        Assert.Equal(("5010314000028", stranger.Id), (pairs[1].Barcode, pairs[1].AddedByUserId));
+    }
+
+    [Fact]
+    public async Task ApproveAsync_WhenLinkingToAnExistingProduct_RecordsTheSourceBottlesBarcode()
+    {
+        var db = CreateDbContext();
+        var admin = SeedUser(db, "Admin");
+        var collector = SeedUser(db, "Collector");
+        var product = SeedProduct(db, name: "Sherry Oak 12", age: 12, volumeMl: 700);
+        var source = SeedBottle(db, collector.Id, name: "sherry oak twelve", barcode: "5010314000011");
+        var request = SeedRequest(db, collector.Id, name: "sherry oak twelve", sourceBottleId: source.Id);
+        var service = CreateService(db, admin.Id, isAdmin: true);
+
+        var result = await service.ApproveAsync(
+            request.Id, new ResolveProductRequestRequest { ExistingProductId = product.Id }, CancellationToken.None);
+
+        Assert.True(result.Success);
+        var pair = await db.ProductBarcodes.AsNoTracking().SingleAsync();
+        Assert.Equal((product.Id, "5010314000011", collector.Id), (pair.ProductId, pair.Barcode, pair.AddedByUserId));
+    }
+
+    /// <summary>An admin removed this pair: approving a request for the same bottle must not bring it back.</summary>
+    [Fact]
+    public async Task ApproveAsync_WhenAnAdminRemovedThePair_DoesNotRecordItAgain()
+    {
+        var db = CreateDbContext();
+        var admin = SeedUser(db, "Admin");
+        var collector = SeedUser(db, "Collector");
+        var product = SeedProduct(db, name: "Sherry Oak 12", age: 12, volumeMl: 700);
+        db.ProductBarcodes.Add(new ProductBarcode
+        {
+            ProductId = product.Id, Barcode = "5010314000011", AddedByUserId = collector.Id, IsDeleted = true,
+            DeletedAt = DateTime.UtcNow
+        });
+        db.SaveChanges();
+        var source = SeedBottle(db, collector.Id, name: "sherry oak twelve", barcode: "05010314000011");
+        var request = SeedRequest(db, collector.Id, name: "sherry oak twelve", sourceBottleId: source.Id);
+        db.ChangeTracker.Clear();
+        var service = CreateService(db, admin.Id, isAdmin: true);
+
+        var result = await service.ApproveAsync(
+            request.Id, new ResolveProductRequestRequest { ExistingProductId = product.Id }, CancellationToken.None);
+
+        Assert.True(result.Success);
+        var pair = await db.ProductBarcodes.AsNoTracking().SingleAsync();
+        Assert.True(pair.IsDeleted);
     }
 
     #endregion

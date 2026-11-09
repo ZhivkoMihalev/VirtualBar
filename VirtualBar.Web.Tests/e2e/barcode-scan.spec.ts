@@ -8,6 +8,7 @@ import {
   bg,
   createBottle,
   expect,
+  fill,
   FLOW_TIMEOUT,
   registerCollector,
   signInContext,
@@ -83,7 +84,8 @@ test.describe('Barcode scan', () => {
     await withCameraShowing(playwright, baseURL, scanner, barcode, async page => {
       await openAddFormAndScan(page)
 
-      await expect(page.getByText(bg.addBottle.barcodeSuccess)).toBeVisible()
+      // The owner gave the barcode to the product, so one collector backs the answer (#49, slice 3).
+      await expect(page.getByText(fill(bg.addBottle.barcodeFromCollectors_one, { count: 1 }))).toBeVisible()
       await expect(page.getByLabel(bg.addBottle.barcodeLookup)).toHaveValue(barcode)
       await expect(page.getByText(bg.products.linkedChip)).toBeVisible()
       await expect(page.getByLabel(bg.addBottle.name, { exact: true })).toHaveValue(product.name)
@@ -122,8 +124,9 @@ test.describe('Barcode scan', () => {
 
       // The platform learned the barcode: the next collector's lookup finds the product the bottle was linked to.
       const next = await registerCollector('barcode-next')
-      const found = await api<{ id: string }>(next, 'GET', `/products/barcode/${barcode}`)
-      expect(found.id).toBe(saved.productId)
+      const found = await api<{ source: string; product: { id: string } | null }>(next, 'GET', `/products/barcode/${barcode}`)
+      expect(found.source).toBe('Collectors')
+      expect(found.product?.id).toBe(saved.productId)
     })
   })
 })

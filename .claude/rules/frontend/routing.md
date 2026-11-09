@@ -24,7 +24,9 @@ paths:
   - `/forgot-password` and `/reset-password`, the password reset pages (`.claude/rules/domain/users.md`).
 - `/login` and `/register` send a logged-in user to `/`. Login and register redirect to `/` after success.
 - **Protected:** `/dashboard` (the user's own virtual bar), `/offers` (the Offers page), `/profile`.
-- **Admins only:** `/admin/product-requests` (`ProductRequestsAdminPage`); `AdminRoute` sends anyone else to `/`.
+- **Admins only:** `/admin/product-requests` (`ProductRequestsAdminPage`) and `/admin/barcodes`
+  (`ProductBarcodesAdminPage`: the barcodes collectors gave products, with a search, "show more" and a confirmed
+  removal, #49); `AdminRoute` sends anyone else to `/`, and the NavBar links them for admins only.
 - There is **no `/messages` page** (the path redirects to `/`): messaging is handled entirely by the floating
   `ChatWidget`.
 - Any other path redirects to `/`.

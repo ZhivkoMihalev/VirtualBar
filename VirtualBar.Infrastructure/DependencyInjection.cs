@@ -86,6 +86,12 @@ public static class DependencyInjection
             sp.GetRequiredService<ProductCatalogService>(),
             sp.GetRequiredService<AppDbContext>()));
 
+        services.AddScoped<ProductBarcodeService>();
+        services.AddScoped<IProductBarcodeService>(sp => new ProductBarcodeValidationDecorator(
+            sp.GetRequiredService<ProductBarcodeService>(),
+            sp.GetRequiredService<AppDbContext>(),
+            sp.GetRequiredService<ICurrentUser>()));
+
         services.AddScoped<ProductRequestService>();
         services.AddScoped<IProductRequestService>(sp => new ProductRequestValidationDecorator(
             sp.GetRequiredService<ProductRequestService>(),

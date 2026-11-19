@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
@@ -376,6 +377,28 @@ public sealed class BottleImageServiceTests
 
         await Assert.ThrowsAsync<OperationCanceledException>(
             () => service.DeleteImageAsync(bottle.Id, image.Id, cts.Token));
+    }
+
+    /// <summary>
+    /// Linking used to store whatever address the body carried, so a collector could make every viewer of the bottle
+    /// load a tracking pixel (#131). The body is read the way the API binds it, so the test sends exactly what such a
+    /// client sends; it must be refused and leave the bottle without an image.
+    /// </summary>
+    [Fact]
+    public async Task LinkImageAsync_WhenTheBodyCarriesAnAddress_ReturnsFailAndStoresNothing()
+    {
+        using var db = CreateDbContext();
+        var user = SeedUser(db);
+        var bottle = SeedBottle(db, user.Id);
+        var service = CreateService(db, user.Id);
+        var request = JsonSerializer.Deserialize<LinkImageRequest>(
+            """{ "url": "https://tracker.example/pixel.png" }""", JsonSerializerOptions.Web)!;
+
+        var result = await service.LinkImageAsync(bottle.Id, request, CancellationToken.None);
+
+        Assert.False(result.Success);
+        Assert.Equal(ErrorCode.Validation, result.ErrorCode);
+        Assert.Empty(db.BottleImages);
     }
 
     [Fact]

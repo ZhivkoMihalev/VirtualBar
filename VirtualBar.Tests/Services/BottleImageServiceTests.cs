@@ -82,11 +82,12 @@ public sealed class BottleImageServiceTests
         return bottle;
     }
 
-    private static BottleImage SeedImage(AppDbContext db, Guid bottleId, bool isDeleted = false)
+    private static BottleImage SeedImage(
+        AppDbContext db, Guid bottleId, string url = "/uploads/bottles/test.jpg", bool isDeleted = false)
     {
         var image = new BottleImage
         {
-            BottleId = bottleId, Url = "/uploads/bottles/test.jpg",
+            BottleId = bottleId, Url = url,
             IsPrimary = true, SortOrder = 0,
             IsDeleted = isDeleted, DeletedAt = isDeleted ? DateTime.UtcNow : null
         };
@@ -364,6 +365,99 @@ public sealed class BottleImageServiceTests
         Assert.False(File.Exists(fullPath));
     }
 
+    /// <summary>
+    /// A bottle linked from the catalog can carry the very upload another bottle shows (a product approved with its
+    /// source bottle's image). Deleting one of the two images used to delete the file under both (#134).
+    /// </summary>
+    [Fact]
+    public async Task DeleteImageAsync_WhenAnotherBottleShowsTheSameUpload_KeepsTheFile()
+    {
+        using var webRoot = new TempWebRoot();
+        var file = webRoot.CreateFile("uploads/bottles/shared.jpg");
+        using var db = CreateDbContext();
+        var owner = SeedUser(db, "Owner");
+        var deleter = SeedUser(db, "Deleter");
+        SeedImage(db, SeedBottle(db, owner.Id).Id, "/uploads/bottles/shared.jpg");
+        var bottle = SeedBottle(db, deleter.Id);
+        var image = SeedImage(db, bottle.Id, "/uploads/bottles/shared.jpg");
+        var service = CreateService(db, deleter.Id, webRoot.Root);
+
+        var result = await service.DeleteImageAsync(bottle.Id, image.Id, CancellationToken.None);
+
+        Assert.True(result.Success);
+        Assert.True((await db.BottleImages.SingleAsync(i => i.Id == image.Id)).IsDeleted);
+        Assert.True(File.Exists(file));
+    }
+
+    /// <summary>
+    /// A catalog product's image can be a bottle's upload; deleting that bottle's image used to delete the product's
+    /// image too (#134). Kept for a soft-deleted product as well: no file is deleted while any product names it.
+    /// </summary>
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task DeleteImageAsync_WhenAProductShowsTheUpload_KeepsTheFile(bool productDeleted)
+    {
+        using var webRoot = new TempWebRoot();
+        var file = webRoot.CreateFile("uploads/bottles/product.jpg");
+        using var db = CreateDbContext();
+        var user = SeedUser(db);
+        var bottle = SeedBottle(db, user.Id);
+        var image = SeedImage(db, bottle.Id, "/uploads/bottles/product.jpg");
+        SeedProduct(db, imageUrl: "/uploads/bottles/product.jpg", isDeleted: productDeleted);
+        var service = CreateService(db, user.Id, webRoot.Root);
+
+        var result = await service.DeleteImageAsync(bottle.Id, image.Id, CancellationToken.None);
+
+        Assert.True(result.Success);
+        Assert.True((await db.BottleImages.SingleAsync(i => i.Id == image.Id)).IsDeleted);
+        Assert.True(File.Exists(file));
+    }
+
+    /// <summary>
+    /// The path used to be built from the stored URL as it was, so a URL with <c>..</c>, or one naming another folder,
+    /// made the API delete a file outside the bottle uploads (#134). The image is still deleted; the file is not.
+    /// </summary>
+    [Theory]
+    [InlineData("/../outside.txt", "outside.txt")]
+    [InlineData("/uploads/bottles/../../../outside.txt", "outside.txt")]
+    [InlineData("/uploads/avatars/someone.png", "wwwroot/uploads/avatars/someone.png")]
+    public async Task DeleteImageAsync_WhenTheUrlPointsOutsideTheBottleUploads_KeepsTheFile(string url, string target)
+    {
+        using var webRoot = new TempWebRoot();
+        var file = webRoot.CreateFileFromBase(target);
+        using var db = CreateDbContext();
+        var user = SeedUser(db);
+        var bottle = SeedBottle(db, user.Id);
+        var image = SeedImage(db, bottle.Id, url);
+        var service = CreateService(db, user.Id, webRoot.Root);
+
+        var result = await service.DeleteImageAsync(bottle.Id, image.Id, CancellationToken.None);
+
+        Assert.True(result.Success);
+        Assert.True((await db.BottleImages.SingleAsync(i => i.Id == image.Id)).IsDeleted);
+        Assert.True(File.Exists(file));
+    }
+
+    /// <summary>Only a live image keeps an upload: one deleted earlier does not, so the last live user deletes the file.</summary>
+    [Fact]
+    public async Task DeleteImageAsync_WhenTheOtherImageOfTheUploadIsDeleted_DeletesTheFile()
+    {
+        using var webRoot = new TempWebRoot();
+        var file = webRoot.CreateFile("uploads/bottles/once-shared.jpg");
+        using var db = CreateDbContext();
+        var user = SeedUser(db);
+        SeedImage(db, SeedBottle(db, user.Id).Id, "/uploads/bottles/once-shared.jpg", isDeleted: true);
+        var bottle = SeedBottle(db, user.Id);
+        var image = SeedImage(db, bottle.Id, "/uploads/bottles/once-shared.jpg");
+        var service = CreateService(db, user.Id, webRoot.Root);
+
+        var result = await service.DeleteImageAsync(bottle.Id, image.Id, CancellationToken.None);
+
+        Assert.True(result.Success);
+        Assert.False(File.Exists(file));
+    }
+
     [Fact]
     public async Task DeleteImageAsync_WhenCancelled_Throws()
     {
@@ -574,4 +668,33 @@ public sealed class BottleImageServiceTests
     }
 
     private static LinkImageRequest LinkTo(Product product) => new() { ProductId = product.Id };
+
+    /// <summary>
+    /// A web root of its own (<c>wwwroot</c>) inside a new temporary folder, so a test can check which file on disk
+    /// survives, including one outside the web root. The whole folder is removed when the test ends.
+    /// </summary>
+    private sealed class TempWebRoot : IDisposable
+    {
+        private readonly string baseDirectory =
+            Path.Combine(Path.GetTempPath(), $"virtualbar-tests-{Guid.NewGuid():N}");
+
+        public TempWebRoot() => Directory.CreateDirectory(Root);
+
+        /// <summary>The web root the service is given.</summary>
+        public string Root => Path.Combine(baseDirectory, "wwwroot");
+
+        /// <summary>Creates a file at <paramref name="relativePath"/> under the web root; returns its full path.</summary>
+        public string CreateFile(string relativePath) => CreateFileFromBase($"wwwroot/{relativePath}");
+
+        /// <summary>Creates a file at <paramref name="relativePath"/> under the temporary folder, the web root's parent.</summary>
+        public string CreateFileFromBase(string relativePath)
+        {
+            var fullPath = Path.Combine(baseDirectory, relativePath.Replace('/', Path.DirectorySeparatorChar));
+            Directory.CreateDirectory(Path.GetDirectoryName(fullPath)!);
+            File.WriteAllText(fullPath, "x");
+            return fullPath;
+        }
+
+        public void Dispose() => Directory.Delete(baseDirectory, recursive: true);
+    }
 }

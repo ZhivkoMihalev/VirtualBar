@@ -1,4 +1,5 @@
 import { screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 import { getFeed } from '@/api/feedApi'
 import { getNotifications } from '@/api/notificationsApi'
@@ -80,5 +81,79 @@ describe('HomePage — a followed collector rated a bottle (#57)', () => {
 
     await screen.findByText(bg.home.rated)
     expect(screen.queryByRole('blockquote')).not.toBeInTheDocument()
+  })
+})
+
+/** `count` reviews, newest first, named `Bottle 01`, `Bottle 02`, … so the order on the page can be read back. */
+function reviews(count: number, first = 1): FeedItem[] {
+  return Array.from({ length: count }, (_, i) =>
+    reviewedItem({ bottleName: `Bottle ${String(first + i).padStart(2, '0')}` }),
+  )
+}
+
+/** The home page of a logged-in collector, with an API that pages `feed` by `skip` and `take` as the server does. */
+function renderPagedFeed(feed: FeedItem[]) {
+  signIn()
+  vi.mocked(getNotifications).mockResolvedValue({ notifications: [], unreadCount: 0 })
+  vi.mocked(getFeed).mockImplementation(async (skip, take) => feed.slice(skip, skip + take))
+  return renderWithProviders(<HomePage />)
+}
+
+/** The bottles of the review cards on the page, in the order shown. */
+const shownBottles = () => screen.queryAllByRole('link', { name: /^Bottle \d+$/ }).map(link => link.textContent)
+
+const showMore = () => screen.queryByRole('button', { name: bg.home.loadMore })
+
+describe('HomePage — "Покажи още" pages the feed (#127)', () => {
+  it('asks for one item more than a page, and appends each next page in order until there is no more', async () => {
+    renderPagedFeed(reviews(45))
+
+    await vi.waitFor(() => expect(shownBottles()).toHaveLength(20))
+    expect(getFeed).toHaveBeenLastCalledWith(0, 21, 'bg')
+    expect(shownBottles()).toEqual(reviews(20).map(item => item.bottleName))
+
+    await userEvent.click(showMore()!)
+    await vi.waitFor(() => expect(shownBottles()).toHaveLength(40))
+    expect(getFeed).toHaveBeenLastCalledWith(20, 21, 'bg')
+    expect(shownBottles()[20]).toBe('Bottle 21')
+
+    await userEvent.click(showMore()!)
+    await vi.waitFor(() => expect(shownBottles()).toHaveLength(45))
+    expect(getFeed).toHaveBeenLastCalledWith(40, 21, 'bg')
+    expect(shownBottles().at(-1)).toBe('Bottle 45')
+    expect(showMore()).not.toBeInTheDocument()
+  })
+
+  it('shows no button when the feed has 20 items or fewer', async () => {
+    renderPagedFeed(reviews(20))
+
+    await vi.waitFor(() => expect(shownBottles()).toHaveLength(20))
+    expect(showMore()).not.toBeInTheDocument()
+  })
+
+  it('shows the button with exactly 21 items, and the 21st only on the next page', async () => {
+    renderPagedFeed(reviews(21))
+
+    await vi.waitFor(() => expect(shownBottles()).toHaveLength(20))
+    expect(screen.queryByRole('link', { name: 'Bottle 21' })).not.toBeInTheDocument()
+
+    await userEvent.click(showMore()!)
+    expect(await screen.findByRole('link', { name: 'Bottle 21' })).toBeInTheDocument()
+    expect(showMore()).not.toBeInTheDocument()
+  })
+
+  it('shows an item once when a new one arrives between two pages and pushes it onto the next page', async () => {
+    const feed = reviews(30)
+    renderPagedFeed(feed)
+    await vi.waitFor(() => expect(shownBottles()).toHaveLength(20))
+
+    // A followed collector rates another bottle: everything moves down one place, so the next page starts with the
+    // 20th item, already on the page.
+    feed.unshift(reviewedItem({ bottleName: 'Bottle 00' }))
+    await userEvent.click(showMore()!)
+
+    await vi.waitFor(() => expect(shownBottles()).toHaveLength(30))
+    expect(screen.getAllByRole('link', { name: 'Bottle 20' })).toHaveLength(1)
+    expect(shownBottles().slice(18, 22)).toEqual(['Bottle 19', 'Bottle 20', 'Bottle 21', 'Bottle 22'])
   })
 })

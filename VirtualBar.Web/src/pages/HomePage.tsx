@@ -1,7 +1,7 @@
 import { useMemo, useRef, useState } from 'react'
 import type { ChangeEvent } from 'react'
 import { Link } from 'react-router-dom'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -18,6 +18,7 @@ import {
 } from '../api/newsApi'
 import { getFeed } from '../api/feedApi'
 import type { CreateNewsPostPayload, FeedItem, NewsPost } from '../types'
+import { feedItemKey, uniqueFeedItems } from '../lib/feedItems'
 import NavBar from '../components/NavBar'
 import Avatar from '../components/Avatar'
 import { cn } from '@/lib/utils'
@@ -52,6 +53,9 @@ import type { TFn } from '@/lib/validation'
 type LangCode = 'bg' | 'en'
 
 const PREVIEW_LENGTH = 280
+
+/** How many feed items a page of the home feed shows; "Покажи още" appends the next page (#127). */
+const FEED_PAGE_SIZE = 20
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
@@ -560,10 +564,17 @@ export default function HomePage() {
     }
   }
 
-  const { data: feed = [], isLoading, isError } = useQuery({
-    queryKey: ['feed', lang],
-    queryFn: () => getFeed(0, 50, lang),
-  })
+  const { data, isLoading, isError, hasNextPage, fetchNextPage, isFetchingNextPage, isFetchNextPageError } =
+    useInfiniteQuery({
+      queryKey: ['feed', lang],
+      // One item more than a page: a 21st item means there is more, with no count query (#127).
+      queryFn: ({ pageParam }) => getFeed(pageParam * FEED_PAGE_SIZE, FEED_PAGE_SIZE + 1, lang),
+      initialPageParam: 0,
+      getNextPageParam: (last, all) => (last.length > FEED_PAGE_SIZE ? all.length : undefined),
+    })
+
+  // Each page shows its first 20 items; the 21st only says there is more, and starts the next page.
+  const feed = useMemo(() => uniqueFeedItems(data?.pages.map(page => page.slice(0, FEED_PAGE_SIZE)) ?? []), [data])
 
   const invalidate = () => queryClient.invalidateQueries({ queryKey: ['feed'] })
 
@@ -618,20 +629,20 @@ export default function HomePage() {
           </div>
         )}
 
-        {isError && !isLoading && (
+        {isError && !data && (
           <div className="py-16 text-center text-sm uppercase tracking-widest text-destructive">
             {t('home.errorLoading')}
           </div>
         )}
 
-        {!isLoading && !isError && feed.length === 0 && (
+        {data && feed.length === 0 && (
           <div className="py-20 text-center">
             <Newspaper className="mx-auto mb-4 size-10 text-muted-foreground/50" />
             <p className="mx-auto max-w-sm text-xl italic text-muted-foreground">{t('home.noNews')}</p>
           </div>
         )}
 
-        {!isLoading && !isError && feed.length > 0 && (
+        {data && feed.length > 0 && (
           <div className="flex flex-col gap-7">
             {feed.map(item => {
               if (item.type === 'News' && item.postId) {
@@ -648,7 +659,7 @@ export default function HomePage() {
                 }
                 return (
                   <NewsPostCard
-                    key={`news-${item.postId}`}
+                    key={feedItemKey(item)}
                     post={post}
                     isAdmin={isAdmin}
                     onEdit={() => handleEditPost(item.postId!)}
@@ -658,11 +669,23 @@ export default function HomePage() {
               }
 
               if (item.type === 'Reviewed') {
-                return <ReviewActivityCard key={`review-${item.reviewId}`} item={item} />
+                return <ReviewActivityCard key={feedItemKey(item)} item={item} />
               }
 
-              return <BottleActivityCard key={`${item.type}-${item.bottleId}`} item={item} />
+              return <BottleActivityCard key={feedItemKey(item)} item={item} />
             })}
+          </div>
+        )}
+
+        {isFetchNextPageError && (
+          <p className="mt-7 text-center text-sm uppercase tracking-widest text-destructive">{t('home.errorLoading')}</p>
+        )}
+
+        {hasNextPage && (
+          <div className="mt-8 flex justify-center">
+            <Button variant="outline" onClick={() => fetchNextPage()} disabled={isFetchingNextPage}>
+              {isFetchingNextPage ? t('home.loadingMore') : t('home.loadMore')}
+            </Button>
           </div>
         )}
       </main>

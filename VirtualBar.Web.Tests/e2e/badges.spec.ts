@@ -30,8 +30,6 @@ import { test, expect, type Page } from '@playwright/test'
  */
 
 const API = 'http://localhost:5000/api'
-const SHOTS =
-  'C:/Users/jivko/AppData/Local/Temp/claude/C--Users-jivko-source-repos-VirtualBar/345f6fa1-3543-4b57-9b3d-fdc50e890310/scratchpad/shots'
 
 const GOLD = 'rgb(232, 200, 112)' // BadgeChip earned name color (#E8C870)
 
@@ -204,7 +202,7 @@ test.describe('Badges / Achievements (frontend)', () => {
       await expect(collector5Item.getByText('1/5', { exact: true })).toBeVisible()
 
       try {
-        await section.screenshot({ path: `${SHOTS}/profile-badges-bg.png` })
+        await test.info().attach('profile-badges-bg', { body: await section.screenshot(), contentType: 'image/png' })
       } catch {
         /* screenshot is best-effort */
       }
@@ -245,7 +243,7 @@ test.describe('Badges / Achievements (frontend)', () => {
       await expect(section).not.toContainText('badges.') // no raw i18n keys
 
       try {
-        await page.screenshot({ path: `${SHOTS}/profile-badges-en.png`, fullPage: true })
+        await test.info().attach('profile-badges-en', { body: await page.screenshot({ fullPage: true }), contentType: 'image/png' })
       } catch {
         /* best-effort */
       }
@@ -287,7 +285,7 @@ test.describe('Badges / Achievements (frontend)', () => {
       await expect(page.getByRole('heading', { name: BG.progressTitle })).toHaveCount(0)
 
       try {
-        await page.screenshot({ path: `${SHOTS}/public-strip-owner.png`, fullPage: true })
+        await test.info().attach('public-strip-owner', { body: await page.screenshot({ fullPage: true }), contentType: 'image/png' })
       } catch {
         /* best-effort */
       }

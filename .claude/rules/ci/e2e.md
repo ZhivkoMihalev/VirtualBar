@@ -49,8 +49,13 @@ Set as environment variables in the workflow:
   exceeds from one machine.
 - `Anthropic:UseProviderStats=false` and `Pricing:RefreshEnabled=false`.
 
-Each run uploads its Playwright HTML report (traces + screenshots of failures) and its API log as artifacts, named
-after the run: `playwright-report-confirmation-off`/`-on` and `api-log-confirmation-off`/`-on`.
+Each run uploads its Playwright HTML report (traces, screenshots of failures and the screenshots the specs attach) and
+its API log as artifacts, named after the run: `playwright-report-confirmation-off`/`-on` and
+`api-log-confirmation-off`/`-on`.
+
+After the tests, "Check the run left no files in the repository" runs `git status --porcelain --untracked-files=all`
+and fails on any file git does not ignore (#132). Playwright's own output (`test-results/`, `playwright-report/`), the
+API's logs and uploads are gitignored; a spec that writes anywhere else fails the run.
 
 ## Running it locally
 - Start the API with the same overrides: the **`api-e2e`** configuration in `.claude/launch.json` passes them as

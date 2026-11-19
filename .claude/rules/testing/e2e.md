@@ -23,3 +23,7 @@ paths:
 - Expected text comes from the app's `bg.json` / `en.json` (exported by `support.ts` as `bg` and `en`), never copied into the spec. The older specs predate this and keep their own string constants.
 - A multi-user flow uses `FLOW_TIMEOUT` and the `expect` exported by `support.ts`, which waits up to 15 s. Each step crosses browser contexts and page loads.
 - Names come from `uniqueName`, so a run never collides with data from an earlier run, and a spec that leaves something other collectors would see removes it: a wish matches every later listing of its category.
+- A spec writes files only where nothing ends up in the repository (#132):
+  - a screenshot worth keeping goes into the report with `test.info().attach`, never to a `path` of its own;
+  - any other file goes to `test.info().outputPath` or the system temp folder;
+  - the E2E workflow fails a run that leaves a file git does not ignore (`.claude/rules/ci/e2e.md`).

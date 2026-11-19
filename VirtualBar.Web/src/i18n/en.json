@@ -622,7 +622,10 @@
     "FirstListing": { "name": "First Listing", "description": "Listed your first bottle for sale" },
     "FirstSale": { "name": "First Sale", "description": "Your first accepted sale" },
     "FirstPurchase": { "name": "First Purchase", "description": "Your first accepted purchase" },
-    "FirstCatalogProduct": { "name": "Contributor", "description": "Your suggestion was approved and added to the catalog" }
+    "FirstCatalogProduct": { "name": "Contributor", "description": "Your suggestion was approved and added to the catalog" },
+    "FirstReview": { "name": "First Review", "description": "Your first review" },
+    "Reviewer10": { "name": "Taster", "description": "10 reviews written" },
+    "Reviewer50": { "name": "Master Taster", "description": "50 reviews written" }
   },
   "products": {
     "searchLabel": "Find in the catalog",

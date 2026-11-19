@@ -4,7 +4,7 @@ import {
   Wine, Boxes, Library, Warehouse, Trophy, Crown,
   Compass, Globe, Gem, Heart, Sparkles, Flame,
   UserPlus, Users, TrendingUp, Tag, Handshake, ShoppingBag,
-  BookPlus,
+  BookPlus, PenLine, NotebookPen, ScrollText,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
@@ -30,6 +30,9 @@ const BADGE_ICONS: Record<BadgeType, LucideIcon> = {
   FirstSale: Handshake,
   FirstPurchase: ShoppingBag,
   FirstCatalogProduct: BookPlus,
+  FirstReview: PenLine,
+  Reviewer10: NotebookPen,
+  Reviewer50: ScrollText,
 }
 
 const GOLD = '#C9A84C'

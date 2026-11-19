@@ -11,4 +11,5 @@ public enum BadgeCountKind
     SalesAccepted,
     PurchasesAccepted,
     ApprovedProductRequests,
+    ReviewsWritten,
 }

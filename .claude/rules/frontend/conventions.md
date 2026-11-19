@@ -61,7 +61,7 @@ Current translation namespaces:
 - `barcodeScanner`: the camera dialog (`BarcodeScannerDialog`) and why it cannot scan (`denied`, `noCamera`,
   `insecure`, `unavailable`)
 - `flavors`: 28 keys = `FlavorTag` enum member names
-- `badges`: `title`/`progressTitle`/`earnedOn` + 19 × `<EnumName>.{name,description}`, keys = `BadgeType` enum member
+- `badges`: `title`/`progressTitle`/`earnedOn` + 22 × `<EnumName>.{name,description}`, keys = `BadgeType` enum member
   names
 - `authErrors`: 4 keys = `AuthErrorReasons` values; login/register show these instead of the API's English `error` text
 - `confirmEmail`: the "check your email" screen, the `/confirm-email` page and the "send a new link" button

@@ -529,6 +529,7 @@ export type BadgeType =
   | 'FirstFollower' | 'Popular10' | 'Influencer50'
   | 'FirstListing' | 'FirstSale' | 'FirstPurchase'
   | 'FirstCatalogProduct'
+  | 'FirstReview' | 'Reviewer10' | 'Reviewer50'
 
 export interface UserBadge {
   badge: BadgeType

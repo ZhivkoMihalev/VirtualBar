@@ -76,7 +76,7 @@ paths:
   - ARIA roles (`combobox`/`listbox`/`option`), keyboard navigation (ArrowUp/Down/Enter/Escape), scroll-into-view.
   - Fetches from `GET /api/distilleries?category=...`, `queryKey: ['distilleries', category ?? 'all']`, staleTime 5 min.
 - `src/components/BadgeChip.tsx` — circular gold-bordered achievement medallion.
-  - Static `badgeType → lucide icon` map (19 entries) + translated name (`badges` namespace); `size` prop; dimmed
+  - Static `badgeType → lucide icon` map (22 entries) + translated name (`badges` namespace); `size` prop; dimmed
     variant for `earned: false`.
   - Used by `ProfilePage`: achievements section, earned chips first, then unearned with thin gold progress bars +
     "7/10" labels; `queryKey: ['badges','progress']`.

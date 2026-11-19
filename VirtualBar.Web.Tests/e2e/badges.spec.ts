@@ -2,8 +2,8 @@ import { test, expect, type Page } from '@playwright/test'
 
 /**
  * E2E coverage for the Badges / Achievements frontend feature.
- * Gate: docs/features/badges/06-frontend.md (§Gate) + docs/features/badges/00-OVERVIEW.md §3 (the 19-badge catalog —
- * the initial 18 plus FirstCatalogProduct, see §3 "Added after this slice").
+ * Gate: docs/features/badges/06-frontend.md (§Gate) + docs/features/badges/00-OVERVIEW.md §3 (the 22-badge catalog —
+ * the initial 18 plus FirstCatalogProduct, see §3 "Added after this slice", plus the three review badges of #125).
  *
  * Real app: Vite dev server (:5173, started by Playwright's webServer config) against the
  * running backend API (:5000). Fresh users/bottles are created per test via the API — the
@@ -21,7 +21,7 @@ import { test, expect, type Page } from '@playwright/test'
  *  - The BadgeEarned notification: type 'BadgeEarned', resourceName = 'FirstBottle', resourceId
  *    null, actor == recipient. NotificationBell renders it WITHOUT actor emphasis as
  *    `${t('notifications.badgeEarned')} ${t('badges.FirstBottle.name')}` and navigates to /profile.
- *  - GET /api/badges/progress returns all 19 catalog rows. A fresh user with 1 bottle:
+ *  - GET /api/badges/progress returns all 22 catalog rows. A fresh user with 1 bottle:
  *    FirstBottle earned; every other badge unearned. Collector5 shows current 1 / threshold 5.
  *    NOTE: Explorer5 also renders "1/5" (5 categories, 1 distinct) — so the "1/5" assertion is
  *    scoped to the Collector5 chip's own progress wrapper, never a bare page-level getByText.
@@ -141,7 +141,7 @@ async function switchToEnglish(page: Page) {
 // =====================================================================================
 
 test.describe('Badges / Achievements (frontend)', () => {
-  test('А · bg · fresh user → FirstBottle in bell → profile 19 chips (FirstBottle gold, Collector5 1/5) → notification navigates to /profile', async ({
+  test('А · bg · fresh user → FirstBottle in bell → profile 22 chips (FirstBottle gold, Collector5 1/5) → notification navigates to /profile', async ({
     page,
   }) => {
     test.setTimeout(120_000)
@@ -175,12 +175,12 @@ test.describe('Badges / Achievements (frontend)', () => {
       await expect(page).toHaveURL('/profile')
     })
 
-    await test.step('profile "Постижения": exactly 19 chips; FirstBottle gold; Collector5 shows 1/5', async () => {
+    await test.step('profile "Постижения": exactly 22 chips; FirstBottle gold; Collector5 shows 1/5', async () => {
       const section = badgesSection(page, BG.badgesTitle)
       await expect(page.getByRole('heading', { name: BG.badgesTitle })).toBeVisible()
 
-      // Exactly 19 badge chips (each BadgeChip renders exactly one lucide <svg>).
-      await expect(section.locator('svg')).toHaveCount(19, { timeout: 15_000 })
+      // Exactly 22 badge chips (each BadgeChip renders exactly one lucide <svg>).
+      await expect(section.locator('svg')).toHaveCount(22, { timeout: 15_000 })
 
       // FirstBottle is EARNED → gold name; a few catalog names render (translated, not raw keys).
       const firstBottle = section.getByText(BG.firstBottle, { exact: true })
@@ -233,7 +233,7 @@ test.describe('Badges / Achievements (frontend)', () => {
     await test.step('profile section + FirstBottle render in English (no bg, no raw keys)', async () => {
       const section = badgesSection(page, EN.badgesTitle)
       await expect(page.getByRole('heading', { name: EN.badgesTitle })).toBeVisible()
-      await expect(section.locator('svg')).toHaveCount(19, { timeout: 15_000 })
+      await expect(section.locator('svg')).toHaveCount(22, { timeout: 15_000 })
 
       const firstBottle = section.getByText(EN.firstBottle, { exact: true })
       await expect(firstBottle).toBeVisible()

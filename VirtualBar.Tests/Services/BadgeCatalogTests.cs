@@ -17,9 +17,9 @@ public sealed class BadgeCatalogTests
     }
 
     [Fact]
-    public void All_HasNineteenDefinitions()
+    public void All_HasTwentyTwoDefinitions()
     {
-        Assert.Equal(19, BadgeCatalog.All.Count);
+        Assert.Equal(22, BadgeCatalog.All.Count);
     }
 
     [Fact]
@@ -101,6 +101,19 @@ public sealed class BadgeCatalogTests
         Assert.Equal(1, defs[0].Threshold);
     }
 
+    /// <summary>The review badges of #125: 1, 10 and 50 reviews written, every one counted by the same kind.</summary>
+    [Fact]
+    public void ForTrigger_ReviewWritten_ReturnsTheThreeReviewBadges()
+    {
+        var defs = BadgeCatalog.ForTrigger(BadgeTrigger.ReviewWritten);
+
+        Assert.Equal(3, defs.Count);
+        Assert.All(defs, d => Assert.Equal(BadgeCountKind.ReviewsWritten, d.CountKind));
+        Assert.Contains(defs, d => d.Type == BadgeType.FirstReview && d.Threshold == 1);
+        Assert.Contains(defs, d => d.Type == BadgeType.Reviewer10 && d.Threshold == 10);
+        Assert.Contains(defs, d => d.Type == BadgeType.Reviewer50 && d.Threshold == 50);
+    }
+
     [Fact]
     public void ForTrigger_EveryTrigger_ReturnsNonEmpty()
     {
@@ -109,14 +122,14 @@ public sealed class BadgeCatalogTests
     }
 
     [Fact]
-    public void ForTrigger_UnionOfAllTriggers_CoversAllNineteenDefinitionsExactlyOnce()
+    public void ForTrigger_UnionOfAllTriggers_CoversAllTwentyTwoDefinitionsExactlyOnce()
     {
         var union = Enum.GetValues<BadgeTrigger>()
             .SelectMany(BadgeCatalog.ForTrigger)
             .ToList();
 
-        Assert.Equal(19, union.Count);
-        Assert.Equal(19, union.Select(d => d.Type).Distinct().Count());
+        Assert.Equal(22, union.Count);
+        Assert.Equal(22, union.Select(d => d.Type).Distinct().Count());
         Assert.Equal(
             BadgeCatalog.All.Select(d => d.Type).OrderBy(t => t),
             union.Select(d => d.Type).OrderBy(t => t));

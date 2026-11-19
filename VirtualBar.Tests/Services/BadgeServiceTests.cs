@@ -161,6 +161,24 @@ public sealed class BadgeServiceTests
         return request;
     }
 
+    /// <summary>A review by <paramref name="userId"/> of a bottle of its own (one review per bottle, as the index wants).</summary>
+    private static BottleReview SeedReview(
+        AppDbContext db, Guid userId, Guid? bottleOwnerId = null, bool isDeleted = false, bool bottleDeleted = false)
+    {
+        var bottle = SeedBottle(db, bottleOwnerId ?? SeedUser(db, "Owner").Id, isDeleted: bottleDeleted);
+        var review = new BottleReview
+        {
+            BottleId = bottle.Id,
+            UserId = userId,
+            Score = 90,
+            IsDeleted = isDeleted,
+            DeletedAt = isDeleted ? DateTime.UtcNow : null
+        };
+        db.BottleReviews.Add(review);
+        db.SaveChanges();
+        return review;
+    }
+
     private static UserBadge SeedBadge(AppDbContext db, Guid userId, BadgeType badge, DateTime? awardedAt = null)
     {
         var userBadge = new UserBadge
@@ -644,9 +662,97 @@ public sealed class BadgeServiceTests
     }
 
     [Fact]
+    public async Task EvaluateAsync_WhenFirstReviewWritten_AwardsFirstReviewOnly()
+    {
+        var db = CreateDbContext();
+        var user = SeedUser(db);
+        SeedReview(db, user.Id);
+        var notificationMock = new Mock<INotificationService>();
+        var service = CreateBadgeService(db, user.Id, notificationMock.Object);
+
+        await service.EvaluateAsync(user.Id, BadgeTrigger.ReviewWritten, CancellationToken.None);
+
+        var badges = await db.UserBadges.Where(b => b.UserId == user.Id).Select(b => b.Badge).ToListAsync();
+        Assert.Equal([BadgeType.FirstReview], badges);
+        VerifyAwarded(notificationMock, user.Id, BadgeType.FirstReview, Times.Once());
+        VerifyAwarded(notificationMock, user.Id, BadgeType.Reviewer10, Times.Never());
+    }
+
+    /// <summary>A review of one's own bottle is the same tasting, so it counts (the owner's decision on #125).</summary>
+    [Fact]
+    public async Task EvaluateAsync_WhenReviewsOfOwnBottles_CountsThem()
+    {
+        var db = CreateDbContext();
+        var user = SeedUser(db);
+        for (var i = 0; i < 10; i++)
+            SeedReview(db, user.Id, bottleOwnerId: user.Id);
+        var notificationMock = new Mock<INotificationService>();
+        var service = CreateBadgeService(db, user.Id, notificationMock.Object);
+
+        await service.EvaluateAsync(user.Id, BadgeTrigger.ReviewWritten, CancellationToken.None);
+
+        var badges = await db.UserBadges.Where(b => b.UserId == user.Id).Select(b => b.Badge).OrderBy(b => b).ToListAsync();
+        Assert.Equal([BadgeType.FirstReview, BadgeType.Reviewer10], badges);
+        VerifyAwarded(notificationMock, user.Id, BadgeType.Reviewer10, Times.Once());
+    }
+
+    [Fact]
+    public async Task EvaluateAsync_WhenFiftyReviewsAndNoBadges_AwardsAllThreeReviewBadges()
+    {
+        var db = CreateDbContext();
+        var user = SeedUser(db);
+        for (var i = 0; i < 50; i++)
+            SeedReview(db, user.Id);
+        var notificationMock = new Mock<INotificationService>();
+        var service = CreateBadgeService(db, user.Id, notificationMock.Object);
+
+        await service.EvaluateAsync(user.Id, BadgeTrigger.ReviewWritten, CancellationToken.None);
+
+        var badges = await db.UserBadges.Where(b => b.UserId == user.Id).Select(b => b.Badge).OrderBy(b => b).ToListAsync();
+        Assert.Equal([BadgeType.FirstReview, BadgeType.Reviewer10, BadgeType.Reviewer50], badges);
+        notificationMock.Verify(n => n.CreateSystemAsync(
+            user.Id, NotificationType.BadgeEarned, null, It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Exactly(3));
+    }
+
+    [Fact]
+    public async Task EvaluateAsync_WhenReviewsDeletedOnDeletedBottlesOrByOthers_ExcludesThemFromReviewCount()
+    {
+        var db = CreateDbContext();
+        var user = SeedUser(db, "User");
+        var other = SeedUser(db, "Other");
+        for (var i = 0; i < 9; i++)
+            SeedReview(db, user.Id);
+        SeedReview(db, user.Id, isDeleted: true);
+        SeedReview(db, user.Id, bottleDeleted: true);
+        SeedReview(db, other.Id);
+        var notificationMock = new Mock<INotificationService>();
+        var service = CreateBadgeService(db, user.Id, notificationMock.Object);
+
+        await service.EvaluateAsync(user.Id, BadgeTrigger.ReviewWritten, CancellationToken.None);
+
+        var badges = await db.UserBadges.Where(b => b.UserId == user.Id).Select(b => b.Badge).ToListAsync();
+        Assert.Equal([BadgeType.FirstReview], badges);
+        VerifyAwarded(notificationMock, user.Id, BadgeType.Reviewer10, Times.Never());
+    }
+
+    [Fact]
+    public async Task EvaluateAsync_WhenNoReviews_AwardsNothing()
+    {
+        var db = CreateDbContext();
+        var user = SeedUser(db);
+        var notificationMock = new Mock<INotificationService>();
+        var service = CreateBadgeService(db, user.Id, notificationMock.Object);
+
+        await service.EvaluateAsync(user.Id, BadgeTrigger.ReviewWritten, CancellationToken.None);
+
+        Assert.Equal(0, await db.UserBadges.CountAsync(b => b.UserId == user.Id));
+        VerifyAwarded(notificationMock, user.Id, BadgeType.FirstReview, Times.Never());
+    }
+
+    [Fact]
     public async Task CountAsync_WhenCountKindOutOfRange_ReturnsZero()
     {
-        // The switch's defensive `_` default arm is unreachable through the catalog (all nine kinds are
+        // The switch's defensive `_` default arm is unreachable through the catalog (all ten kinds are
         // mapped), so invoke the private counter directly with an undefined value to cover it.
         var db = CreateDbContext();
         var user = SeedUser(db);
@@ -791,7 +897,7 @@ public sealed class BadgeServiceTests
     #region GetMyProgressAsync
 
     [Fact]
-    public async Task GetMyProgressAsync_ReturnsAllNineteenRowsInCatalogOrder()
+    public async Task GetMyProgressAsync_ReturnsAllTwentyTwoRowsInCatalogOrder()
     {
         var db = CreateDbContext();
         var user = SeedUser(db);
@@ -800,7 +906,7 @@ public sealed class BadgeServiceTests
         var result = await service.GetMyProgressAsync(CancellationToken.None);
 
         Assert.True(result.Success);
-        Assert.Equal(19, result.Data!.Count);
+        Assert.Equal(22, result.Data!.Count);
         Assert.Equal(BadgeCatalog.All.Select(d => d.Type), result.Data.Select(p => p.Badge));
         Assert.Equal(BadgeCatalog.All.Select(d => d.Threshold), result.Data.Select(p => p.Threshold));
     }
@@ -815,12 +921,16 @@ public sealed class BadgeServiceTests
         SeedBottle(db, user.Id, SpiritCategory.Rum);
         SeedFollow(db, SeedUser(db, "F1").Id, user.Id);
         SeedFollow(db, SeedUser(db, "F2").Id, user.Id);
+        SeedReview(db, user.Id);
+        SeedReview(db, user.Id);
         var service = CreateBadgeService(db, user.Id);
 
         var result = await service.GetMyProgressAsync(CancellationToken.None);
 
         Assert.True(result.Success);
         var rows = result.Data!;
+        Assert.Equal(2, rows.Single(p => p.Badge == BadgeType.FirstReview).Current);
+        Assert.Equal(2, rows.Single(p => p.Badge == BadgeType.Reviewer50).Current);
         Assert.Equal(3, rows.Single(p => p.Badge == BadgeType.FirstBottle).Current);
         Assert.Equal(3, rows.Single(p => p.Badge == BadgeType.Collector5).Current);
         Assert.Equal(2, rows.Single(p => p.Badge == BadgeType.Explorer3).Current);
@@ -867,7 +977,7 @@ public sealed class BadgeServiceTests
         var result = await service.GetMyProgressAsync(CancellationToken.None);
 
         Assert.True(result.Success);
-        Assert.Equal(19, result.Data!.Count);
+        Assert.Equal(22, result.Data!.Count);
         Assert.All(result.Data, p =>
         {
             Assert.False(p.Earned);

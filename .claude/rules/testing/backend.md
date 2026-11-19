@@ -47,4 +47,5 @@ paths:
   no error, so a silent failure cannot pass as success.
 - Existing files: `ProductRequestApprovalFlowTests` (approve → requester notified + `FirstCatalogProduct` awarded) and
   `OfferDealFlowTests` (offer → accept → confirm receipt or cancel, on SQLite: the bottle moves, both sides are notified,
-  the deal badges are awarded, #130).
+  the deal badges are awarded, #130), and `ReviewBadgeFlowTests` (review → `FirstReview` awarded + `BadgeEarned`, own
+  bottles included, never twice, #125).

@@ -57,24 +57,34 @@ public sealed class BottleImageService(
         image!.IsDeleted = true;
         image.DeletedAt = DateTime.UtcNow;
 
-        var relativePath = image.Url.TrimStart('/').Replace('/', Path.DirectorySeparatorChar);
-        var rootPath = env.WebRootPath ?? Path.Combine(env.ContentRootPath, "wwwroot");
-        var filePath = Path.Combine(rootPath, relativePath);
-
-        try
+        // The file goes only when it is an upload inside the bottle folder and nothing else shows it: a bottle linked
+        // from the catalog, or the product itself, can show the very same upload (#134).
+        var filePath = BottleUploads.FilePathOf(env, image.Url);
+        if (filePath is not null && !await IsShownElsewhereAsync(image, cancellationToken))
         {
-            if (File.Exists(filePath))
-                File.Delete(filePath);
-        }
-        catch
-        {
-            // Ignore missing/locked file; soft-delete in DB is authoritative.
+            try
+            {
+                if (File.Exists(filePath))
+                    File.Delete(filePath);
+            }
+            catch
+            {
+                // Ignore missing/locked file; soft-delete in DB is authoritative.
+            }
         }
 
         await db.SaveChangesAsync(cancellationToken);
 
         return Result<bool>.Ok(true);
     }
+
+    /// <summary>
+    /// Whether another live image or any catalog product, deleted or not, has the same URL. The image itself is
+    /// excluded by id: its soft delete is not saved yet.
+    /// </summary>
+    private async Task<bool> IsShownElsewhereAsync(BottleImage image, CancellationToken cancellationToken) =>
+        await db.BottleImages.AnyAsync(i => i.Id != image.Id && i.Url == image.Url && !i.IsDeleted, cancellationToken)
+        || await db.Products.AnyAsync(p => p.ImageUrl == image.Url, cancellationToken);
 
     public async Task<Result<BottleImageDto>> LinkImageAsync(Guid bottleId, LinkImageRequest request, CancellationToken cancellationToken)
     {

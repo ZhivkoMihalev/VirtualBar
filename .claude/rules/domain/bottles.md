@@ -176,9 +176,11 @@ goes last in the gallery (`SortOrder`).
     unknown or deleted product.
   - The add form calls it after saving a bottle linked to a product with an image, unless the collector uploaded a
     photo (`DashboardPage`, `linkBottleImage`).
-- `DELETE /api/bottles/{bottleId}/images/{imageId}` — soft delete, then deletes the file the `Url` names; `404` an image
-  of another bottle, even one the caller owns (#72). No page calls it.
-  - Known gap: #134. The file is deleted whatever the `Url` names, even an upload another bottle or a product shows.
+- `DELETE /api/bottles/{bottleId}/images/{imageId}` — soft delete; `404` an image of another bottle, even one the
+  caller owns (#72). No page calls it.
+  - The file goes too, but only when the `Url` names a file inside the bottle uploads folder
+    (`BottleUploads.FilePathOf`) and no other live image and no catalog product, deleted or not, has the same `Url`
+    (#134). A bottle linked from the catalog, or the product itself, can show the very same upload.
 - **Data fix (#131, approved by the owner):** the migration `HideBottleImagesWithArbitraryUrls` soft-deletes every live
   image whose `Url` is neither a file straight under `/uploads/bottles/` nor a product's `ImageUrl`. Where it hid a
   cover, the bottle's next remaining image becomes the cover, since the feed shows only a primary image.

@@ -144,6 +144,19 @@ jobs:
           E2E_CONFIRMATION: ${{ matrix.confirmation }}
         run: npx playwright test --project=chromium --reporter=list,github,html
 
+      # A test writes only to Playwright's own output folders, which are gitignored; a file anywhere else in the
+      # repository is litter a careless `git add .` would commit, as the screenshot path of #132 was.
+      - name: Check the run left no files in the repository
+        if: ${{ !cancelled() }}
+        run: |
+          left=$(git status --porcelain --untracked-files=all)
+          if [ -n "$left" ]; then
+            echo "::error title=Files left in the repository::The E2E run created or changed files git does not ignore (#132)."
+            echo "$left"
+            exit 1
+          fi
+          echo "The run left the working tree clean."
+
       - name: Upload Playwright report
         if: always()
         uses: actions/upload-artifact@v7

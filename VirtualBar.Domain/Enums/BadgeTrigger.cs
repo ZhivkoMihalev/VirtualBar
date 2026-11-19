@@ -8,4 +8,5 @@ public enum BadgeTrigger
     BottleListed,
     OfferAccepted,
     ProductRequestApproved,
+    ReviewWritten,
 }

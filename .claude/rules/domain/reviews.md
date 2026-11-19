@@ -56,7 +56,9 @@ Composite PK: `(ReviewId, Flavor)`. No `BaseEntity`. Cascade delete from `Bottle
 | `Flavor` | `FlavorTag` |
 
 ## Related rules
-- `BottleReviewService.AddReviewAsync` sends `BottleReviewed` to the bottle owner (`.claude/rules/domain/notifications.md`).
+- `BottleReviewService.AddReviewAsync` sends `BottleReviewed` to the bottle owner (`.claude/rules/domain/notifications.md`)
+  and evaluates the reviewer's badges (`ReviewWritten` → `FirstReview`/`Reviewer10`/`Reviewer50`,
+  `.claude/rules/domain/badges.md`, #125).
 - The product page aggregates the reviews of every linked bottle (`.claude/rules/domain/catalog.md`, `GET /api/products/{id}`).
 - The home feed shows the reviews of followed collectors as `Reviewed` items (`.claude/rules/domain/news.md`).
 

@@ -622,7 +622,10 @@
     "FirstListing": { "name": "Първа обява", "description": "Първа бутилка за продажба" },
     "FirstSale": { "name": "Първа продажба", "description": "Първа приета продажба" },
     "FirstPurchase": { "name": "Първа покупка", "description": "Първа приета покупка" },
-    "FirstCatalogProduct": { "name": "Приносител", "description": "Ваше предложение е одобрено и добавено в каталога" }
+    "FirstCatalogProduct": { "name": "Приносител", "description": "Ваше предложение е одобрено и добавено в каталога" },
+    "FirstReview": { "name": "Първо ревю", "description": "Първото ви ревю" },
+    "Reviewer10": { "name": "Дегустатор", "description": "10 написани ревюта" },
+    "Reviewer50": { "name": "Майстор дегустатор", "description": "50 написани ревюта" }
   },
   "products": {
     "searchLabel": "Намери в каталога",

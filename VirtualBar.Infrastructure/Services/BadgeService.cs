@@ -146,6 +146,9 @@ public sealed class BadgeService(
             BadgeCountKind.ApprovedProductRequests =>
                 db.ProductRequests.CountAsync(
                     r => r.UserId == userId && r.Status == ProductRequestStatus.Approved && !r.IsDeleted, cancellationToken),
+            // A review of the collector's own bottle counts too: it is the same tasting, and the feed shows it (#57, #125).
+            BadgeCountKind.ReviewsWritten =>
+                db.BottleReviews.CountAsync(r => r.UserId == userId && !r.IsDeleted && !r.Bottle.IsDeleted, cancellationToken),
             _ => Task.FromResult(0),
         };
 }

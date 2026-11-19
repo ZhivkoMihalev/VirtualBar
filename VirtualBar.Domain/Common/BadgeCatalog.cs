@@ -25,6 +25,9 @@ public static class BadgeCatalog
         new(BadgeType.FirstSale, BadgeTrigger.OfferAccepted, BadgeCountKind.SalesAccepted, 1),
         new(BadgeType.FirstPurchase, BadgeTrigger.OfferAccepted, BadgeCountKind.PurchasesAccepted, 1),
         new(BadgeType.FirstCatalogProduct, BadgeTrigger.ProductRequestApproved, BadgeCountKind.ApprovedProductRequests, 1),
+        new(BadgeType.FirstReview, BadgeTrigger.ReviewWritten, BadgeCountKind.ReviewsWritten, 1),
+        new(BadgeType.Reviewer10, BadgeTrigger.ReviewWritten, BadgeCountKind.ReviewsWritten, 10),
+        new(BadgeType.Reviewer50, BadgeTrigger.ReviewWritten, BadgeCountKind.ReviewsWritten, 50),
     ];
 
     public static IReadOnlyList<BadgeDefinition> ForTrigger(BadgeTrigger trigger) =>

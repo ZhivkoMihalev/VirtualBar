@@ -3,6 +3,7 @@ using VirtualBar.Application.Common;
 using VirtualBar.Application.DTOs.Reviews;
 using VirtualBar.Application.Interfaces;
 using VirtualBar.Domain.Entities;
+using VirtualBar.Domain.Enums;
 using VirtualBar.Infrastructure.Persistence;
 
 namespace VirtualBar.Infrastructure.Services;
@@ -10,7 +11,8 @@ namespace VirtualBar.Infrastructure.Services;
 public sealed class BottleReviewService(
     AppDbContext db,
     ICurrentUser currentUser,
-    INotificationService notificationService) : IBottleReviewService
+    INotificationService notificationService,
+    IBadgeService badgeService) : IBottleReviewService
 {
     public async Task<Result<BottleReviewsSummaryDto>> GetReviewsAsync(Guid bottleId, CancellationToken cancellationToken)
     {
@@ -80,6 +82,9 @@ public sealed class BottleReviewService(
             .FirstAsync(cancellationToken);
 
         await notificationService.CreateAsync(bottleInfo.UserId, NotificationType.BottleReviewed, bottleId, bottleInfo.Name, cancellationToken);
+
+        // Only a new review can raise the count: an update or a delete never awards anything, and awards are permanent.
+        await badgeService.EvaluateAsync(review.UserId, BadgeTrigger.ReviewWritten, cancellationToken);
 
         return Result<BottleReviewDto>.Ok(ReviewMapping.ToDto(review));
     }

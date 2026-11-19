@@ -16,15 +16,15 @@ profile/public-bar reads.
 
 ## Design (badges / achievements)
 - The catalog lives in **code**, not the DB (the `FlavorTag` pattern):
-  - `BadgeType` enum (**19 members, append-only — never rename/reorder**; stored int values and i18n keys depend on the
+  - `BadgeType` enum (**22 members, append-only — never rename/reorder**; stored int values and i18n keys depend on the
     names);
-  - `BadgeTrigger` (6) + `BadgeCountKind` (9) enums;
+  - `BadgeTrigger` (7) + `BadgeCountKind` (10) enums;
   - static `BadgeCatalog` in `VirtualBar.Domain/Common/` (`BadgeDefinition(Type, Trigger, CountKind, Threshold)`
     records, `All`, `ForTrigger`).
 - Names/descriptions are frontend-translated.
 - Awards are **permanent** — never revoked when counts later drop (unlike/unfollow/delete/unlist).
 
-## The 19 badges
+## The 22 badges
 Every bottle count below sums `Bottle.Quantity`, so one ×5 entry counts as five bottles.
 - `FirstBottle` + `Collector5/10/25/50/100` (bottles ≥ 1/5/10/25/50/100)
 - `Explorer3/5` (distinct categories)
@@ -36,6 +36,8 @@ Every bottle count below sums `Bottle.Quantity`, so one ×5 entry counts as five
 - `FirstSale`/`FirstPurchase` (completed deals as seller/buyer: offers `Accepted` once the buyer confirmed receipt, #130)
 - `FirstCatalogProduct` (own product requests approved by an admin ≥ 1 — counts `Status = Approved`, so linking to an
   existing catalog product counts exactly like creating a new one)
+- `FirstReview`/`Reviewer10`/`Reviewer50` (reviews written 1/10/50, #125 — `ReviewsWritten` counts the user's live
+  reviews of live bottles, their own bottles included, as the feed shows them)
 
 ## Award engine — `IBadgeService.EvaluateAsync(userId, trigger, cancellationToken)`
 `BadgeService` + `BadgeValidationDecorator`.
@@ -52,7 +54,11 @@ Every bottle count below sums `Bottle.Quantity`, so one ×5 entry counts as five
     bottle; winning path only). A deal counts once the buyer confirms receiving the bottle, not when the seller accepts
     (#130, `.claude/rules/domain/offers.md`);
   - `ProductRequestService.ApproveAsync` (`ProductRequestApproved` → the **requester**, never the admin; the
-    `Conflict` race path returns before it).
+    `Conflict` race path returns before it);
+  - `BottleReviewService.AddReviewAsync` (`ReviewWritten` → the **reviewer**, #125). Only a new review: an update or a
+    delete never raises the count, and the `Conflict` race path returns before it.
+- A collector who wrote reviews before #125 gets the review badges with their next review (the lazy catch-up above),
+  not before: there was no backfill.
 - Idempotency: awards go **one at a time** (`Add` → `SaveChangesAsync` → notification); a concurrent duplicate loses on
   the composite PK → `DbUpdateException` → detach, skip its notification, continue.
 - Earning fires `NotificationType.BadgeEarned` via `CreateSystemAsync` with `ResourceId = null`,
@@ -61,12 +67,13 @@ Every bottle count below sums `Bottle.Quantity`, so one ×5 entry counts as five
 ## API endpoints (`/api/badges`)
 - `GET /api/badges/user/{userId}` — `[AllowAnonymous]` (public bars are public); earned badges only, newest first;
   `404` unknown user
-- `GET /api/badges/progress` — `[Authorize]`; all 19 catalog entries with `current`/`threshold`/`earned`/`awardedAt`
+- `GET /api/badges/progress` — `[Authorize]`; all 22 catalog entries with `current`/`threshold`/`earned`/`awardedAt`
   for the **current** user (own-only — never exposed for other users)
 
 ## Related rules
 - The hook sites live in the features' services: `.claude/rules/domain/bottles.md` (add, list, like),
-  `.claude/rules/domain/follows.md`, `.claude/rules/domain/offers.md`, `.claude/rules/domain/catalog.md` (approve).
+  `.claude/rules/domain/follows.md`, `.claude/rules/domain/offers.md`, `.claude/rules/domain/catalog.md` (approve),
+  `.claude/rules/domain/reviews.md` (a new review).
 - Earning a badge sends `BadgeEarned` through `CreateSystemAsync` (`.claude/rules/domain/notifications.md`).
 - In the frontend: `BadgeChip` on the profile and the public bar (`.claude/rules/frontend/shared-components.md`).
 

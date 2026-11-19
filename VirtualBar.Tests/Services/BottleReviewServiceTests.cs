@@ -45,18 +45,22 @@ public sealed class BottleReviewServiceTests
     private static IBottleReviewService CreateService(
         AppDbContext db,
         Guid currentUserId,
-        INotificationService? notificationService = null)
+        INotificationService? notificationService = null,
+        IBadgeService? badgeService = null)
     {
         var currentUser = CreateCurrentUser(currentUserId);
-        var inner = new BottleReviewService(db, currentUser, notificationService ?? Mock.Of<INotificationService>());
+        var inner = new BottleReviewService(
+            db, currentUser, notificationService ?? Mock.Of<INotificationService>(), badgeService ?? Mock.Of<IBadgeService>());
         return new BottleReviewValidationDecorator(inner, db, currentUser);
     }
 
     private static BottleReviewService CreateInnerService(
         AppDbContext db,
         Guid currentUserId,
-        INotificationService? notificationService = null) =>
-        new(db, CreateCurrentUser(currentUserId), notificationService ?? Mock.Of<INotificationService>());
+        INotificationService? notificationService = null,
+        IBadgeService? badgeService = null) =>
+        new(db, CreateCurrentUser(currentUserId), notificationService ?? Mock.Of<INotificationService>(),
+            badgeService ?? Mock.Of<IBadgeService>());
 
     private static AppUser SeedUser(AppDbContext db, string displayName = "Test User", string? avatarUrl = null)
     {
@@ -972,6 +976,97 @@ public sealed class BottleReviewServiceTests
 
         await Assert.ThrowsAsync<OperationCanceledException>(
             () => service.DeleteReviewAsync(Guid.NewGuid(), cts.Token));
+    }
+
+    #endregion
+
+    #region Review badges (#125)
+
+    private static void VerifyBadgesEvaluated(Mock<IBadgeService> badgeMock, Times times) =>
+        badgeMock.Verify(b => b.EvaluateAsync(It.IsAny<Guid>(), It.IsAny<BadgeTrigger>(), It.IsAny<CancellationToken>()), times);
+
+    /// <summary>A new review is the one thing that raises the reviewer's count, so it evaluates their review badges.</summary>
+    [Fact]
+    public async Task AddReviewAsync_WhenValid_EvaluatesTheReviewersReviewBadgesOnce()
+    {
+        var db = CreateDbContext();
+        var owner = SeedUser(db, "Owner");
+        var reviewer = SeedUser(db, "Reviewer");
+        var bottle = SeedBottle(db, owner.Id);
+        var badgeMock = new Mock<IBadgeService>();
+        var service = CreateService(db, reviewer.Id, badgeService: badgeMock.Object);
+
+        var result = await service.AddReviewAsync(bottle.Id, new AddReviewRequest { Score = 90 }, CancellationToken.None);
+
+        Assert.True(result.Success);
+        badgeMock.Verify(b => b.EvaluateAsync(reviewer.Id, BadgeTrigger.ReviewWritten, It.IsAny<CancellationToken>()), Times.Once);
+        VerifyBadgesEvaluated(badgeMock, Times.Once());
+    }
+
+    [Fact]
+    public async Task AddReviewAsync_WhenTheCreateRaceIsLost_EvaluatesNoBadges()
+    {
+        var db = CreateSqliteDbContext();
+        var owner = SeedUser(db, "Owner");
+        var reviewer = SeedUser(db, "Reviewer");
+        var bottle = SeedBottle(db, owner.Id);
+        SeedReview(db, bottle.Id, reviewer.Id, score: 70);
+        var badgeMock = new Mock<IBadgeService>();
+        var inner = CreateInnerService(db, reviewer.Id, badgeService: badgeMock.Object);
+
+        var result = await inner.AddReviewAsync(bottle.Id, new AddReviewRequest { Score = 90 }, CancellationToken.None);
+
+        Assert.Equal(ErrorCode.Conflict, result.ErrorCode);
+        VerifyBadgesEvaluated(badgeMock, Times.Never());
+    }
+
+    [Fact]
+    public async Task AddReviewAsync_WhenAlreadyReviewed_EvaluatesNoBadges()
+    {
+        var db = CreateDbContext();
+        var owner = SeedUser(db, "Owner");
+        var reviewer = SeedUser(db, "Reviewer");
+        var bottle = SeedBottle(db, owner.Id);
+        SeedReview(db, bottle.Id, reviewer.Id, score: 70);
+        var badgeMock = new Mock<IBadgeService>();
+        var service = CreateService(db, reviewer.Id, badgeService: badgeMock.Object);
+
+        var result = await service.AddReviewAsync(bottle.Id, new AddReviewRequest { Score = 90 }, CancellationToken.None);
+
+        Assert.Equal(ErrorCode.Conflict, result.ErrorCode);
+        VerifyBadgesEvaluated(badgeMock, Times.Never());
+    }
+
+    [Fact]
+    public async Task UpdateReviewAsync_WhenValid_EvaluatesNoBadges()
+    {
+        var db = CreateDbContext();
+        var reviewer = SeedUser(db, "Reviewer");
+        var bottle = SeedBottle(db, reviewer.Id);
+        var review = SeedReview(db, bottle.Id, reviewer.Id, score: 70);
+        var badgeMock = new Mock<IBadgeService>();
+        var service = CreateService(db, reviewer.Id, badgeService: badgeMock.Object);
+
+        var result = await service.UpdateReviewAsync(review.Id, new UpdateReviewRequest { Score = 95 }, CancellationToken.None);
+
+        Assert.True(result.Success);
+        VerifyBadgesEvaluated(badgeMock, Times.Never());
+    }
+
+    [Fact]
+    public async Task DeleteReviewAsync_WhenValid_EvaluatesNoBadges()
+    {
+        var db = CreateDbContext();
+        var reviewer = SeedUser(db, "Reviewer");
+        var bottle = SeedBottle(db, reviewer.Id);
+        var review = SeedReview(db, bottle.Id, reviewer.Id, score: 70);
+        var badgeMock = new Mock<IBadgeService>();
+        var service = CreateService(db, reviewer.Id, badgeService: badgeMock.Object);
+
+        var result = await service.DeleteReviewAsync(review.Id, CancellationToken.None);
+
+        Assert.True(result.Success);
+        VerifyBadgesEvaluated(badgeMock, Times.Never());
     }
 
     #endregion

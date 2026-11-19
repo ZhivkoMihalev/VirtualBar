@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
@@ -378,18 +379,41 @@ public sealed class BottleImageServiceTests
             () => service.DeleteImageAsync(bottle.Id, image.Id, cts.Token));
     }
 
+    /// <summary>
+    /// Linking used to store whatever address the body carried, so a collector could make every viewer of the bottle
+    /// load a tracking pixel (#131). The body is read the way the API binds it, so the test sends exactly what such a
+    /// client sends; it must be refused and leave the bottle without an image.
+    /// </summary>
     [Fact]
-    public async Task LinkImageAsync_WhenUrlWhitespace_ReturnsFail()
+    public async Task LinkImageAsync_WhenTheBodyCarriesAnAddress_ReturnsFailAndStoresNothing()
+    {
+        using var db = CreateDbContext();
+        var user = SeedUser(db);
+        var bottle = SeedBottle(db, user.Id);
+        var service = CreateService(db, user.Id);
+        var request = JsonSerializer.Deserialize<LinkImageRequest>(
+            """{ "url": "https://tracker.example/pixel.png" }""", JsonSerializerOptions.Web)!;
+
+        var result = await service.LinkImageAsync(bottle.Id, request, CancellationToken.None);
+
+        Assert.False(result.Success);
+        Assert.Equal(ErrorCode.Validation, result.ErrorCode);
+        Assert.Empty(db.BottleImages);
+    }
+
+    [Fact]
+    public async Task LinkImageAsync_WhenProductIdMissing_ReturnsFail()
     {
         using var db = CreateDbContext();
         var user = SeedUser(db);
         var bottle = SeedBottle(db, user.Id);
         var service = CreateService(db, user.Id);
 
-        var result = await service.LinkImageAsync(bottle.Id, new LinkImageRequest { Url = "   " }, CancellationToken.None);
+        var result = await service.LinkImageAsync(bottle.Id, new LinkImageRequest(), CancellationToken.None);
 
         Assert.False(result.Success);
-        Assert.Equal("Image URL is required.", result.Error);
+        Assert.Equal("Product is required.", result.Error);
+        Assert.Equal(ErrorCode.Validation, result.ErrorCode);
     }
 
     [Fact]
@@ -397,9 +421,10 @@ public sealed class BottleImageServiceTests
     {
         using var db = CreateDbContext();
         var user = SeedUser(db);
+        var product = SeedProduct(db);
         var service = CreateService(db, user.Id);
 
-        var result = await service.LinkImageAsync(Guid.NewGuid(), new LinkImageRequest { Url = "https://x.com/a.jpg" }, CancellationToken.None);
+        var result = await service.LinkImageAsync(Guid.NewGuid(), LinkTo(product), CancellationToken.None);
 
         Assert.False(result.Success);
         Assert.Equal("Bottle not found.", result.Error);
@@ -413,29 +438,89 @@ public sealed class BottleImageServiceTests
         var owner = SeedUser(db, "Owner");
         var other = SeedUser(db, "Other");
         var bottle = SeedBottle(db, owner.Id);
+        var product = SeedProduct(db);
         var service = CreateService(db, other.Id);
 
-        var result = await service.LinkImageAsync(bottle.Id, new LinkImageRequest { Url = "https://x.com/a.jpg" }, CancellationToken.None);
+        var result = await service.LinkImageAsync(bottle.Id, LinkTo(product), CancellationToken.None);
 
         Assert.False(result.Success);
         Assert.Equal("Forbidden.", result.Error);
         Assert.Equal(ErrorCode.Forbidden, result.ErrorCode);
+        Assert.Empty(db.BottleImages);
     }
 
     [Fact]
-    public async Task LinkImageAsync_WhenFirstImage_ReturnsPrimary()
+    public async Task LinkImageAsync_WhenProductNotFound_ReturnsNotFound()
     {
         using var db = CreateDbContext();
         var user = SeedUser(db);
         var bottle = SeedBottle(db, user.Id);
         var service = CreateService(db, user.Id);
 
-        var result = await service.LinkImageAsync(bottle.Id, new LinkImageRequest { Url = "https://x.com/a.jpg" }, CancellationToken.None);
+        var result = await service.LinkImageAsync(
+            bottle.Id, new LinkImageRequest { ProductId = Guid.NewGuid() }, CancellationToken.None);
+
+        Assert.False(result.Success);
+        Assert.Equal("Product not found.", result.Error);
+        Assert.Equal(ErrorCode.NotFound, result.ErrorCode);
+        Assert.Empty(db.BottleImages);
+    }
+
+    [Fact]
+    public async Task LinkImageAsync_WhenProductDeleted_ReturnsNotFound()
+    {
+        using var db = CreateDbContext();
+        var user = SeedUser(db);
+        var bottle = SeedBottle(db, user.Id);
+        var product = SeedProduct(db, isDeleted: true);
+        var service = CreateService(db, user.Id);
+
+        var result = await service.LinkImageAsync(bottle.Id, LinkTo(product), CancellationToken.None);
+
+        Assert.False(result.Success);
+        Assert.Equal("Product not found.", result.Error);
+        Assert.Equal(ErrorCode.NotFound, result.ErrorCode);
+        Assert.Empty(db.BottleImages);
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("   ")]
+    public async Task LinkImageAsync_WhenProductHasNoImage_ReturnsFail(string? imageUrl)
+    {
+        using var db = CreateDbContext();
+        var user = SeedUser(db);
+        var bottle = SeedBottle(db, user.Id);
+        var product = SeedProduct(db, imageUrl: imageUrl);
+        var service = CreateService(db, user.Id);
+
+        var result = await service.LinkImageAsync(bottle.Id, LinkTo(product), CancellationToken.None);
+
+        Assert.False(result.Success);
+        Assert.Equal("The product has no image.", result.Error);
+        Assert.Equal(ErrorCode.Validation, result.ErrorCode);
+        Assert.Empty(db.BottleImages);
+    }
+
+    /// <summary>The bottle takes the product's own image address, the only one linking can store (#131).</summary>
+    [Fact]
+    public async Task LinkImageAsync_WhenFirstImage_StoresTheProductsImageAsPrimary()
+    {
+        using var db = CreateDbContext();
+        var user = SeedUser(db);
+        var bottle = SeedBottle(db, user.Id);
+        var product = SeedProduct(db, imageUrl: "https://images.example.test/lagavulin-16.png");
+        var service = CreateService(db, user.Id);
+
+        var result = await service.LinkImageAsync(bottle.Id, LinkTo(product), CancellationToken.None);
 
         Assert.True(result.Success);
         Assert.True(result.Data!.IsPrimary);
-        Assert.Equal("https://x.com/a.jpg", result.Data.Url);
+        Assert.Equal("https://images.example.test/lagavulin-16.png", result.Data.Url);
         Assert.Equal(0, result.Data.SortOrder);
+        var stored = Assert.Single(db.BottleImages);
+        Assert.Equal(bottle.Id, stored.BottleId);
+        Assert.Equal("https://images.example.test/lagavulin-16.png", stored.Url);
     }
 
     [Fact]
@@ -445,9 +530,10 @@ public sealed class BottleImageServiceTests
         var user = SeedUser(db);
         var bottle = SeedBottle(db, user.Id);
         SeedImage(db, bottle.Id);
+        var product = SeedProduct(db);
         var service = CreateService(db, user.Id);
 
-        var result = await service.LinkImageAsync(bottle.Id, new LinkImageRequest { Url = "https://x.com/b.jpg" }, CancellationToken.None);
+        var result = await service.LinkImageAsync(bottle.Id, LinkTo(product), CancellationToken.None);
 
         Assert.True(result.Success);
         Assert.False(result.Data!.IsPrimary);
@@ -460,11 +546,32 @@ public sealed class BottleImageServiceTests
         using var db = CreateDbContext();
         var user = SeedUser(db);
         var bottle = SeedBottle(db, user.Id);
+        var product = SeedProduct(db);
         var service = CreateService(db, user.Id);
         var cts = new CancellationTokenSource();
         cts.Cancel();
 
         await Assert.ThrowsAsync<OperationCanceledException>(
-            () => service.LinkImageAsync(bottle.Id, new LinkImageRequest { Url = "https://x.com/a.jpg" }, cts.Token));
+            () => service.LinkImageAsync(bottle.Id, LinkTo(product), cts.Token));
     }
+
+    private static Product SeedProduct(
+        AppDbContext db, string? imageUrl = "https://images.example.test/product.png", bool isDeleted = false)
+    {
+        var product = new Product
+        {
+            Name = "Lagavulin 16",
+            CanonicalKey = $"lagavulin|16|{Guid.NewGuid():N}",
+            Category = VirtualBar.Domain.Enums.SpiritCategory.Whisky,
+            ImageUrl = imageUrl,
+            IsDeleted = isDeleted, DeletedAt = isDeleted ? DateTime.UtcNow : null
+        };
+
+        db.Products.Add(product);
+        db.SaveChanges();
+
+        return product;
+    }
+
+    private static LinkImageRequest LinkTo(Product product) => new() { ProductId = product.Id };
 }

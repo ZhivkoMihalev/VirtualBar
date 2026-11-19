@@ -68,11 +68,15 @@ codes, JWT validation and the startup guards. They are not a place for branch co
 
 ## Folders
 - `Support/`: test host, shared throwaway database, email pickup reader, `[SqlServerFact]`/`[SqlServerTheory]`,
-  collectors + admins, setup calls
+  collectors + admins, setup calls, catalog products with an image (`CatalogData`, written to the database since no
+  endpoint creates a product outside the admin request flow)
 - `Access/`: access matrix (anonymous list, 401 without a token), other collectors' resources, admin-only actions
 - `Auth/`: email confirmation, email failure, error reasons, JWT + logout, password reset (#81)
-- `Bottles/`: bottle routes: an image is deleted only through its own bottle's route (#72); a visitor gets a public
-  bar's bottles without `askingPrice`/`currency`, a collector with them (#103)
+- `Bottles/`: bottle routes: an image is deleted only through its own bottle's route (#72); linking takes a catalog
+  product and gives the bottle its image, while an address sent as `{ url }` answers 400 and stores nothing (#131); a
+  visitor gets a public bar's bottles without `askingPrice`/`currency`, a collector with them (#103)
+  - `BottleImageCleanupTests` runs the SQL of the #131 data fix (`HideBottleImagesWithArbitraryUrls.CleanupSql`)
+    against image rows it writes to the database, and reads the bottles back over HTTP.
 - `Feed/`: the home feed on SQL Server: a followed collector's review (its query and JSON shape), the largest `skip`
 - `Products/`: the product page: a visitor gets `listingsCount` and `listings: []`, a collector the listings (#102); the
   barcode database (#49): a bottle saved linked with a barcode makes another collector's lookup find the product

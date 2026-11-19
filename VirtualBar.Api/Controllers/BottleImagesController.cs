@@ -41,14 +41,14 @@ public sealed class BottleImagesController(IBottleImageService bottleImageServic
         return result.Success ? Ok() : result.ToActionResult(this);
     }
 
-    /// <summary>Associates a barcode-sourced image URL with a bottle.</summary>
+    /// <summary>Gives a bottle the image of a catalog product; the request names the product, never an address.</summary>
     /// <param name="bottleId">Bottle identifier.</param>
-    /// <param name="request">The image URL to associate.</param>
+    /// <param name="request">The catalog product whose image the bottle takes.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
-    /// <response code="200">Image associated.</response>
-    /// <response code="400">Validation failed.</response>
+    /// <response code="200">Image linked; returns the image DTO with the product's image URL.</response>
+    /// <response code="400">No product given, or the product has no image.</response>
     /// <response code="403">Bottle belongs to another collector.</response>
-    /// <response code="404">Bottle not found.</response>
+    /// <response code="404">Bottle or product not found.</response>
     [HttpPost("{bottleId:guid}/images/link")]
     public async Task<IActionResult> LinkImage(Guid bottleId, [FromBody] LinkImageRequest request, CancellationToken cancellationToken)
     {

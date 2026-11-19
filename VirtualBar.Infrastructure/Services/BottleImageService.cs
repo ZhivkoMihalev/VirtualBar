@@ -78,13 +78,19 @@ public sealed class BottleImageService(
 
     public async Task<Result<BottleImageDto>> LinkImageAsync(Guid bottleId, LinkImageRequest request, CancellationToken cancellationToken)
     {
+        // The image is always the product's own (#131); the decorator has checked that the product is live and has one.
+        var imageUrl = await db.Products
+            .Where(p => p.Id == request.ProductId)
+            .Select(p => p.ImageUrl!)
+            .FirstAsync(cancellationToken);
+
         var isPrimary = !await db.BottleImages.AnyAsync(i => i.BottleId == bottleId && !i.IsDeleted, cancellationToken);
         var sortOrder = await db.BottleImages.CountAsync(i => i.BottleId == bottleId && !i.IsDeleted, cancellationToken);
 
         var image = new BottleImage
         {
             BottleId = bottleId,
-            Url = request.Url,
+            Url = imageUrl,
             IsPrimary = isPrimary,
             SortOrder = sortOrder
         };

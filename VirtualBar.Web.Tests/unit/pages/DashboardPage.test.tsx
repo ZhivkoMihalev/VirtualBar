@@ -1,7 +1,7 @@
 import { screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { addBottle, getBottlesByUser, lookupBarcode } from '@/api/bottlesApi'
+import { addBottle, getBottlesByUser, linkBottleImage, lookupBarcode } from '@/api/bottlesApi'
 import { getDistilleries } from '@/api/distilleriesApi'
 import { getNotifications } from '@/api/notificationsApi'
 import { getCollectionValue } from '@/api/pricesApi'
@@ -255,5 +255,47 @@ describe('DashboardPage: add a bottle by barcode', () => {
     expect(await screen.findByText(i18n.t('addBottle.barcodeSuggested', { count: 1 }))).toBeInTheDocument()
     expect(screen.queryByText(bg.products.linkedChip)).not.toBeInTheDocument()
     expect(screen.getByLabelText(bg.addBottle.name)).toHaveValue('Unknown Cask')
+  })
+})
+
+describe('DashboardPage: the image of a catalog product', () => {
+  /**
+   * Linking used to send the product's image address, and the API stored whatever address it got, so anyone could
+   * make a bottle's viewers load any address (#131). The form now names the product and the server takes its image.
+   */
+  it('links the picked product\'s image by naming the product, never by sending an address', async () => {
+    const rum = catalogProduct({
+      name: 'Foursquare 2005 Vintage',
+      category: 'Rum',
+      barcode: BARCODE,
+      imageUrl: 'https://images.example.test/foursquare-2005.png',
+    })
+    vi.mocked(lookupBarcode).mockResolvedValue(fromCatalog(rum))
+    await openAddForm()
+
+    await findByBarcode(BARCODE)
+    expect(await screen.findByText(bg.addBottle.barcodeSuccess)).toBeInTheDocument()
+    await userEvent.click(screen.getByRole('button', { name: bg.addBottle.submit }))
+
+    await vi.waitFor(() => expect(linkBottleImage).toHaveBeenCalled())
+    const saved = await vi.mocked(addBottle).mock.results[0].value
+    expect(linkBottleImage).toHaveBeenCalledWith(saved.id, rum.id)
+  })
+
+  it('links no image when the picked product has none', async () => {
+    const rum = catalogProduct({ name: 'Foursquare 2005 Vintage', category: 'Rum', barcode: BARCODE })
+    vi.mocked(lookupBarcode).mockResolvedValue(fromCatalog(rum))
+    await openAddForm()
+
+    await findByBarcode(BARCODE)
+    expect(await screen.findByText(bg.addBottle.barcodeSuccess)).toBeInTheDocument()
+    await userEvent.click(screen.getByRole('button', { name: bg.addBottle.submit }))
+
+    // Saving closes the form once the whole mutation is done, link included.
+    await vi.waitFor(() =>
+      expect(screen.queryByRole('button', { name: bg.addBottle.submit })).not.toBeInTheDocument(),
+    )
+    expect(addBottle).toHaveBeenCalled()
+    expect(linkBottleImage).not.toHaveBeenCalled()
   })
 })

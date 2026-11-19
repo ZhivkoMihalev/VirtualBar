@@ -158,9 +158,31 @@ paths:
 | Property | Type | Notes |
 |---|---|---|
 | `BottleId` | `Guid` | FK → Bottle |
-| `Url` | `string` | Relative path under `/uploads/bottles/` |
+| `Url` | `string` | An upload under `/uploads/bottles/`, or a catalog product's `ImageUrl` — see below |
 | `IsPrimary` | `bool` | Cover image |
 | `SortOrder` | `int` | Gallery order |
+
+### Image endpoints (`BottleImagesController`)
+`[Authorize]`. Every refusal comes from `BottleImageValidationDecorator`; another collector's bottle answers `403`
+(pinned in `OwnershipTests`). An image is the bottle's cover (`IsPrimary`) when the bottle has no other live image, and
+goes last in the gallery (`SortOrder`).
+- `POST /api/bottles/{bottleId}/images` — upload, multipart `file`: JPEG, PNG or WebP (`ImageUploadTypes`), at most
+  10 MB; saved as `/uploads/bottles/<guid><ext>`, the extension taken from the checked content type.
+  - `400` no file, another type, over 10 MB; `404` missing bottle.
+- `POST /api/bottles/{bottleId}/images/link` — gives the bottle the image of a catalog product
+  (`LinkImageRequest.ProductId`). The service stores that product's `ImageUrl`: the request carries no address, so a
+  collector cannot make the bottle's viewers load one (#131).
+  - `400` no `productId` (an old `{ url }` body included) or a product without an image; `404` missing bottle, or an
+    unknown or deleted product.
+  - The add form calls it after saving a bottle linked to a product with an image, unless the collector uploaded a
+    photo (`DashboardPage`, `linkBottleImage`).
+- `DELETE /api/bottles/{bottleId}/images/{imageId}` — soft delete, then deletes the file the `Url` names; `404` an image
+  of another bottle, even one the caller owns (#72). No page calls it.
+  - Known gap: #134. The file is deleted whatever the `Url` names, even an upload another bottle or a product shows.
+- **Data fix (#131, approved by the owner):** the migration `HideBottleImagesWithArbitraryUrls` soft-deletes every live
+  image whose `Url` is neither a file straight under `/uploads/bottles/` nor a product's `ImageUrl`. Where it hid a
+  cover, the bottle's next remaining image becomes the cover, since the feed shows only a primary image.
+  `BottleImageCleanupTests` runs its SQL on SQL Server.
 
 ## BottleLike
 Composite PK: `(BottleId, UserId)`. No `BaseEntity`.
@@ -190,5 +212,6 @@ Bottle code also does work that other rule files describe:
 - `ListForSaleAsync` accepts only the supported currencies (`.claude/rules/domain/currencies.md`).
 - A deal reserves a bottle, takes it off sale, and moves it to the buyer's bar when they confirm receipt
   (`.claude/rules/domain/offers.md`).
+- `BottleImageService.LinkImageAsync` gives a bottle its catalog product's `ImageUrl` (`.claude/rules/domain/catalog.md`).
 - Notification types: `.claude/rules/domain/notifications.md`. Badges: `.claude/rules/domain/badges.md`. A bottle's price estimate
   and the collection value: `.claude/rules/domain/pricing.md`.

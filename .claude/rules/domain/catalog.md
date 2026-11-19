@@ -25,7 +25,7 @@ Canonical catalog entry for a spirits product. Not user-owned.
 | `AbvPercent` | `double?` | |
 | `VolumeMl` | `int?` | |
 | `Barcode` | `string?` | The product's own EAN/UPC (seed or approved request); a barcode lookup tries it first |
-| `ImageUrl` | `string?` | |
+| `ImageUrl` | `string?` | Set by an admin (seed rows have none); the only image a bottle can link (#131) |
 | `Description` | `string?` | |
 | `CanonicalKey` | `string` | `ProductKey.For(distilleryName ?? brand, name, category, age, null, volumeMl)` — **filtered unique index** `WHERE [IsDeleted] = 0` |
 | `Origin` | `ProductOrigin` | `Seeded` / `Approved` (append-only enum) |
@@ -274,6 +274,8 @@ A user's request to add a missing product to the catalog.
 
 ## Related rules
 - A bottle is linked when it is added (`BottleService.AddBottleAsync`, `.claude/rules/domain/bottles.md`).
+- A bottle takes its product's `ImageUrl` through `POST /api/bottles/{bottleId}/images/link`
+  (`.claude/rules/domain/bottles.md`, Image endpoints).
 - Approve and reject send `ProductRequestApproved` / `ProductRequestRejected` (`.claude/rules/domain/notifications.md`);
   approve evaluates the requester's badges (`FirstCatalogProduct`, `.claude/rules/domain/badges.md`).
 - `CanonicalKey` is the price key of every linked bottle (`.claude/rules/domain/pricing.md`, Price key rule).

@@ -408,7 +408,9 @@
     "deleteBtn": "ИЗТРИЙ",
     "postTitlePlaceholder": "Заглавие на статията",
     "postContentPlaceholder": "Пълният разказ…",
-    "errorSubmit": "Нещо се обърка. Моля, опитайте отново."
+    "errorSubmit": "Нещо се обърка. Моля, опитайте отново.",
+    "loadMore": "Покажи още",
+    "loadingMore": "Зареждане…"
   },
   "barShelf": {
     "addBottle": "Добави бутилка",

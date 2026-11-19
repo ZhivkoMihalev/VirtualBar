@@ -28,8 +28,15 @@ Composite PK: `(PostId, LanguageCode)`. Cascade delete from `NewsPost`.
 `NewsService.Resolve(post, lang)` returns the translation matching `lang`, falls back to `"bg"`. Bulgarian translation is required — enforced in `NewsValidationDecorator`.
 
 ## Home feed (`GET /api/feed?skip=&take=&lang=`)
-`[AllowAnonymous]`; `FeedService.GetFeedAsync` → `List<FeedItemDto>`, newest first. The home page (`HomePage`) asks for
-the first 50 items.
+`[AllowAnonymous]`; `FeedService.GetFeedAsync` → `List<FeedItemDto>`, newest first.
+- **The home page** (`HomePage`, #127) pages it with `useInfiniteQuery` (query key `['feed', lang]`), 20 items a page
+  (`FEED_PAGE_SIZE`), and a "Покажи още" button (`home.loadMore`, `home.loadingMore` while it loads).
+  - Each request asks for one item more than a page (`skip` = pages loaded × 20, `take` = 21) and shows 20: a 21st item
+    means there is more, with no count query and no change to the API.
+  - An item that arrives while the collector reads pushes the older ones down, so a next page can start with items
+    already shown. `uniqueFeedItems` (`src/lib/feedItems.ts`) keeps the first of each, by the key the list renders
+    (`feedItemKey`: `news-<postId>`, `review-<reviewId>`, `<type>-<bottleId>`).
+  - A failed next page shows `home.errorLoading` under the list and keeps the button; the items already loaded stay.
 - `FeedValidationDecorator`: a negative `skip` becomes 0, a `take` outside 1–100 becomes 20, a blank `lang` becomes `bg`.
 - `FeedItemType` (append-only): `News`, `NewBottle`, `ForSale`, `Reviewed`.
 - **News:** non-deleted posts, translated like `NewsService.Resolve` (`lang`, falling back to `bg`).

@@ -408,7 +408,9 @@
     "deleteBtn": "DELETE",
     "postTitlePlaceholder": "A rare cask emerges",
     "postContentPlaceholder": "The full story…",
-    "errorSubmit": "Something went wrong. Please try again."
+    "errorSubmit": "Something went wrong. Please try again.",
+    "loadMore": "Show more",
+    "loadingMore": "Loading…"
   },
   "barShelf": {
     "addBottle": "Add bottle",

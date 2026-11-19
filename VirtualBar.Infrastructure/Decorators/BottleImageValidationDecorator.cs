@@ -62,8 +62,10 @@ public sealed class BottleImageValidationDecorator(
     {
         cancellationToken.ThrowIfCancellationRequested();
 
-        if (string.IsNullOrWhiteSpace(request.Url))
-            return Result<BottleImageDto>.Fail("Image URL is required.");
+        // The request names a catalog product, never an address (#131): a body without one, such as an old client's
+        // { url }, is refused before anything is read or stored.
+        if (request.ProductId is not Guid productId)
+            return Result<BottleImageDto>.Fail("Product is required.");
 
         var bottle = await db.Bottles.FirstOrDefaultAsync(b => b.Id == bottleId && !b.IsDeleted, cancellationToken);
         if (bottle is null)
@@ -71,6 +73,16 @@ public sealed class BottleImageValidationDecorator(
 
         if (bottle.UserId != currentUser.UserId)
             return Result<BottleImageDto>.Forbidden("Forbidden.");
+
+        var product = await db.Products
+            .Where(p => p.Id == productId && !p.IsDeleted)
+            .Select(p => new { p.ImageUrl })
+            .FirstOrDefaultAsync(cancellationToken);
+        if (product is null)
+            return Result<BottleImageDto>.NotFound("Product not found.");
+
+        if (string.IsNullOrWhiteSpace(product.ImageUrl))
+            return Result<BottleImageDto>.Fail("The product has no image.");
 
         return await inner.LinkImageAsync(bottleId, request, cancellationToken);
     }

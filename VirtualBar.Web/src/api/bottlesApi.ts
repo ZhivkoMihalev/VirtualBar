@@ -53,8 +53,9 @@ export async function uploadBottleImage(bottleId: string, file: File): Promise<v
   })
 }
 
-export async function linkBottleImage(bottleId: string, url: string): Promise<void> {
-  await client.post(`/bottles/${bottleId}/images/link`, { url })
+/** Gives the bottle the image of a catalog product; the server takes the product's own image, never an address (#131). */
+export async function linkBottleImage(bottleId: string, productId: string): Promise<void> {
+  await client.post(`/bottles/${bottleId}/images/link`, { productId })
 }
 
 /** What the platform knows about a barcode (#49): a catalog product or a suggestion; 404 when nobody has it. */

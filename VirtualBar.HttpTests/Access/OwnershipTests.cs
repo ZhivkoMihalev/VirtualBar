@@ -95,9 +95,10 @@ public sealed class OwnershipTests(ApiHosts hosts)
     {
         var (owner, other) = await TwoCollectorsAsync();
         var bottleId = await owner.AddBottleAsync();
+        var productId = await CatalogData.SeedProductAsync(Api);
 
         var response = await other.Client.PostAsJsonAsync(
-            $"/api/bottles/{bottleId}/images/link", new { url = "https://images.example.test/other.png" });
+            $"/api/bottles/{bottleId}/images/link", new { productId });
 
         await CollectorApi.AssertRefusedAsync(response, HttpStatusCode.Forbidden);
     }
@@ -107,7 +108,7 @@ public sealed class OwnershipTests(ApiHosts hosts)
     {
         var (owner, other) = await TwoCollectorsAsync();
         var bottleId = await owner.AddBottleAsync();
-        var imageId = await owner.LinkImageAsync(bottleId);
+        var imageId = await owner.LinkImageAsync(bottleId, await CatalogData.SeedProductAsync(Api));
 
         var response = await other.Client.DeleteAsync($"/api/bottles/{bottleId}/images/{imageId}");
 

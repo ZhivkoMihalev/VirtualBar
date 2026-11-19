@@ -52,9 +52,10 @@ internal static class CollectorApi
         await AssertSucceededAsync(await collector.Client.PostAsJsonAsync(
             $"/api/bottles/{bottleId}/list-for-sale", new { askingPrice = 120m, currency = "EUR" }));
 
-    public static async Task<Guid> LinkImageAsync(this Collector collector, Guid bottleId) =>
+    /// <summary>Gives the bottle the image of <paramref name="productId"/>, as the add form does for a catalog pick (#131).</summary>
+    public static async Task<Guid> LinkImageAsync(this Collector collector, Guid bottleId, Guid productId) =>
         await IdAsync(await collector.Client.PostAsJsonAsync(
-            $"/api/bottles/{bottleId}/images/link", new { url = "https://images.example.test/bottle.png" }));
+            $"/api/bottles/{bottleId}/images/link", new { productId }));
 
     public static async Task<Guid> AddCommentAsync(this Collector collector, Guid bottleId) =>
         await IdAsync(await collector.Client.PostAsJsonAsync(

@@ -5,9 +5,10 @@ using VirtualBar.HttpTests.Support;
 namespace VirtualBar.HttpTests.Bottles;
 
 /// <summary>
-/// Deleting a bottle image over HTTP. The route names both the bottle and the image, and the API must act only on an
-/// image of that bottle (#72). Both ids are GUIDs, so these tests also catch the controller passing them the wrong way
-/// round, which the service tests cannot see.
+/// Linking and deleting bottle images over HTTP. Linking takes a catalog product and gives the bottle that product's
+/// image, never an address the client sends (#131). Deleting names both the bottle and the image, and the API must act
+/// only on an image of that bottle (#72). Both ids are GUIDs, so these tests also catch the controller passing them
+/// the wrong way round, which the service tests cannot see.
 /// </summary>
 [Collection(ApiCollection.Name)]
 public sealed class BottleImageTests(ApiHosts hosts)
@@ -20,7 +21,7 @@ public sealed class BottleImageTests(ApiHosts hosts)
         var owner = await Collector.RegisterAsync(Api, "owner");
         var namedBottle = await owner.AddBottleAsync();
         var imagesBottle = await owner.AddBottleAsync();
-        var imageId = await owner.LinkImageAsync(imagesBottle);
+        var imageId = await owner.LinkImageAsync(imagesBottle, await CatalogData.SeedProductAsync(Api));
 
         var response = await owner.Client.DeleteAsync($"/api/bottles/{namedBottle}/images/{imageId}");
 
@@ -33,7 +34,7 @@ public sealed class BottleImageTests(ApiHosts hosts)
     {
         var owner = await Collector.RegisterAsync(Api, "owner");
         var bottleId = await owner.AddBottleAsync();
-        var imageId = await owner.LinkImageAsync(bottleId);
+        var imageId = await owner.LinkImageAsync(bottleId, await CatalogData.SeedProductAsync(Api));
 
         var response = await owner.Client.DeleteAsync($"/api/bottles/{bottleId}/images/{imageId}");
 
@@ -53,6 +54,35 @@ public sealed class BottleImageTests(ApiHosts hosts)
 
         var response = await owner.Client.PostAsJsonAsync(
             $"/api/bottles/{bottleId}/images/link", new { url = "https://example.com/any.png" });
+
+        await CollectorApi.AssertRefusedAsync(response, HttpStatusCode.BadRequest);
+        Assert.Empty(await ImageIdsAsync(bottleId));
+    }
+
+    [SqlServerFact]
+    public async Task LinkImage_WhenTheProductHasAnImage_GivesTheBottleTheProductsImage()
+    {
+        var owner = await Collector.RegisterAsync(Api, "owner");
+        var bottleId = await owner.AddBottleAsync();
+        var productId = await CatalogData.SeedProductAsync(Api);
+
+        var response = await owner.Client.PostAsJsonAsync($"/api/bottles/{bottleId}/images/link", new { productId });
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var image = await response.JsonAsync();
+        Assert.Equal(CatalogData.ProductImageUrl, image.GetProperty("url").GetString());
+        Assert.True(image.GetProperty("isPrimary").GetBoolean());
+        Assert.Equal(image.GetProperty("id").GetGuid(), Assert.Single(await ImageIdsAsync(bottleId)));
+    }
+
+    [SqlServerFact]
+    public async Task LinkImage_WhenTheProductHasNoImage_Returns400AndStoresNothing()
+    {
+        var owner = await Collector.RegisterAsync(Api, "owner");
+        var bottleId = await owner.AddBottleAsync();
+        var productId = await CatalogData.SeedProductAsync(Api, imageUrl: null);
+
+        var response = await owner.Client.PostAsJsonAsync($"/api/bottles/{bottleId}/images/link", new { productId });
 
         await CollectorApi.AssertRefusedAsync(response, HttpStatusCode.BadRequest);
         Assert.Empty(await ImageIdsAsync(bottleId));

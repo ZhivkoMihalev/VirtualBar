@@ -255,8 +255,8 @@ function AddBottlePanel({ onSuccess }: { onSuccess: () => void }) {
       const bottle = await addBottle(payload)
       if (imageFile) {
         await uploadBottleImage(bottle.id, imageFile)
-      } else if (activeProductImageUrl) {
-        await linkBottleImage(bottle.id, activeProductImageUrl)
+      } else if (activeProduct && activeProductImageUrl) {
+        await linkBottleImage(bottle.id, activeProduct.id)
       }
       return bottle
     },

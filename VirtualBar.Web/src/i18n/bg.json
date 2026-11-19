@@ -307,7 +307,12 @@
     "noBarcode": "Тази бутилка още няма баркод. Сканирай го, за да я разпознаваме и при другите колекционери.",
     "saveBarcode": "Запази баркода",
     "barcodeSaved": "Баркодът е запазен.",
-    "errorBarcode": "Баркодът не можа да бъде запазен. Моля, опитайте отново."
+    "errorBarcode": "Баркодът не можа да бъде запазен. Моля, опитайте отново.",
+    "acquiredFrom": "Купена от",
+    "quantityReserved_one": "{{count}} е запазена за купувач до потвърждение на сделката.",
+    "quantityReserved_other": "{{count}} са запазени за купувачи до потвърждение на сделките.",
+    "allReserved": "Всички бутилки са запазени за купувачи.",
+    "removeReserved": "Бутилката е запазена за купувач. Откажете сделката, преди да я изтриете."
   },
   "collectionValue": {
     "title": "Стойност на колекцията",
@@ -429,8 +434,8 @@
     "wishListMatchNoName": "Намерена е бутилка от списъка ви с желания",
     "offerReceived": "направи оферта за {{bottle}}",
     "offerReceivedNoName": "направи оферта за ваша бутилка",
-    "offerAccepted": "прие офертата ви за {{bottle}}",
-    "offerAcceptedNoName": "прие офертата ви",
+    "offerAccepted": "прие офертата ви за {{bottle}}. Потвърдете, когато я получите.",
+    "offerAcceptedNoName": "прие офертата ви. Потвърдете, когато получите бутилката.",
     "offerDeclined": "отхвърли офертата ви за {{bottle}}",
     "offerDeclinedNoName": "отхвърли офертата ви",
     "badgeEarned": "Спечелихте значка:",
@@ -441,7 +446,11 @@
     "justNow": "сега",
     "minutesAgo": "{{count}}м",
     "hoursAgo": "{{count}}ч",
-    "daysAgo": "{{count}}д"
+    "daysAgo": "{{count}}д",
+    "saleCompleted": "потвърди, че получи {{bottle}}",
+    "saleCompletedNoName": "потвърди, че получи бутилката",
+    "dealCancelled": "отказа сделката за {{bottle}}",
+    "dealCancelledNoName": "отказа сделката"
   },
   "wishList": {
     "title": "Списък с желания",
@@ -510,7 +519,7 @@
     "decline": "Откажи",
     "withdraw": "Оттегли",
     "statusPending": "Изчаква",
-    "statusAccepted": "Приета",
+    "statusAccepted": "Завършена",
     "statusDeclined": "Отказана",
     "statusWithdrawn": "Оттеглена",
     "by": "от {{name}}",
@@ -518,7 +527,20 @@
     "loading": "ЗАРЕЖДАНЕ…",
     "errorCreate": "Неуспешно изпращане на оферта. Опитай отново.",
     "priceInvalid": "Въведете валидна цена.",
-    "errorRespond": "Неуспешна операция. Опитай отново."
+    "errorRespond": "Неуспешна операция. Опитай отново.",
+    "statusAwaitingReceipt": "Чака потвърждение",
+    "statusCancelled": "Отказана сделка",
+    "acceptHint": "При приемане бутилката се запазва за купувача, докато потвърди, че я е получил.",
+    "awaitingSeller": "Бутилката е запазена. Чака купувачът да потвърди, че я е получил.",
+    "awaitingBuyer": "Потвърди, когато бутилката пристигне. Тогава тя влиза в бара ти.",
+    "confirmReceipt": "Получих бутилката",
+    "cancelDeal": "Откажи сделката",
+    "errorNoBottleLeft": "Няма свободна бутилка за продажба.",
+    "reminderTitle": "Получи ли бутилката?",
+    "reminderText": "Потвърди, когато бутилката пристигне. Тогава тя влиза в бара ти и изчезва от бара на продавача.",
+    "reminderFrom": "от {{name}} · приета на {{date}}",
+    "reminderLater": "Още не",
+    "reminderAll": "Към офертите"
   },
   "reviews": {
     "title": "Оценки",

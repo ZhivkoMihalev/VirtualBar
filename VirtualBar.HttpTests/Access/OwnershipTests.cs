@@ -185,6 +185,31 @@ public sealed class OwnershipTests(ApiHosts hosts)
     }
 
     [SqlServerFact]
+    public async Task ConfirmReceipt_WhenTheCallerIsTheSeller_Returns403()
+    {
+        var (seller, buyer) = await TwoCollectorsAsync();
+        var offerId = await buyer.MakeOfferAsync(await seller.AddBottleAsync());
+        await CollectorApi.AssertSucceededAsync(await seller.Client.PatchAsync($"/api/offers/{offerId}/accept", content: null));
+
+        var response = await seller.Client.PatchAsync($"/api/offers/{offerId}/confirm-receipt", content: null);
+
+        await CollectorApi.AssertRefusedAsync(response, HttpStatusCode.Forbidden);
+    }
+
+    [SqlServerFact]
+    public async Task CancelDeal_WhenTheCallerIsNeitherBuyerNorSeller_Returns403()
+    {
+        var (seller, buyer) = await TwoCollectorsAsync();
+        var outsider = await Collector.RegisterAsync(Api, "outsider");
+        var offerId = await buyer.MakeOfferAsync(await seller.AddBottleAsync());
+        await CollectorApi.AssertSucceededAsync(await seller.Client.PatchAsync($"/api/offers/{offerId}/accept", content: null));
+
+        var response = await outsider.Client.PatchAsync($"/api/offers/{offerId}/cancel", content: null);
+
+        await CollectorApi.AssertRefusedAsync(response, HttpStatusCode.Forbidden);
+    }
+
+    [SqlServerFact]
     public async Task WithdrawProductRequest_WhenTheRequestBelongsToAnotherCollector_Returns403()
     {
         var (owner, other) = await TwoCollectorsAsync();

@@ -45,4 +45,6 @@ paths:
 - They complement the per-service classes, never replace them — branch coverage still belongs in `Services/`.
 - Because the badge engine swallows and logs its own exceptions, these tests also assert `ILogger<BadgeService>` logged
   no error, so a silent failure cannot pass as success.
-- Existing file: `ProductRequestApprovalFlowTests` (approve → requester notified + `FirstCatalogProduct` awarded).
+- Existing files: `ProductRequestApprovalFlowTests` (approve → requester notified + `FirstCatalogProduct` awarded) and
+  `OfferDealFlowTests` (offer → accept → confirm receipt or cancel, on SQLite: the bottle moves, both sides are notified,
+  the deal badges are awarded, #130).

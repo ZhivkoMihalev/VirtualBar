@@ -17,7 +17,8 @@ import {
 /**
  * Offers: any collector can offer on any bottle of another collector, listed for sale or not. The seller accepts or
  * declines from /offers, the buyer can withdraw a pending offer, and each answer reaches the other side as a
- * notification.
+ * notification. An accepted offer reserves the bottle until the buyer confirms receiving it, which moves the bottle to
+ * the buyer's bar (#130).
  */
 test.describe('Offers', () => {
   test.describe.configure({ timeout: FLOW_TIMEOUT })
@@ -69,18 +70,36 @@ test.describe('Offers', () => {
     await expect(received).toContainText(fill(bg.offers.by, { name: buyer.displayName }))
     await expect(received).toContainText('EUR 120')
     await received.getByRole('button', { name: bg.offers.accept }).click()
-    await expect(received).toContainText(bg.offers.statusAccepted)
-    await expect(received.getByRole('button')).toHaveCount(0)
+    // Accepted, the bottle is reserved until the buyer confirms receiving it (#130): the seller can only cancel.
+    await expect(received).toContainText(bg.offers.statusAwaitingReceipt)
+    await expect(received.getByRole('button', { name: bg.offers.accept })).toHaveCount(0)
+    await expect(received.getByRole('button', { name: bg.offers.cancelDeal })).toBeVisible()
 
+    // The buyer is asked on the next page load whether the bottle arrived; "not yet" puts it off.
     await buyerPage.reload()
+    const reminder = buyerPage.getByRole('dialog', { name: bg.offers.reminderTitle })
+    await expect(reminder).toContainText(name)
+    await reminder.getByRole('button', { name: bg.offers.reminderLater }).click()
+    await expect(reminder).toHaveCount(0)
+
     await openNotifications(buyerPage)
     await expect(
       notification(buyerPage, seller.displayName, fill(bg.notifications.offerAccepted, { bottle: name })),
     ).toBeVisible()
     await buyerPage.keyboard.press('Escape')
     await buyerPage.getByRole('tab', { name: bg.offers.tabSent }).click()
-    await expect(sent).toContainText(bg.offers.statusAccepted)
+    await expect(sent).toContainText(bg.offers.statusAwaitingReceipt)
     await expect(sent.getByRole('button', { name: bg.offers.withdraw })).toHaveCount(0)
+    await sent.getByRole('button', { name: bg.offers.confirmReceipt }).click()
+    await expect(sent).toContainText(bg.offers.statusAccepted)
+
+    // The bottle moved: it is in the buyer's bar, bought from the seller, and gone from the seller's.
+    await buyerPage.goto(`/bar/${buyer.id}`)
+    const bought = await openBottlePanel(buyerPage, name)
+    await expect(bought).toContainText(bg.bottle.acquiredFrom)
+    await expect(bought.getByRole('link', { name: seller.displayName })).toBeVisible()
+    await sellerPage.goto(`/bar/${seller.id}`)
+    await expect(sellerPage.getByText(bg.publicBar.empty)).toBeVisible()
   })
 
   test('the seller declines one offer and the buyer withdraws another', async ({ openAs }) => {

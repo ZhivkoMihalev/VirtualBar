@@ -2244,6 +2244,136 @@ public sealed class BottleServiceTests
 
     #endregion
 
+    #region Bottles reserved for a buyer (#130)
+
+    private static Bottle Reserve(AppDbContext db, Bottle bottle, int reservedQuantity)
+    {
+        bottle.ReservedQuantity = reservedQuantity;
+        db.SaveChanges();
+        return bottle;
+    }
+
+    [Fact]
+    public async Task UpdateBottleAsync_WhenQuantityBelowListedAndReservedCount_ReturnsConflict()
+    {
+        var db = CreateDbContext();
+        var user = SeedUser(db);
+        var bottle = Reserve(db, SeedBottle(db, user.Id, isForSale: true, quantity: 4, forSaleQuantity: 2), 2);
+        var service = CreateBottleService(db, user.Id);
+        var request = new UpdateBottleRequest { Name = bottle.Name, Quantity = 3 };
+
+        var result = await service.UpdateBottleAsync(bottle.Id, request, CancellationToken.None);
+
+        Assert.Equal(ErrorCode.Conflict, result.ErrorCode);
+        Assert.Equal("Quantity cannot drop below the 4 bottles listed for sale or reserved for buyers.", result.Error);
+        Assert.Equal(4, db.Bottles.Single().Quantity);
+    }
+
+    [Fact]
+    public async Task UpdateBottleAsync_WhenQuantityCoversListedAndReservedCount_Succeeds()
+    {
+        var db = CreateDbContext();
+        var user = SeedUser(db);
+        var bottle = Reserve(db, SeedBottle(db, user.Id, quantity: 5), 2);
+        var service = CreateBottleService(db, user.Id);
+        var request = new UpdateBottleRequest { Name = bottle.Name, Quantity = 2 };
+
+        var result = await service.UpdateBottleAsync(bottle.Id, request, CancellationToken.None);
+
+        Assert.True(result.Success);
+        Assert.Equal(2, result.Data!.Quantity);
+        Assert.Equal(2, result.Data.ReservedQuantity);
+    }
+
+    [Fact]
+    public async Task RemoveBottleAsync_WhenABottleIsReservedForABuyer_ReturnsConflict()
+    {
+        var db = CreateDbContext();
+        var user = SeedUser(db);
+        var bottle = Reserve(db, SeedBottle(db, user.Id), 1);
+        var service = CreateBottleService(db, user.Id);
+
+        var result = await service.RemoveBottleAsync(bottle.Id, CancellationToken.None);
+
+        Assert.Equal(ErrorCode.Conflict, result.ErrorCode);
+        Assert.Equal("This bottle is reserved for a buyer. Cancel the deal before removing it.", result.Error);
+        Assert.False(db.Bottles.Single().IsDeleted);
+    }
+
+    [Fact]
+    public async Task ListForSaleAsync_WhenEveryBottleIsReserved_ReturnsConflict()
+    {
+        var db = CreateDbContext();
+        var user = SeedUser(db);
+        var bottle = Reserve(db, SeedBottle(db, user.Id, quantity: 2), 2);
+        var service = CreateBottleService(db, user.Id);
+        var request = new ListForSaleRequest { AskingPrice = 100m, Currency = "EUR", Quantity = 1 };
+
+        var result = await service.ListForSaleAsync(bottle.Id, request, CancellationToken.None);
+
+        Assert.Equal(ErrorCode.Conflict, result.ErrorCode);
+        Assert.Equal("Every bottle of this entry is reserved for a buyer.", result.Error);
+        Assert.False(db.Bottles.Single().IsForSale);
+    }
+
+    [Fact]
+    public async Task ListForSaleAsync_WhenQuantityExceedsTheFreeBottles_ReturnsFail()
+    {
+        var db = CreateDbContext();
+        var user = SeedUser(db);
+        var bottle = Reserve(db, SeedBottle(db, user.Id, quantity: 3), 1);
+        var service = CreateBottleService(db, user.Id);
+        var request = new ListForSaleRequest { AskingPrice = 100m, Currency = "EUR", Quantity = 3 };
+
+        var result = await service.ListForSaleAsync(bottle.Id, request, CancellationToken.None);
+
+        Assert.False(result.Success);
+        Assert.Equal("For sale quantity must be between 1 and 2.", result.Error);
+    }
+
+    [Fact]
+    public async Task GetBottleByIdAsync_WhenTheBottleCameFromADeal_ReturnsItsSellerAndReservedCount()
+    {
+        var db = CreateDbContext();
+        var seller = SeedUser(db, "Seller");
+        var buyer = SeedUser(db, "Buyer");
+        var sold = SeedBottle(db, seller.Id);
+        var offer = new Offer
+        {
+            BottleId = sold.Id, BuyerId = buyer.Id, SellerId = seller.Id, OfferedPrice = 100m, Currency = "EUR",
+            Status = OfferStatus.Accepted
+        };
+        db.Offers.Add(offer);
+        db.SaveChanges();
+        var bought = SeedBottle(db, buyer.Id);
+        bought.AcquiredFromOfferId = offer.Id;
+        db.SaveChanges();
+        var service = CreateBottleService(db, buyer.Id);
+
+        var result = await service.GetBottleByIdAsync(bought.Id, CancellationToken.None);
+
+        Assert.True(result.Success);
+        Assert.Equal(seller.Id, result.Data!.AcquiredFromUserId);
+        Assert.Equal("Seller", result.Data.AcquiredFromDisplayName);
+        Assert.Equal(0, result.Data.ReservedQuantity);
+    }
+
+    [Fact]
+    public async Task GetBottleByIdAsync_WhenTheBottleWasAddedByHand_HasNoSeller()
+    {
+        var db = CreateDbContext();
+        var user = SeedUser(db);
+        var bottle = SeedBottle(db, user.Id);
+        var service = CreateBottleService(db, user.Id);
+
+        var result = await service.GetBottleByIdAsync(bottle.Id, CancellationToken.None);
+
+        Assert.Null(result.Data!.AcquiredFromUserId);
+        Assert.Null(result.Data.AcquiredFromDisplayName);
+    }
+
+    #endregion
+
     #region Asking price for visitors (#103)
 
     [Fact]

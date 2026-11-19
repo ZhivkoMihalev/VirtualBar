@@ -25,6 +25,7 @@ paths:
 | `Condition` | `BottleCondition` | Sealed/Opened/Empty |
 | `Quantity` | `int` | How many identical bottles this entry stands for — see below |
 | `ForSaleQuantity` | `int` | How many of the owned bottles are actually on offer — see below |
+| `ReservedQuantity` | `int` | How many of the owned bottles are reserved for buyers until they confirm receipt (#130) — see below |
 | `Description` | `string?` | |
 | `IsLimited` | `bool` | Limited edition flag |
 | `IsForSale` | `bool` | Listed in marketplace |
@@ -34,6 +35,7 @@ paths:
 | `Barcode` | `string?` | The EAN/UPC on the bottle, 8–14 digits; `nvarchar(14)`, indexed — see below |
 | `ProductId` | `Guid?` | FK → Product (nullable) — catalog link; see below |
 | `DisplayOrder` | `int` | The bottle's place on its owner's shelf — see below |
+| `AcquiredFromOfferId` | `Guid?` | FK → Offer (`Restrict`, indexed): the completed deal the bottle came from (#130) |
 
 ### Quantity
 - Default `1` (a store default backfills old rows), validated 1–99 in the decorator.
@@ -44,12 +46,29 @@ paths:
   field).
 - **Never below `ForSaleQuantity`:** `UpdateBottleAsync`'s decorator returns `409` rather than leaving the marketplace
   offering bottles the owner no longer has.
+- **Nor below `ForSaleQuantity` + `ReservedQuantity`:** a reserved bottle leaves the entry when its buyer confirms
+  receipt, so it must still be there (`409`).
+
+### ReservedQuantity (#130)
+- An accepted offer reserves one bottle of the entry until the buyer confirms receiving it or the deal is cancelled
+  (`.claude/rules/domain/offers.md`); the free bottles are `Quantity - ReservedQuantity`.
+- Set only by `OfferService` with conditional updates on the bottle row (accept `+ 1`, confirm and cancel `- 1`).
+  Confirming also takes the bottle out (`Quantity - 1`) and soft-deletes the entry with its last bottle.
+- A reserved bottle is neither for sale nor removable: listing offers only the free bottles, and removing an entry with
+  one reserved answers `409`.
+- `BottleDto` returns it; the owner's panel says how many are reserved (`bottle.quantityReserved_one`/`_other`).
+
+### AcquiredFromOfferId (#130)
+- Set on the buyer's copy of a bottle when they confirm a deal; never by a client.
+- `BottleDto` returns the seller as `AcquiredFromUserId` / `AcquiredFromDisplayName` (null for a bottle added by hand);
+  the bottle panel shows "Купена от <seller>" with a link to their bar.
 
 ### ForSaleQuantity
 - A stack can be listed **in part**.
 - Invariant maintained by the service, not the DB:
-  - `ListForSaleAsync` sets it to `request.Quantity` (validated 1..`Quantity` in the decorator; omitted → **1**, so an
-    older client lists a single bottle rather than the whole stack);
+  - `ListForSaleAsync` sets it to `request.Quantity` (validated 1..`Quantity - ReservedQuantity` in the decorator;
+    omitted → **1**, so an older client lists a single bottle rather than the whole stack);
+  - accepting an offer lowers it by one, and unlists the entry when the last listed bottle is reserved (#130);
   - `UnlistFromSaleAsync` zeroes it.
 - Only meaningful alongside `IsForSale`, which stays the authoritative listed/not-listed flag every query filters on.
 - `BadgeCountKind.ActiveListings` sums **this**, not `Quantity`; the Dashboard "for sale" stat and the marketplace `×N`
@@ -123,15 +142,17 @@ paths:
 - `PUT /api/bottles/{id}` — update (`UpdateBottleRequest`, every field echoed, see ProductId above).
   - `400` blank name, quantity outside 1–99, a barcode that is not 8–14 digits, or an unknown product; `404` missing
     bottle or unknown distillery; `403` another collector's.
-  - `409` a quantity below `ForSaleQuantity`.
+  - `409` a quantity below `ForSaleQuantity`, or below `ForSaleQuantity` + `ReservedQuantity`.
 - `POST /api/bottles/{id}/list-for-sale` — list (`ListForSaleRequest`: price, currency, quantity).
-  - `404` missing; `403` another collector's; `409` already listed.
-  - `400` a quantity outside 1..`Quantity`, or an unsupported currency (`.claude/rules/domain/currencies.md`).
+  - `404` missing; `403` another collector's; `409` already listed, or every bottle reserved for buyers.
+  - `400` a quantity outside 1..the free bottles (`Quantity - ReservedQuantity`), or an unsupported currency
+    (`.claude/rules/domain/currencies.md`).
 - `POST /api/bottles/{id}/unlist` — `404` missing; `403` another collector's; `400` not listed.
 - `PUT /api/bottles/reorder` — set `DisplayOrder` from the ids sent (`ReorderBottlesRequest`).
   - `400` no ids or duplicate ids; `404` any id that is not one of the caller's own bottles.
   - The caller's bottles missing from the request keep their relative order after the ones sent.
-- `DELETE /api/bottles/{id}` — soft delete. `404` missing; `403` another collector's.
+- `DELETE /api/bottles/{id}` — soft delete. `404` missing; `403` another collector's; `409` a bottle of it is reserved
+  for a buyer.
 
 ## BottleImage
 | Property | Type | Notes |
@@ -167,5 +188,7 @@ Bottle code also does work that other rule files describe:
 - `BottleLikeService.LikeAsync` sends `BottleLiked` and evaluates the owner's badges (`LikeReceived`);
   `BottleCommentService.AddCommentAsync` sends `BottleCommented`.
 - `ListForSaleAsync` accepts only the supported currencies (`.claude/rules/domain/currencies.md`).
+- A deal reserves a bottle, takes it off sale, and moves it to the buyer's bar when they confirm receipt
+  (`.claude/rules/domain/offers.md`).
 - Notification types: `.claude/rules/domain/notifications.md`. Badges: `.claude/rules/domain/badges.md`. A bottle's price estimate
   and the collection value: `.claude/rules/domain/pricing.md`.

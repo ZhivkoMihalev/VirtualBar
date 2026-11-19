@@ -45,6 +45,9 @@ public sealed class BottleDto
     /// <summary>How many of the owned bottles are on sale. Zero when the entry is not listed.</summary>
     public int ForSaleQuantity { get; set; }
 
+    /// <summary>How many of the owned bottles are reserved for buyers until they confirm receipt (#130).</summary>
+    public int ReservedQuantity { get; set; }
+
     public decimal? AskingPrice { get; set; }
 
     public string? Currency { get; set; }
@@ -62,4 +65,9 @@ public sealed class BottleDto
     public DateTime CreatedAt { get; set; }
 
     public List<BottleImageDto> Images { get; set; } = [];
+
+    /// <summary>The seller of the completed deal this bottle came from (#130); null for a bottle added by hand.</summary>
+    public Guid? AcquiredFromUserId { get; set; }
+
+    public string? AcquiredFromDisplayName { get; set; }
 }

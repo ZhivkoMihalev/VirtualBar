@@ -3,7 +3,8 @@ import { Navigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import type { TFunction } from 'i18next'
-import { Check, X, Undo2 } from 'lucide-react'
+import { isAxiosError } from 'axios'
+import { Check, X, Undo2, PackageCheck, Ban } from 'lucide-react'
 import { useAuth } from '../contexts/useAuth'
 import NavBar from '../components/NavBar'
 import {
@@ -12,26 +13,64 @@ import {
   acceptOffer,
   declineOffer,
   withdrawOffer,
+  confirmReceipt,
+  cancelDeal,
 } from '../api/offersApi'
-import type { Offer, OfferStatus } from '../types'
+import type { ApiErrorBody, Offer, OfferStatus } from '../types'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 
+/** The `reason` the API sends when every bottle of an entry is reserved for buyers (`OfferErrorReasons`). */
+const NO_BOTTLE_LEFT = 'NoBottleLeft'
+
 const STATUS_KEYS: Record<OfferStatus, string> = {
   Pending: 'offers.statusPending',
+  AwaitingReceipt: 'offers.statusAwaitingReceipt',
   Accepted: 'offers.statusAccepted',
   Declined: 'offers.statusDeclined',
   Withdrawn: 'offers.statusWithdrawn',
+  Cancelled: 'offers.statusCancelled',
 }
 
 const STATUS_VARIANTS: Record<OfferStatus, 'warning' | 'success' | 'destructive' | 'secondary'> = {
   Pending: 'warning',
+  AwaitingReceipt: 'warning',
   Accepted: 'success',
   Declined: 'destructive',
   Withdrawn: 'secondary',
+  Cancelled: 'secondary',
+}
+
+/**
+ * A deal moves bottles between bars (#130): accepting reserves one and takes it off sale, confirming moves it, and
+ * cancelling frees it. So every step refreshes the offers, the bars, the marketplace and the collection values.
+ */
+function useDealInvalidation() {
+  const queryClient = useQueryClient()
+  return () => {
+    queryClient.invalidateQueries({ queryKey: ['offers'] })
+    queryClient.invalidateQueries({ queryKey: ['bottles'] })
+    queryClient.invalidateQueries({ queryKey: ['marketplace'] })
+    queryClient.invalidateQueries({ queryKey: ['collectionValue'] })
+  }
+}
+
+/** A refusal says why when the API gives the reason that no bottle is left (#130); anything else is generic. */
+function respondError(error: unknown, t: TFunction): string {
+  return isAxiosError<ApiErrorBody>(error) && error.response?.data?.reason === NO_BOTTLE_LEFT
+    ? t('offers.errorNoBottleLeft')
+    : t('offers.errorRespond')
+}
+
+function ErrorBanner({ text }: { text: string }) {
+  return (
+    <div role="alert" className="rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+      {text}
+    </div>
+  )
 }
 
 function formatDate(iso: string): string {
@@ -89,24 +128,19 @@ function OfferCard({
 
 function ReceivedTab() {
   const { t } = useTranslation()
-  const queryClient = useQueryClient()
+  const invalidate = useDealInvalidation()
 
   const { data: offers = [], isLoading, isError } = useQuery({
     queryKey: ['offers', 'received'],
     queryFn: getReceivedOffers,
   })
 
-  const acceptMutation = useMutation({
-    mutationFn: (id: string) => acceptOffer(id),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['offers', 'received'] }),
-  })
+  const acceptMutation = useMutation({ mutationFn: (id: string) => acceptOffer(id), onSuccess: invalidate })
+  const declineMutation = useMutation({ mutationFn: (id: string) => declineOffer(id), onSuccess: invalidate })
+  const cancelMutation = useMutation({ mutationFn: (id: string) => cancelDeal(id), onSuccess: invalidate })
 
-  const declineMutation = useMutation({
-    mutationFn: (id: string) => declineOffer(id),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['offers', 'received'] }),
-  })
-
-  const pending = acceptMutation.isPending || declineMutation.isPending
+  const pending = acceptMutation.isPending || declineMutation.isPending || cancelMutation.isPending
+  const error = acceptMutation.error ?? declineMutation.error ?? cancelMutation.error
 
   if (isLoading) return <StateMessage text={t('offers.loading')} />
   if (isError) return <StateMessage text={t('offers.errorRespond')} error />
@@ -114,11 +148,7 @@ function ReceivedTab() {
 
   return (
     <div className="flex flex-col gap-4">
-      {(acceptMutation.isError || declineMutation.isError) && (
-        <div className="rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive">
-          {t('offers.errorRespond')}
-        </div>
-      )}
+      {error && <ErrorBanner text={respondError(error, t)} />}
       {offers.map(offer => (
         <OfferCard
           key={offer.id}
@@ -127,19 +157,30 @@ function ReceivedTab() {
           t={t}
           actions={
             offer.status === 'Pending' ? (
-              <div className="flex gap-2">
-                <Button size="sm" onClick={() => acceptMutation.mutate(offer.id)} disabled={pending}>
-                  <Check className="size-3.5" />
-                  {t('offers.accept')}
-                </Button>
-                <Button
-                  size="sm"
-                  variant="destructive"
-                  onClick={() => declineMutation.mutate(offer.id)}
-                  disabled={pending}
-                >
-                  <X className="size-3.5" />
-                  {t('offers.decline')}
+              <div className="flex max-w-[260px] flex-col items-end gap-2">
+                <div className="flex gap-2">
+                  <Button size="sm" onClick={() => acceptMutation.mutate(offer.id)} disabled={pending}>
+                    <Check className="size-3.5" />
+                    {t('offers.accept')}
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="destructive"
+                    onClick={() => declineMutation.mutate(offer.id)}
+                    disabled={pending}
+                  >
+                    <X className="size-3.5" />
+                    {t('offers.decline')}
+                  </Button>
+                </div>
+                <p className="text-right text-xs text-muted-foreground">{t('offers.acceptHint')}</p>
+              </div>
+            ) : offer.status === 'AwaitingReceipt' ? (
+              <div className="flex max-w-[260px] flex-col items-end gap-2">
+                <p className="text-right text-xs text-muted-foreground">{t('offers.awaitingSeller')}</p>
+                <Button size="sm" variant="outline" onClick={() => cancelMutation.mutate(offer.id)} disabled={pending}>
+                  <Ban className="size-3.5" />
+                  {t('offers.cancelDeal')}
                 </Button>
               </div>
             ) : null
@@ -152,17 +193,19 @@ function ReceivedTab() {
 
 function SentTab() {
   const { t } = useTranslation()
-  const queryClient = useQueryClient()
+  const invalidate = useDealInvalidation()
 
   const { data: offers = [], isLoading, isError } = useQuery({
     queryKey: ['offers', 'sent'],
     queryFn: getSentOffers,
   })
 
-  const withdrawMutation = useMutation({
-    mutationFn: (id: string) => withdrawOffer(id),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['offers', 'sent'] }),
-  })
+  const withdrawMutation = useMutation({ mutationFn: (id: string) => withdrawOffer(id), onSuccess: invalidate })
+  const confirmMutation = useMutation({ mutationFn: (id: string) => confirmReceipt(id), onSuccess: invalidate })
+  const cancelMutation = useMutation({ mutationFn: (id: string) => cancelDeal(id), onSuccess: invalidate })
+
+  const pending = withdrawMutation.isPending || confirmMutation.isPending || cancelMutation.isPending
+  const error = withdrawMutation.error ?? confirmMutation.error ?? cancelMutation.error
 
   if (isLoading) return <StateMessage text={t('offers.loading')} />
   if (isError) return <StateMessage text={t('offers.errorRespond')} error />
@@ -170,11 +213,7 @@ function SentTab() {
 
   return (
     <div className="flex flex-col gap-4">
-      {withdrawMutation.isError && (
-        <div className="rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive">
-          {t('offers.errorRespond')}
-        </div>
-      )}
+      {error && <ErrorBanner text={respondError(error, t)} />}
       {offers.map(offer => (
         <OfferCard
           key={offer.id}
@@ -187,11 +226,25 @@ function SentTab() {
                 size="sm"
                 variant="outline"
                 onClick={() => withdrawMutation.mutate(offer.id)}
-                disabled={withdrawMutation.isPending}
+                disabled={pending}
               >
                 <Undo2 className="size-3.5" />
                 {t('offers.withdraw')}
               </Button>
+            ) : offer.status === 'AwaitingReceipt' ? (
+              <div className="flex max-w-[260px] flex-col items-end gap-2">
+                <p className="text-right text-xs text-muted-foreground">{t('offers.awaitingBuyer')}</p>
+                <div className="flex flex-wrap justify-end gap-2">
+                  <Button size="sm" onClick={() => confirmMutation.mutate(offer.id)} disabled={pending}>
+                    <PackageCheck className="size-3.5" />
+                    {t('offers.confirmReceipt')}
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => cancelMutation.mutate(offer.id)} disabled={pending}>
+                    <Ban className="size-3.5" />
+                    {t('offers.cancelDeal')}
+                  </Button>
+                </div>
+              </div>
             ) : null
           }
         />

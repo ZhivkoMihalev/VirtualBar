@@ -24,16 +24,18 @@ Both FK relations use `DeleteBehavior.Restrict`. Composite index on `(UserId, Is
 | `BottleCommented` | `BottleCommentService.AddCommentAsync` |
 | `NewFollower` | `UserFollowService.FollowAsync` |
 | `NewMessage` | `MessageService.SendAsync` |
-| `NewBottleFromFollowing` | `BottleService.AddBottleAsync` — fan-out to all followers |
+| `NewBottleFromFollowing` | `BottleService.AddBottleAsync` — fan-out to all followers; also `OfferService.ConfirmReceiptAsync` for the buyer's new bottle (#130) |
 | `BottleListedForSale` | `BottleService.ListForSaleAsync` — fan-out to all followers |
 | `WishListMatch` | `BottleService.ListForSaleAsync` — fan-out to wish list owners whose criteria match the listed bottle |
 | `OfferReceived` | `OfferService.CreateAsync` — sent to the seller |
-| `OfferAccepted` | `OfferService.AcceptAsync` — sent to the buyer |
-| `OfferDeclined` | `OfferService.DeclineAsync` — sent to the buyer |
+| `OfferAccepted` | `OfferService.AcceptAsync` — sent to the buyer, who is asked to confirm when the bottle arrives (#130) |
+| `OfferDeclined` | `OfferService.DeclineAsync` — sent to the buyer; also from `AcceptAsync` to the buyers of the other pending offers once no bottle is free (#130) |
 | `BottleReviewed` | `BottleReviewService.AddReviewAsync` — sent to the bottle owner (create only, not on update/delete) |
 | `BadgeEarned` | `BadgeService.EvaluateAsync` — sent to the badge earner via `CreateSystemAsync` (actor = recipient; `ResourceName` = the `BadgeType` name) |
 | `ProductRequestApproved` | `ProductRequestService.ApproveAsync` — sent to the requester (`ResourceId` = new/linked product id, `ResourceName` = product name) |
 | `ProductRequestRejected` | `ProductRequestService.RejectAsync` — sent to the requester (`ResourceId` = request id, `ResourceName` = requested product name) |
+| `SaleCompleted` | `OfferService.ConfirmReceiptAsync` — sent to the seller when the buyer confirms receiving the bottle (`ResourceId` = offer id, #130) |
+| `DealCancelled` | `OfferService.CancelAsync` — sent to the other side of a deal cancelled while it awaited receipt (`ResourceId` = offer id, #130) |
 
 ## INotificationService methods
 - `CreateAsync(recipientId, type, resourceId, resourceName, cancellationToken)` — single recipient; decorator skips if

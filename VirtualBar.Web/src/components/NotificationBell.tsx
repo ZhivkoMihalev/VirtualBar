@@ -85,6 +85,14 @@ function describe(item: NotificationItem, t: (key: string, opts?: Record<string,
       return item.resourceName
         ? t('notifications.productRequestRejected', { name: item.resourceName })
         : t('notifications.productRequestRejectedNoName')
+    case 'SaleCompleted':
+      return item.resourceName
+        ? t('notifications.saleCompleted', { bottle: item.resourceName })
+        : t('notifications.saleCompletedNoName')
+    case 'DealCancelled':
+      return item.resourceName
+        ? t('notifications.dealCancelled', { bottle: item.resourceName })
+        : t('notifications.dealCancelledNoName')
   }
 }
 
@@ -104,6 +112,8 @@ function targetPath(item: NotificationItem): string | null {
     case 'OfferReceived':
     case 'OfferAccepted':
     case 'OfferDeclined':
+    case 'SaleCompleted':
+    case 'DealCancelled':
       return '/offers'
     case 'BadgeEarned':
     case 'ProductRequestApproved':

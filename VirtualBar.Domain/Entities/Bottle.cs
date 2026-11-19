@@ -46,6 +46,12 @@ public class Bottle : BaseEntity
 
     public int ForSaleQuantity { get; set; }
 
+    /// <summary>
+    /// How many of the owned bottles are reserved for buyers whose deal awaits their confirmation of receipt (#130).
+    /// Never more than <see cref="Quantity"/>; a reserved bottle is neither free to sell nor to remove.
+    /// </summary>
+    public int ReservedQuantity { get; set; }
+
     public decimal? AskingPrice { get; set; }
 
     public string? Currency { get; set; }
@@ -53,6 +59,11 @@ public class Bottle : BaseEntity
     public DateTime? ForSaleAt { get; set; }
 
     public int DisplayOrder { get; set; }
+
+    /// <summary>The completed deal this bottle came from, when the buyer confirmed receiving it (#130).</summary>
+    public Guid? AcquiredFromOfferId { get; set; }
+
+    public Offer? AcquiredFromOffer { get; set; }
 
     public ICollection<BottleImage> Images { get; set; } = [];
 

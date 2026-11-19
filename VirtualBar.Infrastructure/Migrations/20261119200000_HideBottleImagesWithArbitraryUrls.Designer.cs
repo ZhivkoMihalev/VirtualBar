@@ -255,6 +255,9 @@ namespace VirtualBar.Infrastructure.Migrations
                     b.Property<double?>("AbvPercent")
                         .HasColumnType("float");
 
+                    b.Property<Guid?>("AcquiredFromOfferId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<int?>("Age")
                         .HasColumnType("int");
 
@@ -322,6 +325,9 @@ namespace VirtualBar.Infrastructure.Migrations
                     b.Property<string>("Region")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int>("ReservedQuantity")
+                        .HasColumnType("int");
+
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("datetime2");
 
@@ -335,6 +341,8 @@ namespace VirtualBar.Infrastructure.Migrations
                         .HasColumnType("int");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("AcquiredFromOfferId");
 
                     b.HasIndex("Barcode");
 
@@ -706,6 +714,12 @@ namespace VirtualBar.Infrastructure.Migrations
 
                     b.Property<Guid>("BuyerId")
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("CancelledAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("CompletedAt")
+                        .HasColumnType("datetime2");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
@@ -1187,6 +1201,11 @@ namespace VirtualBar.Infrastructure.Migrations
 
             modelBuilder.Entity("VirtualBar.Domain.Entities.Bottle", b =>
                 {
+                    b.HasOne("VirtualBar.Domain.Entities.Offer", "AcquiredFromOffer")
+                        .WithMany()
+                        .HasForeignKey("AcquiredFromOfferId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("VirtualBar.Domain.Entities.Distillery", "Distillery")
                         .WithMany("Bottles")
                         .HasForeignKey("DistilleryId")
@@ -1202,6 +1221,8 @@ namespace VirtualBar.Infrastructure.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.Navigation("AcquiredFromOffer");
 
                     b.Navigation("Distillery");
 

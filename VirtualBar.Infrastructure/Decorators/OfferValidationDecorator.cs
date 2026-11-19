@@ -4,6 +4,7 @@ using VirtualBar.Application.DTOs.Offers;
 using VirtualBar.Application.Interfaces;
 using VirtualBar.Domain.Enums;
 using VirtualBar.Infrastructure.Persistence;
+using VirtualBar.Infrastructure.Services;
 
 namespace VirtualBar.Infrastructure.Decorators;
 
@@ -33,6 +34,10 @@ public sealed class OfferValidationDecorator(
 
         if (bottle.UserId == currentUser.UserId)
             return Result<OfferDto>.Fail("You cannot make an offer on your own bottle.");
+
+        // Every bottle of the entry is reserved for buyers (#130): an offer could never be accepted.
+        if (bottle.Quantity - bottle.ReservedQuantity < 1)
+            return Result<OfferDto>.Conflict(OfferService.NoBottleLeftMessage, OfferErrorReasons.NoBottleLeft);
 
         var existingPending = await db.Offers
             .AnyAsync(o => o.BottleId == request.BottleId
@@ -74,6 +79,13 @@ public sealed class OfferValidationDecorator(
         if (offer.Status != OfferStatus.Pending)
             return Result<OfferDto>.Conflict("Only pending offers can be accepted.");
 
+        // A friendly fast path: the service reserves the bottle in one conditional update, which closes the race.
+        var hasFreeBottle = await db.Bottles
+            .AnyAsync(b => b.Id == offer.BottleId && !b.IsDeleted && b.Quantity - b.ReservedQuantity >= 1, cancellationToken);
+
+        if (!hasFreeBottle)
+            return Result<OfferDto>.Conflict(OfferService.NoBottleLeftMessage, OfferErrorReasons.NoBottleLeft);
+
         return await inner.AcceptAsync(offerId, cancellationToken);
     }
 
@@ -113,5 +125,43 @@ public sealed class OfferValidationDecorator(
             return Result<OfferDto>.Conflict("Only pending offers can be withdrawn.");
 
         return await inner.WithdrawAsync(offerId, cancellationToken);
+    }
+
+    public async Task<Result<OfferDto>> ConfirmReceiptAsync(Guid offerId, CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+
+        var offer = await db.Offers
+            .FirstOrDefaultAsync(o => o.Id == offerId && !o.IsDeleted, cancellationToken);
+
+        if (offer is null)
+            return Result<OfferDto>.NotFound("Offer not found.");
+
+        if (offer.BuyerId != currentUser.UserId)
+            return Result<OfferDto>.Forbidden("Only the buyer can confirm receiving the bottle.");
+
+        if (offer.Status != OfferStatus.AwaitingReceipt)
+            return Result<OfferDto>.Conflict("Only a deal awaiting receipt can be confirmed.");
+
+        return await inner.ConfirmReceiptAsync(offerId, cancellationToken);
+    }
+
+    public async Task<Result<OfferDto>> CancelAsync(Guid offerId, CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+
+        var offer = await db.Offers
+            .FirstOrDefaultAsync(o => o.Id == offerId && !o.IsDeleted, cancellationToken);
+
+        if (offer is null)
+            return Result<OfferDto>.NotFound("Offer not found.");
+
+        if (offer.BuyerId != currentUser.UserId && offer.SellerId != currentUser.UserId)
+            return Result<OfferDto>.Forbidden("Only the buyer or the seller can cancel this deal.");
+
+        if (offer.Status != OfferStatus.AwaitingReceipt)
+            return Result<OfferDto>.Conflict("Only a deal awaiting receipt can be cancelled.");
+
+        return await inner.CancelAsync(offerId, cancellationToken);
     }
 }

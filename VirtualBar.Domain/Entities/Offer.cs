@@ -20,6 +20,12 @@ public sealed class Offer : BaseEntity
 
     public DateTime? RespondedAt { get; set; }
 
+    /// <summary>When the buyer confirmed they received the bottle (#130).</summary>
+    public DateTime? CompletedAt { get; set; }
+
+    /// <summary>When one side cancelled the deal before the buyer confirmed (#130).</summary>
+    public DateTime? CancelledAt { get; set; }
+
     public Bottle Bottle { get; set; } = null!;
 
     public AppUser Buyer { get; set; } = null!;

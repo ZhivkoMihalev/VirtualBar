@@ -48,7 +48,8 @@ fabricated number.
 - `ClaudeMarketResearchProvider` (`PriceSource.ClaudeResearch`) — Anthropic Messages API + `web_search` tool.
   - Returns an indicative min–max + **mandatory citations** (a result with no citations is treated as `None`).
   - Typed `HttpClient`.
-- `InternalMarketPriceProvider` (`PriceSource.Internal`) — our own listings + accepted offers matched by `ProductKey`;
+- `InternalMarketPriceProvider` (`PriceSource.Internal`) — our own listings + accepted offers (completed deals, #130) matched by
+  `ProductKey`;
   confidence by sample count.
 - `PriceEstimationService` (orchestrator) — read-through `PriceSnapshot` cache (5-day TTL).
   - On a miss/stale snapshot it tries **Claude first, then Internal** as fallback, and caches the chosen estimate.

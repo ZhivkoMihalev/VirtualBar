@@ -104,6 +104,14 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
         builder.Entity<Bottle>()
             .HasIndex(b => b.Barcode);
 
+        // The deal a bottle came from (#130). Configured explicitly so EF never pairs it with Offer.Bottle,
+        // which points the other way (the offer's bottle is the seller's, this one is the buyer's).
+        builder.Entity<Bottle>()
+            .HasOne(b => b.AcquiredFromOffer)
+            .WithMany()
+            .HasForeignKey(b => b.AcquiredFromOfferId)
+            .OnDelete(DeleteBehavior.Restrict);
+
         builder.Entity<UserFollow>()
             .HasIndex(f => f.FollowedId);
 

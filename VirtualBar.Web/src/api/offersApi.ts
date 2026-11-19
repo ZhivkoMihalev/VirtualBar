@@ -25,3 +25,11 @@ export const declineOffer = (id: string) =>
 
 export const withdrawOffer = (id: string) =>
   client.patch<Offer>(`/offers/${id}/withdraw`).then(r => r.data)
+
+/** The buyer confirms receiving the bottle of an accepted deal: it moves to their bar (#130). */
+export const confirmReceipt = (id: string) =>
+  client.patch<Offer>(`/offers/${id}/confirm-receipt`).then(r => r.data)
+
+/** Either side ends an accepted deal before the buyer confirmed receiving the bottle (#130). */
+export const cancelDeal = (id: string) =>
+  client.patch<Offer>(`/offers/${id}/cancel`).then(r => r.data)

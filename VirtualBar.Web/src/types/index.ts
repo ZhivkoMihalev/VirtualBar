@@ -50,9 +50,14 @@ export interface Bottle {
   isLimited: boolean
   isForSale: boolean
   forSaleQuantity: number
+  /** How many of the owned bottles are reserved for buyers until they confirm receipt (#130). */
+  reservedQuantity: number
   askingPrice?: number
   currency?: string
   images: BottleImage[]
+  /** The seller of the completed deal this bottle came from (#130); null for a bottle added by hand. */
+  acquiredFromUserId?: string | null
+  acquiredFromDisplayName?: string | null
   likesCount: number
   commentsCount: number
   averageScore?: number | null
@@ -538,7 +543,7 @@ export interface BadgeProgress {
   awardedAt: string | null
 }
 
-export type NotificationType = 'BottleLiked' | 'BottleCommented' | 'NewFollower' | 'NewMessage' | 'NewBottleFromFollowing' | 'BottleListedForSale' | 'WishListMatch' | 'OfferReceived' | 'OfferAccepted' | 'OfferDeclined' | 'BottleReviewed' | 'BadgeEarned' | 'ProductRequestApproved' | 'ProductRequestRejected'
+export type NotificationType = 'BottleLiked' | 'BottleCommented' | 'NewFollower' | 'NewMessage' | 'NewBottleFromFollowing' | 'BottleListedForSale' | 'WishListMatch' | 'OfferReceived' | 'OfferAccepted' | 'OfferDeclined' | 'BottleReviewed' | 'BadgeEarned' | 'ProductRequestApproved' | 'ProductRequestRejected' | 'SaleCompleted' | 'DealCancelled'
 
 export interface NotificationItem {
   id: string
@@ -595,7 +600,11 @@ export interface CollectionValue {
   items: BottlePriceLine[]
 }
 
-export type OfferStatus = 'Pending' | 'Accepted' | 'Declined' | 'Withdrawn'
+/**
+ * `AwaitingReceipt`: the seller accepted and a bottle is reserved until the buyer confirms receiving it (#130).
+ * `Accepted`: a completed deal. `Cancelled`: a deal one side ended before the buyer confirmed.
+ */
+export type OfferStatus = 'Pending' | 'AwaitingReceipt' | 'Accepted' | 'Declined' | 'Withdrawn' | 'Cancelled'
 
 export interface Offer {
   id: string
@@ -610,6 +619,8 @@ export interface Offer {
   message: string | null
   status: OfferStatus
   respondedAt: string | null
+  completedAt: string | null
+  cancelledAt: string | null
   createdAt: string
 }
 

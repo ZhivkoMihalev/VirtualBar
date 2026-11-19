@@ -21,8 +21,6 @@ import { test, expect, type Page } from '@playwright/test'
  */
 
 const API = 'http://localhost:5000/api'
-const SHOTS =
-  'C:/Users/jivko/AppData/Local/Temp/claude/C--Users-jivko-source-repos-VirtualBar/5e20ec85-e692-47c1-97a2-23ffebd28a6f/scratchpad/shots'
 
 // ---- Exact expected UI strings (from src/i18n/{bg,en}.json) ----
 const BG = {
@@ -281,7 +279,7 @@ test.describe('Bottle Reviews (frontend)', () => {
       await expect(panel.getByText(BG.flavor.Oak).first()).toBeVisible()
 
       try {
-        await panel.screenshot({ path: `${SHOTS}/bg-edit-mode.png` })
+        await test.info().attach('bg-edit-mode', { body: await panel.screenshot(), contentType: 'image/png' })
       } catch {
         /* screenshot is best-effort */
       }
@@ -354,7 +352,7 @@ test.describe('Bottle Reviews (frontend)', () => {
       await expect(panel.getByText(BG.flavor.Smoky).first()).toBeVisible()
 
       try {
-        await panel.screenshot({ path: `${SHOTS}/anon-review-card.png` })
+        await test.info().attach('anon-review-card', { body: await panel.screenshot(), contentType: 'image/png' })
       } catch {
         /* best-effort */
       }
@@ -468,7 +466,7 @@ test.describe('Bottle Reviews (frontend)', () => {
       await expect(panel.getByText(EN.count1, { exact: true })).toBeVisible()
 
       try {
-        await panel.screenshot({ path: `${SHOTS}/en-edit-mode.png` })
+        await test.info().attach('en-edit-mode', { body: await panel.screenshot(), contentType: 'image/png' })
       } catch {
         /* best-effort */
       }
